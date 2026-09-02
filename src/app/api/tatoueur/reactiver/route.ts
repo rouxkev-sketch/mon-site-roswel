@@ -34,7 +34,7 @@ export async function POST() {
       userId: user.id,
       genre: "annulation",
       detail:
-        "Te reconnecter a annulé la suppression du compte : tes portfolios sont rétablis tels qu'ils étaient.",
+        "Logging back in canceled the account deletion: your portfolios are restored as they were.",
     });
   }
   return NextResponse.json({ ok: true, reactive });

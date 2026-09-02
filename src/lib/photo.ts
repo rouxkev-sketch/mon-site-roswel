@@ -34,8 +34,8 @@ export async function compresserPhoto(
   /*  §1 (nº 699) — le plafond, avant toute lecture du contenu. */
   if (fichier.size > TAILLE_MAX_PHOTO_OCTETS) {
     throw new Error(
-      `Cette image est trop lourde (${Math.round(fichier.size / 1024 / 1024)} Mo). ` +
-        `Le maximum est de ${TAILLE_MAX_PHOTO_OCTETS / 1024 / 1024} Mo.`
+      `This image is too heavy (${Math.round(fichier.size / 1024 / 1024)} MB). ` +
+        `The maximum is ${TAILLE_MAX_PHOTO_OCTETS / 1024 / 1024} MB.`
     );
   }
   try {
@@ -46,13 +46,13 @@ export async function compresserPhoto(
     canvas.width = Math.round(image.width * echelle);
     canvas.height = Math.round(image.height * echelle);
     const contexte = canvas.getContext("2d");
-    if (!contexte) throw new Error("toile indisponible");
+    if (!contexte) throw new Error("canvas unavailable");
     contexte.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     const blob = await new Promise<Blob | null>((resoudre) =>
       canvas.toBlob(resoudre, "image/jpeg", qualite)
     );
-    if (!blob) throw new Error("encodage impossible");
+    if (!blob) throw new Error("encoding failed");
     return blob;
   } catch {
     /*  ██ §2 (nº 699) — ON REFUSE, ON NE LAISSE PLUS PASSER ██
@@ -74,8 +74,8 @@ export async function compresserPhoto(
         ⚠️ LE PLAFOND DE TAILLE, LUI, EST LEVÉ AVANT CE `try` : son
         message passe donc tout droit, sans être réécrit ici. */
     throw new Error(
-      "Ce fichier n'est pas une image que le navigateur sait lire. " +
-        "Enregistre-le en JPG ou en PNG, puis réessaie."
+      "This file isn't an image the browser can read. " +
+        "Save it as JPG or PNG, then try again."
     );
   }
 }

@@ -39,7 +39,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `Vérifie ton nom, ton e-mail et ton message (${CONTACT_YOKOFOLIO.messageMin} caractères au minimum).`,
+        message: `Check your name, your email and your message (at least ${CONTACT_YOKOFOLIO.messageMin} characters).`,
       },
       { status: 400 }
     );
@@ -71,13 +71,13 @@ export async function POST(requete: NextRequest) {
       ip,
     });
     if (error) {
-      console.error("Contact yokofolio non enregistré :", error.message);
+      console.error("Contact yokofolio not saved:", error.message);
     }
   } catch (e) {
     // Base injoignable ou migration pas passée : la transmission
     // e-mail ci-dessous reste tentée — le message ne se perd pas.
     console.error(
-      "Contact yokofolio — base indisponible :",
+      "Contact yokofolio — database unavailable:",
       e instanceof Error ? e.message : String(e)
     );
   }
@@ -87,12 +87,12 @@ export async function POST(requete: NextRequest) {
     await envoyerEmail(
       destinataire,
       `[${MARQUE_YOKOFOLIO.nom} · Contact] ${nom}`,
-      `Nouveau message depuis le formulaire de contact de ${MARQUE_YOKOFOLIO.nom}.\n\n` +
-        `Nom : ${nom}\nE-mail : ${email}\n\nMessage :\n${message}\n`
+      `New message from the ${MARQUE_YOKOFOLIO.nom} contact form.\n\n` +
+        `Name: ${nom}\nEmail: ${email}\n\nMessage:\n${message}\n`
     );
   } else {
     console.log(
-      `\n📨 [CONTACT ${MARQUE_YOKOFOLIO.nom} — renseigner CONTACT_EMAIL dans .env.local]\n` +
+      `\n📨 [CONTACT ${MARQUE_YOKOFOLIO.nom} — set CONTACT_EMAIL in .env.local]\n` +
         `   ${nom} <${email}>\n   ${message.replaceAll("\n", "\n   ")}\n`
     );
   }

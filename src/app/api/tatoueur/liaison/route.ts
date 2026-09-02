@@ -73,7 +73,7 @@ export async function POST(requete: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi pour gérer tes rattachements." },
+      { ok: false, message: "Log in to manage your links." },
       { status: 401 }
     );
   }
@@ -81,13 +81,13 @@ export async function POST(requete: NextRequest) {
   const corps = (await requete.json().catch(() => ({}))) as CorpsDemande;
   if (!corps.artisteId || !corps.salonId) {
     return NextResponse.json(
-      { ok: false, message: "Il manque un des deux portfolios." },
+      { ok: false, message: "One of the two portfolios is missing." },
       { status: 400 }
     );
   }
   if (corps.artisteId === corps.salonId) {
     return NextResponse.json(
-      { ok: false, message: "Un portfolio ne se rattache pas à lui-même." },
+      { ok: false, message: "A portfolio can't link to itself." },
       { status: 400 }
     );
   }
@@ -222,9 +222,9 @@ export async function POST(requete: NextRequest) {
   if (error || !data) {
     //  RÈGLE 1 — LA TRACE. Sans elle, la panne de la passe nº 102
     //  était invisible : on ne savait même pas que la base répondait.
-    console.error("[liaison] écriture refusée", {
+    console.error("[liaison] write refused", {
       code: error?.code ?? null,
-      message: error?.message ?? "aucune ligne écrite",
+      message: error?.message ?? "no row written",
       details: error?.details ?? null,
       origine: corps.origine ?? "artiste",
     });
@@ -235,8 +235,8 @@ export async function POST(requete: NextRequest) {
       {
         ok: false,
         message: refusDePolitique
-          ? "Ce portfolio ne t'appartient pas : le rattachement n'a pas été enregistré."
-          : "Le rattachement n'a pas pu être enregistré. Réessaie dans un instant.",
+          ? "This portfolio isn't yours: the link wasn't saved."
+          : "The link couldn't be saved. Try again in a moment.",
       },
       { status: refusDePolitique ? 403 : 500 }
     );
@@ -252,7 +252,7 @@ export async function DELETE(requete: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi pour gérer tes rattachements." },
+      { ok: false, message: "Log in to manage your links." },
       { status: 401 }
     );
   }
@@ -266,7 +266,7 @@ export async function DELETE(requete: NextRequest) {
     corps.liaisonId ?? requete.nextUrl.searchParams.get("id") ?? null;
   if (!liaisonId) {
     return NextResponse.json(
-      { ok: false, message: "Quel rattachement ?" },
+      { ok: false, message: "Which link?" },
       { status: 400 }
     );
   }
@@ -282,7 +282,7 @@ export async function DELETE(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Ce rattachement ne t'appartient pas, ou il n'existe plus.",
+        message: "This link isn't yours, or it no longer exists.",
       },
       { status: 403 }
     );

@@ -99,6 +99,34 @@ message.
 
 ---
 
+### Ajouts de la 805 (serveur, courriels, bibliothèque)
+
+| Français | Anglais | Note |
+|---|---|---|
+| les pays (affichage) | **USA**, **UK**, **Germany**, **Spain**… | la table `RACCOURCIS_PAYS` (lib/adresse) reconnaît les formes officielles anglaises ET françaises et affiche la forme courte anglaise ; le géocodeur parle anglais (`lang=en`) |
+| les régions (affichage) | le **code** : TX, CA, QC, NSW… | inchangé ; les variantes françaises de la table servent à reconnaître, jamais à afficher |
+| les jours | **Monday** … **Sunday** (Mon … Sun) | |
+| les mois | **January** … ; abrégés **Jan** … **Dec** | |
+| les dates | **September 12, 2026** · **Sep 12** · **9/12** (mois/jour) | ordre américain partout |
+| les heures | **9 AM**, **6:30 PM** | l'horloge de douze heures ; « 9h », « 18h30 » disparaissent |
+| Ouvert • Ferme à… / Fermé • Ouvre à… | **Open • Closes at…** / **Closed • Opens at…** | |
+| À partir du… / Jusqu'au… / (du … au …) | **From…** / **Until…** / **(… – …)** | |
+| Fondateur de… | **Founder of…** | le rôle lui-même (« Fondateur », « Résident ») vit en config : 806 |
+| Salon / Studio (type de lieu d'un mode) | **Tattoo Shop** / **Private Studio** | |
+| En guest au… | **Guest spot at…** | |
+| N mois d'attente | **N-month wait** | |
+| Site web (lien) | **Website** | |
+| Brouillon · En validation · À corriger · Suppression en cours | **Draft** · **Under review** · **Changes requested** · **Deletion in progress** | états d'un portfolio dans le menu du compte |
+| Tous les profils / portfolios / favoris | **All profiles** / **All portfolios** / **All favorites** | |
+| Trop court · Faible · Moyen · Fort (mot de passe) | **Too short** · **Weak** · **Medium** · **Strong** | |
+| Noir · Noir et gris · Couleur (rendu) | **Black** · **Black & grey** · **Color** | |
+| Réalisation (nature) | **Tattoo** | |
+| Mo (taille de fichier) | **MB** | |
+| les courriels aux artistes | sujet **Convention added** / **Convention declined** / **Style added** / **Style declined** ; signature **— YokoFolio** | |
+| le message de démarchage | « Hey ${nom} 👋 … It's free, no strings attached. » | même structure, même lien |
+| les réponses d'API | même ton que l'écran : « Log in first. », « Incomplete request. », « This portfolio isn't yours. » | |
+| les journaux serveur | anglais aussi (« [liaison] write refused ») — sauf les sondes, qui restent en français (exceptions déclarées) | |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

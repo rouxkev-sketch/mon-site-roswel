@@ -164,7 +164,7 @@ export function oublierLeSilence(): void {
 function REPONSE_BASE_MUETTE(): Response {
   return new Response(
     JSON.stringify({
-      message: "Base injoignable — lecture abandonnée (nº 686).",
+      message: "Database unreachable — read abandoned (nº 686).",
       code: "yf_base_muette",
     }),
     { status: 400, headers: { "content-type": "application/json" } }

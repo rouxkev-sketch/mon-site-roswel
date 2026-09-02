@@ -51,10 +51,10 @@ import { LienAccueil } from "@/components/LienAccueil";
  * propriétaire les avait écrits en liste à tirets dans son message :
  * même texte, même ordre, la forme est celle de la page).
  *
- * ⚠️ « THE PINK HEART » : le texte du propriétaire dit que le cœur du
- * logo est ROSE. Il est ROUGE (#E11144) depuis les nº 762-763. Le mot
- * est posé tel quel parce que la consigne est « tel quel » ; le
- * rapport de la nº 804 le lui signale, et c'est à lui de trancher.
+ * ⚠️ « THE RED HEART » (nº 805) : le texte du propriétaire disait
+ * « pink ». Le cœur est ROUGE (#E11144) depuis les nº 762-763 ; la
+ * nº 804 l'avait posé tel quel et signalé, le propriétaire a tranché à
+ * la nº 805 : « red ». C'est la seule retouche à son texte.
  *
  * TYPOGRAPHIE : les guillemets du propriétaire sont DROITS ("…"), et
  * ils s'écrivent `&quot;` en JSX ; les apostrophes s'écrivent `&apos;`
@@ -125,7 +125,7 @@ export default function PageQuiSommesNous() {
              grandes typographies, ouverture centrée, sections aérées. */}
         <p className="mt-6 text-center text-[17px] sm:text-[19px] leading-[1.7] text-sombre-texte-doux text-pretty">
           &quot;Yoko&quot; comes from Japanese, meaning &quot;on its
-          side.&quot; Take a look at the pink heart in our logo:
+          side.&quot; Take a look at the red heart in our logo:
           it&apos;s tilted. &quot;Folio&quot; is short for
           portfolio—the core of our platform.{" "}
           {MARQUE_YOKOFOLIO.nom} is a tilted heart guiding you straight

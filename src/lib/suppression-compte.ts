@@ -111,7 +111,7 @@ export async function demanderSuppression(
     return {
       ok: false,
       message: structureAbsente(message)
-        ? "La base n'est pas prête pour la suppression différée : passer supabase/yokofolio-suppression-differee.sql."
+        ? "The database isn't ready for deferred deletion: run supabase/yokofolio-suppression-differee.sql."
         : message,
     };
   }

@@ -439,14 +439,14 @@ async function envoyerCourriel(
     const destinataire = data?.user?.email;
     if (!destinataire) return;
 
-    const sujet = accepte ? "Convention acceptée" : "Convention refusée";
+    const sujet = accepte ? "Convention added" : "Convention declined";
     const corps = [
       accepte
-        ? `Bonne nouvelle : « ${nomDeLaConvention} » rejoint la liste des conventions de YokoFolio.`
-        : `« ${nomDeLaConvention} » n'a pas été retenue.`,
+        ? `Good news: "${nomDeLaConvention}" is now on YokoFolio's convention list.`
+        : `"${nomDeLaConvention}" wasn't accepted.`,
       message,
       accepte
-        ? `Pour l'ajouter à ta fiche, ouvre ton portfolio et choisis-la dans l'onglet « Convention » :\n${adresseDuSite()}/devenir-tatoueur/fiche`
+        ? `To add it to your portfolio, open it and pick it in the "Convention" tab:\n${adresseDuSite()}/devenir-tatoueur/fiche`
         : "",
       "— YokoFolio",
     ]
@@ -456,7 +456,7 @@ async function envoyerCourriel(
     await envoyerEmail(destinataire, sujet, corps);
   } catch (erreur) {
     console.warn(
-      "[demande de convention] courriel non parti :",
+      "[convention request] email not sent:",
       erreur instanceof Error ? erreur.message : String(erreur)
     );
   }

@@ -36,13 +36,12 @@ function sansSlashFinal(adresse: string): string {
 
 /** Le message d'erreur, écrit une fois — il sert aussi aux tests. */
 export const MESSAGE_ADRESSE_MANQUANTE =
-  "NEXT_PUBLIC_SITE_URL est absente. Cette variable porte l'adresse " +
-  "publique du site (ex. https://yokofolio.com) : elle construit les " +
-  "liens canoniques, le plan du site (sitemap.xml), les données " +
-  "structurées et les aperçus de partage. Sans elle, tout le " +
-  "référencement pointerait vers une mauvaise adresse — la " +
-  "construction s'arrête donc ici. À définir sur l'hébergement " +
-  "(Vercel → Settings → Environment Variables), puis reconstruire.";
+  "NEXT_PUBLIC_SITE_URL is missing. This variable holds the site's " +
+  "public address (e.g. https://yokofolio.com): it builds the " +
+  "canonical links, the sitemap (sitemap.xml), the structured data " +
+  "and the share previews. Without it, all SEO would point to a " +
+  "wrong address — so the build stops here. Set it on the host " +
+  "(Vercel → Settings → Environment Variables), then rebuild.";
 
 export function adresseDuSite(): string {
   const configuree = process.env.NEXT_PUBLIC_SITE_URL?.trim();

@@ -52,7 +52,7 @@ export async function GET(
   const bas = eclaircir(base, -10);
   const libelle = libelleStyle(connu);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Image de démonstration — style ${libelle}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="Demo image — ${libelle} style">
   <defs>
     <linearGradient id="f" x1="0" y1="0" x2="0.6" y2="1">
       <stop offset="0" stop-color="${haut}"/>
@@ -64,7 +64,7 @@ export async function GET(
         font-family="system-ui, sans-serif" font-size="54" font-weight="600"
         letter-spacing="1">${libelle}</text>
   <text x="400" y="552" text-anchor="middle" fill="#F2F2F4" fill-opacity="0.55"
-        font-family="system-ui, sans-serif" font-size="24" letter-spacing="3">DÉMONSTRATION</text>
+        font-family="system-ui, sans-serif" font-size="24" letter-spacing="3">DEMO</text>
 </svg>`;
 
   return new Response(svg, {

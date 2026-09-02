@@ -137,7 +137,7 @@ export function legendeDeCarte(
       photo montrée, donc la même règle de choix. */
   nature?: string
 ): string {
-  const debut = `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}`;
+  const debut = `${tatoueur.nom}'s portfolio in ${tatoueur.ville_nom}`;
   const photo = photoChoisie(tatoueur, style, rendu, nature);
   const morceaux = photo
     ? [

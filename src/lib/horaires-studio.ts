@@ -46,13 +46,13 @@ export type SemaineStudio = Plage[][];
 /** Les jours, dans l'ordre où on les lit. L'INDEX EST LA CLÉ : c'est
     lui qui range les plages en base, et il ne changera jamais. */
 export const JOURS_STUDIO = [
-  { index: 0, label: "Lundi", court: "Lun" },
-  { index: 1, label: "Mardi", court: "Mar" },
-  { index: 2, label: "Mercredi", court: "Mer" },
-  { index: 3, label: "Jeudi", court: "Jeu" },
-  { index: 4, label: "Vendredi", court: "Ven" },
-  { index: 5, label: "Samedi", court: "Sam" },
-  { index: 6, label: "Dimanche", court: "Dim" },
+  { index: 0, label: "Monday", court: "Mon" },
+  { index: 1, label: "Tuesday", court: "Tue" },
+  { index: 2, label: "Wednesday", court: "Wed" },
+  { index: 3, label: "Thursday", court: "Thu" },
+  { index: 4, label: "Friday", court: "Fri" },
+  { index: 5, label: "Saturday", court: "Sat" },
+  { index: 6, label: "Sunday", court: "Sun" },
 ] as const;
 
 /** Deux plages par jour, pas plus : la coupure du midi, et c'est tout. */
@@ -333,13 +333,18 @@ function enMinutes(heure: string): number {
     une information qu'on lit d'un coup d'œil. */
 export function heureCourte(heure: string): string {
   const [h, m] = heure.split(":");
-  return m === "00" ? `${Number(h)}h` : `${Number(h)}h${m}`;
+  //  nº 805 — L'HORLOGE AMÉRICAINE : « 9 AM », « 6:30 PM ». Le site
+  //  écrivait « 9h », « 18h30 » ; un Texan lit sur douze heures.
+  const heures = Number(h);
+  const moment = heures >= 12 ? "PM" : "AM";
+  const cadran = heures % 12 || 12;
+  return m === "00" ? `${cadran} ${moment}` : `${cadran}:${m} ${moment}`;
 }
 
 /** « 9h – 12h · 14h – 19h » — les plages d'un jour, en toutes lettres.
     Un jour sans plage est FERMÉ, et le dit. */
 export function libelleDuJour(plages: Plage[]): string {
-  if (plages.length === 0) return "Fermé";
+  if (plages.length === 0) return "Closed";
   return plages
     .map((plage) => `${heureCourte(plage.debut)} – ${heureCourte(plage.fin)}`)
     .join(" · ");
@@ -377,7 +382,7 @@ export function etatOuverture(
     if (minutes >= enMinutes(plage.debut) && minutes < enMinutes(plage.fin)) {
       return {
         ouvert: true,
-        libelle: `Ouvert • Ferme à ${heureCourte(plage.fin)}`,
+        libelle: `Open • Closes at ${heureCourte(plage.fin)}`,
       };
     }
   }
@@ -390,7 +395,7 @@ export function etatOuverture(
   if (restantAujourdhui) {
     return {
       ouvert: false,
-      libelle: `Fermé • Ouvre à ${heureCourte(restantAujourdhui.debut)}`,
+      libelle: `Closed • Opens at ${heureCourte(restantAujourdhui.debut)}`,
     };
   }
 
@@ -405,15 +410,15 @@ export function etatOuverture(
     if (!premiere) continue;
     const heure = heureCourte(premiere.debut);
     if (ecart === 1) {
-      return { ouvert: false, libelle: `Fermé • Ouvre demain à ${heure}` };
+      return { ouvert: false, libelle: `Closed • Opens tomorrow at ${heure}` };
     }
     return {
       ouvert: false,
-      libelle: `Fermé • Ouvre ${JOURS_STUDIO[suivant].label.toLowerCase()} à ${heure}`,
+      libelle: `Closed • Opens ${JOURS_STUDIO[suivant].label} at ${heure}`,
     };
   }
 
   // 4. Aucune plage nulle part : le module ne devrait même pas
   //    s'afficher (voir `semaineRenseignee`), mais on ne ment pas.
-  return { ouvert: false, libelle: "Fermé" };
+  return { ouvert: false, libelle: "Closed" };
 }

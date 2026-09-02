@@ -29,7 +29,7 @@ export async function POST(requete: NextRequest) {
 
     if (!/^[a-z0-9-]{2,80}$/.test(slug) || motifs.length === 0) {
       return NextResponse.json(
-        { ok: false, message: "Coche au moins un motif." },
+        { ok: false, message: "Check at least one reason." },
         { status: 400 }
       );
     }
@@ -48,7 +48,7 @@ export async function POST(requete: NextRequest) {
       {
         ok: false,
         message:
-          "L'envoi n'a pas abouti — la base n'est peut-être pas prête (migration supabase/yokofolio-signalements.sql).",
+          "Sending failed — the database may not be ready (migration supabase/yokofolio-signalements.sql).",
       },
       { status: 500 }
     );

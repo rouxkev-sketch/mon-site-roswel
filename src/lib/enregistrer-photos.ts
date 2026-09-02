@@ -210,7 +210,7 @@ export async function enregistrerPhotos(
     );
   } catch (erreur) {
     console.warn(
-      "[portfolio] non écrit :",
+      "[portfolio] not written:",
       erreur instanceof Error ? erreur.message : String(erreur)
     );
   }

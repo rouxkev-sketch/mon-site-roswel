@@ -35,7 +35,7 @@ export async function POST(requete: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi d'abord." },
+      { ok: false, message: "Log in first." },
       { status: 401 }
     );
   }
@@ -47,7 +47,7 @@ export async function POST(requete: NextRequest) {
   const id = corps?.id ?? "";
   if (!id) {
     return NextResponse.json(
-      { ok: false, message: "Demande incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -63,7 +63,7 @@ export async function POST(requete: NextRequest) {
   const ligne = fiche as { id: string; nom: string; user_id: string } | null;
   if (!ligne || ligne.user_id !== user.id) {
     return NextResponse.json(
-      { ok: false, message: "Ce portfolio n'est pas le tien." },
+      { ok: false, message: "This portfolio isn't yours." },
       { status: 403 }
     );
   }
@@ -85,7 +85,7 @@ export async function POST(requete: NextRequest) {
       {
         ok: false,
         message: message.includes("purge_le")
-          ? "La base n'est pas prête : passer supabase/yokofolio-fiches-multiples.sql."
+          ? "The database isn't ready: run supabase/yokofolio-fiches-multiples.sql."
           : error.message,
       },
       { status: 500 }
@@ -100,8 +100,8 @@ export async function POST(requete: NextRequest) {
     ficheNom: ligne.nom,
     genre: annuler ? "annulation" : "suppression_fiche",
     detail: annuler
-      ? "La suppression est annulée : le portfolio est rétabli tel qu'il était."
-      : `La fiche est retirée du public. Elle sera définitivement supprimée dans ${DELAI_SUPPRESSION_JOURS} jours — la réactiver avant l\u2019échéance remet tout en place.`,
+      ? "The deletion is canceled: the portfolio is restored as it was."
+      : `The portfolio is removed from public view. It will be permanently deleted in ${DELAI_SUPPRESSION_JOURS} days — reactivating it before then puts everything back.`,
   });
 
   return NextResponse.json({

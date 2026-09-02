@@ -161,35 +161,35 @@ export const TITRE_NOTIFICATION: Record<GenreNotification, string> = {
   //  base pour les nouvelles lignes ; l'affichage, lui, dérive du
   //  GENRE (voir FenetreNotifications) pour que les anciennes lignes
   //  parlent aussi la nouvelle langue.
-  validee: "Portfolio en ligne",
-  modifications: "Modifications demandées",
-  hors_ligne: "Portfolio hors ligne",
-  suppression_fiche: "Suppression de portfolio programmée",
-  suppression_compte: "Suppression du compte programmée",
-  annulation: "Suppression annulée",
-  style_ajoute: "Style accepté",
-  style_refuse: "Style refusé",
-  demande_style: "Demande de style",
+  validee: "Portfolio online",
+  modifications: "Changes requested",
+  hors_ligne: "Portfolio offline",
+  suppression_fiche: "Portfolio deletion scheduled",
+  suppression_compte: "Account deletion scheduled",
+  annulation: "Deletion canceled",
+  style_ajoute: "Style added",
+  style_refuse: "Style declined",
+  demande_style: "Style request",
   //  nº 750 — le titre suit celui des styles, au mot près.
-  demande_convention: "Demande de convention",
+  demande_convention: "Convention request",
   //  nº 756 — et les deux réponses aussi : « Style accepté » /
   //  « Style refusé » dictent la forme, rien n'est inventé.
-  convention_ajoutee: "Convention acceptée",
-  convention_refusee: "Convention refusée",
-  en_validation: "Portfolio en cours de validation",
+  convention_ajoutee: "Convention added",
+  convention_refusee: "Convention declined",
+  en_validation: "Portfolio under review",
   /*  §1 (nº 663) — LE MOT DU PROPRIÉTAIRE, à la graphie de la marque
       près : « YokoFolio », Y et F majuscules (la règle nº 104, sa
       décision). Il vient de la config, jamais recopié — le jour où la
       marque changerait de nom, cette ligne suivrait. */
-  bienvenue: `Bienvenue sur ${MARQUE_YOKOFOLIO.nom} !`,
+  bienvenue: `Welcome to ${MARQUE_YOKOFOLIO.nom}!`,
   //  §3 (nº 688) — le titre du propriétaire, au mot près.
-  demande_refusee: "Demande de portfolio refusée",
+  demande_refusee: "Portfolio request declined",
   //  §1 (nº 696) — les deux titres du propriétaire, au mot près. Le
   //  CORPS des deux phrases, lui, se dérive du genre au moment de
   //  l'affichage (FenetreNotifications) : c'est ce qui fait qu'une
   //  ligne écrite aujourd'hui restera lisible si la phrase change.
-  portfolio_retire: "Portfolio retiré",
-  portfolio_retabli: "Portfolio rétabli",
+  portfolio_retire: "Portfolio removed",
+  portfolio_retabli: "Portfolio restored",
 };
 
 /**
@@ -378,7 +378,7 @@ export async function creerNotification(entree: {
     return true;
   } catch (erreur) {
     console.warn(
-      "[notifications] non écrite :",
+      "[notifications] not written:",
       erreur instanceof Error ? erreur.message : String(erreur)
     );
     return false;
@@ -402,7 +402,7 @@ export async function proprietaireDeLaFiche(
       .maybeSingle();
     const ligne = data as { user_id?: string | null; nom?: string } | null;
     if (!ligne?.user_id) return null;
-    return { userId: ligne.user_id, nom: ligne.nom ?? "Ton portfolio" };
+    return { userId: ligne.user_id, nom: ligne.nom ?? "Your portfolio" };
   } catch {
     return null;
   }

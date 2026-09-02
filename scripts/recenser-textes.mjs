@@ -84,6 +84,27 @@ const EXCEPTIONS = [
     texte: /^rafraîchissement de la page courante \(icône\)$/,
     raison: "motif de défilement programmé, lu par la sonde de navigation, jamais affiché",
   },
+  /*  ── nº 805 : le périmètre D + E + J ── */
+  {
+    fichier: /^scripts\/engendrer-emojis\.mjs$/,
+    raison: "script d'atelier : son écran est le terminal du propriétaire, et ce qu'il écrit dans emojis-donnees.ts est un commentaire (les commentaires du dépôt restent en français)",
+  },
+  {
+    fichier: /^src\/lib\/emojis-donnees\.ts$/,
+    raison: "données Unicode EN ANGLAIS (régénérées à la nº 804) : « ma'am », « 5–0 » ne sont pas du français",
+  },
+  {
+    fichier: /^src\/lib\/tatoueurs-demo\.ts$/,
+    raison: "fiches de démonstration, interdites en ligne (lib/catalogue-demonstration) : des données de banc, pas de l'interface",
+  },
+  {
+    fichier: /^src\/lib\/adresse\.ts$/,
+    raison: "tables de RECONNAISSANCE : les noms français (Californie, Québec, Brésil, République française…) servent à reconnaître ce que rend le géocodeur ou ce que porte une vieille fiche, jamais à l'afficher — ce qui s'affiche est la colonne de droite, anglaise depuis la nº 805 (USA, UK, Germany, TX, QC)",
+  },
+  {
+    fichier: /^src\/lib\/(bas-de-la-pile|carte-du-haut|defilement-programme|gel-du-corps|geste-toucher|glissement-lateral|liste-neuve|remontee-champ|vitesse|journal-de-bord)\.ts$/,
+    raison: "signatures et motifs lus par les sondes de navigation et de vitesse (/dev, verrouillé admin), jamais affichés — même famille que les instruments de la nº 804",
+  },
 ];
 
 const ACCENTS_FRANCAIS = /[éèêëàâçùûôîïœÉÈÊËÀÂÇÙÛÔÎÏŒ]/;
@@ -99,7 +120,7 @@ const MOTS_OUTILS_FRANCAIS = new Set([
   "parmi", "afin", "lorsque", "tandis", "ni", "soit", "voici", "merci",
   "bonjour", "je", "tu", "il", "ils", "elle", "elles", "nous", "vous", "lui",
   "leur", "leurs", "ses", "sa", "celui", "celle", "ceux", "quel", "quelle",
-  "quels", "quelles", "quand", "comment", "pourquoi", "parce", "car", "en",
+  "quels", "quelles", "quand", "comment", "pourquoi", "parce", "en",
   "être", "avoir", "fait", "faire", "peut", "peux", "doit", "dois", "suis",
   "sera", "seront", "cliquer", "choisir", "envoyer", "ajouter", "supprimer",
   "modifier", "enregistrer", "fermer", "ouvrir", "voir", "chercher",
@@ -121,7 +142,10 @@ function estFrancais(texte) {
   //  ce qu'il reste une fois qu'ils sont ôtés.
   const lisible = texte
     .replace(/\$\{[^}]*\}/g, " ")
-    .replace(/\S+\/\S+|\S+\.\S+/g, " ");
+    .replace(/\S+\/\S+|\S+\.\S+/g, " ")
+    //  nº 805 — un IDENTIFIANT EN MAJUSCULES n'est pas un mot : « NOM_
+    //  CONVENTION_MAXIMUM » se lisait « nom », un mot-outil français.
+    .replace(/\b[A-Z0-9_]{2,}\b/g, " ");
   if (ACCENTS_FRANCAIS.test(lisible)) return true;
   const mots = lisible.toLowerCase().match(/[a-zà-ü']+/g) ?? [];
   return mots.some((m) => MOTS_OUTILS_FRANCAIS.has(m));
@@ -174,6 +198,42 @@ function sansCommentaires(source) {
       while (i < n && !(source[i] === "*" && source[i + 1] === "/")) i++;
       i += 2;
       continue;
+    }
+    /*  nº 805 — UN LITTÉRAL D'EXPRESSION RÉGULIÈRE N'EST PAS UNE CHAÎNE,
+        et c'est un défaut d'instrument corrigé sur le fait : dans
+        `tatoueurs.ts`, `/column\s+(?:"?[a-z0-9_]+"?\.)?…/i` porte des
+        guillemets. Le découpeur y voyait une chaîne ouverte, se
+        désynchronisait, et prenait ensuite les COMMENTAIRES pour du code
+        — trente « textes » qui n'en étaient pas. Un `/` qui suit une
+        parenthèse, une virgule, un `=`, un `:`, un `!`, un `&`, un `|`,
+        un `?`, un `{`, un `;`, un crochet ouvrant ou le mot `return`
+        ouvre une expression régulière : on la recopie telle quelle
+        jusqu'à sa barre fermante (hors classe `[…]`), puis ses drapeaux. */
+    if (c === "/" && suivant !== "/" && suivant !== "*") {
+      const avant = dehors.replace(/\s+$/, "");
+      const ouvreUneRegex =
+        avant === "" || /[(,=:!&|?{;\[]$/.test(avant) || /\breturn$/.test(avant);
+      if (ouvreUneRegex) {
+        let j = i + 1;
+        let dansClasse = false;
+        while (j < n && source[j] !== "\n") {
+          if (source[j] === "\\") {
+            j += 2;
+            continue;
+          }
+          if (source[j] === "[") dansClasse = true;
+          else if (source[j] === "]") dansClasse = false;
+          else if (source[j] === "/" && !dansClasse) break;
+          j++;
+        }
+        if (j < n && source[j] === "/") {
+          j++;
+          while (j < n && /[a-z]/.test(source[j])) j++;
+          dehors += source.slice(i, j);
+          i = j;
+          continue;
+        }
+      }
     }
     if (c === '"' || c === "'" || c === "`") {
       const guillemet = c;

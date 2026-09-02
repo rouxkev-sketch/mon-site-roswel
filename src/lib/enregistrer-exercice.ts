@@ -529,15 +529,15 @@ export async function creerLesRattachementsEnAttente(
       } | null;
       if (!donnees?.ok) {
         manques += 1;
-        console.error("[liaison] rattachement en attente non enregistré", {
+        console.error("[liaison] pending link not saved", {
           origine: envoi.origine,
-          message: donnees?.message ?? `réponse ${reponse.status}`,
+          message: donnees?.message ?? `response ${reponse.status}`,
         });
       }
     } catch {
       // Voir l'en-tête : jamais bloquant — mais jamais muet non plus.
       manques += 1;
-      console.error("[liaison] réseau indisponible pour un rattachement", {
+      console.error("[liaison] network unavailable for a link", {
         origine: envoi.origine,
       });
     }

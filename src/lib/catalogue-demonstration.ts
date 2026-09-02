@@ -37,7 +37,7 @@
     nomme ni la base, ni l'erreur : un visiteur n'a rien à en faire, et
     une pile d'erreur affichée est une fuite d'information. */
 export const MESSAGE_INDISPONIBLE =
-  "Le site est momentanément indisponible. Réessaie dans un instant.";
+  "The site is temporarily unavailable. Try again in a moment.";
 
 /**
  * A-T-ON LE DROIT DE SERVIR LES FICHES DE DÉMONSTRATION ?

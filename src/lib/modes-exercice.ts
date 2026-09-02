@@ -374,7 +374,7 @@ export function membreDepuisVue(
  * ici : le texte reste « Guest spot » dans le code, le navigateur le
  * peint « GUEST SPOT ».
  */
-export const LIBELLE_GUEST = "Guest spot";
+export const LIBELLE_GUEST = "Guest Spot";
 
 /**
  * LE RÔLE D'UN MEMBRE, EN UN MOT — « Fondateur », « Résident »,
@@ -460,13 +460,13 @@ export type MentionEnDeuxMorceaux = {
 export function mentionDuMembre(membre: MembreEquipe): MentionEnDeuxMorceaux {
   const etat =
     membre.booking === "ouvert" || membre.booking === "delai"
-      ? "Booking ouvert"
+      ? "Books open"
       : membre.booking === "ferme"
-        ? "Booking fermé"
+        ? "Books closed"
         : null;
   const attente =
     membre.booking === "delai" && membre.booking_mois
-      ? `${membre.booking_mois} mois d'attente`
+      ? `${membre.booking_mois}-month wait`
       : null;
   const muet = membre.booking === "delai" && !attente;
   return {
@@ -581,7 +581,7 @@ export function membresActifs(
 export function dateCourte(iso: string | null): string {
   if (!iso) return "";
   const [, mois, jour] = iso.split("-");
-  return mois && jour ? `${jour}/${mois}` : iso;
+  return mois && jour ? `${mois}/${jour}` : iso;
 }
 
 /**
@@ -593,8 +593,8 @@ export function dateCourte(iso: string | null): string {
  * comme un instant la décalerait d'un jour selon l'endroit du monde.
  */
 const MOIS_EN_TOUTES_LETTRES = [
-  "janvier", "février", "mars", "avril", "mai", "juin",
-  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export function dateLongue(iso: string | null | undefined): string {
@@ -603,8 +603,7 @@ export function dateLongue(iso: string | null | undefined): string {
   const nom = MOIS_EN_TOUTES_LETTRES[Number(mois) - 1];
   if (!annee || !nom || !jour) return iso;
   //  « 1er septembre », comme on l'écrit en français.
-  const quantieme = Number(jour) === 1 ? "1er" : String(Number(jour));
-  return `${quantieme} ${nom} ${annee}`;
+  return `${nom} ${Number(jour)}, ${annee}`;
 }
 
 /**
@@ -655,8 +654,8 @@ export function dateLongue(iso: string | null | undefined): string {
  * l'année suivante gagne ses années au plus cinq minutes plus tard.
  */
 const MOIS_ABREGES = [
-  "janv.", "févr.", "mars", "avril", "mai", "juin",
-  "juil.", "août", "sept.", "oct.", "nov.", "déc.",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
 /** Un jour écrit — « 23 août », « 1er oct. 2027 ». */
@@ -665,10 +664,9 @@ function jourEcrit(iso: string, avecAnnee: boolean): string {
   const table = avecAnnee ? MOIS_ABREGES : MOIS_EN_TOUTES_LETTRES;
   const nom = table[Number(mois) - 1];
   if (!annee || !nom || !jour) return iso;
-  const quantieme = Number(jour) === 1 ? "1er" : String(Number(jour));
   return avecAnnee
-    ? `${quantieme} ${nom} ${annee}`
-    : `${quantieme} ${nom}`;
+    ? `${nom} ${Number(jour)}, ${annee}`
+    : `${nom} ${Number(jour)}`;
 }
 
 export function periodeDeSession(
@@ -689,8 +687,8 @@ export function periodeDeSession(
     if (d === f) return jourEcrit(d, horsAnnee);
     return `${jourEcrit(d, horsAnnee)} – ${jourEcrit(f, horsAnnee)}`;
   }
-  if (d) return `À partir du ${jourEcrit(d, horsAnnee)}`;
-  return `Jusqu'au ${jourEcrit(f as string, horsAnnee)}`;
+  if (d) return `From ${jourEcrit(d, horsAnnee)}`;
+  return `Until ${jourEcrit(f as string, horsAnnee)}`;
 }
 
 /** « (du 01/09 au 15/09) » — la parenthèse d'une session guest. */
@@ -699,7 +697,7 @@ export function periodeCourte(mode: {
   fin_le: string | null;
 }): string {
   if (!mode.debut_le || !mode.fin_le) return "";
-  return `(du ${dateCourte(mode.debut_le)} au ${dateCourte(mode.fin_le)})`;
+  return `(${dateCourte(mode.debut_le)} – ${dateCourte(mode.fin_le)})`;
 }
 
 /* ================================================================
@@ -822,11 +820,11 @@ export function libelleLieuDuMode(mode: ModeExerciceFiche): string {
  * chaîne est vide et l'étiquette se réduit à « GUEST ».
  */
 export function typeDeLieuDuMode(mode: ModeExerciceFiche): string {
-  if (mode.genre === "salon") return "Salon";
-  if (mode.genre === "prive") return "Studio";
+  if (mode.genre === "salon") return "Tattoo Shop";
+  if (mode.genre === "prive") return "Private Studio";
   if (mode.genre === "guest") {
-    if (mode.nature_lieu === "salon") return "Salon";
-    if (mode.nature_lieu === "prive") return "Studio";
+    if (mode.nature_lieu === "salon") return "Tattoo Shop";
+    if (mode.nature_lieu === "prive") return "Private Studio";
   }
   return "";
 }
@@ -846,7 +844,7 @@ export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
   //  sans lieu connu (base ancienne, `nature_lieu` absent), « En
   //  guest » se suffit : on n'invente pas un type.
   if (mode.genre === "guest") {
-    return lieu ? `En guest au ${lieu}` : "En guest";
+    return lieu ? `Guest spot at ${lieu}` : "Guest spot";
   }
   //  FONDATEUR / RÉSIDENT DU SALON — DU STUDIO. Le rôle vient de
   //  `libelleRoleCourt` (« Fondateur », « Résident »), le mot même du
@@ -855,7 +853,7 @@ export function etiquetteDuLieu(mode: ModeExerciceFiche): string {
   if (role && lieu) return `${role} du ${lieu}`;
   //  Un rôle sans type de lieu (ou l'inverse) : on dit ce qu'on sait,
   //  jamais plus.
-  return role || (lieu ? `Au ${lieu}` : genreMode(mode.genre).label);
+  return role || (lieu ? `At ${lieu}` : genreMode(mode.genre).label);
 }
 
 /**
@@ -1125,13 +1123,13 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
     const queueF = lieu ? `— ${lieu}` : "";
     if (lie) {
       return {
-        avant: "Fondateur de ",
+        avant: "Founder of ",
         nomSalon: mode.salon_nom ?? "",
         apres: queueF ? ` ${queueF}` : "",
       };
     }
     return {
-      avant: "Fondateur de son studio",
+      avant: "Founder of their private studio",
       nomSalon: null,
       apres: queueF ? ` ${queueF}` : "",
     };
@@ -2142,7 +2140,7 @@ export function premierManque(
     return {
       cle: null,
       champ: "type",
-      message: "Choisis d'abord artiste ou salon.",
+      message: "Choose artist or shop first.",
     };
   }
   if (typeFiche === "salon") {
@@ -2156,8 +2154,8 @@ export function premierManque(
       champ: "lieu",
       message:
         etablissement === "prive"
-          ? "Choisis ta ville (ou ton adresse) DANS LA LISTE de suggestions."
-          : "Choisis l'ADRESSE COMPLÈTE de ton salon DANS LA LISTE — une ville seule ne suffit pas.",
+          ? "Pick your city (or your address) FROM THE LIST of suggestions."
+          : "Pick your shop's FULL ADDRESS FROM THE LIST — a city alone isn't enough.",
     };
   }
   //  ⚠️ MÊME FILTRE QUE `blocExerciceComplet` (passe nº 124) : un
@@ -2187,7 +2185,7 @@ export function premierManque(
     return {
       cle: null,
       champ: "aucun-lieu",
-      message: "Choisissez un lieu d'exercice",
+      message: "Choose a place where you work",
     };
   }
   for (const mode of declares) {
@@ -2195,14 +2193,14 @@ export function premierManque(
       return {
         cle: mode.cle,
         champ: "genre",
-        message: "Choisis un mode d'activité parmi les cinq.",
+        message: "Choose one of the five ways you work.",
       };
     }
     if (mode.genre === "salon" && !mode.role) {
       return {
         cle: mode.cle,
         champ: "role",
-        message: "Précise si tu es fondateur ou résident du salon.",
+        message: "Say whether you're the shop's founder or a resident.",
       };
     }
     //  nº 752 — LA MÊME BRANCHE QUE `tousLesManques`, et à la même
@@ -2213,21 +2211,21 @@ export function premierManque(
         return {
           cle: mode.cle,
           champ: "dates",
-          message: "Une session guest a besoin de ses deux dates.",
+          message: "A guest spot needs both dates.",
         };
       }
       if (mode.fin_le < mode.debut_le) {
         return {
           cle: mode.cle,
           champ: "dates",
-          message: "La date de fin précède la date de début.",
+          message: "The end date is before the start date.",
         };
       }
       if (!pointDuMode(mode)) {
         return {
           cle: mode.cle,
           champ: "ville",
-          message: "Ajoute au moins une ville pour ce guest.",
+          message: "Add at least one city for this guest spot.",
         };
       }
       continue;
@@ -2241,21 +2239,21 @@ export function premierManque(
         return {
           cle: mode.cle,
           champ: "convention",
-          message: "Choisis la convention où tu seras.",
+          message: "Choose the convention you'll be at.",
         };
       }
       if (!(mode.debut_le && mode.fin_le)) {
         return {
           cle: mode.cle,
           champ: "dates",
-          message: "Une convention a besoin de tes deux dates.",
+          message: "A convention needs both your dates.",
         };
       }
       if (mode.fin_le < mode.debut_le) {
         return {
           cle: mode.cle,
           champ: "dates",
-          message: "La date de fin précède la date de début.",
+          message: "The end date is before the start date.",
         };
       }
       continue;
@@ -2269,14 +2267,14 @@ export function premierManque(
         return {
           cle: mode.cle,
           champ: "statut",
-          message: "Choisis ton statut.",
+          message: "Choose your status.",
         };
       }
       if (!pointDuMode(mode)) {
         return {
           cle: mode.cle,
           champ: "zone",
-          message: "Ajoute au moins une zone de déplacement.",
+          message: "Add at least one service area.",
         };
       }
       continue;
@@ -2291,7 +2289,7 @@ export function premierManque(
       return {
         cle: mode.cle,
         champ: "lieu",
-        message: "Renseigne le lieu de ce mode.",
+        message: "Fill in the place for this mode.",
       };
     }
     //  §1 (nº 266) — LE NOM DU LIEU SAISI À LA MAIN. Même règle que
@@ -2301,14 +2299,14 @@ export function premierManque(
       return {
         cle: mode.cle,
         champ: "nomLieu",
-        message: "Donne le nom de ce lieu.",
+        message: "Give this place a name.",
       };
     }
     if (mode.genre === "guest" && !(mode.debut_le && mode.fin_le)) {
       return {
         cle: mode.cle,
         champ: "dates",
-        message: "Une session guest a besoin de ses deux dates.",
+        message: "A guest spot needs both dates.",
       };
     }
     if (
@@ -2320,7 +2318,7 @@ export function premierManque(
       return {
         cle: mode.cle,
         champ: "dates",
-        message: "La date de fin précède la date de début.",
+        message: "The end date is before the start date.",
       };
     }
   }
@@ -2418,7 +2416,7 @@ export function tousLesManques(
       manques.push({
         cle: mode.cle,
         champ: "genre",
-        message: "Choisis un mode d'activité parmi les cinq.",
+        message: "Choose one of the five ways you work.",
       });
       continue;
     }
@@ -2426,7 +2424,7 @@ export function tousLesManques(
       manques.push({
         cle: mode.cle,
         champ: "role",
-        message: "Précise si tu es fondateur ou résident du salon.",
+        message: "Say whether you're the shop's founder or a resident.",
       });
     }
     //  nº 752 — LE GUEST SANS LIEU A SES DEUX MANQUES À LUI, et ils
@@ -2439,20 +2437,20 @@ export function tousLesManques(
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "Une session guest a besoin de ses deux dates.",
+          message: "A guest spot needs both dates.",
         });
       } else if (mode.fin_le < mode.debut_le) {
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "La date de fin précède la date de début.",
+          message: "The end date is before the start date.",
         });
       }
       if (!pointDuMode(mode)) {
         manques.push({
           cle: mode.cle,
           champ: "ville",
-          message: "Ajoute au moins une ville pour ce guest.",
+          message: "Add at least one city for this guest spot.",
         });
       }
       continue;
@@ -2461,7 +2459,7 @@ export function tousLesManques(
       manques.push({
         cle: mode.cle,
         champ: "genre",
-        message: "Dis si le lieu qui t'accueille est un studio ou un salon.",
+        message: "Say whether the place hosting you is a studio or a shop.",
       });
     }
     //  nº 750 — LA MÊME BRANCHE QUE `premierManque`, et à la même
@@ -2472,20 +2470,20 @@ export function tousLesManques(
         manques.push({
           cle: mode.cle,
           champ: "convention",
-          message: "Choisis la convention où tu seras.",
+          message: "Choose the convention you'll be at.",
         });
       }
       if (!(mode.debut_le && mode.fin_le)) {
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "Une convention a besoin de tes deux dates.",
+          message: "A convention needs both your dates.",
         });
       } else if (mode.fin_le < mode.debut_le) {
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "La date de fin précède la date de début.",
+          message: "The end date is before the start date.",
         });
       }
       continue;
@@ -2498,14 +2496,14 @@ export function tousLesManques(
         manques.push({
           cle: mode.cle,
           champ: "statut",
-          message: "Choisis ton statut.",
+          message: "Choose your status.",
         });
       }
       if (!pointDuMode(mode)) {
         manques.push({
           cle: mode.cle,
           champ: "zone",
-          message: "Ajoute au moins une zone de déplacement.",
+          message: "Add at least one service area.",
         });
       }
       continue;
@@ -2514,14 +2512,14 @@ export function tousLesManques(
       manques.push({
         cle: mode.cle,
         champ: "lieu",
-        message: "Renseigne le lieu de ce mode.",
+        message: "Fill in the place for this mode.",
       });
     }
     if (nomLieuRequis(mode) && !(mode.nomLieu ?? "").trim()) {
       manques.push({
         cle: mode.cle,
         champ: "nomLieu",
-        message: "Donne le nom de ce lieu.",
+        message: "Give this place a name.",
       });
     }
     //  LES DATES d'une session guest : les deux, et dans l'ordre.
@@ -2530,13 +2528,13 @@ export function tousLesManques(
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "Une session guest a besoin de ses deux dates.",
+          message: "A guest spot needs both dates.",
         });
       } else if (mode.fin_le < mode.debut_le) {
         manques.push({
           cle: mode.cle,
           champ: "dates",
-          message: "La date de fin précède la date de début.",
+          message: "The end date is before the start date.",
         });
       }
     }

@@ -174,11 +174,11 @@ export async function chercherChezPhoton(
 ): Promise<LieuTrouve[]> {
   const adresse = new URL(ADRESSE_PHOTON);
   adresse.searchParams.set("q", saisie);
-  adresse.searchParams.set("lang", "fr");
+  adresse.searchParams.set("lang", "en");
   adresse.searchParams.set("limit", String(NOMBRE_SUGGESTIONS * 2));
 
   const reponse = await fetch(adresse, { signal });
-  if (!reponse.ok) throw new Error(`Photon a répondu ${reponse.status}`);
+  if (!reponse.ok) throw new Error(`Photon answered ${reponse.status}`);
   const donnees = (await reponse.json()) as { features?: TraitPhoton[] };
 
   const lieux: LieuTrouve[] = [];

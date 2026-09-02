@@ -81,12 +81,12 @@ export async function GET(
 ) {
   const racine = racineDuStockage();
   if (!racine) {
-    return new Response("stockage non configuré", { status: 503 });
+    return new Response("storage not configured", { status: 503 });
   }
   const { chemin } = await params;
   const sur = cheminSur(chemin ?? []);
   if (!sur) {
-    return new Response("chemin refusé", { status: 400 });
+    return new Response("path refused", { status: 400 });
   }
 
   let amont: Response;
@@ -108,7 +108,7 @@ export async function GET(
     //  Le stockage ne répond pas : on le dit, et surtout on NE POSE PAS
     //  la consigne — une panne d'une seconde ne doit pas être gardée un
     //  an au bord du monde.
-    return new Response("photo injoignable", {
+    return new Response("photo unreachable", {
       status: 502,
       headers: { "cache-control": "no-store" },
     });
@@ -155,6 +155,6 @@ export async function GET(
     venaient à diverger. */
 if (PORTE_PHOTOS !== "/photos") {
   throw new Error(
-    "PORTE_PHOTOS ne correspond plus au dossier de cette route (app/photos)"
+    "PORTE_PHOTOS no longer matches this route's folder (app/photos)"
   );
 }

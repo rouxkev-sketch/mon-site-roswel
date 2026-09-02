@@ -205,7 +205,7 @@ export function reconnaitreLien(
   }
   //  TOUT LE RESTE EST UN SITE ORDINAIRE. On n'exige aucun chemin :
   //  « ateliercorvus.fr » est une adresse complète.
-  return { service: "site", nom: "Site web", identite: domaine, adresse: normalisee };
+  return { service: "site", nom: "Website", identite: domaine, adresse: normalisee };
 }
 
 /* =====================================================================
@@ -232,7 +232,7 @@ export type ChampLien = "instagram" | "tiktok" | "site" | "pageDeLiens";
 const CHAMPS: Record<ChampLien, { nom: string; admis: ServiceLien[] }> = {
   instagram: { nom: "Instagram", admis: ["instagram"] },
   tiktok: { nom: "TikTok", admis: ["tiktok"] },
-  site: { nom: "Site web", admis: ["site"] },
+  site: { nom: "Website", admis: ["site"] },
   pageDeLiens: {
     nom: "Linktree / Beacons",
     admis: ["linktree", "beacons"],
@@ -269,7 +269,7 @@ export function etatDuLien(saisi: string, champ: ChampLien): EtatDuLien {
   const reconnu = reconnaitreLien(propre);
   const attendu = CHAMPS[champ];
   if (!reconnu) {
-    return { genre: "faux", phrase: "Adresse incomplète ou mal écrite." };
+    return { genre: "faux", phrase: "Incomplete or misspelled address." };
   }
   if (!attendu.admis.includes(reconnu.service)) {
     //  ON NOMME LE CHAMP OÙ ELLE VA. Sans cela, « adresse refusée »
@@ -280,8 +280,8 @@ export function etatDuLien(saisi: string, champ: ChampLien): EtatDuLien {
     return {
       genre: "faux",
       phrase: bonChamp
-        ? `Ça, c'est pour le champ « ${CHAMPS[bonChamp].nom} ».`
-        : `Ce champ attend une adresse ${attendu.nom}.`,
+        ? `That one goes in the "${CHAMPS[bonChamp].nom}" field.`
+        : `This field expects a ${attendu.nom} address.`,
     };
   }
   return { genre: "bon", identite: reconnu.identite };

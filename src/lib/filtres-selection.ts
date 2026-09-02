@@ -355,7 +355,7 @@ export const cleProfil = (nature: string) => `${PROFIL}:${nature}`;
 export const TOUS_LES_PROFILS = `${PROFIL}:*`;
 /** Son mot, écrit une seule fois — le menu et le champ le lisent tous
     les deux (voir `libelleDuProfil`). */
-export const LIBELLE_TOUS_LES_PROFILS = "Tous les profils";
+export const LIBELLE_TOUS_LES_PROFILS = "All profiles";
 
 /**
  * EST-CE UNE VALEUR DE PROFIL ? Rend la valeur telle quelle si oui,
@@ -588,14 +588,14 @@ export const VALEUR_NEUTRE = "";
     barre le lisent tous les deux (voir MenusSelection). Il remplace
     « Tous les styles », qui mentait depuis que le menu filtre aussi
     par profil (nº 316). */
-export const LIBELLE_TOUS_LES_PORTFOLIOS = "Tous les portfolios";
+export const LIBELLE_TOUS_LES_PORTFOLIOS = "All portfolios";
 
 /** §3 (nº 321) — LE MOT DE L'ENTRÉE NEUTRE DU MENU DES FAVORIS. Même
     place et même rôle que « Tous les portfolios » sur l'autre onglet :
     première de la liste, hors groupe, elle annule le filtre — et c'est
     ce que le champ affiche quand rien n'est choisi. Écrit une fois,
     lu par le menu et par le champ (voir MenusSelection). */
-export const LIBELLE_TOUS_LES_FAVORIS = "Tous les favoris";
+export const LIBELLE_TOUS_LES_FAVORIS = "All favorites";
 
 /** LA CLÉ DU TOTAL, dans la table des comptes — une étoile : ni un
     slug de style, ni une valeur d'Explorer, donc aucune collision

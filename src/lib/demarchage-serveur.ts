@@ -101,7 +101,7 @@ export async function lireDemarchageParJeton(
       }>
     ).map((f) => ({
       id: f.id,
-      nom: f.nom ?? "(sans nom)",
+      nom: f.nom ?? "(unnamed)",
       slug: f.slug,
       ville: f.ville_nom,
       type: typeDeLaFiche(f),

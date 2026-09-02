@@ -9,9 +9,9 @@ export function infosConnexionSupabase() {
 
   if (!url || !clePublishable) {
     throw new Error(
-      "Connexion Supabase impossible : il manque NEXT_PUBLIC_SUPABASE_URL " +
-        "ou NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY dans le fichier .env.local " +
-        "(voir le modèle .env.local.example à la racine du projet)."
+      "Can't connect to Supabase: NEXT_PUBLIC_SUPABASE_URL " +
+        "or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is missing from .env.local " +
+        "(see the .env.local.example template at the project root)."
     );
   }
 

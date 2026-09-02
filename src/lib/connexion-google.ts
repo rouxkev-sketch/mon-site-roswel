@@ -142,9 +142,9 @@ export async function delierGoogle(): Promise<string | null> {
     if (lecture) return traduire(lecture.message);
     const identites = data?.identities ?? [];
     const google = identites.find((une) => une.provider === "google");
-    if (!google) return "Google n'est pas lié à ce compte.";
+    if (!google) return "Google isn't linked to this account.";
     if (identites.length <= 1) {
-      return "C'est ton seul moyen de te connecter : ajoute d'abord un mot de passe, tu pourras délier Google ensuite.";
+      return "It's your only way to log in: add a password first, then you can unlink Google.";
     }
     const { error } = await supabase.auth.unlinkIdentity(google);
     if (error) return traduire(error.message);
@@ -171,25 +171,25 @@ export async function delierGoogle(): Promise<string | null> {
 function traduire(brut: string): string {
   const texte = brut.toLowerCase();
   if (texte.includes("provider is not enabled")) {
-    return "La connexion Google n'est pas encore activée sur le site.";
+    return "Google login isn't enabled on the site yet.";
   }
   //  §3 (nº 783) — le réglage « Enable Manual Linking » de Supabase.
   if (texte.includes("manual linking") || texte.includes("linking is disabled")) {
-    return "Lier un compte Google n'est pas encore autorisé sur le site. Préviens-moi : c'est un réglage à cocher.";
+    return "Linking a Google account isn't allowed on the site yet. Let me know: it's a setting to turn on.";
   }
   //  §3 (nº 783) — cette adresse Google appartient déjà à quelqu'un.
   if (texte.includes("already") && texte.includes("identity")) {
-    return "Ce compte Google est déjà rattaché à un autre compte du site.";
+    return "This Google account is already linked to another account on the site.";
   }
   //  §3 (nº 783) — le refus de Supabase sur la dernière identité.
   if (texte.includes("at least 1 identity") || texte.includes("single identity")) {
-    return "C'est ton seul moyen de te connecter : ajoute d'abord un mot de passe, tu pourras délier Google ensuite.";
+    return "It's your only way to log in: add a password first, then you can unlink Google.";
   }
   if (texte.includes("redirect") || texte.includes("not allowed")) {
-    return "L'adresse de retour n'est pas autorisée. Préviens-moi : c'est un réglage du site.";
+    return "The return address isn't allowed. Let me know: it's a site setting.";
   }
   if (texte.includes("network") || texte.includes("fetch")) {
-    return "La connexion à Google n'a pas pu s'ouvrir. Vérifie ta connexion, puis réessaie.";
+    return "The Google login couldn't open. Check your connection, then try again.";
   }
-  return "La connexion avec Google n'a pas abouti. Réessaie dans un instant.";
+  return "Google login failed. Try again in a moment.";
 }

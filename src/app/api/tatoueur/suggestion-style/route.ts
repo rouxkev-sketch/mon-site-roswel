@@ -58,7 +58,7 @@ export async function POST(requete: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Il faut être connecté pour proposer un style." },
+      { ok: false, message: "You need to be logged in to suggest a style." },
       { status: 401 }
     );
   }
@@ -73,7 +73,7 @@ export async function POST(requete: NextRequest) {
   const propose = (corps?.propose ?? "").trim().replace(/\s+/g, " ");
   if (propose.length < 2 || propose.length > 40) {
     return NextResponse.json(
-      { ok: false, message: "Écris le nom du style (2 à 40 caractères)." },
+      { ok: false, message: "Enter the style's name (2 to 40 characters)." },
       { status: 400 }
     );
   }
@@ -81,7 +81,7 @@ export async function POST(requete: NextRequest) {
   const slug = slugifier(propose);
   if (!slug) {
     return NextResponse.json(
-      { ok: false, message: "Ce nom ne contient aucune lettre." },
+      { ok: false, message: "This name has no letters." },
       { status: 400 }
     );
   }
@@ -97,7 +97,7 @@ export async function POST(requete: NextRequest) {
         ok: false,
         refus: "existe" satisfies Refus,
         libelle: deja.label,
-        message: `« ${deja.label} » est déjà dans la liste.`,
+        message: `"${deja.label}" is already on the list.`,
       });
     }
 
@@ -129,7 +129,7 @@ export async function POST(requete: NextRequest) {
       return NextResponse.json({
         ok: false,
         refus: "doublon" satisfies Refus,
-        message: "Tu as déjà proposé ce style — il est en cours d'examen.",
+        message: "You already suggested this style — it's under review.",
       });
     }
 
@@ -185,7 +185,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `La demande n'a pas pu être enregistrée (migration supabase/yokofolio-suggestions-styles.sql passée ?) : ${
+        message: `The request couldn't be saved (was the migration supabase/yokofolio-suggestions-styles.sql run?): ${
           e instanceof Error ? e.message : String(e)
         }`,
       },

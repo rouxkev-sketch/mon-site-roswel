@@ -18,18 +18,18 @@ export function evaluerMotDePasse(mdp: string) {
   const criteres = [
     {
       cle: "longueur",
-      libelle: "8 caractères au minimum",
+      libelle: "At least 8 characters",
       ok: mdp.length >= LONGUEUR_MINIMALE,
     },
     {
       cle: "casse",
-      libelle: "une minuscule et une majuscule",
+      libelle: "one small and one capital letter",
       ok: /[a-z]/.test(mdp) && /[A-Z]/.test(mdp),
     },
-    { cle: "chiffre", libelle: "un chiffre", ok: /\d/.test(mdp) },
+    { cle: "chiffre", libelle: "a number", ok: /\d/.test(mdp) },
     {
       cle: "symbole",
-      libelle: "un symbole (!, ?, #…)",
+      libelle: "a symbol (!, ?, #…)",
       ok: /[^A-Za-z0-9\s]/.test(mdp),
     },
   ];
@@ -46,10 +46,10 @@ export function evaluerMotDePasse(mdp: string) {
 
 /** La jauge : libellé + couleur par niveau (0 = trop court). */
 export const NIVEAUX_MOT_DE_PASSE = [
-  { libelle: "Trop court", couleur: "#6E6E76", segments: 0 },
-  { libelle: "Faible", couleur: "#D9534F", segments: 1 },
-  { libelle: "Moyen", couleur: "#E0A73C", segments: 2 },
-  { libelle: "Fort", couleur: "#4CAF7D", segments: 3 },
+  { libelle: "Too short", couleur: "#6E6E76", segments: 0 },
+  { libelle: "Weak", couleur: "#D9534F", segments: 1 },
+  { libelle: "Medium", couleur: "#E0A73C", segments: 2 },
+  { libelle: "Strong", couleur: "#4CAF7D", segments: 3 },
 ] as const;
 
 /** Les erreurs Supabase, traduites en français — jamais d'anglais
@@ -58,18 +58,18 @@ export function messageErreurAuth(erreur: unknown): string {
   const brut =
     erreur instanceof Error ? erreur.message.toLowerCase() : String(erreur);
   if (brut.includes("invalid login credentials"))
-    return "E-mail ou mot de passe incorrect.";
+    return "Incorrect email or password.";
   if (brut.includes("email not confirmed"))
-    return "Ton adresse n'est pas encore confirmée : ouvre l'e-mail qui t'a été envoyé.";
+    return "Your email isn't confirmed yet: open the email we sent you.";
   if (brut.includes("already registered") || brut.includes("already been registered"))
-    return "Un compte existe déjà avec cette adresse.";
+    return "An account already exists with this email.";
   if (brut.includes("password should be"))
-    return `Le mot de passe doit faire au moins ${LONGUEUR_MINIMALE} caractères.`;
+    return `Your password must be at least ${LONGUEUR_MINIMALE} characters.`;
   if (brut.includes("same password") || brut.includes("should be different"))
-    return "Le nouveau mot de passe doit être différent de l'ancien.";
+    return "The new password must be different from the old one.";
   if (brut.includes("rate limit") || brut.includes("too many"))
-    return "Trop d'essais d'affilée. Attends quelques minutes, puis réessaie.";
+    return "Too many attempts in a row. Wait a few minutes, then try again.";
   if (brut.includes("fetch") || brut.includes("network"))
-    return "Impossible de joindre le serveur. Vérifie ta connexion, puis réessaie.";
-  return "Quelque chose n'a pas marché. Réessaie.";
+    return "Can't reach the server. Check your connection, then try again.";
+  return "Something went wrong. Try again.";
 }

@@ -68,7 +68,7 @@ export async function generateImageMetadata({
   const { style, ville } = await chargerStyleVille(params.style, params.ville);
   const titre =
     style && ville
-      ? `Tatoueurs ${libelleStyle(style).toLowerCase()} à ${villeAffichee(ville.nom)}`
+      ? `${libelleStyle(style)} tattoo artists in ${villeAffichee(ville.nom)}`
       : "";
   return [
     {
@@ -77,7 +77,7 @@ export async function generateImageMetadata({
       contentType,
       alt: titre
         ? `${titre} — yokofolio`
-        : "yokofolio — Ton prochain tatouage commence par un style",
+        : "yokofolio — Your next tattoo starts with a style",
     },
   ];
 }
@@ -101,15 +101,15 @@ export default async function ImagePartageStyleVille({
       (
         <CompositionMarque
           logo={logo}
-          titre="Ton prochain tatouage commence par un style"
-          sousTitre="Compare les portfolios des tatoueurs, par style et par ville."
+          titre="Your next tattoo starts with a style"
+          sousTitre="Compare tattoo artists' portfolios, by style and city."
         />
       ),
       commun
     );
   }
 
-  const titre = `Tatoueurs ${libelleStyle(style).toLowerCase()} à ${villeAffichee(ville.nom)}`;
+  const titre = `${libelleStyle(style)} tattoo artists in ${villeAffichee(ville.nom)}`;
 
   // UNE PHOTO PAR TATOUEUR, et celle DU STYLE DEMANDÉ : c'est la même
   // règle que les cartes de la mosaïque — montrer ce qu'on est venu
@@ -138,7 +138,7 @@ export default async function ImagePartageStyleVille({
         <CompositionMarque
           logo={logo}
           titre={coupe(titre, 62)}
-          sousTitre="Compare les portfolios des tatoueurs, par style et par ville."
+          sousTitre="Compare tattoo artists' portfolios, by style and city."
           largeurTitre={1010}
         />
       ),

@@ -377,8 +377,8 @@ export async function nettoyerLeStockageDUnCompte(
 /** Le compte rendu, dit en une ligne — pour le journal du serveur. */
 export function direLeMenage(rendu: CompteRenduDuMenage): string {
   return (
-    `${rendu.effaces} fichier(s) effacé(s)` +
-    (rendu.introuvables > 0 ? `, ${rendu.introuvables} déjà absent(s)` : "") +
-    (rendu.echecs.length > 0 ? `, ${rendu.echecs.length} en échec` : "")
+    `${rendu.effaces} file(s) deleted` +
+    (rendu.introuvables > 0 ? `, ${rendu.introuvables} already gone` : "") +
+    (rendu.echecs.length > 0 ? `, ${rendu.echecs.length} failed` : "")
   );
 }

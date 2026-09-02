@@ -253,9 +253,9 @@ export function lieuDepuisFiche(
  * rend une chaîne vide : l'appelant passe au palier monde, comme pour
  * un pays inconnu. Jamais d'exception jetée à l'affichage.
  */
-function nomFrancaisDuPays(code: string): string {
+function nomDuPays(code: string): string {
   try {
-    const noms = new Intl.DisplayNames(["fr"], { type: "region" });
+    const noms = new Intl.DisplayNames(["en"], { type: "region" });
     const nom = noms.of(code) ?? "";
     return nom.toUpperCase() === code.toUpperCase() ? "" : nom;
   } catch {
@@ -269,7 +269,7 @@ export function paysDuLieu(lieu: LieuTrouve | null): LieuTrouve | null {
   if (!code) return null;
   //  Le mot du géocodeur d'abord — c'est celui que le champ affiche ;
   //  le nom du code ensuite, pour tout lieu revenu par l'adresse.
-  const nom = (lieu.pays ?? "").trim() || nomFrancaisDuPays(code);
+  const nom = (lieu.pays ?? "").trim() || nomDuPays(code);
   if (!nom) return null;
   return {
     identifiant: `pays:${code}`,

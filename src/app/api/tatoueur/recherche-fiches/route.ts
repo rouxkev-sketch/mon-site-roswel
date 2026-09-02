@@ -49,7 +49,7 @@ export async function GET(requete: Request) {
     const { data: session } = await supabase.auth.getUser();
     if (!session?.user) {
       return NextResponse.json(
-        { ok: false, message: "Connexion requise." },
+        { ok: false, message: "Login required." },
         { status: 401 }
       );
     }

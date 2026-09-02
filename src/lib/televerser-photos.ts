@@ -142,9 +142,9 @@ export async function televerserPhotos({
       ]);
       if (pleine.error) {
         throw new Error(
-          `Une photo « ${libelleStyle(photo.style)} » n'a pas pu être envoyée (${pleine.error.message}).` +
+          `A "${libelleStyle(photo.style)}" photo couldn't be uploaded (${pleine.error.message}).` +
             (reussies > 0
-              ? ` Les ${reussies} déjà en ligne sont gardées : le prochain envoi ne reprendra que le reste.`
+              ? ` The ${reussies} already online are kept: the next upload will only send the rest.`
               : "")
         );
       }

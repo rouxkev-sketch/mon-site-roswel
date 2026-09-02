@@ -26,10 +26,10 @@ export type StatutDemarchage = "envoye" | "compte_cree" | "supprime";
 export type EtatLigne = "a_envoyer" | StatutDemarchage;
 
 export const LIBELLE_ETAT_DEMARCHAGE: Record<EtatLigne, string> = {
-  a_envoyer: "À envoyer",
-  envoye: "Envoyé",
-  compte_cree: "Compte créé",
-  supprime: "Supprimé",
+  a_envoyer: "To send",
+  envoye: "Sent",
+  compte_cree: "Account created",
+  supprime: "Deleted",
 };
 
 /**
@@ -59,9 +59,9 @@ export const JOURS_APRES_SUPPRESSION = 30;
 export type TypeFiche = "artiste" | "studio" | "salon";
 
 export const LIBELLE_TYPE_FICHE: Record<TypeFiche, string> = {
-  artiste: "Artiste",
-  studio: "Studio",
-  salon: "Salon",
+  artiste: "Artist",
+  studio: "Private Studio",
+  salon: "Tattoo Shop",
 };
 
 /**
@@ -126,7 +126,7 @@ export function messageDemarchage(
   const destinataire = fiches[0].nom;
 
   const lienFiche = (f: FicheDemarchee) =>
-    f.slug ? `${adresse}/tatoueur/${f.slug}` : "(adresse en préparation)";
+    f.slug ? `${adresse}/tatoueur/${f.slug}` : "(link coming soon)";
 
   //  LE MOT JUSTE POUR CE QU'ON A PRÉPARÉ. Un artiste a un
   //  « portfolio » ; un salon et un studio ont une « page » — leur
@@ -134,18 +134,18 @@ export function messageDemarchage(
   const chose = plusieurs
     ? `${fiches.length} pages`
     : fiches[0].type === "artiste"
-      ? "un portfolio"
+      ? "a portfolio"
       : fiches[0].type === "studio"
-        ? "la page de ton studio"
-        : "la page de ton salon";
+        ? "your studio's page"
+        : "your shop's page";
 
-  const accord = plusieurs ? "elles sont" : "il est";
-  const leur = plusieurs ? "Elles sont à toi" : "Il est à toi";
+  const accord = plusieurs ? "they're" : "it's";
+  const leur = plusieurs ? "They're yours" : "It's yours";
   const surQuoi = plusieurs
-    ? `sur les ${fiches.length}`
-    : "dessus";
-  const lesRetirer = plusieurs ? "les retirer" : "le retirer";
-  const lesSupprimer = plusieurs ? "les supprimer" : "le supprimer";
+    ? `over all ${fiches.length}`
+    : "over it";
+  const lesRetirer = plusieurs ? "take them down" : "take it down";
+  const lesSupprimer = plusieurs ? "delete them" : "delete it";
 
   //  LA LISTE. Une seule fiche : son lien sur sa propre ligne, rien
   //  de plus. Plusieurs : une puce par fiche, avec son nom — sans
@@ -155,17 +155,17 @@ export function messageDemarchage(
     : lienFiche(fiches[0]);
 
   return [
-    `Salut ${destinataire} 👋`,
+    `Hey ${destinataire} 👋`,
     "",
-    "Je lance YokoFolio, un annuaire de tatoueurs classés par style.",
+    "I'm launching YokoFolio, a directory of tattoo artists sorted by style.",
     "",
-    `Je t'ai préparé ${chose} à partir de ce qui est public sur ton compte, ${accord} déjà en ligne :`,
+    `I put together ${chose} from what's public on your account, ${accord} already online:`,
     liste,
     "",
-    `${leur} si tu ${plusieurs ? "les" : "le"} veux : ce lien te donne la main ${surQuoi} (modifier, ajouter des photos, ou ${lesSupprimer}).`,
+    `${leur} if you want ${plusieurs ? "them" : "it"}: this link gives you control ${surQuoi} (edit, add photos, or ${lesSupprimer}).`,
     lienRattachement,
     "",
-    `C'est gratuit et sans engagement. Si tu préfères ne pas y figurer, le même lien te permet de ${lesRetirer}.`,
+    `It's free, no strings attached. If you'd rather not be listed, the same link lets you ${lesRetirer}.`,
   ].join("\n");
 }
 

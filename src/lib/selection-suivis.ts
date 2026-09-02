@@ -118,8 +118,8 @@ export function suivisAPlat(suivis: TatoueurSuivi[]): TatoueurSuivi[] {
 /** « 3 – 8 mars » — les deux bornes d'une session, au plus court.
     Le mois n'est écrit qu'une fois quand il est le même. */
 const MOIS_COURTS = [
-  "janvier", "février", "mars", "avril", "mai", "juin",
-  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 export function periodeDuGuest(mode: {
   debut_le: string | null;
@@ -129,11 +129,11 @@ export function periodeDuGuest(mode: {
   const [, moisD, jourD] = mode.debut_le.split("-");
   const jour = (valeur: string) => String(Number(valeur));
   const nom = (valeur: string) => MOIS_COURTS[Number(valeur) - 1] ?? "";
-  if (!mode.fin_le) return `${jour(jourD)} ${nom(moisD)}`;
+  if (!mode.fin_le) return `${nom(moisD)} ${jour(jourD)}`;
   const [, moisF, jourF] = mode.fin_le.split("-");
   return moisD === moisF
-    ? `${jour(jourD)} – ${jour(jourF)} ${nom(moisF)}`
-    : `${jour(jourD)} ${nom(moisD)} – ${jour(jourF)} ${nom(moisF)}`;
+    ? `${nom(moisF)} ${jour(jourD)}–${jour(jourF)}`
+    : `${nom(moisD)} ${jour(jourD)} – ${nom(moisF)} ${jour(jourF)}`;
 }
 
 /**
@@ -865,13 +865,13 @@ export function compteDeLaSelection({
     surLesFavoris ? (n > 1 ? "photos" : "photo") : n > 1 ? "portfolios" : "portfolio";
   //  RIEN DU TOUT — et on le dit avec le mot juste, pas avec un zéro.
   if (total === 0) {
-    return surLesFavoris ? "Aucune photo en favori" : "Aucun portfolio suivi";
+    return surLesFavoris ? "No favorite photos yet" : "No portfolios followed yet";
   }
   if (!filtreActif) return `${total} ${nom(total)}`;
   if (visibles === 0) {
-    return `${surLesFavoris ? "Aucune photo" : "Aucun portfolio"} sur ${total}`;
+    return `${surLesFavoris ? "No photos" : "No portfolios"} out of ${total}`;
   }
-  return `${visibles} ${nom(visibles)} sur ${total}`;
+  return `${visibles} ${nom(visibles)} out of ${total}`;
 }
 
 /* ==================================================================
@@ -1025,7 +1025,5 @@ export function comptesDesFavoris(
 /** « 3 nouvelles réalisations » — le compte du §5, jamais à zéro. */
 export function libelleNouveautes(nombre: number): string {
   if (nombre <= 0) return "";
-  return `${nombre} nouvelle${nombre > 1 ? "s" : ""} réalisation${
-    nombre > 1 ? "s" : ""
-  }`;
+  return `${nombre} new tattoo${nombre > 1 ? "s" : ""}`;
 }

@@ -29,7 +29,7 @@ export async function POST() {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi pour supprimer ton compte." },
+      { ok: false, message: "Log in to delete your account." },
       { status: 401 }
     );
   }
@@ -37,7 +37,7 @@ export async function POST() {
   const resultat = await demanderSuppression(user.id, user.email ?? null);
   if (!resultat.ok) {
     return NextResponse.json(
-      { ok: false, message: `Suppression impossible : ${resultat.message}` },
+      { ok: false, message: `Deletion impossible: ${resultat.message}` },
       { status: 500 }
     );
   }
@@ -47,7 +47,7 @@ export async function POST() {
   await creerNotification({
     userId: user.id,
     genre: "suppression_compte",
-    detail: `Le compte et TOUS ses portfolios sont retirés du public. Effacement définitif dans ${DELAI_SUPPRESSION_JOURS} jours — une simple reconnexion annule tout.`,
+    detail: `The account and ALL its portfolios are removed from public view. Permanent deletion in ${DELAI_SUPPRESSION_JOURS} days — simply logging back in cancels everything.`,
   });
 
   return NextResponse.json({

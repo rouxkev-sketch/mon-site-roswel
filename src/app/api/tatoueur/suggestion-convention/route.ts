@@ -64,7 +64,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Il faut être connecté pour proposer une convention.",
+        message: "You need to be logged in to suggest a convention.",
       },
       { status: 401 }
     );
@@ -86,7 +86,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `Écris le nom de la convention (${NOM_CONVENTION_MINIMUM} à ${NOM_CONVENTION_MAXIMUM} caractères).`,
+        message: `Enter the convention's name (${NOM_CONVENTION_MINIMUM} to ${NOM_CONVENTION_MAXIMUM} characters).`,
       },
       { status: 400 }
     );
@@ -99,7 +99,7 @@ export async function POST(requete: NextRequest) {
   const codePays = (corps?.codePays ?? "").trim().toUpperCase();
   if (!/^[A-Z]{2}$/.test(codePays)) {
     return NextResponse.json(
-      { ok: false, message: "Choisis le pays de cette convention." },
+      { ok: false, message: "Choose this convention's country." },
       { status: 400 }
     );
   }
@@ -107,7 +107,7 @@ export async function POST(requete: NextRequest) {
   const slug = slugifier(propose);
   if (!slug) {
     return NextResponse.json(
-      { ok: false, message: "Ce nom ne contient aucune lettre." },
+      { ok: false, message: "This name has no letters." },
       { status: 400 }
     );
   }
@@ -135,7 +135,7 @@ export async function POST(requete: NextRequest) {
         ok: false,
         refus: "existe" satisfies Refus,
         libelle: deja.nom ?? propose,
-        message: `« ${deja.nom ?? propose} » est déjà dans la liste.`,
+        message: `"${deja.nom ?? propose}" is already on the list.`,
       });
     }
 
@@ -158,7 +158,7 @@ export async function POST(requete: NextRequest) {
       return NextResponse.json({
         ok: false,
         refus: "doublon" satisfies Refus,
-        message: "Tu as déjà proposé cette convention — elle est en cours d'examen.",
+        message: "You already suggested this convention — it's under review.",
       });
     }
 
@@ -220,7 +220,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: `La demande n'a pas pu être enregistrée (migration supabase/yokofolio-conventions-et-independent.sql passée ?) : ${
+        message: `The request couldn't be saved (was the migration supabase/yokofolio-conventions-et-independent.sql run?): ${
           e instanceof Error ? e.message : String(e)
         }`,
       },

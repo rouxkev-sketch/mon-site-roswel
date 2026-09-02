@@ -28,7 +28,7 @@ import {
  */
 
 export const alt =
-  "yokofolio — Ton prochain tatouage commence par un style";
+  "yokofolio — Your next tattoo starts with a style";
 export const size = TAILLE_PARTAGE;
 export const contentType = TYPE_PARTAGE;
 
@@ -39,8 +39,8 @@ export default async function ImagePartageMarque() {
     (
       <CompositionMarque
         logo={logo}
-        titre="Ton prochain tatouage commence par un style"
-        sousTitre="Compare les portfolios des tatoueurs, par style et par ville."
+        titre="Your next tattoo starts with a style"
+        sousTitre="Compare tattoo artists' portfolios, by style and city."
       />
     ),
     { ...size, headers: { "cache-control": CACHE_PARTAGE } }

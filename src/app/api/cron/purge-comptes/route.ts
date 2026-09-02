@@ -73,13 +73,13 @@ export async function GET(request: Request) {
   const attendu = process.env.CRON_SECRET;
   if (!attendu) {
     console.error(
-      "[cron purge-comptes] REFUSÉ : la variable CRON_SECRET n'est pas configurée."
+      "[cron purge-comptes] REFUSED: the CRON_SECRET variable is not configured."
     );
     return NextResponse.json(
       {
         ok: false,
         message:
-          "Tâche désactivée : la variable CRON_SECRET n'est pas configurée sur l'hébergement.",
+          "Task disabled: the CRON_SECRET variable is not configured on the host.",
       },
       { status: 503 }
     );
@@ -87,9 +87,9 @@ export async function GET(request: Request) {
 
   const recu = secretPresente(request);
   if (!recu || !memeSecret(recu, attendu)) {
-    console.warn("[cron purge-comptes] REFUSÉ : secret absent ou incorrect.");
+    console.warn("[cron purge-comptes] REFUSED: secret missing or incorrect.");
     return NextResponse.json(
-      { ok: false, message: "Accès refusé." },
+      { ok: false, message: "Access denied." },
       { status: 401 }
     );
   }
@@ -100,10 +100,10 @@ export async function GET(request: Request) {
   // Une trace dans le journal de l'hébergeur : une suppression
   // définitive ne doit jamais être silencieuse.
   console.log(
-    `[cron purge-comptes] ${resultat.effaces} compte(s) et ` +
-      `${fiches.effacees} fiche(s) effacé(s) après ` +
-      `${DELAI_SUPPRESSION_JOURS} jours · ` +
-      `${resultat.echecs.length + fiches.echecs.length} échec(s)`
+    `[cron purge-comptes] ${resultat.effaces} account(s) and ` +
+      `${fiches.effacees} portfolio(s) deleted after ` +
+      `${DELAI_SUPPRESSION_JOURS} days · ` +
+      `${resultat.echecs.length + fiches.echecs.length} failure(s)`
   );
 
   return NextResponse.json({

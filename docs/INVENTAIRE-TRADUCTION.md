@@ -533,3 +533,37 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   des modes d'exercice sur les profils publics (« Résident », « Au
   studio »), jours de la semaine, critères de mot de passe, noms de
   pays, message de site indisponible, courriels et messages d'API.
+
+## 12 · Ce que la 805 a fait (traduction 2/3 : serveur, courriels, lib)
+
+- **Traduit** : les lots **D + E + J** — le transport des courriels et
+  ses trois appelants (les deux courriels aux artistes vivent dans des
+  routes admin : seuls leurs sujets et corps ont bougé, l'écran admin
+  reste pour la 806), les treize routes d'API, la bibliothèque (jours,
+  mois, dates et heures à l'américaine, critères de mot de passe, rendus
+  et natures, états de portfolio, messages de validation des modes,
+  message de démarchage, journaux serveur).
+- **Les pays** (§6c tranché) : le géocodeur passe en anglais
+  (`lang=en`), `nomFrancaisDuPays` devient `nomDuPays` (`en`), et la
+  table `RACCOURCIS_PAYS` de `lib/adresse` reconnaît désormais les
+  formes officielles anglaises ET françaises (celles que portent les
+  fiches écrites avant la 805) pour afficher la forme courte anglaise —
+  le « sens de lecture » est inversé sans réécrire une seule ligne de
+  base. Les variantes françaises des régions restent, comme données de
+  reconnaissance. `lib/preposition-pays.ts` (« en France », « aux
+  États-Unis ») n'avait plus d'appelant : supprimé.
+- **Trois mécanismes du §7 faits en passant**, parce qu'ils vivent dans
+  les fichiers traduits : Photon `lang`, le nom du pays, les jours de la
+  semaine. Restent pour la 806 : les tris (`localeCompare("fr")`,
+  `Intl.Collator("fr")`) et les dates de l'admin.
+- **Les gabarits Supabase** (§5b) : `docs/GABARITS-SUPABASE-EN.md`, à
+  coller à la main.
+- **Le banc** : `--francais --perimetre=D,E,J` → **0 texte français**,
+  162 exceptions déclarées (données Unicode, fiches de démonstration,
+  tables de reconnaissance des pays et régions, sondes). Deux défauts
+  d'instrument corrigés : les littéraux d'expression régulière (qui
+  désynchronisaient le découpeur sur `tatoueurs.ts`) et les
+  identifiants en majuscules (« NOM_… » lu « nom »).
+- **Reste français jusqu'à la 806** : `config/tatouage.ts` (styles,
+  motifs, rôles Fondateur/Résident, genres de mode « En salon »/« Au
+  studio », filtres), l'espace admin et ses API, `/dev`.

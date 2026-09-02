@@ -80,7 +80,7 @@ export async function chargerStylesAjoutes(): Promise<StyleAjoute[]> {
       //  d'origine et on réessaie dans une minute.
       derniereLecture = Date.now();
       console.warn(
-        "[styles ajoutés] catalogue non relu :",
+        "[added styles] catalog not reread:",
         erreur instanceof Error ? erreur.message : String(erreur)
       );
     } finally {

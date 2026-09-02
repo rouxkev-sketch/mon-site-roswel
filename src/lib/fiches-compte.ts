@@ -93,7 +93,7 @@ export async function chargerFichesDuCompte(
   if (reponse.error || !Array.isArray(reponse.data)) return [];
   return (reponse.data as Array<Record<string, unknown>>).map((ligne) => ({
     id: String(ligne.id),
-    nom: String(ligne.nom ?? "Portfolio sans nom"),
+    nom: String(ligne.nom ?? "Untitled portfolio"),
     slug: (ligne.slug as string | null) ?? null,
     publie: Boolean(ligne.publie),
     statut: (ligne.statut as string | null) ?? null,
@@ -130,12 +130,12 @@ export function etatDeLaFiche(fiche: FicheDuCompte | null): EtatFiche {
 /** Le libellé court d'un état — celui qui s'affiche dans le
     sélecteur, à côté du nom de chaque fiche. */
 export const LIBELLE_ETAT: Record<EtatFiche, string> = {
-  attente: "En validation",
-  enLigne: "En ligne",
-  modifications: "À corriger",
-  horsLigne: "Hors ligne",
-  suppression: "Suppression en cours",
-  aucune: "Brouillon",
+  attente: "Under review",
+  enLigne: "Online",
+  modifications: "Changes requested",
+  horsLigne: "Offline",
+  suppression: "Deletion in progress",
+  aucune: "Draft",
 };
 
 /** La couleur de la pastille d'état — la même grammaire partout. */

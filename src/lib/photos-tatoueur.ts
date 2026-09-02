@@ -81,9 +81,9 @@ import { libelleStyle } from "@/config/tatouage";
     les galeries d'une fiche (`seriesDeLaCategorie`,
     `rendusDuPortfolio`) le lisent tous ici. */
 export const RENDUS_PHOTO = [
-  { slug: "black", label: "Noir" },
-  { slug: "black_and_grey", label: "Noir et gris" },
-  { slug: "color", label: "Couleur" },
+  { slug: "black", label: "Black" },
+  { slug: "black_and_grey", label: "Black & grey" },
+  { slug: "color", label: "Color" },
 ] as const;
 
 export type SlugRendu = (typeof RENDUS_PHOTO)[number]["slug"];
@@ -189,7 +189,7 @@ export function renduDOuverture(
 //  libellé ne coûte rien ; renommer une clé casse tout ce qui est
 //  déjà enregistré.
 export const NATURES_PHOTO = [
-  { slug: "tatouage", label: "Réalisation" },
+  { slug: "tatouage", label: "Tattoo" },
   { slug: "flash", label: "Flash" },
 ] as const;
 

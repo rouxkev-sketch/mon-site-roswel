@@ -399,14 +399,14 @@ async function envoyerCourriel(
     const destinataire = data?.user?.email;
     if (!destinataire) return;
 
-    const sujet = accepte ? "Style ajouté" : "Style refusé";
+    const sujet = accepte ? "Style added" : "Style declined";
     const corps = [
       accepte
-        ? `Bonne nouvelle : « ${nomDuStyle} » rejoint la liste des styles de YokoFolio.`
-        : `« ${nomDuStyle} » n'a pas été retenu.`,
+        ? `Good news: "${nomDuStyle}" is now on YokoFolio's style list.`
+        : `"${nomDuStyle}" wasn't accepted.`,
       message,
       accepte
-        ? `Pour l'ajouter à ton portfolio, ouvre ta fiche et coche-le dans « Ajouter un style & des photos » :\n${adresseDuSite()}/devenir-tatoueur/fiche`
+        ? `To add it to your portfolio, open it and check it under "Add a style & photos":\n${adresseDuSite()}/devenir-tatoueur/fiche`
         : "",
       "— YokoFolio",
     ]
@@ -416,7 +416,7 @@ async function envoyerCourriel(
     await envoyerEmail(destinataire, sujet, corps);
   } catch (erreur) {
     console.warn(
-      "[suggestion de style] courriel non parti :",
+      "[style suggestion] email not sent:",
       erreur instanceof Error ? erreur.message : String(erreur)
     );
   }

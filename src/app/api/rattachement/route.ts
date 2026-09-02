@@ -50,7 +50,7 @@ export async function POST(requete: NextRequest) {
   const action = corps?.action ?? "";
   if (!jeton || !["rattacher", "supprimer", "reactiver"].includes(action)) {
     return NextResponse.json(
-      { ok: false, message: "Requête incomplète." },
+      { ok: false, message: "Incomplete request." },
       { status: 400 }
     );
   }
@@ -58,7 +58,7 @@ export async function POST(requete: NextRequest) {
   const demarchage = await lireDemarchageParJeton(jeton);
   if (!demarchage) {
     return NextResponse.json(
-      { ok: false, message: "Ce lien n'est plus valable." },
+      { ok: false, message: "This link is no longer valid." },
       { status: 404 }
     );
   }
@@ -76,7 +76,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Crée ton compte d'abord : c'est lui qui recevra les portfolios.",
+            message: "Create your account first: it will receive the portfolios.",
           },
           { status: 401 }
         );
@@ -90,7 +90,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: "Ces portfolios ont déjà été récupérés par un autre compte.",
+            message: "These portfolios were already claimed by another account.",
           },
           { status: 409 }
         );
@@ -180,7 +180,7 @@ export async function POST(requete: NextRequest) {
     return NextResponse.json(
       {
         ok: false,
-        message: e instanceof Error ? e.message : "L'opération n'a pas abouti.",
+        message: e instanceof Error ? e.message : "The operation failed.",
       },
       { status: 500 }
     );

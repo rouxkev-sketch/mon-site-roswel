@@ -73,11 +73,11 @@ export async function texteAlternatifPartage(
 ): Promise<string> {
   const { tatoueur, demonstration } = await ficheLue(slug);
   if (!tatoueur || demonstration) {
-    return "yokofolio — Ton prochain tatouage commence par un style";
+    return "yokofolio — Your next tattoo starts with a style";
   }
   const style = tags.style || tatoueur.styles[0] || "";
   return (
-    `Portfolio de ${tatoueur.nom} à ${tatoueur.ville_nom}` +
+    `${tatoueur.nom}'s portfolio in ${tatoueur.ville_nom}` +
     (style ? ` — ${libelleStyle(style)}` : "") +
     " · yokofolio"
   );
@@ -106,8 +106,8 @@ export async function imagePartageDeLaFiche(
       (
         <CompositionMarque
           logo={logo}
-          titre="Ton prochain tatouage commence par un style"
-          sousTitre="Compare les portfolios des tatoueurs, par style et par ville."
+          titre="Your next tattoo starts with a style"
+          sousTitre="Compare tattoo artists' portfolios, by style and city."
         />
       ),
       commun
@@ -137,7 +137,7 @@ export async function imagePartageDeLaFiche(
           logo={logo}
           titre={coupe(tatoueur.nom, 44)}
           sousTitre={
-            `Tatoueur à ${tatoueur.ville_nom}` +
+            `Tattoo artist in ${tatoueur.ville_nom}` +
             (style ? ` — ${libelleStyle(style)}` : "")
           }
         />

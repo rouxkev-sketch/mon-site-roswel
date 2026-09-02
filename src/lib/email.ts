@@ -66,10 +66,10 @@ export async function envoyerEmailDetaille(
 
   if (!cle) {
     console.log(
-      `\n📧 [EMAIL SIMULÉ — renseigner RESEND_API_KEY dans .env.local pour envoyer réellement]\n` +
-        `   À : ${destinataire}\n   Sujet : ${sujet}\n` +
+      `\n📧 [SIMULATED EMAIL — set RESEND_API_KEY in .env.local to really send]\n` +
+        `   To: ${destinataire}\n   Subject: ${sujet}\n` +
         (options.desinscription
-          ? `   Désinscription : ${options.desinscription}\n`
+          ? `   Unsubscribe: ${options.desinscription}\n`
           : "") +
         `   ${texte.replaceAll("\n", "\n   ")}\n`
     );

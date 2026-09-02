@@ -31,7 +31,7 @@ export async function GET() {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi pour voir tes notifications." },
+      { ok: false, message: "Log in to see your notifications." },
       { status: 401 }
     );
   }
@@ -124,7 +124,7 @@ export async function POST(requete: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json(
-      { ok: false, message: "Connecte-toi d'abord." },
+      { ok: false, message: "Log in first." },
       { status: 401 }
     );
   }
@@ -143,7 +143,7 @@ export async function POST(requete: NextRequest) {
   if (!corps?.tout) {
     if (!corps?.id) {
       return NextResponse.json(
-        { ok: false, message: "Demande incomplète." },
+        { ok: false, message: "Incomplete request." },
         { status: 400 }
       );
     }

@@ -1191,7 +1191,7 @@ function pointDeReference(
   const { latitude, longitude } = filtres;
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   return {
-    nom: filtres.lieu?.trim() || "ce lieu",
+    nom: filtres.lieu?.trim() || "this place",
     latitude: latitude as number,
     longitude: longitude as number,
   };
@@ -1767,8 +1767,8 @@ export async function listerTatoueurs(
       {
         demonstration: true,
         message: tableAbsente(raison)
-          ? "Douze tatoueurs de DÉMONSTRATION sont affichés : la table n'existe pas encore. Passer supabase/tatoueurs.sql dans l'éditeur SQL de Supabase."
-          : `Douze tatoueurs de DÉMONSTRATION sont affichés : la base est injoignable (${raison}).`,
+          ? "Twelve DEMO tattoo artists are shown: the table doesn't exist yet. Run supabase/tatoueurs.sql in the Supabase SQL editor."
+          : `Twelve DEMO tattoo artists are shown: the database is unreachable (${raison}).`,
         ville,
       }
     );
