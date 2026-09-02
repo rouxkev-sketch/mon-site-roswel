@@ -224,6 +224,23 @@ message.
 | le courriel « portfolio en cours de suppression » | sujet **Your portfolio "<nom>" will be deleted on <date>** · titre **Portfolio deletion in progress** · **You asked to delete "<nom>". It is hidden from the site right now, and it will be permanently deleted on <date> — photos included.** · **Changed your mind? You have 30 days. Reactivate it and everything comes back as it was. Your account and your other portfolios don't change.** · bouton **Reactivate my portfolio** | même écriture que le précédent |
 | la page Sécurité, après le lien d'un courriel | **Deletion canceled: your account and your portfolios are back as they were.** · **Your account is active — the deletion is canceled.** · **Deletion canceled: your portfolio is back as it was.** · erreur **Reactivation failed. Try again.** | `BlocSuppressions`, `?reactiver=…` |
 
+### Ajouts de la 820 (sorties, langue, textes, rouge)
+
+| Français | Anglais | Note |
+|---|---|---|
+| « Changer d'e-mail » (titre d'encadré, page Sécurité) | **Change email** | resté en français jusqu'à la 820 : il voyage dans une PROPRIÉTÉ de composant (`titre`), et « changer » manquait au vocabulaire du recenseur — les deux sont réparés |
+| la liste des langues | **한국어** rejoint la liste, à venir (`COMING SOON`), après **日本語** | `LANGUES_YOKOFOLIO`, config/tatouage |
+
+> **Le balayage des attributs (nº 820)** — le recenseur lit les
+> attributs d'écran (`title`, `aria-label`, `alt`, `placeholder`…) ET
+> tous les littéraux ; ce qui lui a manqué, c'est le VOCABULAIRE. Sa
+> liste de mots français s'enrichit de trente-deux verbes d'interface
+> (changer, afficher, masquer, copier, coller, vérifier, télécharger,
+> partager, quitter, créer…), tous français et français seuls : un
+> texte anglais ne peut pas être accusé par eux. Preuve faite à la
+> passe : avec l'ancien libellé en place, le recenseur en trouve un ;
+> avec le nouveau, zéro.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

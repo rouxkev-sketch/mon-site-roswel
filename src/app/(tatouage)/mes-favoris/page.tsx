@@ -64,7 +64,13 @@ export default async function PageMesFavoris() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/devenir-tatoueur?suite=${encodeURIComponent("/mes-favoris")}`);
+    /*  nº 820 — DÉCONNECTÉ, ON RENTRE À L'ACCUEIL (décision du
+        propriétaire). L'ancienne règle menait à la page de connexion
+        en gardant l'adresse en `suite` — utile quand un lien pointait
+        ici, mais « Ma sélection » n'est pas une destination qu'on
+        partage : c'est l'arrivée d'un compte. Sans compte, il n'y a
+        rien à y voir, et l'accueil est la page du visiteur. */
+    redirect("/");
   }
 
   const { photos, suivis } = await lireLesFavoris(user.id);

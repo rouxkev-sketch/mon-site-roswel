@@ -125,6 +125,26 @@ const MOTS_OUTILS_FRANCAIS = new Set([
   "recherche", "chargement", "lecture", "nouveau", "nouvelle", "mois",
   "jour", "jours", "heures", "semaine", "ville", "pays", "nom", "tatoueur",
   "tatoueurs", "tatouage", "rendu", "mot", "passe", "se", "te",
+  /*  ██ nº 820 — LES VERBES QUI MANQUAIENT, ET CE QU'ILS ONT LAISSÉ
+      PASSER ██
+      LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE : « Changer d'e-mail » est
+      resté en français sur la page Sécurité, sous les yeux d'un
+      recenseur qui rendait « 0 texte français ». La moisson, elle,
+      l'avait bien pris (tout littéral de trois caractères est lu) : ce
+      qui a manqué, c'est le JUGEMENT — le texte n'a pas d'accent, et
+      « changer » n'était pas dans cette liste. Un mot absent, un texte
+      invisible.
+      LA RÉPARATION : les verbes d'interface français les plus courants
+      qui n'y figuraient pas. ⚠️ CHACUN EST FRANÇAIS ET FRANÇAIS SEUL —
+      aucun n'existe en anglais (« change », « place », « note » ne
+      sont donc PAS dans la liste) : un texte anglais ne peut pas être
+      accusé par eux. */
+  "changer", "afficher", "masquer", "copier", "coller", "remplir",
+  "vider", "trier", "classer", "revenir", "retourner", "commencer",
+  "terminer", "essayer", "vérifier", "corriger", "remplacer",
+  "télécharger", "déplacer", "glisser", "appuyer", "toucher", "saisir",
+  "écrire", "lire", "aider", "prévenir", "partager", "publier",
+  "quitter", "rejoindre", "créer", "gérer",
 ]);
 /*  ⚠️ N'Y FIGURENT PAS, PARCE QU'ILS SONT AUSSI ANGLAIS : « la », « on »,
     « a », « son », « ton », « est », « plus », « sans », « photo »,

@@ -8,7 +8,12 @@ import {
   PARAM_REACTIVER,
   REACTIVER_COMPTE,
 } from "@/lib/reactivation";
-import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
+//  nº 820 — le départ vers l'accueil (déclaration comprise) vit dans
+//  cette écriture-là, partagée avec la déconnexion.
+import {
+  marquerLeDepartVersLAccueil,
+  partirVersLAccueil,
+} from "@/lib/depart-accueil";
 import { sansRemplissageAuto } from "@/lib/champs-sans-remplissage";
 import {
   chargerFichesDuCompte,
@@ -81,6 +86,29 @@ function Surtitre({ children }: { children: React.ReactNode }) {
     </h3>
   );
 }
+
+/**
+ * ██ §5 (nº 820) — LE ROUGE DE « DELETE », CELUI DE LA CHARTE ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : « le rouge actuel est trop vif, hors
+ * charte ». LA CAUSE, NOMMÉE : ces deux liens portaient `text-erreur`
+ * — #D32E28, le rouge des messages d'erreur, calculé pour une PAGE
+ * BLANCHE (globals.css le dit déjà : « fait pour une page blanche »).
+ * Un rouge orangé, étranger au bleu nuit du fond et à la marque.
+ * LE REMÈDE : le rouge de la charte, #E11144 (`text-primaire`, la
+ * primaire du site) — et le survol de la famille des liens d'action
+ * (PastilleAction, nº 815) : une base légèrement retenue qui s'allume
+ * au survol, jamais de soulignement. Ici, la retenue est l'opacité
+ * (85 %), l'idiome déjà en place sur ces liens ; au survol, le rouge
+ * plein, exactement #E11144.
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX LIENS (pièges nº 378/379) : le
+ * « Delete » d'un portfolio et celui du compte étaient décrits deux
+ * fois, au caractère près. Ils partagent désormais cette constante —
+ * ils ne peuvent plus diverger.
+ */
+const LIEN_SUPPRIMER =
+  `shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE} ` +
+  "text-primaire/85 hover:text-primaire transition-colors";
 
 export function BlocSuppressions() {
   const { fiches, recharger, chargement } = useFichesDuCompte();
@@ -220,6 +248,14 @@ export function BlocSuppressions() {
       if (!reponse.ok || !donnees?.ok) {
         throw new Error(donnees?.message ?? "Deletion failed.");
       }
+      /*  nº 820 — LE DÉPART EST MARQUÉ AVANT L'EFFACEMENT DE LA
+          SESSION : sans cela, la garde de cette page-ci (Securite,
+          « plus personne ici → la page de connexion ») se réveille dès
+          que la session tombe, et son `router.replace` gagne la course
+          contre le chargement de l'accueil — c'est le relevé du
+          propriétaire (« après la suppression, j'atterris sur la page
+          de connexion »). */
+      marquerLeDepartVersLAccueil();
       try {
         await creerClientSupabaseNavigateur().auth.signOut();
       } catch {
@@ -227,9 +263,10 @@ export function BlocSuppressions() {
       }
       setCompteAConfirmer(false);
       //  §1 (nº 429) — départ voulu vers l'accueil : le filet de
-      //  réparation du repli n'a pas à s'en mêler.
-      declarerDepartVouluVersLAccueil();
-      window.location.assign("/");
+      //  réparation du repli n'a pas à s'en mêler. L'écriture vit
+      //  désormais dans lib/depart-accueil, partagée avec la
+      //  déconnexion (nº 820).
+      partirVersLAccueil();
     } catch (e) {
       setErreur(
         e instanceof Error ? e.message : "Deletion failed."
@@ -387,8 +424,7 @@ export function BlocSuppressions() {
                   setErreur(null);
                   setFicheAConfirmer(fiche);
                 }}
-                className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
-                           text-erreur/85 hover:text-erreur transition-colors`}
+                className={LIEN_SUPPRIMER}
               >
                 Delete
               </button>
@@ -443,8 +479,7 @@ export function BlocSuppressions() {
             setErreur(null);
             setCompteAConfirmer(true);
           }}
-          className={`shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE}
-                     text-erreur/85 hover:text-erreur transition-colors`}
+          className={LIEN_SUPPRIMER}
         >
           Delete
         </button>

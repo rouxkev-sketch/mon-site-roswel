@@ -102,6 +102,8 @@ import type { NatureEtablissement } from "@/config/tatouage";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { redirectionDeGarde } from "@/lib/journal-de-bord";
+//  nº 820 — un départ voulu vers l'accueil ne se double pas.
+import { leDepartVersLAccueilEstEnCours } from "@/lib/depart-accueil";
 import { marquerTravailEnCours } from "@/lib/travail-en-cours";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 //  §1 (nº 645) — l'avatar de la barre, rangé dans la session : une
@@ -2808,6 +2810,10 @@ export function FormulaireFiche() {
   //  allers normaux, consigne chacun d'eux, et COUPE au-delà de
   //  trois dans la fenêtre — la page s'immobilise au lieu de mourir.
   useEffect(() => {
+    //  nº 820 — un DÉPART VOULU VERS L'ACCUEIL (déconnexion, compte
+    //  supprimé) efface la session et réveille cette garde : elle se
+    //  tait, le trajet est déjà décidé (lib/depart-accueil).
+    if (leDepartVersLAccueilEstEnCours()) return;
     if (
       pret &&
       !utilisateur &&

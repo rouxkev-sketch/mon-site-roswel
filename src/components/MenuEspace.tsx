@@ -135,6 +135,12 @@ import {
 //  composant vit dans le tronc, et son import direct pesait 62 Ko
 //  compressés sur toutes les pages (voir client-a-la-demande).
 import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
+//  nº 820 — quitter son compte mène à l'accueil, et le trajet est
+//  déclaré pour que les gardes des pages du compte ne le doublent pas.
+import {
+  marquerLeDepartVersLAccueil,
+  partirVersLAccueil,
+} from "@/lib/depart-accueil";
 import { travailEnCours } from "@/lib/travail-en-cours";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import { useAppareilMobile } from "@/lib/appareil";
@@ -1331,16 +1337,26 @@ export function MenuEspace({
   /* Échap referme l'avertissement — c'est la fenêtre partagée
      (FenetreNonEnregistre) qui s'en charge elle-même. */
 
-  /** DÉCONNEXION SANS REDIRECTION FORCÉE : la session s'efface, la
-      page réagit d'elle-même.
-      ⚠️ CE QUE ÇA DONNE DEPUIS LA PASSE Nº 133 : les pages du compte
-      (formulaire de portfolio, Sécurité) MÈNENT DROIT à la page de
-      connexion — l'écran « Connecte-toi d'abord » qui s'y affichait
-      n'existe plus. Les pages publiques, elles, continuent comme si
-      de rien n'était : la barre repasse simplement aux boutons de
-      visiteur. Rien n'arrache le lecteur à ce qu'il regardait. */
+  /** ██ nº 820 — SE DÉCONNECTER MÈNE À L'ACCUEIL ██
+      L'ANCIENNE RÈGLE (nº 133) laissait la page telle quelle : « la
+      session s'efface, la page réagit d'elle-même ». Les pages du
+      compte menaient alors à la page de connexion, et les pages
+      publiques ne bougeaient pas — mais « Ma sélection », qui est
+      publique de structure, restait à l'écran AVEC LES FAVORIS DE LA
+      PERSONNE QUI VIENT DE PARTIR. Le propriétaire tranche : on rentre
+      à l'accueil, d'où qu'on parte.
+      ⚠️ ON ATTEND QUE LA SESSION SOIT VRAIMENT EFFACÉE avant de
+      partir : `signOut` écrit le stockage (le cookie EST la session,
+      @supabase/ssr) ; couper le fil avant la fin laisserait un cookie
+      vivant, et l'accueil se peindrait connecté. Le menu, lui, s'est
+      déjà refermé — la personne ne voit aucune attente.
+      ⚠️ LE DÉPART EST MARQUÉ AVANT L'EFFACEMENT (lib/depart-accueil) :
+      sans cela, les gardes des pages du compte, réveillées par la
+      session qui disparaît, filent à la page de connexion et gagnent
+      la course. */
   function deconnecter() {
     setOuvert(false);
+    marquerLeDepartVersLAccueil();
     /*  §1 (nº 703) — le client arrive à la demande. La fenêtre s'est
         DÉJÀ refermée à la ligne du dessus : la personne ne voit aucune
         attente, et l'appel part derrière. */
@@ -1358,7 +1374,9 @@ export function MenuEspace({
       .then((supabase) => supabase.auth.signOut({ scope: "local" }))
       .catch(() => {
         // Serveur injoignable : la session locale est déjà effacée.
-      });
+      })
+      //  nº 820 — et l'on rentre à l'accueil, dans tous les cas.
+      .finally(partirVersLAccueil);
   }
 
   /** UNE ENTRÉE DU MENU — icône, libellé, action. LES QUATRE ENTRÉES

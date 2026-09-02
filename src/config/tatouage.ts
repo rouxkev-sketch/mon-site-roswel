@@ -116,6 +116,13 @@ export const LANGUES_YOKOFOLIO = [
   { code: "it", label: "Italiano", actif: false },
   { code: "pt", label: "Português", actif: false },
   { code: "ja", label: "日本語", actif: false },
+  //  §3 (nº 820) — LE CORÉEN entre dans la liste, à venir comme les
+  //  autres : il suit le japonais, la place que l'ordre de la liste
+  //  lui donne (les alphabets latins d'abord, dans leur ordre, puis
+  //  les autres écritures). Rien d'autre ne change : `actif: false`
+  //  suffit à le ranger dans « bientôt », et le sélecteur s'en occupe
+  //  seul (SelecteurLangue lit `actif`, il ne connaît aucune langue).
+  { code: "ko", label: "한국어", actif: false },
 ];
 
 /**

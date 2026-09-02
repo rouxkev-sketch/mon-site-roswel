@@ -3,6 +3,8 @@
 //  nº 819 — le paramètre des courriels de suppression (`?reactiver=…`),
 //  gardé en `suite` quand il faut d'abord se connecter.
 import { PARAM_REACTIVER } from "@/lib/reactivation";
+//  nº 820 — un départ voulu vers l'accueil ne se double pas.
+import { leDepartVersLAccueilEstEnCours } from "@/lib/depart-accueil";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -460,6 +462,14 @@ export function Securite() {
      qu'il fallait un compte, et un bouton qui n'allait qu'à un seul
      endroit. On y va directement. */
   useEffect(() => {
+    /*  nº 820 — UN DÉPART VOULU VERS L'ACCUEIL NE SE DOUBLE PAS : se
+        déconnecter, ou supprimer son compte, efface la session — ce
+        qui réveille cette garde. Elle filait alors à la page de
+        connexion et gagnait la course contre le chargement de
+        l'accueil (le relevé du propriétaire). Elle ne sert qu'à
+        raccompagner quelqu'un qui n'a rien à faire ici ; quand le
+        trajet est déjà décidé, elle se tait (lib/depart-accueil). */
+    if (leDepartVersLAccueilEstEnCours()) return;
     if (pret && !utilisateur) {
       /*  nº 819 — LE BOUTON D'UN COURRIEL DE SUPPRESSION SURVIT À LA
           CONNEXION : un compte qui vient de demander sa suppression est
@@ -548,7 +558,13 @@ export function Securite() {
           blocs sur téléphone, 24 sur le web. */}
       <div className="mt-10 sm:mt-8 flex flex-col gap-8 sm:gap-6">
         {/* ---------- 1 · CHANGER D'E-MAIL ---------- */}
-        <Bloc titre="Changer d'e-mail">
+        {/*  §4 (nº 820) — « Changer d'e-mail » était resté en français,
+             et l'instrument ne l'a pas vu : le titre voyage dans une
+             PROPRIÉTÉ de composant (`titre`), et le mot « changer »
+             manquait au vocabulaire du recenseur (scripts/recenser-
+             textes, corrigé à cette passe). Le libellé prend la forme
+             de son voisin, « Change password ». */}
+        <Bloc titre="Change email">
           {/* L'ADRESSE EN COURS — un fond élevé, sans contour : c'est
               un badge d'information, le niveau au-dessus de la carte. */}
           <div className="flex items-center gap-3 rounded-lg bg-sombre-eleve px-4 py-3">
