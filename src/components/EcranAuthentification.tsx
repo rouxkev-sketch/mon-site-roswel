@@ -631,15 +631,20 @@ export function EcranAuthentification({
               faux, pas après. Le faire surgir à l'échec, c'est le
               cacher précisément à qui le cherchait.
               Connexion uniquement — on n'oublie pas un mot de passe
-              qu'on est en train de choisir. */}
+              qu'on est en train de choisir.
+              ██ nº 816 — SA ROBE, DÉCISION DU PROPRIÉTAIRE : gris doux
+              par défaut (inchangé), LE BLEU DES LIENS D'ACTION au survol
+              (`sombre-lien`, celui de « Unlink » / « Link ») à la place
+              du rouge, et JAMAIS souligné — ni par défaut ni au survol
+              (le `underline underline-offset-4` d'avant est parti). Plus
+              aucun lien rouge ni souligné sur les deux formulaires. */}
           {!creer && (
             <p className="mt-2 text-right">
               <button
                 type="button"
                 onClick={demanderReinitialisation}
                 disabled={enCours}
-                className="text-[13px] text-sombre-texte-doux underline
-                           underline-offset-4 hover:text-primaire
+                className="text-[13px] text-sombre-texte-doux hover:text-sombre-lien
                            transition-colors disabled:opacity-60"
               >
                 Forgot your password?
@@ -747,11 +752,19 @@ export function EcranAuthentification({
            ██ nº 814 — LE LIEN MÈNE AUX TERMS OF USE (/terms), et les
            nomme : « site rules » menait à la page légale, qui n'était
            pas un contrat. Un compte se crée en acceptant un document
-           qui a un nom — c'est ce que l'usage américain attend. */}
+           qui a un nom — c'est ce que l'usage américain attend.
+           ██ nº 816 — SA ROBE, DÉCISION DU PROPRIÉTAIRE : LE BLEU DES
+           LIENS D'ACTION d'office (`sombre-lien`, #7FA9EE, celui de
+           « Unlink » / « Link » et des pages légales depuis la nº 815),
+           éclairci au survol (`sombre-lien-clair`), et JAMAIS souligné
+           — ni par défaut ni au survol. Plus de rouge. */}
       {creer && (
       <p className="mt-8 text-center text-[13px] leading-relaxed text-sombre-texte-doux">
         By creating an account, you accept the{" "}
-        <Link href={CHEMIN_TERMS} className="text-primaire hover:underline">
+        <Link
+          href={CHEMIN_TERMS}
+          className="text-sombre-lien hover:text-sombre-lien-clair transition-colors"
+        >
           Terms of Use
         </Link>
         . Your email is only used for your account — never for ads.
