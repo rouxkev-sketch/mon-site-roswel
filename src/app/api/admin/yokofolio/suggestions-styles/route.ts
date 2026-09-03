@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { catalogueStyles, FAMILLES_STYLES } from "@/config/tatouage";
 import { verifierAdmin } from "@/lib/admin-yokofolio";
-import { adresseDuSite, envoyerEmail } from "@/lib/email";
+import { adresseDuSite, envoyerEmailDetaille } from "@/lib/email";
 //  nº 817 — l'habillage des courriels du site, écrit une fois.
 import { habillerCourriel } from "@/lib/courriel-habille";
 import { creerNotification } from "@/lib/notifications";
@@ -584,11 +584,20 @@ type EtatCourriel =
   | "envoye"
   | "simule"
   | "echec"
+  //  nº 833 — DISTINGUÉ DE « echec » : celui-ci n'a jamais atteint
+  //  Resend (préparation du courriel), et l'écran ne doit pas renvoyer
+  //  le propriétaire vers les journaux du service d'envoi pour rien.
+  | "echec-avant-envoi"
   | "sans-compte"
   | "sans-adresse";
 
-/** Ce que l'administration reçoit : l'état, et à qui on a écrit. */
-export type SortDuCourriel = { etat: EtatCourriel; destinataire: string | null };
+/** Ce que l'administration reçoit : l'état, à qui on a écrit, et —
+    nº 833 — l'identifiant que Resend rend pour un envoi accepté. */
+export type SortDuCourriel = {
+  etat: EtatCourriel;
+  destinataire: string | null;
+  identifiant?: string | null;
+};
 
 function noter(quoi: string): void {
   console.error(`📧 STYLE — ${quoi}`);
@@ -620,44 +629,106 @@ async function envoyerCourriel(
       return { etat: "sans-adresse", destinataire: null };
     }
 
-    const sujet = accepte ? "Style added" : "Style declined";
+    /*  ██ §1 (nº 833) — LES DEUX TEXTES, RÉÉCRITS PAR LE PROPRIÉTAIRE ██
+        Ils disaient « Style added » / « Style declined » et récitaient
+        l'état d'un dossier. Les nouveaux parlent à quelqu'un : une
+        bonne nouvelle qu'on partage, un refus qui remercie et qui
+        rappelle. Ce sont SES phrases, au mot près. */
+    const sujet = accepte ? "Your style is live!" : "About your style suggestion";
     /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
-        phrases qu'avant, dans la charte du site ; le lien vers le
-        portfolio devient le bouton rouge. Le texte nu part à côté. */
+        phrases, dans la charte du site ; le lien d'action part avec.
+        Le texte nu part à côté. */
     const courriel = habillerCourriel({
       titre: sujet,
       paragraphes: [
         accepte
-          ? `Good news: "${nomDuStyle}" is now on YokoFolio's style list.`
-          : `"${nomDuStyle}" wasn't accepted.`,
+          ? `Great news — "${nomDuStyle}" is now part of YokoFolio's style catalog. Thanks for helping the collection grow.`
+          : `Thanks for suggesting "${nomDuStyle}" — we appreciate it. This one didn't make the cut this time, but keep them coming.`,
         message,
-        accepte
-          ? 'To add it to your portfolio, open it and check it under "Add a style & photos".'
-          : "",
       ].filter(Boolean),
-      action: accepte
-        ? { libelle: "Open my portfolio", url: `${adresseDuSite()}/devenir-tatoueur/fiche` }
-        : null,
+      action: lienDuPortfolio(accepte),
     });
 
-    //  LE RÉSULTAT SE LIT AUSSI : « echec » veut dire que Resend a
-    //  refusé, et `lib/email` a déjà écrit la raison exacte (nº 830).
-    const resultat = await envoyerEmail(
+    /*  ██ §2 (nº 833) — L'IDENTIFIANT DE L'ENVOI REMONTE ██
+        LE DÉFAUT DU PROPRIÉTAIRE : le courriel de REFUS arrive, celui
+        d'ACCEPTATION non — et l'écran disait « Email sent » pour les
+        deux. Il manquait de quoi trancher entre « il n'est jamais
+        parti » et « il est parti et le destinataire ne l'a pas vu ».
+        Resend rend un IDENTIFIANT à chaque envoi accepté ; c'est lui
+        qui permet d'ouvrir resend.com/emails et de lire le sort réel
+        du message (remis, rejeté, signalé). `envoyerEmail` le jetait ;
+        on passe donc par `envoyerEmailDetaille`, qui le rend. */
+    const { resultat, id } = await envoyerEmailDetaille(
       destinataire,
       sujet,
       courriel.texte,
-      courriel.html
+      { html: courriel.html }
     );
     if (resultat === "echec") {
       noter(`l'envoi à ${destinataire} a été REFUSÉ (la raison est au-dessus).`);
+    } else {
+      noter(`envoi « ${sujet} » à ${destinataire} — identifiant Resend ${id ?? "(aucun)"}.`);
     }
-    return { etat: resultat, destinataire };
+    return { etat: resultat, destinataire, identifiant: id };
   } catch (erreur) {
+    /*  ⚠️ CE N'EST PAS RESEND QUI A REFUSÉ ICI, et le dire compte : une
+        exception à ce point vient de la préparation du courriel (une
+        adresse de site absente, une lecture de compte qui expire), pas
+        du service d'envoi. L'écran d'administration distingue les deux
+        depuis cette passe. */
     noter(
-      `l'envoi n'a pas abouti — ${
+      `l'envoi n'a pas abouti AVANT d'atteindre Resend — ${
         erreur instanceof Error ? erreur.message : String(erreur)
       }`
     );
-    return { etat: "echec", destinataire: null };
+    return { etat: "echec-avant-envoi", destinataire: null };
+  }
+}
+
+/**
+ * ██ §3 (nº 833) — LE LIEN D'ACTION NE PEUT PLUS TUER L'ENVOI ██
+ * ------------------------------------------------------------------
+ * LA PISTE QUI SEMBLAIT ÉVIDENTE, ET QUE LA MESURE A ÉCARTÉE. La seule
+ * différence de code entre les deux courriels était ici : la branche
+ * ACCEPTATION appelait `adresseDuSite()` pour composer l'adresse du
+ * bouton, celle du REFUS jamais. Or `adresseDuSite()` LÈVE en
+ * production quand `NEXT_PUBLIC_SITE_URL` manque (lib/site — une panne
+ * franche voulue). L'explication tenait debout : l'exception tombe
+ * dans le `catch` ci-dessus, et seul l'e-mail d'acceptation meurt.
+ *
+ * DEUX MESURES L'ONT DÉMENTIE, et je les écris parce qu'elles valent
+ * plus que l'hypothèse :
+ *  1. un site bâti PUIS servi sans cette variable envoie quand même
+ *     les deux courriels, bouton compris ;
+ *  2. la lui retirer à l'exécution ne change rien non plus — les
+ *     variables `NEXT_PUBLIC_*` sont CUITES DANS LE BÂTI, et c'est la
+ *     valeur du jour du bâti qui sert au runtime.
+ * ⚠️ ET `habillerCourriel` L'APPELLE AUSSI, par défaut de paramètre :
+ * si elle levait vraiment, LES DEUX courriels tomberaient, pas un
+ * seul. L'asymétrie n'aurait donc pas pu produire ce que le
+ * propriétaire décrit.
+ *
+ * CE QUI RESTE, ET POURQUOI ON LE GARDE : un courriel ne doit jamais
+ * échouer parce que son BOUTON n'a pas pu être composé. Le lien est un
+ * supplément ; s'il ne peut pas être fait, le courriel part sans lui et
+ * le journal dit pourquoi. La cause de la panne du propriétaire, elle,
+ * se lira dans l'identifiant Resend du §2.
+ */
+function lienDuPortfolio(
+  accepte: boolean
+): { libelle: string; url: string } | null {
+  if (!accepte) return null;
+  try {
+    return {
+      libelle: "Open my portfolio",
+      url: `${adresseDuSite()}/devenir-tatoueur/fiche`,
+    };
+  } catch (erreur) {
+    noter(
+      `le courriel part SANS son bouton — ${
+        erreur instanceof Error ? erreur.message : String(erreur)
+      }`
+    );
+    return null;
   }
 }

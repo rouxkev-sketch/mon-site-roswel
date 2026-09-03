@@ -340,8 +340,15 @@ function dateCourte(iso: string | null | undefined): string {
 function sortDuCourriel(
   sort:
     | {
-        etat: "envoye" | "simule" | "echec" | "sans-compte" | "sans-adresse";
+        etat:
+          | "envoye"
+          | "simule"
+          | "echec"
+          | "echec-avant-envoi"
+          | "sans-compte"
+          | "sans-adresse";
         destinataire: string | null;
+        identifiant?: string | null;
       }
     | undefined
 ): { texte: string; bon: boolean } | null {
@@ -349,7 +356,25 @@ function sortDuCourriel(
   const a = sort.destinataire ? ` to ${sort.destinataire}` : "";
   switch (sort.etat) {
     case "envoye":
-      return { texte: `Email sent${a}.`, bon: true };
+      /*  §2 (nº 833) — L'IDENTIFIANT EST LA PREUVE. « Email sent » ne
+          suffisait pas : le propriétaire voyait ce message pour un
+          courriel qui n'arrivait jamais, sans pouvoir dire s'il était
+          parti. Avec l'identifiant, resend.com/emails donne le sort
+          réel du message — remis, rejeté, ou signalé comme
+          indésirable. */
+      return {
+        texte: sort.identifiant
+          ? `Email sent${a} — Resend id ${sort.identifiant} (check its delivery on resend.com/emails).`
+          : `Email sent${a}.`,
+        bon: true,
+      };
+    case "echec-avant-envoi":
+      return {
+        texte:
+          "No email: it couldn't even be prepared — see the server logs " +
+          "(this is not a Resend refusal).",
+        bon: false,
+      };
     case "simule":
       return {
         texte: `Email simulated${a} — no RESEND_API_KEY on this server.`,
@@ -825,8 +850,15 @@ export function AdminYokofolio() {
         ok: boolean;
         message?: string;
         courriel?: {
-          etat: "envoye" | "simule" | "echec" | "sans-compte" | "sans-adresse";
+          etat:
+            | "envoye"
+            | "simule"
+            | "echec"
+            | "echec-avant-envoi"
+            | "sans-compte"
+            | "sans-adresse";
           destinataire: string | null;
+          identifiant?: string | null;
         };
       };
       if (!donnees.ok) throw new Error(donnees.message);

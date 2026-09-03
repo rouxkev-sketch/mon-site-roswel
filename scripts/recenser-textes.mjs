@@ -114,7 +114,11 @@ const EXCEPTIONS = [
     //  ⚠️ CIBLÉE SUR LES LIGNES DE JOURNAL, PAS SUR LE FICHIER : celui-ci
     //  porte aussi de vrais textes d'écran (les messages d'erreur de la
     //  route), et ceux-là doivent rester surveillés.
-    texte: /^(la demande n'a pas d'auteur|le compte \$\{userId\}|l'envoi )/,
+    //  nº 833 — deux journaux de plus : la trace d'un envoi accepté
+    //  (avec l'identifiant Resend, la pièce qui manquait) et le
+    //  courriel parti sans son bouton.
+    texte:
+      /^(la demande n'a pas d'auteur|le compte \$\{userId\}|l'envoi |envoi «|le courriel part SANS)/,
     raison:
       "lignes de JOURNAL SERVEUR (passe nº 832) : elles disent pourquoi le courriel d'une décision de style n'est pas parti — la panne que le propriétaire a signalée, et qu'aucune trace ne nommait. Écrites pour lui, dans les journaux de l'hébergeur",
   },
