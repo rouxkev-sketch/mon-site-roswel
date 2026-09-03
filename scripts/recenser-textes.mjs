@@ -102,6 +102,22 @@ const EXCEPTIONS = [
     fichier: /^src\/lib\/email\.ts$/,
     raison: "ce fichier n'écrit RIEN à l'écran : il expédie des courriels dont le contenu vient d'ailleurs (lib/courriel-habille). Ses seules chaînes françaises sont des lignes de JOURNAL SERVEUR, écrites pour le propriétaire quand un envoi est refusé (passe nº 830) — elles disent la cause et le geste qui la règle, et un propriétaire francophone doit pouvoir les lire",
   },
+  /*  ── nº 831 ── */
+  {
+    fichier: /^src\/lib\/diagnostic-variables\.ts$/,
+    raison:
+      "ce module n'écrit RIEN à l'écran du site : il rend l'état de la chaîne de déploiement à la route d'administration `diagnostic-courriel`, lue par le seul propriétaire. Ses chaînes françaises NOMMENT UNE CAUSE (« la ligne existe dans un fichier .env mais elle est vide », « la valeur répète le nom de la variable ») — c'est le sujet même de la passe nº 831, et un propriétaire francophone doit pouvoir les lire",
+  },
+  /*  ── nº 832 ── */
+  {
+    fichier: /^src\/app\/api\/admin\/yokofolio\/suggestions-styles\/route\.ts$/,
+    //  ⚠️ CIBLÉE SUR LES LIGNES DE JOURNAL, PAS SUR LE FICHIER : celui-ci
+    //  porte aussi de vrais textes d'écran (les messages d'erreur de la
+    //  route), et ceux-là doivent rester surveillés.
+    texte: /^(la demande n'a pas d'auteur|le compte \$\{userId\}|l'envoi )/,
+    raison:
+      "lignes de JOURNAL SERVEUR (passe nº 832) : elles disent pourquoi le courriel d'une décision de style n'est pas parti — la panne que le propriétaire a signalée, et qu'aucune trace ne nommait. Écrites pour lui, dans les journaux de l'hébergeur",
+  },
   {
     fichier: /^src\/lib\/adresse\.ts$/,
     raison: "tables de RECONNAISSANCE : les noms français (Californie, Québec, Brésil, République française…) servent à reconnaître ce que rend le géocodeur ou ce que porte une vieille fiche, jamais à l'afficher — ce qui s'affiche est la colonne de droite, anglaise depuis la nº 805 (USA, UK, Germany, TX, QC)",

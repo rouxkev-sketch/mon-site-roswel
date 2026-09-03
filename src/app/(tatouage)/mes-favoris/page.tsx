@@ -5,6 +5,14 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { lireLesFavoris } from "@/lib/favoris-serveur";
 import { BarreSelection } from "@/components/BarreSelection";
 import { PageFavoris } from "@/components/PageFavoris";
+//  nº 832 — le bouton « Reactivate my account » d'un courriel de
+//  suppression arrive ICI depuis cette passe (lib/reactivation, §1).
+import { ReactivationParCourriel } from "@/components/ReactivationParCourriel";
+import {
+  CHEMIN_MA_SELECTION,
+  PARAM_REACTIVER,
+  connexionEnGardantLaReactivation,
+} from "@/lib/reactivation";
 //  nº 819 — la bienvenue se décide ICI, au serveur, qui connaît le
 //  compte : le HTML porte le bon bloc, rien d'autre n'est jamais peint.
 import { doitMontrerLaBienvenue } from "@/lib/bienvenue-regle";
@@ -57,11 +65,34 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PageMesFavoris() {
+export default async function PageMesFavoris({
+  searchParams,
+}: {
+  //  Next 16 : les paramètres d'adresse arrivent en promesse.
+  searchParams: Promise<{ [cle: string]: string | string[] | undefined }>;
+}) {
   const supabase = await creerClientSupabaseServeur();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  /*  nº 832 — LE BOUTON « Reactivate my account » ARRIVE ICI. Le
+      courriel de suppression de compte dépose désormais sur cette
+      page (lib/reactivation, §1) avec `?reactiver=compte`, et celui
+      qui clique est presque toujours DÉCONNECTÉ : demander la
+      suppression déconnecte. Le renvoi ci-dessous doit donc garder
+      l'adresse, sans quoi le geste est perdu. */
+  const parametres = await searchParams;
+  const reactiver = parametres[PARAM_REACTIVER];
+
+  if (!user && typeof reactiver === "string" && reactiver.length > 0) {
+    redirect(
+      connexionEnGardantLaReactivation(
+        CHEMIN_MA_SELECTION,
+        `?${PARAM_REACTIVER}=${encodeURIComponent(reactiver)}`
+      )
+    );
+  }
 
   if (!user) {
     /*  nº 820 — DÉCONNECTÉ, ON RENTRE À L'ACCUEIL (décision du
@@ -148,6 +179,10 @@ export default async function PageMesFavoris() {
         entreesFavoris={entreesFavoris}
         entreesSuivis={entreesSuivis}
       />
+      {/*  nº 832 — LE GESTE DU COURRIEL DE SUPPRESSION DE COMPTE : il
+           lit `?reactiver=compte`, annule, puis efface le paramètre.
+           Il ne peint rien tant qu'il n'a rien à dire. */}
+      <ReactivationParCourriel />
       {/*  §1 (nº 253) — LA PAGE N'A PLUS BESOIN DES ENTRÉES : les deux
            menus sont retournés à la barre, seule à commander.
            La mise en page, elle, vient du fournisseur au-dessus. */}

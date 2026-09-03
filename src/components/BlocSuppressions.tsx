@@ -2,12 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { DELAI_SUPPRESSION_JOURS } from "@/config/tatouage";
-//  nº 819 — le bouton des courriels de suppression (`?reactiver=…`).
-import {
-  CHEMIN_SECURITE,
-  PARAM_REACTIVER,
-  REACTIVER_COMPTE,
-} from "@/lib/reactivation";
 //  nº 820 — le départ vers l'accueil (déclaration comprise) vit dans
 //  cette écriture-là, partagée avec la déconnexion.
 import {
@@ -130,10 +124,6 @@ export function BlocSuppressions() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState("");
-  /** nº 819 — ce qu'une réactivation venue d'un courriel a fait : une
-      information sur fond élevé (la règle de la page, nº 134), pas un
-      accent. `null` tant qu'aucun lien n'a été suivi. */
-  const [message, setMessage] = useState<string | null>(null);
 
   /**
    * ██ §2 (nº 784) — UN PORTFOLIO, UNE SEULE MENTION ██
@@ -156,10 +146,11 @@ export function BlocSuppressions() {
   const enSuppression = fiches.filter((f) => f.purge_le);
   const encoreSupprimables = fiches.filter((f) => !f.purge_le);
 
-  /*  nº 819 — MÉMORISÉE (`useCallback`) ET ELLE DIT SI ELLE A ABOUTI :
-      l'effet du lien de réactivation, plus bas, l'appelle une fois au
-      montage et a besoin d'une référence stable et d'une réponse. Le
-      corps, lui, ne change pas. */
+  /*  nº 819 — MÉMORISÉE (`useCallback`) ET ELLE DIT SI ELLE A ABOUTI.
+      ⚠️ nº 832 — CE N'EST PLUS L'EFFET DU LIEN DE COURRIEL QUI L'APPELLE
+      (il est parti dans `ReactivationParCourriel`) : la référence reste
+      stable pour les boutons de la liste, et la réponse sert à savoir
+      s'il faut refermer la demande de confirmation. */
   const demanderSuppressionFiche = useCallback(
     async (id: string, annuler: boolean): Promise<boolean> => {
       setEnCours(true);
@@ -191,56 +182,14 @@ export function BlocSuppressions() {
     [recharger]
   );
 
-  /*  ██ nº 819 — LE BOUTON DES COURRIELS DE SUPPRESSION ██
-      « Reactivate my account » / « Reactivate my portfolio » mènent ICI
-      avec `?reactiver=compte` ou `?reactiver=<identifiant>`
-      (lib/reactivation). On joue l'annulation EXISTANTE — la route de
-      réactivation du compte (celle de la reconnexion, nº 313), ou la
-      suppression de portfolio jouée à l'envers (`annuler: true`, comme
-      « Cancel » ci-dessous) — puis on EFFACE le paramètre de l'adresse
-      (`replaceState`, que le routeur suit) : un rechargement ne rejoue
-      rien. Une seule fois, au montage ; la fonction est stable. */
-  useEffect(() => {
-    const cible = new URLSearchParams(window.location.search).get(
-      PARAM_REACTIVER
-    );
-    if (!cible) return;
-    window.history.replaceState(window.history.state, "", CHEMIN_SECURITE);
-    void (async () => {
-      if (cible !== REACTIVER_COMPTE) {
-        if (await demanderSuppressionFiche(cible, true)) {
-          setMessage("Deletion canceled: your portfolio is back as it was.");
-        }
-        return;
-      }
-      setEnCours(true);
-      setErreur(null);
-      try {
-        const reponse = await fetch("/api/tatoueur/reactiver", {
-          method: "POST",
-        });
-        const donnees = (await reponse.json().catch(() => null)) as {
-          ok?: boolean;
-          reactive?: boolean;
-        } | null;
-        if (!reponse.ok || !donnees?.ok) {
-          throw new Error("Reactivation failed. Try again.");
-        }
-        setMessage(
-          donnees.reactive
-            ? "Deletion canceled: your account and your portfolios are back as they were."
-            : "Your account is active — the deletion is canceled."
-        );
-      } catch (e) {
-        setErreur(
-          e instanceof Error ? e.message : "Reactivation failed. Try again."
-        );
-      } finally {
-        setEnCours(false);
-      }
-    })();
-  }, [demanderSuppressionFiche]);
-
+  /*  ██ nº 832 — LE GESTE DU COURRIEL A DÉMÉNAGÉ ██
+      L'effet qui vivait ici lisait `?reactiver=` et jouait l'annulation
+      (nº 819). Il devait servir sur TROIS pages — les deux nouvelles
+      destinations des courriels (« My portfolio », « My selection ») et
+      celle-ci, pour les courriels déjà partis. Il est donc sorti dans
+      `components/ReactivationParCourriel`, monté sur les trois : une
+      seule écriture du geste (piège nº 378), et cette page n'en garde
+      rien — pas même le message, qui s'affiche là où l'on arrive. */
   async function supprimerLeCompte() {
     if (confirmation.trim().toUpperCase() !== "DELETE") return;
     setEnCours(true);
@@ -499,19 +448,10 @@ export function BlocSuppressions() {
            échoué (le serveur n'a pas répondu, la suppression n'a pas
            abouti). Le standard de la nº 788 vise les erreurs de SAISIE,
            qui ont un champ à désigner ; celle-ci n'en a aucun. */}
-      {/*  nº 819 — ce que le lien d'un courriel de suppression a fait :
-           une information sur fond élevé (la règle de la page Sécurité,
-           nº 134 / nº 788 — mêmes classes que son `MESSAGE`, qu'on ne
-           peut pas importer d'ici sans boucler). */}
-      {message && (
-        <p
-          role="status"
-          className="rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px]
-                     leading-relaxed text-sombre-texte"
-        >
-          {message}
-        </p>
-      )}
+      {/*  nº 832 — LE MESSAGE DE RÉACTIVATION N'EST PLUS ICI : il
+           s'affiche sur la page où le courriel dépose désormais (« My
+           portfolio » ou « My selection »), portée par
+           `ReactivationParCourriel`. */}
       {erreur && (
         <p
           role="alert"

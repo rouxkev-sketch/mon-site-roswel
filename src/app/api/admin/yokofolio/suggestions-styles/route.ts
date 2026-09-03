@@ -520,9 +520,21 @@ export async function POST(requete: NextRequest) {
         .join("\n\n"),
     });
 
-    await envoyerCourriel(admin, demande.user_id, accepte, nomDitAuTatoueur, message);
+    /*  §1 (nº 832) — LE SORT DU COURRIEL REMONTE À L'ÉCRAN. Il partait
+        (ou pas) sans que personne ne le sache : le propriétaire a
+        accepté un style et n'a rien reçu, sans un mot nulle part. La
+        décision reste NON BLOQUANTE — elle est déjà écrite en base —
+        mais son résultat voyage désormais avec la réponse, et
+        l'écran d'administration le dit. */
+    const courriel = await envoyerCourriel(
+      admin,
+      demande.user_id,
+      accepte,
+      nomDitAuTatoueur,
+      message
+    );
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, courriel });
   } catch (e) {
     return NextResponse.json(
       {
@@ -542,19 +554,71 @@ export async function POST(requete: NextRequest) {
  * en place sur le site : Resend si RESEND_API_KEY est renseignée,
  * sinon un envoi SIMULÉ écrit dans le terminal de `npm run dev`.
  * JAMAIS BLOQUANT — on note et on continue.
+ *
+ * ██ §2 (nº 832) — IL PARTAIT DANS LE NOIR, ET C'ÉTAIT LE DÉFAUT ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : style suggéré depuis son compte, accepté
+ * dans l'administration, AUCUN e-mail. Le formulaire de contact, lui,
+ * arrivait — la chaîne Resend marchait donc.
+ *
+ * CE QUI RENDAIT LA PANNE INTROUVABLE, ici même. Cette fonction avait
+ * TROIS SORTIES MUETTES et pas une seule trace :
+ *  · `if (!userId) return` — la demande n'a pas d'auteur ;
+ *  · `const { data } = await …getUserById(…)` — L'ERREUR N'ÉTAIT MÊME
+ *    PAS LUE : une lecture refusée ou expirée (le délai de garde de la
+ *    nº 686) rendait `data` nul, et l'on repartait sans un mot ;
+ *  · `if (!destinataire) return` — le compte n'a pas d'adresse.
+ * Et quand l'envoi était bel et bien tenté, SON RÉSULTAT ÉTAIT JETÉ :
+ * `envoyerEmail` rend « envoye » ou « echec », personne ne le lisait.
+ * Un refus de Resend — celui que le §4 de la nº 830 nomme, quand
+ * l'expéditeur d'essai n'a pas le droit d'écrire à quelqu'un d'autre
+ * que le propriétaire du compte — passait donc totalement inaperçu.
+ * C'est très exactement la différence avec le formulaire de contact,
+ * qui écrit TOUJOURS à la même adresse : celle du propriétaire.
+ *
+ * CE QU'ELLE FAIT MAINTENANT : chaque sortie se dit dans le journal
+ * du serveur ET remonte à l'écran d'administration, avec l'adresse
+ * visée. Plus une seule branche silencieuse.
  */
+type EtatCourriel =
+  | "envoye"
+  | "simule"
+  | "echec"
+  | "sans-compte"
+  | "sans-adresse";
+
+/** Ce que l'administration reçoit : l'état, et à qui on a écrit. */
+export type SortDuCourriel = { etat: EtatCourriel; destinataire: string | null };
+
+function noter(quoi: string): void {
+  console.error(`📧 STYLE — ${quoi}`);
+}
+
 async function envoyerCourriel(
   admin: ReturnType<typeof creerClientSupabaseAdmin>,
   userId: string | null,
   accepte: boolean,
   nomDuStyle: string | null,
   message: string
-): Promise<void> {
-  if (!userId) return;
+): Promise<SortDuCourriel> {
+  if (!userId) {
+    noter("la demande n'a pas d'auteur (user_id vide) : rien à qui écrire.");
+    return { etat: "sans-compte", destinataire: null };
+  }
   try {
-    const { data } = await admin.auth.admin.getUserById(userId);
+    //  ⚠️ L'ERREUR SE LIT. C'est elle qui dit qu'une lecture a été
+    //  refusée (clé) ou abandonnée (délai de garde), et elle était
+    //  jetée depuis l'origine.
+    const { data, error } = await admin.auth.admin.getUserById(userId);
+    if (error) {
+      noter(`le compte ${userId} n'a pas pu être lu — ${error.message}`);
+      return { etat: "sans-adresse", destinataire: null };
+    }
     const destinataire = data?.user?.email;
-    if (!destinataire) return;
+    if (!destinataire) {
+      noter(`le compte ${userId} n'a pas d'adresse de courriel.`);
+      return { etat: "sans-adresse", destinataire: null };
+    }
 
     const sujet = accepte ? "Style added" : "Style declined";
     /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
@@ -576,11 +640,24 @@ async function envoyerCourriel(
         : null,
     });
 
-    await envoyerEmail(destinataire, sujet, courriel.texte, courriel.html);
-  } catch (erreur) {
-    console.warn(
-      "[style suggestion] email not sent:",
-      erreur instanceof Error ? erreur.message : String(erreur)
+    //  LE RÉSULTAT SE LIT AUSSI : « echec » veut dire que Resend a
+    //  refusé, et `lib/email` a déjà écrit la raison exacte (nº 830).
+    const resultat = await envoyerEmail(
+      destinataire,
+      sujet,
+      courriel.texte,
+      courriel.html
     );
+    if (resultat === "echec") {
+      noter(`l'envoi à ${destinataire} a été REFUSÉ (la raison est au-dessus).`);
+    }
+    return { etat: resultat, destinataire };
+  } catch (erreur) {
+    noter(
+      `l'envoi n'a pas abouti — ${
+        erreur instanceof Error ? erreur.message : String(erreur)
+      }`
+    );
+    return { etat: "echec", destinataire: null };
   }
 }

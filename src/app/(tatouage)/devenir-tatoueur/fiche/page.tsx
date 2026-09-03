@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { EnTeteTatouage } from "@/components/EnTeteTatouage";
 import { EspaceFiche } from "@/components/EspaceFiche";
+//  nº 832 — le bouton « Reactivate my portfolio » d'un courriel de
+//  suppression arrive ICI depuis cette passe (lib/reactivation, §1).
+import { ReactivationParCourriel } from "@/components/ReactivationParCourriel";
 
 /**
  * LA CRÉATION DE FICHE — réservée aux comptes connectés
@@ -26,6 +29,9 @@ export default function PageCreationFiche() {
           L'ENVELOPPE, elle, tient la CLÉ REACT du formulaire : c'est
           elle qui garantit qu'« Ajouter une fiche » ouvre un
           formulaire réellement vierge (voir EspaceFiche). */}
+      <Suspense fallback={null}>
+        <ReactivationParCourriel />
+      </Suspense>
       <Suspense fallback={null}>
         <EspaceFiche />
       </Suspense>

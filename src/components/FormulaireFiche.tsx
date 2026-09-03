@@ -104,6 +104,9 @@ import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { redirectionDeGarde } from "@/lib/journal-de-bord";
 //  nº 820 — un départ voulu vers l'accueil ne se double pas.
 import { leDepartVersLAccueilEstEnCours } from "@/lib/depart-accueil";
+//  nº 832 — le renvoi à la connexion qui garde le geste d'un courriel
+//  de réactivation (`?reactiver=…`).
+import { connexionEnGardantLaReactivation } from "@/lib/reactivation";
 import { marquerTravailEnCours } from "@/lib/travail-en-cours";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 //  §1 (nº 645) — l'avatar de la barre, rangé dans la session : une
@@ -2814,12 +2817,19 @@ export function FormulaireFiche() {
     //  supprimé) efface la session et réveille cette garde : elle se
     //  tait, le trajet est déjà décidé (lib/depart-accueil).
     if (leDepartVersLAccueilEstEnCours()) return;
-    if (
-      pret &&
-      !utilisateur &&
-      redirectionDeGarde("espace", "/devenir-tatoueur")
-    ) {
-      router.replace("/devenir-tatoueur");
+    /*  nº 832 — LE BOUTON D'UN COURRIEL DE SUPPRESSION SURVIT À LA
+        CONNEXION. « Reactivate my portfolio » mène ici avec
+        `?reactiver=<identifiant>`, et celui qui clique est presque
+        toujours DÉCONNECTÉ (demander la suppression déconnecte). Sans
+        `suite`, ce renvoi jetait le paramètre — donc le geste. La règle
+        est écrite une seule fois, pour les trois pages d'arrivée
+        (lib/reactivation, §2). */
+    if (pret && !utilisateur) {
+      const ou = connexionEnGardantLaReactivation(
+        window.location.pathname,
+        window.location.search
+      );
+      if (redirectionDeGarde("espace", ou)) router.replace(ou);
     }
   }, [pret, utilisateur, router]);
 

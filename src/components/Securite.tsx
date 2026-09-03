@@ -1,8 +1,9 @@
 "use client";
 
-//  nº 819 — le paramètre des courriels de suppression (`?reactiver=…`),
-//  gardé en `suite` quand il faut d'abord se connecter.
-import { PARAM_REACTIVER } from "@/lib/reactivation";
+//  nº 832 — le renvoi à la connexion qui garde le geste d'un courriel
+//  de réactivation (`?reactiver=…`), écrit une fois pour les trois
+//  pages d'arrivée.
+import { connexionEnGardantLaReactivation } from "@/lib/reactivation";
 //  nº 820 — un départ voulu vers l'accueil ne se double pas.
 import { leDepartVersLAccueilEstEnCours } from "@/lib/depart-accueil";
 
@@ -24,6 +25,9 @@ import {
   messageErreurAuth,
 } from "@/lib/mot-de-passe";
 import { BlocSuppressions } from "@/components/BlocSuppressions";
+//  nº 832 — le geste des courriels de réactivation, sorti d'ici pour
+//  servir aussi sur les deux pages d'arrivée.
+import { ReactivationParCourriel } from "@/components/ReactivationParCourriel";
 //  §1 (nº 785) — les deux pastilles de bout de ligne, écrites une
 //  seule fois et partagées avec le bloc des suppressions.
 import { EtatActif, PastilleAction } from "@/components/Pastille";
@@ -510,11 +514,15 @@ export function Securite() {
           — était perdu. Avec le paramètre, et seulement avec lui, on
           garde l'adresse entière en `suite` (rien ne change pour les
           autres visites déconnectées de cette page). */
-      const recherche = window.location.search;
-      const suite = recherche.includes(`${PARAM_REACTIVER}=`)
-        ? `?suite=${encodeURIComponent(window.location.pathname + recherche)}`
-        : "";
-      router.replace(`/devenir-tatoueur${suite}`);
+      /*  nº 832 — LA RÈGLE EST SORTIE DANS `lib/reactivation` (§2) :
+          les trois pages d'arrivée d'un courriel de réactivation la
+          partagent désormais, au lieu d'en tenir chacune une copie. */
+      router.replace(
+        connexionEnGardantLaReactivation(
+          window.location.pathname,
+          window.location.search
+        )
+      );
     }
   }, [pret, utilisateur, router]);
 
@@ -937,6 +945,11 @@ export function Securite() {
         </Bloc>
 
         {/* 4. LES SUPPRESSIONS — en dernier. */}
+        {/*  nº 832 — LES COURRIELS DÉJÀ PARTIS POINTENT ENCORE ICI. Les
+             nouveaux déposent sur « My portfolio » ou « My selection »
+             (lib/reactivation, §1) ; ceux d'avant gardent cette adresse,
+             et le même composant les honore. */}
+        <ReactivationParCourriel />
         <BlocSuppressions />
       </div>
     </main>

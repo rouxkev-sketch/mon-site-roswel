@@ -326,6 +326,53 @@ function dateCourte(iso: string | null | undefined): string {
   }
 }
 
+/**
+ * ██ nº 832 — CE QU'EST DEVENU LE COURRIEL DE LA DÉCISION ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : style accepté dans cet écran, aucun
+ * e-mail reçu, et rien nulle part pour dire pourquoi. La route rend
+ * maintenant le sort de l'envoi (suggestions-styles, §2) ; cette
+ * fonction le met en une phrase, avec L'ADRESSE VISÉE — c'est elle qui
+ * distingue un envoi refusé d'un envoi jamais tenté.
+ * `simule` n'arrive qu'en développement, sans clé Resend : on le dit
+ * aussi, pour ne pas croire à un envoi qui n'a pas eu lieu.
+ */
+function sortDuCourriel(
+  sort:
+    | {
+        etat: "envoye" | "simule" | "echec" | "sans-compte" | "sans-adresse";
+        destinataire: string | null;
+      }
+    | undefined
+): { texte: string; bon: boolean } | null {
+  if (!sort) return null;
+  const a = sort.destinataire ? ` to ${sort.destinataire}` : "";
+  switch (sort.etat) {
+    case "envoye":
+      return { texte: `Email sent${a}.`, bon: true };
+    case "simule":
+      return {
+        texte: `Email simulated${a} — no RESEND_API_KEY on this server.`,
+        bon: false,
+      };
+    case "sans-compte":
+      return {
+        texte: "No email: this request has no account attached.",
+        bon: false,
+      };
+    case "sans-adresse":
+      return {
+        texte: "No email: that account has no readable email address.",
+        bon: false,
+      };
+    default:
+      return {
+        texte: `Email REFUSED${a} — see the server logs for Resend's reason.`,
+        bon: false,
+      };
+  }
+}
+
 export function AdminYokofolio() {
   const { utilisateur, pret } = useUtilisateur();
   /**
@@ -467,6 +514,15 @@ export function AdminYokofolio() {
       a répondu au dernier renommage (la limace a suivi, ou pas). */
   const [aRenommer, setARenommer] = useState<{ id: string; label: string } | null>(null);
   const [ditRenommage, setDitRenommage] = useState<string | null>(null);
+  /*  nº 832 — CE QU'EST DEVENU LE COURRIEL DE LA DERNIÈRE DÉCISION.
+      Il partait dans le noir : le propriétaire a accepté un style et
+      n'a rien reçu, sans que rien ne le dise. La route rend désormais
+      son sort (route suggestions-styles, §2) et l'écran le répète —
+      vert s'il est parti, rouge sinon, avec l'adresse visée. */
+  const [ditCourriel, setDitCourriel] = useState<{
+    texte: string;
+    bon: boolean;
+  } | null>(null);
   /* ---- nº 756 — Demandes de convention, dans la même section ----
      DEUX LISTES, UN SEUL ÉCRAN : les deux routes sont distinctes (deux
      tables), la vue les fond et les trie par date. L'erreur, elle, est
@@ -768,8 +824,13 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as {
         ok: boolean;
         message?: string;
+        courriel?: {
+          etat: "envoye" | "simule" | "echec" | "sans-compte" | "sans-adresse";
+          destinataire: string | null;
+        };
       };
       if (!donnees.ok) throw new Error(donnees.message);
+      setDitCourriel(sortDuCourriel(donnees.courriel));
       setBrouillon(null);
       setSuggestions(null); // relecture : la liste montre la décision
     } catch (e) {
@@ -2106,6 +2167,19 @@ export function AdminYokofolio() {
               <p className="mt-4 rounded-xl bg-[#34D399]/15 px-4 py-3 text-[13.5px] leading-relaxed text-[#34D399]">
                 {ditRenommage}
               </p>
+            )}
+            {/*  nº 832 — LE SORT DU COURRIEL DE LA DERNIÈRE DÉCISION.
+                 Vert s'il est parti, rouge sinon : accepter un style
+                 sans prévenir personne ne doit plus passer pour une
+                 réussite. Les deux habillages sont ceux de l'écran —
+                 la bande verte du renommage, l'encadré d'erreur. */}
+            {ditCourriel && ditCourriel.bon && (
+              <p className="mt-4 rounded-xl bg-[#34D399]/15 px-4 py-3 text-[13.5px] leading-relaxed text-[#34D399]">
+                {ditCourriel.texte}
+              </p>
+            )}
+            {ditCourriel && !ditCourriel.bon && (
+              <p className={`mt-4 ${ERREUR}`}>{ditCourriel.texte}</p>
             )}
             <div className="mt-5 flex flex-col gap-2.5">
               {/*  nº 756 — L'ATTENTE COUVRE LES DEUX LECTURES : tant que
