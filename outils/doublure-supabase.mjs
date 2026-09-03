@@ -355,6 +355,9 @@ function identitesDe(compte, courriel, metaApp) {
  * comptes ouverts dans deux onglets du même banc.
  */
 const SESSIONS = new Map();
+/*  Les jetons des LIENS D'E-MAIL (nº 827) : émis par `/auth/v1/recover`,
+    consommés par `/auth/v1/verify`, à usage unique. */
+const JETONS_COURRIEL = new Map();
 let compteurDeSessions = 0;
 /*  §2 (nº 796) — le carnet des jetons DÉJÀ SERVIS, et le cran qui les
     refuse une seconde fois. Voir la note à la route /auth/v1/token. */
@@ -961,6 +964,118 @@ function repondre(req, res, u, brut) {
     );
     res.writeHead(302, { location: vers });
     res.end();
+    return;
+  }
+
+  /**
+   * ██ §1 (nº 827) — LES LIENS D'E-MAIL, DE BOUT EN BOUT ██
+   * ------------------------------------------------------------------
+   * POURQUOI LA DOUBLURE APPREND ÇA : la nº 827 corrige un défaut
+   * bloquant — « Choose a new password » menait à l'accueil. La
+   * correction change LA FORME DU LIEN (un `token_hash` vérifié chez
+   * nous, au lieu du détour par `/auth/v1/verify` de Supabase). Un banc
+   * ne pouvait pas l'éprouver : la doublure ne savait ni émettre le
+   * jeton, ni le vérifier. Elle sait, désormais, et le parcours entier
+   * se joue — demande, lien, clic, session, mot de passe changé.
+   *
+   * DEUX ROUTES, CALQUÉES SUR LES VRAIES :
+   *  · `POST /auth/v1/recover` — « j'ai oublié mon mot de passe ». La
+   *    vraie envoie le courriel et ne rend rien ; celle-ci FABRIQUE le
+   *    jeton et le range dans `JETONS_COURRIEL`, pour que le banc
+   *    puisse composer le lien exactement comme le gabarit le ferait ;
+   *  · `POST /auth/v1/verify` — le clic. On rend une session, comme la
+   *    vraie, et LE JETON EST À USAGE UNIQUE : un lien déjà cliqué ne
+   *    vaut plus rien. C'est le comportement réel, et c'est ce qui
+   *    permet au banc de l'éprouver.
+   */
+  if (u.pathname === "/auth/v1/recover" && req.method === "POST") {
+    let courriel = "";
+    try { courriel = JSON.parse(brut || "{}").email ?? ""; } catch { /* corps vide */ }
+    const compte = COMPTES_DOUBLURE.find((c) => c.email === courriel)
+      ?? { id: "eeee0000-0000-4000-8000-0000000ent03", email: courriel };
+    const jeton = `jeton-courriel-${++compteurDeSessions}`;
+    JETONS_COURRIEL.set(jeton, { type: "recovery", compte });
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST auth/recover →", courriel, "· jeton", jeton
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({}));
+    return;
+  }
+
+  /*  ⚠️ CETTE ROUTE N'EXISTE PAS CHEZ SUPABASE, et son nom le dit :
+      elle est PRÉFIXÉE `/banc/`. Elle fabrique un jeton de lien d'un
+      TYPE DONNÉ (`signup`, `email_change`…), que la vraie n'émettrait
+      qu'au bout d'un parcours entier — une inscription, un changement
+      d'adresse. Le banc de la nº 827 éprouve la DESTINATION des trois
+      liens ; il lui faut les trois jetons, sans rejouer trois
+      parcours. Le chemin qui compte, lui — vérifier et ouvrir la
+      session — reste celui de la vraie route ci-dessous. */
+  if (u.pathname === "/banc/jeton-courriel" && req.method === "POST") {
+    let courriel = "", type = "recovery";
+    try {
+      const corps = JSON.parse(brut || "{}");
+      courriel = corps.email ?? "";
+      type = corps.type ?? "recovery";
+    } catch { /* corps vide */ }
+    const compte = COMPTES_DOUBLURE.find((c) => c.email === courriel)
+      ?? { id: "eeee0000-0000-4000-8000-0000000ent03", email: courriel };
+    const jeton = `jeton-courriel-${++compteurDeSessions}`;
+    JETONS_COURRIEL.set(jeton, { type, compte });
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify({ token_hash: jeton, type }));
+    return;
+  }
+
+  if (u.pathname === "/auth/v1/verify" && req.method === "POST") {
+    let jeton = "", type = "";
+    try {
+      const corps = JSON.parse(brut || "{}");
+      jeton = corps.token_hash ?? corps.token ?? "";
+      type = corps.type ?? "";
+    } catch { /* corps vide */ }
+    const connu = JETONS_COURRIEL.get(jeton);
+    //  Le jeton doit exister, ne pas avoir servi, ET porter le type
+    //  qu'on lui demande : un lien d'inscription n'ouvre pas un écran
+    //  de mot de passe.
+    if (!connu || connu.type !== type) {
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "POST auth/verify →", jeton || "(aucun)", type,
+        connu ? "MAUVAIS TYPE" : "INCONNU-OU-DEJA-SERVI"
+      );
+      res.writeHead(403, {
+        "content-type": "application/json",
+        "access-control-allow-origin": "*",
+      });
+      res.end(JSON.stringify({
+        error: "invalid_grant",
+        error_code: "otp_expired",
+        error_description: "Email link is invalid or has expired",
+      }));
+      return;
+    }
+    JETONS_COURRIEL.delete(jeton);
+    console.log(
+      new Date().toISOString().slice(11, 19),
+      "POST auth/verify →", connu.compte.email, type, "servi"
+    );
+    res.writeHead(200, {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+    });
+    res.end(JSON.stringify(sessionDeBanc({
+      identifiant: connu.compte.id,
+      courriel: connu.compte.email,
+      metaApp: { provider: "email", providers: ["email"] },
+    })));
     return;
   }
 

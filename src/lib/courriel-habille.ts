@@ -69,32 +69,39 @@ import { adresseDuSite } from "@/lib/site";
  * `!important` qui n'existaient que pour résister à Gmail. Le HTML
  * est d'autant plus léger.
  *
- * ██ §1 (nº 826) — LA TÊTE, LA CARTE ET L'ACTION ██
+ * ██ §1 (nº 826-827) — LA TÊTE, LE FOND ET L'ACTION ██
  * ==================================================================
- * Trois retouches du propriétaire sur le courriel clair :
+ * 1. IL N'Y A PLUS DE CARTE. La nº 825 posait le texte sur une carte
+ *    blanche, la nº 826 lui a retiré son contour, la nº 827 retire la
+ *    carte elle-même : le texte repose DIRECTEMENT sur le fond clair.
+ *    Les trois blocs — la plaque, le texte, le pied — s'alignent donc
+ *    sur le même bord gauche : sans carte, un retrait n'aurait plus
+ *    rien à quoi se caler.
  *
- * 1. LA CARTE N'A PLUS DE CONTOUR. Le cheveu gris de la nº 825 est
- *    retiré : le blanc franc suffit à la détacher du blanc cassé.
- *
- * 2. LE LOGOTYPE OFFICIEL EST REVENU, SUR SA PLAQUE (le montage de la
- *    nº 824, reposé sur un courriel clair). Le mot du logotype est
- *    BLANC : il lui faut un fond sombre, et ce fond ne peut pas être
- *    une COULEUR — une couleur, l'inversion la retourne. C'est donc
- *    une IMAGE (`plaque-courriel.png`), et une image ne s'inverse chez
- *    personne : la plaque reste sombre dans tous les modes, le
- *    logotype lisible dessus, le courriel clair tout autour.
- *    ⚠️ C'est ce qui rend inutile un logotype à mot noir : la nº 825
- *    en attendait un, la nº 826 n'en a plus besoin. `logoNoir` a
- *    disparu de la marque avec cette passe.
+ * 2. LE LOGOTYPE OFFICIEL EST SUR SA PLAQUE (montage de la nº 824). Le
+ *    mot du logotype est BLANC : il lui faut un fond sombre, et ce
+ *    fond ne peut pas être une COULEUR — une couleur, l'inversion la
+ *    retourne. C'est donc une IMAGE (`plaque-courriel.png`), et une
+ *    image ne s'inverse chez personne : la plaque reste sombre dans
+ *    tous les modes, le logotype lisible dessus, le clair tout autour.
+ *    C'EST LE SEUL BLOC DU COURRIEL, et il est assumé.
  *    ⚠️ SI LES IMAGES SONT BLOQUÉES, ni la plaque ni le logotype ne
  *    s'affichent. La cellule porte donc un repli complet : sa couleur
  *    de fond est celle de la plaque, et son texte est blanc et gras —
  *    le `alt` (« YokoFolio ») se lit alors sur le sombre.
  *
- * 3. L'ACTION EST UN LIEN TEXTE, plus un badge rouge. Même libellé,
- *    sans soulignement, dans le bleu des liens d'action — mais dans sa
+ * 3. L'ACTION EST UN LIEN TEXTE, plus un badge. Même libellé, sans
+ *    soulignement, dans le bleu des liens d'action — mais dans sa
  *    version pour FOND CLAIR (voir `LIEN_ACTION` plus bas : le bleu du
  *    site est fait pour du sombre et ne vaudrait que 2,4:1 ici).
+ *
+ * ⚠️ LE LIEN DES TROIS COURRIELS DE SUPABASE A CHANGÉ DE FORME À LA
+ * nº 827, et c'était un défaut BLOQUANT : « Choose a new password »
+ * menait à l'accueil. La cause et la correction sont écrites là où
+ * elles se lisent — src/app/auth/callback/route.ts, §2 (nº 827).
+ * Retenir seulement ceci ici : le lien d'un gabarit Supabase ne
+ * s'écrit plus `{{ .ConfirmationURL }}` mais
+ * `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=…&next=…`.
  *
  * CE QUE LE BANC MESURE, SUR LES DIX (contrastes WCAG lus dans les
  * pixels d'une capture ; la transformation est faite au canevas en
@@ -103,16 +110,16 @@ import { adresseDuSite } from "@/lib/site";
  * tous la meme) :
  *
  *                        mot   coeur  titre  texte  lien   pied
- *   clair               18,9    4,0    19,2   19,2   5,6    5,4
- *   inversion franche   18,9    4,0    18,5   18,5   9,1    7,1
- *   bascule de clarte   18,9    4,0    18,2   18,2   4,8    6,7
+ *   clair               18,9    4,0    17,8   17,8   5,7    5,4
+ *   inversion franche   18,9    4,0    17,5   17,5   9,1    7,1
+ *   bascule de clarte   18,9    4,0    17,3   17,3   5,0    6,7
  *
- * Seuils AA : 4,5 pour du texte courant, 3 pour du grand texte gras.
- * Tout passe DANS LES TROIS SENS. LE MOT ET LE CŒUR DU LOGOTYPE NE
- * BOUGENT PAS D'UN DIXIÈME entre les trois : ce n'est pas une
- * coïncidence, c'est la démonstration — deux couches d'image l'une sur
- * l'autre, rien à recalculer. Le lien, lui, s'inverse avec sa carte et
- * garde son contraste (4,8 au pire).
+ * Seuils AA : 4,5 pour du texte courant, 3 pour du grand texte gras et
+ * pour un dessin. Tout passe DANS LES TROIS SENS. LE MOT ET LE CŒUR DU
+ * LOGOTYPE NE BOUGENT PAS D'UN DIXIÈME entre les trois : ce n'est pas
+ * une coïncidence, c'est la démonstration — deux couches d'image l'une
+ * sur l'autre, rien à recalculer. Le lien, lui, s'inverse avec son
+ * fond et garde son contraste (5,0 au pire).
  *
  * LE POIDS : le propriétaire voyait Gmail COUPER ses courriels (les
  * trois points, vers 102 Ko). Mesuré, chacun des dix pèse moins de
@@ -127,7 +134,7 @@ export type ActionCourriel = {
 };
 
 export type ContenuCourriel = {
-  /** Le titre du courriel, en tête de la carte. */
+  /** Le titre du courriel, en tête du corps. */
   titre: string;
   /** Les paragraphes, en texte nu : les retours à la ligne sont
       gardés, tout le reste est échappé. */
@@ -166,13 +173,12 @@ const POLICE = "Arial, Helvetica, sans-serif";
  */
 /** Le fond de la page : un blanc cassé, très légèrement bleuté. */
 const FOND = "#F5F6F8";
-/** La carte : blanc franc, posée sur le fond cassé. */
-const CARTE = "#FFFFFF";
 /** Le texte courant et les titres : le bleu nuit du site, qui se lit
-    ici comme un noir (19,2:1 sur la carte). */
+    ici comme un noir (18,6:1 sur le fond clair). */
 const TEXTE = "#0B0F14";
 /** Le texte discret : le pied de page et la note sous le bouton
-    (5,8:1 sur la carte — au-dessus du seuil pour du petit texte). */
+    (5,4:1 sur le fond clair — au-dessus du seuil pour du petit
+    texte). */
 const TEXTE_DOUX = "#5F6670";
 /**
  * LE BLANC DU LIBELLÉ DU BOUTON — cassé exprès (nº 824, gardé) : les
@@ -197,16 +203,21 @@ const PLAQUE_FOND = "#0B0F14";
 /**
  * ██ LE BLEU DU LIEN D'ACTION — CELUI D'UN FOND CLAIR ██
  * Le site emploie `#7FA9EE` pour ses liens d'action. Ce bleu est fait
- * pour LE FOND SOMBRE du site, où il vaut 8,1:1 ; SUR LA CARTE BLANCHE
- * DU COURRIEL IL NE VAUT QUE 2,4:1 — et 2,0:1 une fois le courriel
- * inversé. Il y serait illisible.
+ * pour LE FOND SOMBRE du site, où il vaut 8,1:1 ; SUR LE FOND CLAIR
+ * DU COURRIEL IL NE VAUT QUE 2,3:1 — et moins encore une fois le
+ * courriel inversé. Il y serait illisible.
  * Celui-ci est son homologue pour fond clair : MÊME TEINTE (217°) et
- * MÊME SATURATION (0,77), seule la clarté descend (0,72 → 0,47). Il
- * vaut 5,6:1 sur la carte, 4,6:1 sous une bascule de clarté et 9,1:1
- * sous une inversion franche — au-dessus du seuil AA dans les trois
- * sens, ce qu'aucun bleu plus clair ne fait.
+ * MÊME SATURATION, seule la clarté descend. Il
+ * tient au-dessus du seuil AA dans les trois sens, ce qu'aucun bleu
+ * plus clair ne fait ; les chiffres mesurés sont dans le tableau
+ * ci-dessus.
+ * ⚠️ IL A ÉTÉ ASSOMBRI D'UN CRAN À LA nº 827 (`#1C62D4` → `#1A5CC8`),
+ * et c'est la carte qui l'a voulu : en disparaissant, elle a remplacé
+ * le blanc franc par le blanc cassé sous le lien, et son contraste
+ * sous bascule de clarté est tombé PILE SUR LE SEUIL (4,5). Un cran
+ * plus sombre lui rend sa marge (4,8) sans changer le bleu à l'œil.
  */
-const LIEN_ACTION = "#1C62D4";
+const LIEN_ACTION = "#1A5CC8";
 
 /** Un paragraphe du corps : 15 px, interligne 23. */
 function paragraphe(texte: string): string {
@@ -252,7 +263,7 @@ export function habillerCourriel(
         <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
-            <td align="left" style="padding:0 0 20px 0;line-height:0;">
+            <td align="left" style="padding:0 0 24px 0;line-height:0;">
               <a href="${echapperHtml(site)}" style="text-decoration:none;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
                   <td background="${echapperHtml(site)}${PLAQUE}" bgcolor="${PLAQUE_FOND}" style="background-color:${PLAQUE_FOND};background-image:url('${echapperHtml(site)}${PLAQUE}');background-repeat:repeat;border-radius:12px;padding:10px 14px;font-family:${POLICE};font-size:20px;line-height:33px;font-weight:bold;color:${BLANC_CASSE};">
@@ -263,7 +274,7 @@ export function habillerCourriel(
             </td>
           </tr>
           <tr>
-            <td bgcolor="${CARTE}" style="background-color:${CARTE};border-radius:16px;padding:32px 28px;">
+            <td align="left" style="padding:4px 0 0 0;">
               <h1 style="margin:0 0 18px 0;font-family:${POLICE};font-size:22px;line-height:28px;font-weight:bold;color:${TEXTE};">${echapperHtml(contenu.titre)}</h1>
               ${contenu.paragraphes.map(paragraphe).join("\n              ")}
               ${bouton}
@@ -271,7 +282,7 @@ export function habillerCourriel(
             </td>
           </tr>
           <tr>
-            <td align="left" style="padding:20px 4px 0 4px;font-family:${POLICE};font-size:12.5px;line-height:18px;color:${TEXTE_DOUX};">
+            <td align="left" style="padding:28px 0 0 0;font-family:${POLICE};font-size:12.5px;line-height:18px;color:${TEXTE_DOUX};">
               ${MARQUE_YOKOFOLIO.nom} &middot; <a href="${echapperHtml(site)}" style="color:${TEXTE_DOUX};text-decoration:none;">${echapperHtml(domaine)}</a>
             </td>
           </tr>

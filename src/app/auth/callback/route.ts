@@ -13,9 +13,12 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
  * ⚠️ CETTE LIGNE DISAIT « Google, Facebook, Apple… » (corrigé nº 783) :
  * les deux derniers n'ont jamais rien renvoyé ici — ils n'étaient que
  * des boutons annoncés — et ils sont retirés. Le seul fournisseur
- * externe du site est Google. Ce chemin sert AUSSI aux liens d'e-mail
- * (confirmation d'adresse, mot de passe oublié), qui portent le même
- * code.
+ * externe du site est Google.
+ * ⚠️ CE CHEMIN SERT AUSSI AUX LIENS D'E-MAIL (confirmation d'adresse,
+ * mot de passe oublié, changement d'adresse), MAIS PLUS AVEC LE MÊME
+ * JETON depuis la nº 827 : Google apporte un `code` à échanger, les
+ * courriels un `token_hash` à vérifier. Voir le §2 plus bas — c'est
+ * lui qui a corrigé le lien de réinitialisation.
  *
  * Cette adresse (/auth/callback) est à déclarer dans Supabase :
  * voir docs/CONFIGURATION-SUPABASE.md.
@@ -53,43 +56,126 @@ function origineReelle(request: Request): string {
   return `${protocole}://${hote}`;
 }
 
+/**
+ * ██ §2 (nº 827) — LES LIENS D'E-MAIL N'EMPRUNTENT PLUS SUPABASE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : « Choose a new password », cliqué sur un
+ * courriel neuf, menait À L'ACCUEIL au lieu de l'écran de nouveau mot
+ * de passe.
+ *
+ * LA CAUSE, ET ELLE EST DANS LA FORME DU LIEN. Les gabarits portaient
+ * `{{ .ConfirmationURL }}`, que Supabase compose ainsi :
+ *
+ *     <projet>.supabase.co/auth/v1/verify
+ *        ?token=…&type=recovery&redirect_to=<ce qu'on a demandé>
+ *
+ * Le clic part donc CHEZ SUPABASE, qui vérifie le jeton puis renvoie
+ * vers `redirect_to` — MAIS SEULEMENT SI CETTE ADRESSE FIGURE DANS SA
+ * LISTE BLANCHE (Authentication → URL Configuration → Redirect URLs).
+ * Or le site demande `…/auth/callback?next=/devenir-tatoueur/nouveau-
+ * mot-de-passe`, AVEC UN PARAMÈTRE, et la liste ne contient que
+ * `…/auth/callback`, sans. Une entrée sans joker ne couvre pas une
+ * adresse à paramètres : Supabase écarte la demande EN SILENCE et
+ * retombe sur la Site URL — L'ACCUEIL. Rien n'expire, rien n'échoue :
+ * on est simplement renvoyé ailleurs.
+ *
+ * LA CORRECTION, ET POURQUOI ELLE NE DÉPEND PLUS DE PERSONNE : les
+ * gabarits n'emploient plus `{{ .ConfirmationURL }}` mais
+ * `{{ .TokenHash }}`, posé sur NOTRE PROPRE adresse :
+ *
+ *     {{ .SiteURL }}/auth/callback
+ *        ?token_hash={{ .TokenHash }}&type=recovery&next=<chez nous>
+ *
+ * Le clic arrive donc ICI directement. On vérifie le jeton nous-mêmes
+ * (`verifyOtp`), et l'on redirige vers `next`, qui est à nous. Plus de
+ * détour, PLUS DE LISTE BLANCHE À TENIR À JOUR pour les courriels, et
+ * plus de repli muet sur l'accueil.
+ * ⚠️ UN SECOND DÉFAUT DISPARAÎT AVEC : `exchangeCodeForSession` est un
+ * échange PKCE — il exige le vérificateur déposé dans le navigateur QUI
+ * A FAIT LA DEMANDE. Un lien ouvert sur un autre appareil (demande au
+ * bureau, clic dans l'application Gmail du téléphone) échouait donc,
+ * et retombait lui aussi sur l'accueil. `verifyOtp` ne demande rien de
+ * tel : le lien marche depuis n'importe où.
+ * ⚠️ LE CHEMIN `code` RESTE, INTACT : c'est celui de Google, qui passe
+ * bien par un échange PKCE. Les deux cohabitent.
+ */
+
+/** Les types de lien qu'un courriel de Supabase peut porter. */
+const TYPES_DE_LIEN = [
+  "signup",
+  "invite",
+  "magiclink",
+  "recovery",
+  "email_change",
+  "email",
+] as const;
+type TypeDeLien = (typeof TYPES_DE_LIEN)[number];
+
+/**
+ * LA DESTINATION, FILTRÉE. `next` arrive d'un courriel : on n'accepte
+ * qu'un CHEMIN INTERNE, jamais une adresse. Même règle que `suiteSure`
+ * (lib/favoris-yokofolio), réécrite ici parce que ce fichier tourne sur
+ * le serveur et que l'autre est un module de navigateur.
+ */
+function destinationSure(brut: string | null): string {
+  if (!brut || !brut.startsWith("/") || brut.startsWith("//")) {
+    //  LE DÉFAUT EST L'AIGUILLAGE (passe nº 137, il remplace la règle
+    //  de la nº 131) : la page /apres-connexion demande à la base si ce
+    //  compte a un portfolio, puis mène à sa fiche ou à ses favoris.
+    //  L'accueil était un défaut hérité, jamais choisi.
+    return ARRIVEE_APRES_CONNEXION;
+  }
+  return brut;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const origin = origineReelle(request);
   const code = searchParams.get("code");
-  //  Page vers laquelle revenir après connexion. LE DÉFAUT EST
-  //  L'AIGUILLAGE (passe nº 137, il remplace la règle de la nº 131) :
-  //  ce chemin ne sert qu'à des retours de CONNEXION (fournisseur
-  //  externe, lien d'e-mail), et la règle est la même pour tous — la
-  //  page /apres-connexion demande à la base si ce compte a un
-  //  portfolio, puis mène à sa fiche ou à ses favoris.
-  //  L'accueil était un défaut hérité, jamais choisi.
-  const suite = searchParams.get("next") ?? ARRIVEE_APRES_CONNEXION;
+  const jeton = searchParams.get("token_hash");
+  const typeBrut = searchParams.get("type");
+  const type = TYPES_DE_LIEN.includes(typeBrut as TypeDeLien)
+    ? (typeBrut as TypeDeLien)
+    : null;
+  const suite = destinationSure(searchParams.get("next"));
 
+  /*  UNE SUPPRESSION DE COMPTE EN COURS ? Revenir, c'est l'annuler —
+      quel que soit le chemin de retour (mot de passe, lien d'e-mail,
+      fournisseur externe).
+      §4 (nº 314) — ET PLUS AUCUN `?bienvenue=1` : le message d'accueil
+      qu'il portait est supprimé, sur consigne. LA RÉACTIVATION, ELLE,
+      RESTE — c'est la promesse faite au moment de la demande de
+      suppression, et elle n'a jamais eu besoin d'un message. */
+  async function ouvrirEtRepartir(
+    supabase: Awaited<ReturnType<typeof creerClientSupabaseServeur>>
+  ) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      const { reactiverCompte } = await import("@/lib/suppression-compte");
+      await reactiverCompte(user.id);
+    }
+    return NextResponse.redirect(`${origin}${suite}`);
+  }
+
+  //  1. LE LIEN D'UN COURRIEL (nº 827) : un jeton à vérifier ici même.
+  if (jeton && type) {
+    const supabase = await creerClientSupabaseServeur();
+    const { error } = await supabase.auth.verifyOtp({
+      type,
+      token_hash: jeton,
+    });
+    if (!error) return ouvrirEtRepartir(supabase);
+  }
+
+  //  2. LE RETOUR D'UN FOURNISSEUR EXTERNE : un code à échanger (PKCE).
   if (code) {
     const supabase = await creerClientSupabaseServeur();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      /*  UNE SUPPRESSION DE COMPTE EN COURS ? Revenir, c'est l'annuler
-          — quel que soit le chemin de retour (mot de passe, lien
-          d'e-mail, fournisseur externe).
-          §4 (nº 314) — ET PLUS AUCUN `?bienvenue=1` : le message
-          d'accueil qu'il portait est supprimé, sur consigne (il vivait
-          sur le formulaire de fiche, page où une connexion ne mène plus
-          depuis la nº 313-§2). LA RÉACTIVATION, ELLE, RESTE — c'est la
-          promesse faite au moment de la demande de suppression, et elle
-          n'a jamais eu besoin d'un message pour se faire. */
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { reactiverCompte } = await import("@/lib/suppression-compte");
-        await reactiverCompte(user.id);
-      }
-      return NextResponse.redirect(`${origin}${suite}`);
-    }
+    if (!error) return ouvrirEtRepartir(supabase);
   }
 
-  // Code absent ou invalide : retour à l'accueil avec un signal d'erreur
+  // Rien d'exploitable : retour à l'accueil avec un signal d'erreur
   return NextResponse.redirect(`${origin}/?erreur=connexion`);
 }

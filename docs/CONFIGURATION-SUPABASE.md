@@ -48,10 +48,25 @@ adresse renvoyer le visiteur.
 
 1. Dans Supabase : **Authentication** → **URL Configuration**.
 2. **Site URL** : `http://localhost:3000`
-3. **Redirect URLs** → **Add URL** : `http://localhost:3000/auth/callback`
+3. **Redirect URLs** → **Add URL** : `http://localhost:3000/auth/callback**`
 
 > Quand le site sera en ligne (sur Vercel), on ajoutera ici les mêmes
 > adresses avec le vrai nom de domaine.
+
+### ⚠️ LES DEUX ÉTOILES À LA FIN NE SONT PAS UNE COQUILLE (passe nº 827)
+
+Le site ne demande jamais `…/auth/callback` tout court : il demande
+`…/auth/callback?next=<où revenir>`. **Une entrée sans joker ne couvre
+pas une adresse à paramètres.** Quand l'adresse demandée n'est pas dans
+la liste, Supabase ne le signale pas : il **retombe en silence sur la
+Site URL** — c'est-à-dire l'accueil.
+
+C'est très exactement le défaut qui a coûté la passe nº 827 : le lien
+« Choose a new password » menait à l'accueil. Les trois **liens
+d'e-mail** ne dépendent plus de cette liste depuis (ils passent par
+notre propre route, voir `src/app/auth/callback/route.ts` §2), **mais la
+connexion Google, elle, en dépend toujours**. Il faut donc l'entrée avec
+les deux étoiles.
 
 ---
 
