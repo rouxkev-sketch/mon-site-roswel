@@ -36,12 +36,13 @@ import { adresseDuSite } from "@/lib/site";
  *    COULEURS_SOMBRE : ce sont les mêmes valeurs, lues ici, jamais
  *    recopiées).
  * LE FOND EST SOMBRE, COMME LE SITE — mais il ne peut PAS le rester
- * chez tout le monde : voir le §1 de la nº 823 plus bas, qui dit ce
- * que la tête du courriel est devenue pour survivre à l'inversion de
- * Gmail (le CŒUR seul, en image, et le nom en TEXTE).
- * ⚠️ L'IMAGE EST CHARGÉE DEPUIS LE SITE (adresse absolue) : un courriel
- * n'embarque pas d'image. C'est le fichier officiel de `public/`,
- * jamais une copie.
+ * chez tout le monde : voir les §1 de la nº 823 et de la nº 824 plus
+ * bas, qui disent ce qu'est devenue la tête du courriel pour survivre
+ * à l'inversion de Gmail (le logotype officiel sur une PLAQUE qui est
+ * elle-même une image).
+ * ⚠️ LES IMAGES SONT CHARGÉES DEPUIS LE SITE (adresses absolues) : un
+ * courriel n'embarque pas d'image. Le logotype est le fichier officiel
+ * de `public/`, jamais une copie.
  *
  * ⚠️ LES TROIS COURRIELS DE SUPABASE (confirmation d'inscription, mot de
  * passe, changement d'adresse) NE PASSENT PAS ICI : Supabase les envoie
@@ -106,45 +107,91 @@ export function echapperHtml(texte: string): string {
  *    un fond redevenu clair, le mot n'a plus aucun contraste : c'est
  *    LUI qui disparaissait, pas le cœur.
  *
- * LA NOUVELLE RÈGLE : le courriel doit rester lisible AVEC OU SANS
- * inversion. Ce qui la traverse sans dommage, ce sont deux choses :
- *  · LES IMAGES — aucun client ne les inverse ; le cœur reste rouge
- *    quoi qu'il arrive, et le rouge se lit des deux côtés ;
+ * LA RÈGLE : le courriel doit rester lisible AVEC OU SANS inversion.
+ * Ce qui la traverse sans dommage, ce sont deux choses :
+ *  · LES IMAGES — aucun client ne les inverse, ni celles d'une balise
+ *    `img` ni celles d'un FOND DE CELLULE (`background-image`) ; une
+ *    image est une trame de pixels, pas une couleur à recalculer ;
  *  · LE TEXTE — il s'inverse AVEC son fond, donc leur contraste est
  *    conservé quoi qu'il arrive.
- * LA TÊTE DU COURRIEL EST FAITE DE CES DEUX-LÀ : le cœur (image) et
- * le nom « YokoFolio » ÉCRIT EN TEXTE, à la place du logo blanc.
+ *
+ * ██ §1 (nº 824) — LE LOGOTYPE COMPLET, SUR UNE PLAQUE D'IMAGE ██
+ * ==================================================================
+ * CE QUE LA nº 823 AVAIT FAIT, ET POURQUOI ON VA PLUS LOIN : elle
+ * avait remplacé le logotype par le CŒUR (image) plus le nom ÉCRIT EN
+ * TEXTE. Ça survivait, mais le propriétaire perdait SA typographie.
+ *
+ * CE QUI NE MARCHE PAS, ET IL FAUT LE SAVOIR AVANT DE LIRE LA SUITE :
+ *  · CHOISIR L'IMAGE SELON LE FOND (une version blanche, une noire,
+ *    et `prefers-color-scheme` ou `picture` pour trancher) — il
+ *    faudrait que le client DISE dans quel mode il est. Gmail ne le
+ *    dit pas : c'est exactement ce que le propriétaire a constaté ;
+ *  · UNE PLAQUE POSÉE EN COULEUR DE FOND (`bgcolor`) — une couleur,
+ *    l'inversion la retourne. Une plaque sombre devient claire et le
+ *    mot blanc disparaît de nouveau : la plaque ne protège rien.
+ *
+ * CE QUI MARCHE : QUE LA PLAQUE SOIT ELLE-MÊME UNE IMAGE. La cellule
+ * de la tête porte `plaque-courriel.png` en FOND — un carré de 16 px
+ * d'une seule couleur, le bleu nuit du site, qui se répète. Étant une
+ * image, elle ne s'inverse jamais ; le logotype officiel est posé
+ * DESSUS, tel quel. Les deux couches sont donc invariantes, et la
+ * tête a exactement le même aspect dans les deux modes.
+ * ⚠️ `plaque-courriel.png` N'EST PAS UNE IMAGE DE MARQUE et n'est la
+ * variante de RIEN : c'est un rectangle d'une seule couleur. La règle
+ * nº 356 n'est pas en jeu — aucun pixel du logo n'a été touché,
+ * recadré ni recoloré ; l'image officielle est posée par-dessus.
+ * ⚠️ SI LES IMAGES SONT BLOQUÉES (Gmail le fait pour un expéditeur
+ * inconnu), ni la plaque ni le logotype ne s'affichent : il reste le
+ * `alt` du logotype, du TEXTE, qui s'inverse avec son fond et reste
+ * donc lisible. La dégradation est sûre.
  *
  * CE QUE LE BANC MESURE (contrastes WCAG lus dans les pixels de la
- * capture, la transformation faite au canevas en épargnant les
- * rectangles d'image — deux transformations, parce que les clients
- * n'emploient pas tous la même) :
+ * capture ; la transformation est faite au canevas en épargnant les
+ * rectangles d'image — LA PLAQUE COMPRISE, puisqu'elle en est une —
+ * et l'on en essaie DEUX, les clients n'employant pas tous la même) :
  *
- *                        cœur   nom   titre  texte  bouton
- *   tel quel              4,0   17,2   14,8   14,8    4,8
- *   inversion franche     4,2   17,1   14,8   14,8   14,0
- *   bascule de clarte     4,2   17,0   14,5   14,5    4,9
+ *                        mot   coeur  titre  texte  bouton
+ *   tel quel             18,9   4,0   14,8   14,8    6,6
+ *   inversion franche    18,9   4,0   14,8   14,8   14,6
+ *   bascule de clarte    18,9   4,0   14,5   14,5    5,8
  *
- * Les seuils WCAG AA : 4,5 pour du texte courant, 3 pour du grand
- * texte gras et pour un dessin. Tout passe, DANS LES TROIS SENS.
- * Le cœur tient parce que son rouge est une couleur MOYENNE : 4,0 sur
- * le bleu nuit, 4,2 sur le clair. Ni le blanc ni le noir n'auraient
- * cette propriété — c'est le rouge de la marque qui sauve la tête.
- * ⚠️ AUCUNE IMAGE OFFICIELLE N'EST TOUCHÉE, et c'est la règle du dépôt
- * (nº 356/467) : on n'a ni recadré, ni recoloré, ni fabriqué de
- * variante du logo. On emploie l'icône telle quelle, à ses
- * proportions (285 × 324 → 26 × 30), et le nom devient du texte.
- * ⚠️ POURQUOI PAS « UNE PLAQUE DE FOND SOUS LE LOGO », qui semble la
- * réponse évidente : une plaque posée en HTML est une COULEUR DE
- * FOND, et une couleur de fond, l'inversion la retourne comme le
- * reste. Une plaque sombre devient claire, et le mot blanc disparaît
- * de nouveau — la plaque ne protège rien. Il n'y a qu'un support que
- * l'inversion ne touche pas : le PNG lui-même.
- * ⚠️ SI LE PROPRIÉTAIRE VEUT SON LOGOTYPE DANS LES COURRIELS, il faut
- * donc une image qui porte SON PROPRE FOND (un liseré clair autour
- * des lettres, ou une plaque sombre CUITE DANS LE PNG) : celle-là
- * traverserait l'inversion comme le cœur. C'est une image à FOURNIR —
- * le dépôt interdit d'en fabriquer une (règle nº 356).
+ * LE MOT ET LE CŒUR NE BOUGENT PAS D'UN DIXIÈME entre les trois : ce
+ * n'est pas une coïncidence, c'est la démonstration. Deux couches
+ * d'image l'une sur l'autre, rien à recalculer. Le banc le vérifie
+ * aussi directement : la plaque doit rendre la MÊME couleur dans les
+ * trois sens (11,15,20 partout).
+ *
+ * ██ §2 (nº 824) — LE BOUTON : UN TEXTE CLAIR NE PEUT PAS LE RESTER ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : dans Gmail sombre, le libellé BLANC du
+ * bouton devient NOIR sur le rouge — laid.
+ * LA CAUSE, ET C'EST UNE IMPOSSIBILITÉ, PAS UN RÉGLAGE : ces moteurs
+ * retournent la CLARTÉ (L devient 1 − L). La transformation est
+ * monotone — tout ce qui est clair devient sombre. AUCUNE couleur de
+ * texte claire ne peut rester claire après elle. (Les seules couleurs
+ * invariantes ont une clarté TSL de 0,5 : ni blanches, ni noires.)
+ * Un libellé qui reste blanc à coup sûr devrait être une IMAGE — et
+ * un bouton d'action qui disparaît quand les images sont bloquées est
+ * un défaut plus grave que celui qu'on corrige.
+ *
+ * LES DEUX PARADES POSÉES, l'une pour chaque famille de moteurs :
+ *  1. LE LIBELLÉ N'EST PLUS `#FFFFFF` MAIS `#FEFEFE`. Les moteurs qui
+ *     n'inversent que le blanc PUR et le noir PUR (l'inversion dite
+ *     partielle, celle d'Outlook.com notamment) laissent passer un
+ *     blanc cassé : le libellé reste blanc. C'est la technique que le
+ *     propriétaire a proposée ; elle ne coûte rien et elle sert.
+ *     ⚠️ ELLE N'EST PAS MESURABLE ICI : elle dépend du moteur du
+ *     client, pas du rendu. D'où la seconde parade.
+ *  2. LE ROUGE DU BOUTON QUITTE LE MILIEU DE L'ÉCHELLE. C'est là toute
+ *     l'affaire : `#E11144` a une clarté TSL de 0,47 — la bascule le
+ *     laisse presque sur place, et le libellé devenu noir se retrouve
+ *     sur un rouge resté VIF. D'où le « moche ». Le bouton prend donc
+ *     `#B80E38` (`primaireFonce`, déjà à la charte), clarté 0,39 : la
+ *     bascule l'envoie à 0,61, un corail CLAIR sur lequel un libellé
+ *     devenu sombre se lit comme un bouton de thème clair — voulu, et
+ *     non plus subi. Et si le moteur laisse passer le blanc cassé, le
+ *     libellé reste blanc sur un rouge plus profond : les deux issues
+ *     sont bonnes.
  *
  * ██ §1 (nº 822) — LES COULEURS NE DÉPENDENT PLUS DU LECTEUR ██
  * ==================================================================
@@ -179,6 +226,19 @@ export function echapperHtml(texte: string): string {
 const POLICE = "Arial, Helvetica, sans-serif";
 const TEXTE = "#F2F2F4";
 const TEXTE_DOUX = "#A8A8B0";
+/**
+ * LA PLAQUE DE LA TÊTE (voir le §1 de la nº 824) : un carré de 16 px
+ * du bleu nuit du site, qui se répète derrière le logotype. Étant une
+ * IMAGE, elle ne s'inverse jamais — c'est tout son intérêt.
+ * ⚠️ Ce n'est PAS une image de marque et ce n'est la variante de rien.
+ */
+const PLAQUE = "/plaque-courriel.png";
+/**
+ * LE BLANC DU LIBELLÉ DU BOUTON — cassé exprès (voir le §2 de la
+ * nº 824) : les moteurs qui n'inversent que le blanc PUR le laissent
+ * passer. Ne pas le « corriger » en `#FFFFFF`.
+ */
+const BLANC_CASSE = "#FEFEFE";
 
 /** Un paragraphe du corps : 15 px, interligne 23. */
 function paragraphe(texte: string): string {
@@ -202,13 +262,17 @@ export function habillerCourriel(
   const domaine = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
   const fond = COULEURS_SOMBRE.fond;
   const carte = COULEURS_SOMBRE.carte;
-  const rouge = COULEURS_SOMBRE.primaire;
+  //  LE ROUGE DU BOUTON : `primaireFonce`, pas `primaire` — c'est le
+  //  point 2 de la nº 824. Sa clarté TSL (0,39) est assez basse pour
+  //  que la bascule des moteurs sombres l'envoie sur un corail CLAIR,
+  //  au lieu de le laisser sur place et d'y coller un libellé noirci.
+  const rouge = COULEURS_SOMBRE.primaireFonce;
 
   const bouton = contenu.action
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
             <tr>
               <td class="yf-bouton" bgcolor="${rouge}" style="background-color:${rouge} !important;border-radius:999px;">
-                <a href="${echapperHtml(contenu.action.url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF !important;text-decoration:none;border-radius:999px;">${echapperHtml(contenu.action.libelle)}</a>
+                <a href="${echapperHtml(contenu.action.url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:14px;line-height:18px;font-weight:bold;color:${BLANC_CASSE} !important;text-decoration:none;border-radius:999px;">${echapperHtml(contenu.action.libelle)}</a>
               </td>
             </tr>
           </table>`
@@ -239,7 +303,7 @@ export function habillerCourriel(
       .yf-texte, .yf-titre { color: ${TEXTE} !important; }
       .yf-doux, .yf-doux a { color: ${TEXTE_DOUX} !important; }
       .yf-bouton { background-color: ${rouge} !important; }
-      .yf-bouton a { color: #FFFFFF !important; }
+      .yf-bouton a { color: ${BLANC_CASSE} !important; }
     }
     /*  OUTLOOK.COM en mode sombre marque les éléments qu'il a
         retouchés (data-ogsc pour la couleur, data-ogsb pour le
@@ -249,7 +313,7 @@ export function habillerCourriel(
     [data-ogsc] .yf-texte, [data-ogsc] .yf-titre { color: ${TEXTE} !important; }
     [data-ogsc] .yf-doux, [data-ogsc] .yf-doux a { color: ${TEXTE_DOUX} !important; }
     [data-ogsc] .yf-bouton, [data-ogsb] .yf-bouton { background-color: ${rouge} !important; }
-    [data-ogsc] .yf-bouton a { color: #FFFFFF !important; }
+    [data-ogsc] .yf-bouton a { color: ${BLANC_CASSE} !important; }
   </style>
 </head>
 <body class="yf-fond" style="margin:0;padding:0;background-color:${fond} !important;" bgcolor="${fond}">
@@ -259,11 +323,12 @@ export function habillerCourriel(
         <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
-            <td class="yf-fond" align="left" bgcolor="${fond}" style="background-color:${fond} !important;padding:0 4px 24px 4px;">
+            <td class="yf-fond" align="left" bgcolor="${fond}" style="background-color:${fond} !important;padding:0 0 24px 0;">
               <a href="${echapperHtml(site)}" style="text-decoration:none;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                  <td style="padding:0 10px 0 0;" valign="middle"><img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.icone}" width="26" height="30" alt="" style="display:block;border:0;outline:none;width:26px;height:30px;"></td>
-                  <td class="yf-titre" valign="middle" style="font-family:${POLICE};font-size:22px;line-height:30px;font-weight:bold;letter-spacing:-0.2px;color:${TEXTE} !important;">${MARQUE_YOKOFOLIO.nom}</td>
+                  <td background="${echapperHtml(site)}${PLAQUE}" bgcolor="${fond}" style="background-color:${fond};background-image:url('${echapperHtml(site)}${PLAQUE}');background-repeat:repeat;border-radius:12px;padding:10px 14px;line-height:0;">
+                    <img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.logo}" width="170" height="33" alt="${MARQUE_YOKOFOLIO.nom}" style="display:block;border:0;outline:none;width:170px;height:33px;">
+                  </td>
                 </tr></table>
               </a>
             </td>
