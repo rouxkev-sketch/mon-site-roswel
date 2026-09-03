@@ -207,12 +207,21 @@ export async function POST(requete: NextRequest) {
    * CORRECTION. La différence commande tout le reste :
    *  · elle ne s'applique qu'à une ligne DÉJÀ ACCEPTÉE ;
    *  · elle ne demande ni nom, ni rangement, ni message ;
-   *  · elle NE PRÉVIENT PAS LE TATOUEUR. Le cas d'usage est « j'ai
-   *    validé par erreur » : lui écrire « Style refusé » des jours
-   *    après un « Style ajouté » l'inquiéterait pour une hésitation
-   *    d'administration. (Si un jour il faut retirer un style
-   *    largement adopté, ce sera un message écrit à la main, pas une
-   *    notification automatique.)
+   *  · elle NE POSE PAS DE NOTIFICATION dans la cloche.
+   *
+   * ██ §2 (nº 834) — MAIS ELLE ÉCRIT, DÉSORMAIS ██
+   * ⚠️ CETTE NOTE DISAIT LE CONTRAIRE, et il faut le dire : « elle ne
+   * prévient pas le tatoueur », avec pour raison qu'un « Style
+   * refusé » reçu des jours après un « Style ajouté » inquiéterait
+   * pour une simple hésitation d'administration. LE PROPRIÉTAIRE A
+   * TRANCHÉ AUTREMENT : un style qu'on a vu entrer au catalogue et qui
+   * en sort sans un mot est plus déroutant qu'un message qui
+   * l'explique. Le courriel du retrait ne dit donc pas « refusé » — il
+   * dit ce qui s'est passé, remercie, et invite à recommencer
+   * (`textesDuCourriel`, §1).
+   * ⚠️ LA CLOCHE, ELLE, RESTE MUETTE : seul le courriel a été demandé,
+   * et une notification « Style refusé » rouvrirait exactement le
+   * malentendu que l'ancienne note craignait.
    * Techniquement, c'est le même geste que la requête SQL de secours :
    * repasser `etat` à « refusee ». Le slug se libère (l'index unique
    * ne vaut que sur les acceptées) et le style quitte le catalogue au
@@ -230,7 +239,9 @@ export async function POST(requete: NextRequest) {
         //  ⚠️ SEULEMENT SI ELLE EST ENCORE ACCEPTÉE : deux onglets
         //  ouverts sur la même ligne ne peuvent pas se contredire.
         .eq("etat", "acceptee")
-        .select("id, label");
+        //  nº 834 — `user_id` EN PLUS : c'est à lui qu'on écrit
+        //  désormais (voir le §2 juste au-dessus de ce bloc).
+        .select("id, label, user_id");
       if (error) throw new Error(error.message);
       if (!data || data.length === 0) {
         return NextResponse.json(
@@ -244,8 +255,16 @@ export async function POST(requete: NextRequest) {
       //  Le catalogue vient de rétrécir : la prochaine page doit le
       //  relire sans attendre la minute de cache.
       oublierStylesAjoutes();
-    rafraichirToutLeSite();
-      return NextResponse.json({ ok: true });
+      rafraichirToutLeSite();
+      const retiree = data[0] as { label: string | null; user_id: string | null };
+      const courriel = await envoyerCourriel(
+        admin,
+        retiree.user_id,
+        "retirer",
+        retiree.label,
+        ""
+      );
+      return NextResponse.json({ ok: true, courriel });
     } catch (e) {
       return NextResponse.json(
         {
@@ -529,7 +548,7 @@ export async function POST(requete: NextRequest) {
     const courriel = await envoyerCourriel(
       admin,
       demande.user_id,
-      accepte,
+      accepte ? "accepter" : "refuser",
       nomDitAuTatoueur,
       message
     );
@@ -580,6 +599,10 @@ export async function POST(requete: NextRequest) {
  * du serveur ET remonte à l'écran d'administration, avec l'adresse
  * visée. Plus une seule branche silencieuse.
  */
+/** Les trois décisions qui écrivent au suggéreur (nº 834 : le retrait
+    en fait partie, il n'écrivait à personne). */
+type DecisionCourriel = "accepter" | "refuser" | "retirer";
+
 type EtatCourriel =
   | "envoye"
   | "simule"
@@ -603,10 +626,46 @@ function noter(quoi: string): void {
   console.error(`📧 STYLE — ${quoi}`);
 }
 
+/**
+ * ██ §1 (nº 834) — LES TROIS TEXTES, AU MÊME ENDROIT ██
+ * ------------------------------------------------------------------
+ * Ils étaient deux, écrits en ternaires dans le corps de l'envoi. Le
+ * RETRAIT en ajoute un troisième (décision du propriétaire), et trois
+ * ternaires imbriqués deviendraient illisibles — c'est le moment de
+ * les sortir. Une table : une décision, un sujet, une phrase.
+ * Ce sont les mots du propriétaire, au caractère près.
+ */
+function textesDuCourriel(
+  decision: DecisionCourriel,
+  nomDuStyle: string | null
+): { sujet: string; phrase: string } {
+  switch (decision) {
+    case "accepter":
+      return {
+        sujet: "Your style is live!",
+        phrase: `Great news — "${nomDuStyle}" is now part of YokoFolio's style catalog. Thanks for helping the collection grow.`,
+      };
+    case "refuser":
+      return {
+        sujet: "About your style suggestion",
+        phrase: `Thanks for suggesting "${nomDuStyle}" — we appreciate it. This one didn't make the cut this time, but keep them coming.`,
+      };
+    default:
+      /*  LE RETRAIT (nº 834) — un style qui ÉTAIT au catalogue en
+          sort. Le sujet nomme le style, parce que le destinataire
+          l'avait vu accepté : sans son nom, le message serait une
+          énigme. */
+      return {
+        sujet: `About your style "${nomDuStyle}"`,
+        phrase: `We've removed "${nomDuStyle}" from YokoFolio's style catalog after a review. Thanks again for suggesting it — keep them coming.`,
+      };
+  }
+}
+
 async function envoyerCourriel(
   admin: ReturnType<typeof creerClientSupabaseAdmin>,
   userId: string | null,
-  accepte: boolean,
+  decision: DecisionCourriel,
   nomDuStyle: string | null,
   message: string
 ): Promise<SortDuCourriel> {
@@ -629,24 +688,18 @@ async function envoyerCourriel(
       return { etat: "sans-adresse", destinataire: null };
     }
 
-    /*  ██ §1 (nº 833) — LES DEUX TEXTES, RÉÉCRITS PAR LE PROPRIÉTAIRE ██
-        Ils disaient « Style added » / « Style declined » et récitaient
-        l'état d'un dossier. Les nouveaux parlent à quelqu'un : une
-        bonne nouvelle qu'on partage, un refus qui remercie et qui
-        rappelle. Ce sont SES phrases, au mot près. */
-    const sujet = accepte ? "Your style is live!" : "About your style suggestion";
-    /*  nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
+    /*  nº 833 — LES TEXTES SONT CEUX DU PROPRIÉTAIRE (§1 ci-dessous,
+        où ils vivent tous les trois depuis la nº 834). Ils disaient
+        « Style added » / « Style declined » et récitaient l'état d'un
+        dossier ; ils parlent maintenant à quelqu'un.
+        nº 817 — LE COURRIEL HABILLÉ (lib/courriel-habille) : les mêmes
         phrases, dans la charte du site ; le lien d'action part avec.
         Le texte nu part à côté. */
+    const { sujet, phrase } = textesDuCourriel(decision, nomDuStyle);
     const courriel = habillerCourriel({
       titre: sujet,
-      paragraphes: [
-        accepte
-          ? `Great news — "${nomDuStyle}" is now part of YokoFolio's style catalog. Thanks for helping the collection grow.`
-          : `Thanks for suggesting "${nomDuStyle}" — we appreciate it. This one didn't make the cut this time, but keep them coming.`,
-        message,
-      ].filter(Boolean),
-      action: lienDuPortfolio(accepte),
+      paragraphes: [phrase, message].filter(Boolean),
+      action: lienDuPortfolio(decision),
     });
 
     /*  ██ §2 (nº 833) — L'IDENTIFIANT DE L'ENVOI REMONTE ██
@@ -715,9 +768,13 @@ async function envoyerCourriel(
  * se lira dans l'identifiant Resend du §2.
  */
 function lienDuPortfolio(
-  accepte: boolean
+  decision: DecisionCourriel
 ): { libelle: string; url: string } | null {
-  if (!accepte) return null;
+  //  ⚠️ SEULE L'ACCEPTATION MÈNE QUELQUE PART : un refus n'a rien à
+  //  ouvrir, et un RETRAIT non plus (nº 834) — envoyer quelqu'un vers
+  //  son portfolio pour lui montrer un style qui vient d'en disparaître
+  //  serait une invitation à la déception.
+  if (decision !== "accepter") return null;
   try {
     return {
       libelle: "Open my portfolio",

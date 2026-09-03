@@ -337,37 +337,39 @@ function dateCourte(iso: string | null | undefined): string {
  * `simule` n'arrive qu'en développement, sans clé Resend : on le dit
  * aussi, pour ne pas croire à un envoi qui n'a pas eu lieu.
  */
+/*  §2 (nº 834) — LE TYPE, ÉCRIT UNE FOIS. Il était recopié dans la
+    lecture de la réponse d'`accepter/refuser` ET dans la signature
+    ci-dessous ; le RETRAIT en aurait fait une troisième copie (piège
+    nº 378). Il tient ici, et les trois lecteurs s'y réfèrent. */
+type SortDuCourriel = {
+  etat:
+    | "envoye"
+    | "simule"
+    | "echec"
+    | "echec-avant-envoi"
+    | "sans-compte"
+    | "sans-adresse";
+  destinataire: string | null;
+  identifiant?: string | null;
+};
+
 function sortDuCourriel(
-  sort:
-    | {
-        etat:
-          | "envoye"
-          | "simule"
-          | "echec"
-          | "echec-avant-envoi"
-          | "sans-compte"
-          | "sans-adresse";
-        destinataire: string | null;
-        identifiant?: string | null;
-      }
-    | undefined
+  sort: SortDuCourriel | undefined
 ): { texte: string; bon: boolean } | null {
   if (!sort) return null;
   const a = sort.destinataire ? ` to ${sort.destinataire}` : "";
   switch (sort.etat) {
     case "envoye":
-      /*  §2 (nº 833) — L'IDENTIFIANT EST LA PREUVE. « Email sent » ne
-          suffisait pas : le propriétaire voyait ce message pour un
-          courriel qui n'arrivait jamais, sans pouvoir dire s'il était
-          parti. Avec l'identifiant, resend.com/emails donne le sort
-          réel du message — remis, rejeté, ou signalé comme
-          indésirable. */
-      return {
-        texte: sort.identifiant
-          ? `Email sent${a} — Resend id ${sort.identifiant} (check its delivery on resend.com/emails).`
-          : `Email sent${a}.`,
-        bon: true,
-      };
+      /*  §1 (nº 834) — LA PHRASE COURTE. La nº 833 y avait ajouté
+          l'identifiant Resend et l'adresse du tableau de bord : c'était
+          l'outil d'une enquête, pas une confirmation de tous les jours.
+          L'enquête faite, l'écran redevient sobre — « Email sent to
+          … », rien de plus.
+          ⚠️ L'IDENTIFIANT N'EST PAS PERDU : il continue de partir dans
+          le JOURNAL DU SERVEUR à chaque envoi (route
+          suggestions-styles, §2). Il se retrouve donc quand on le
+          cherche, sans encombrer l'écran quand tout va bien. */
+      return { texte: `Email sent${a}.`, bon: true };
     case "echec-avant-envoi":
       return {
         texte:
@@ -772,8 +774,14 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as {
         ok: boolean;
         message?: string;
+        courriel?: SortDuCourriel;
       };
       if (!donnees.ok) throw new Error(donnees.message);
+      /*  §2 (nº 834) — LE RETRAIT ÉCRIT LUI AUSSI, et le dit. Il ne
+          prévenait personne (voir la route, §2) ; le propriétaire l'a
+          changé, et cet écran doit donc rendre compte des TROIS
+          décisions, pas de deux. */
+      setDitCourriel(sortDuCourriel(donnees.courriel));
       setARetirer(null);
       setSuggestions(null); // relecture : la ligne montre son nouvel état
     } catch (e) {
@@ -849,17 +857,7 @@ export function AdminYokofolio() {
       const donnees = (await reponse.json()) as {
         ok: boolean;
         message?: string;
-        courriel?: {
-          etat:
-            | "envoye"
-            | "simule"
-            | "echec"
-            | "echec-avant-envoi"
-            | "sans-compte"
-            | "sans-adresse";
-          destinataire: string | null;
-          identifiant?: string | null;
-        };
+        courriel?: SortDuCourriel;
       };
       if (!donnees.ok) throw new Error(donnees.message);
       setDitCourriel(sortDuCourriel(donnees.courriel));
