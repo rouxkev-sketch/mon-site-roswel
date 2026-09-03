@@ -42,6 +42,9 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
 //  zone est écrite : la réserve neutre plus bas la reprend telle
 //  quelle, elles ne peuvent plus diverger.
 import { EMPREINTE_ZONE_COMPTE, MenuEspace } from "@/components/MenuEspace";
+//  §6 (nº 821) — la cible et le dessin des gestes de la barre, écrits
+//  une fois (lib/reserve-barre) et partagés avec le squelette.
+import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
 //  nº 815 — les accès au compte tirent le rideau au clic (nº 811).
 import { LienAuGeste } from "@/components/LienAuGeste";
@@ -1115,8 +1118,11 @@ export function EnTeteTatouage({
             data-loupe-barre=""
             aria-hidden={!loupeVisible || undefined}
             tabIndex={loupeVisible ? 0 : -1}
-            style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-            className={`flex ${rangeeLibre ? "" : "lg:hidden "}shrink-0 items-center justify-center rounded-full
+            /*  §6 (nº 821) — LA CIBLE VIENT DE L'ÉCRITURE UNIQUE : 46
+                au doigt (le standard tactile), 40 au web, inchangé.
+                L'attribut de style qui la posait est parti — il ne
+                savait pas dire « selon l'appareil ». */
+            className={`flex ${CIBLE_GESTE_BARRE} ${rangeeLibre ? "" : "lg:hidden "}shrink-0 items-center justify-center rounded-full
                        transition-opacity duration-200 ${ETATS_ROND_BARRE}
                        text-sombre-texte
                        focus-visible:outline-2 focus-visible:outline-offset-2
@@ -1126,7 +1132,7 @@ export function EnTeteTatouage({
                            : "opacity-0 pointer-events-none"
                        }`}
           >
-            <IconeLoupe taille={28} classe="mobile:h-6 mobile:w-6" />
+            <IconeLoupe taille={28} classe={DESSIN_GESTE_BARRE} />
           </a>
           {/* ⚠️ LA PLACE À GAUCHE DU COMPTE CHANGE DE MAIN SELON QU'ON
               EST CONNECTÉ (passe nº 137) :
@@ -1156,8 +1162,8 @@ export function EnTeteTatouage({
               //  données (`router.refresh()` — les favoris d'à
               //  l'instant, sans recharger l'application entière).
               onClick={rafraichirSiDejaLa("/mes-favoris")}
-              style={{ height: HAUTEUR_ACTIONS, width: HAUTEUR_ACTIONS }}
-              className={`shrink-0 flex items-center justify-center rounded-full
+              //  §6 (nº 821) — même cible que la loupe et le globe.
+              className={`${CIBLE_GESTE_BARRE} shrink-0 flex items-center justify-center rounded-full
                          transition-colors ${ETATS_ROND_BARRE}
                          focus-visible:outline-2 focus-visible:outline-offset-2
                          focus-visible:outline-primaire
@@ -1170,10 +1176,10 @@ export function EnTeteTatouage({
                   RANG 24 (nº 147-§6) : les icônes de la barre — globe,
                   fanion, compte — montent de 22 à 24, web et
                   smartphone. */}
-              <IconeFanion taille={28} classe="mobile:h-6 mobile:w-6" />
+              <IconeFanion taille={28} classe={DESSIN_GESTE_BARRE} />
             </Link>
           ) : (
-            <SelecteurLangue hauteur={HAUTEUR_ACTIONS} />
+            <SelecteurLangue />
           )}
 
           {connecte && utilisateur ? (

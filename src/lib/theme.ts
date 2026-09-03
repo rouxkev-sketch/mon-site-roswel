@@ -62,6 +62,9 @@ export function variablesCssCouleurs(): string {
     //  §5 (nº 388) — le bleu des liens qui sortent du site.
     "--rw-sombre-lien": COULEURS_SOMBRE.lien,
     "--rw-sombre-lien-clair": COULEURS_SOMBRE.lienClair,
+    //  §5 (nº 821) — la primaire éclaircie, pour le survol d'un lien
+    //  rouge sur le fond sombre (voir COULEURS_SOMBRE.primaireClair).
+    "--rw-sombre-primaire-clair": COULEURS_SOMBRE.primaireClair,
   };
 
   const lignes = Object.entries(variables)

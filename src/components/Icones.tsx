@@ -1358,6 +1358,42 @@ export function IconeReglages({ taille = 19, classe = "" }: ProprietesIcone) {
 }
 
 /**
+ * ██ LE CRAYON — « Éditer », nº 821 ██
+ * ==================================================================
+ * Le geste d'édition du compte, en glyphe : le mot « Edit » le disait,
+ * il le dit désormais par un dessin — au coin haut gauche de la
+ * fenêtre « Mon compte » pour un particulier, et dans le menu d'un
+ * professionnel, à la place qu'il occupait.
+ * LE DESSIN, à la charte de la famille (traits fins de 1,8, bouts
+ * arrondis, boîte de 24) : le corps du crayon en diagonale, sa pointe
+ * en bas à gauche, et le trait du support sous elle. Rien de plein,
+ * aucune ombre — comme les vingt autres icônes du site.
+ */
+export function IconeCrayon({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {/*  Le corps : du haut droit (la gomme) vers la pointe, et le
+           second bord parallèle — un crayon vu de trois quarts. */}
+      <path
+        d="M16.4 4.6a2.2 2.2 0 0 1 3.1 3.1L9.1 18.1l-4 .9.9-4L16.4 4.6Z"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/*  Le trait qui sépare la gomme du corps : c'est lui qui fait
+           lire « crayon » plutôt que « flèche ». */}
+      <path
+        d="m14.9 6.1 3.1 3.1"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * LA FLÈCHE DE L'ADRESSE (fiches yokofolio) — la diagonale type
  * Apple, VERSION LONGUE : le trait part vraiment du bas gauche
  * (5,19) jusqu'à la pointe haut droit (19,5), tête équilibrée.

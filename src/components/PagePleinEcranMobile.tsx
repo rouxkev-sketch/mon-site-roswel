@@ -40,6 +40,7 @@ export function EnTetePleinEcran({
   surFermer,
   ariaLabelFermer = "Close",
   actions,
+  actionsGauche,
   marqueRecherche = false,
   children,
 }: {
@@ -73,6 +74,12 @@ export function EnTetePleinEcran({
   /** La croix : on referme sans rien appliquer. */
   surFermer: () => void;
   ariaLabelFermer?: string;
+  /** §2 (nº 821) — LA FENTE DE GAUCHE, EN FACE DE LA CROIX. Elle
+      n'existait pas : la rangée n'avait qu'un porteur à droite. « Mon
+      compte » y pose le crayon d'un particulier, aligné avec la croix
+      (décision du propriétaire). Facultative : les écrans qui ne la
+      passent pas ne changent pas d'un pixel. */
+  actionsGauche?: React.ReactNode;
   /** Un geste de plus à GAUCHE de la croix (la double coche des
       notifications) — rien pour les autres porteurs. */
   actions?: React.ReactNode;
@@ -121,12 +128,39 @@ export function EnTetePleinEcran({
     </div>
   );
   return (
+    /*  ██ §4 (nº 821) — « TOTALEMENT FIXE », ET PLUS « COLLANT » ██
+        LE DÉFAUT DU PROPRIÉTAIRE (fenêtre « Mon compte », téléphone) :
+        « au défilement, la partie qui porte l'avatar se rétracte avant
+        de se bloquer ». LA CAUSE : cet en-tête était `sticky top-0`
+        DANS la surface qui défile — un élément qui appartient au flux
+        et que le moteur repositionne À CHAQUE IMAGE. Sur WebKit, ce
+        repositionnement suit le doigt d'une image ou deux : la barre
+        part avec le contenu, puis revient se caler — c'est la
+        rétraction, et elle ne se reproduit pas en Chromium (comme les
+        fantômes de la nº 815).
+        LE REMÈDE, DÉTERMINISTE : la barre SORT du flux qui défile. Elle
+        devient un frère qui ne bouge jamais (`shrink-0`), et c'est le
+        CONTENU qui reçoit le défilement (voir `PagePleinEcranMobile`
+        juste dessous). Il n'y a plus rien à repositionner : la barre ne
+        peut plus bouger, sur aucun moteur.
+        ⚠️ RIEN NE CHANGE À L'ŒIL : même fond, même hauteur, mêmes
+        24 px sous l'encoche, même contenu dessous — c'est la mécanique
+        qui change, pas le dessin. Les cinq écrans qui montent cette
+        page (Mon compte, Notifications, Langue, recherche, conventions)
+        en profitent ensemble : une seule écriture. */
     <div
       {...(marqueRecherche ? { "data-entete-recherche": "" } : {})}
-      className="sticky top-0 z-10 bg-sombre-fond px-4 pb-1
+      className="shrink-0 z-10 bg-sombre-fond px-4 pb-1
                  pt-[max(24px,env(safe-area-inset-top))]"
     >
       <div className="flex items-center justify-between gap-4">
+        {/*  §2 (nº 821) — le geste de gauche se cale EN HAUT de la
+             rangée, comme ceux de droite : les deux cibles partent
+             alors du même pixel, quelle que soit la hauteur de la
+             rangée. */}
+        {actionsGauche ? (
+          <div className="flex shrink-0 items-center self-start">{actionsGauche}</div>
+        ) : null}
         {tete ? (
           /*  §4 (nº 641) — LA TÊTE PREND LA PLACE DU TITRE, PAS UNE
               PLACE DE PLUS : même rangée, même écart aux gestes. Le
@@ -168,6 +202,7 @@ export function PagePleinEcranMobile({
   surFermer,
   ariaLabelFermer,
   actions,
+  actionsGauche,
   sousLeTitre,
   classeCadre = "z-[70]",
   children,
@@ -182,6 +217,12 @@ export function PagePleinEcranMobile({
   ariaLabel: string;
   surFermer: () => void;
   ariaLabelFermer?: string;
+  /** §2 (nº 821) — LA FENTE DE GAUCHE, EN FACE DE LA CROIX. Elle
+      n'existait pas : la rangée n'avait qu'un porteur à droite. « Mon
+      compte » y pose le crayon d'un particulier, aligné avec la croix
+      (décision du propriétaire). Facultative : les écrans qui ne la
+      passent pas ne changent pas d'un pixel. */
+  actionsGauche?: React.ReactNode;
   actions?: React.ReactNode;
   /** §2-b (nº 475) — CE QUI VIT SOUS LA LIGNE DU TITRE, DANS LE BLOC
       COLLANT : le canal existait déjà dans `EnTetePleinEcran` (les
@@ -300,9 +341,12 @@ export function PagePleinEcranMobile({
       role="dialog"
       aria-modal="true"
       aria-label={ariaLabel}
+      /*  §4 (nº 821) — LE CADRE NE DÉFILE PLUS : le défilement est
+          descendu d'un cran, sur le contenu (juste dessous). C'est ce
+          qui rend l'en-tête immobile pour de bon — il n'est plus dans
+          la zone qui bouge. */
       className={`hidden mobile:flex fixed inset-0 ${classeCadre} flex-col
-                 overflow-y-auto overscroll-contain
-                 bg-sombre-fond text-sombre-texte`}
+                 overflow-hidden bg-sombre-fond text-sombre-texte`}
     >
       <EnTetePleinEcran
         icone={icone}
@@ -311,10 +355,18 @@ export function PagePleinEcranMobile({
         surFermer={surFermer}
         ariaLabelFermer={ariaLabelFermer}
         actions={actions}
+        actionsGauche={actionsGauche}
       >
         {sousLeTitre}
       </EnTetePleinEcran>
-      {children}
+      {/*  §4 (nº 821) — LA ZONE QUI DÉFILE, ET ELLE SEULE. Elle reste
+           une colonne souple : les contenus qui portent `grow` (la
+           liste des notifications, la recherche) se comportent comme
+           avant, à ceci près qu'ils défilent maintenant SOUS une barre
+           qui ne bouge plus. */}
+      <div className="flex grow flex-col overflow-y-auto overscroll-contain">
+        {children}
+      </div>
     </div>,
     document.body
   );

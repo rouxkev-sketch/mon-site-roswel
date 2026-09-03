@@ -146,6 +146,11 @@
       éclaircissement au survol. */
   --color-sombre-lien: var(--rw-sombre-lien);
   --color-sombre-lien-clair: var(--rw-sombre-lien-clair);
+  /*  §5 (nº 821) — LA PRIMAIRE ÉCLAIRCIE, pour le survol d'un lien
+      rouge sur le fond sombre : sur le bleu nuit, tout s'éclaircit au
+      survol (la grammaire des liens, nº 388), et le rouge n'avait pas
+      sa seconde teinte. Voir COULEURS_SOMBRE.primaireClair. */
+  --color-sombre-primaire-clair: var(--rw-sombre-primaire-clair);
 
   --font-sans: var(--font-geist-sans);
 }

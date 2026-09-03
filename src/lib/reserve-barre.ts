@@ -72,6 +72,36 @@
 export const RESERVE_RANGEE = 122;
 export const RESERVE_LOGO = 64;
 
+/**
+ * ██ §6 (nº 821) — LA CIBLE DES GESTES DE LA BARRE, AU DOIGT ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : « les icônes de la barre fixe mobile
+ * (loupe, globe, fanion — PAS l'avatar) sont trop petites ». MESURÉ
+ * AVANT D'ÉCRIRE : au doigt, la cible fait 40 × 40 et le dessin 24 —
+ * la cible est SOUS le standard tactile (44 à 48), le dessin est à sa
+ * borne basse.
+ * CE QUI CHANGE, ET RIEN D'AUTRE : la cible passe à 46 (le milieu de
+ * la fourchette) et le dessin à 26 — les proportions et le trait fin
+ * (1,8) ne bougent pas. LE WEB NE CHANGE PAS D'UN PIXEL : 40 de cible,
+ * 28 de dessin, comme depuis la nº 147.
+ * ⚠️ DEUX VARIANTES QUI S'EXCLUENT (piège nº 389), et l'appareil se
+ * lit sur `data-appareil` — jamais sur une largeur de fenêtre (piège
+ * nº 60).
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES TROIS GESTES ET LEUR SQUELETTE
+ * (pièges nº 378/379) : la barre (EnTeteTatouage, SelecteurLangue) et
+ * les ronds gris de l'habillage d'attente (SquelettesDePage) lisent
+ * cette constante-ci. Sans cela, l'habillage promettrait une largeur
+ * que la barre ne tiendrait pas — c'est l'acquis de la nº 815.
+ * ⚠️ L'AVATAR N'EN EST PAS : il garde ses 40 (EMPREINTE_ZONE_COMPTE,
+ * MenuEspace) — le propriétaire l'exclut, et sa photo n'est pas une
+ * icône.
+ */
+export const CIBLE_GESTE_BARRE =
+  "mobile:h-[46px] mobile:w-[46px] not-mobile:h-10 not-mobile:w-10";
+/** Le dessin dans cette cible : 26 au doigt (le web garde ses 28,
+    posés par l'attribut `taille` de l'icône). */
+export const DESSIN_GESTE_BARRE = "mobile:h-[26px] mobile:w-[26px]";
+
 /** La marque posée sur `<html>` : « nais avec la rangée repliée ».
     Un attribut de document, parce que le script d'avant peinture doit
     pouvoir l'écrire avant que React n'existe. */

@@ -16,7 +16,10 @@ import {
   IconeCroix,
   IconeFanion,
   IconeAjouterPortfolio,
-  IconeReglages,
+  //  §2/§3 (nº 821) — le crayon d'« Éditer », le même dessin pour les
+  //  deux types de comptes ; il remplace les curseurs des réglages,
+  //  qui ne servaient plus qu'à cette entrée-là.
+  IconeCrayon,
   IconeSilhouette,
   IconeSortie,
   IconeUtilisateur,
@@ -1835,12 +1838,23 @@ export function MenuEspace({
           }
           window.dispatchEvent(new Event("yokofolio-modification-demandee"));
         }}
+        /*  §3 (nº 821) — LE MOT « Edit » DEVIENT LE CRAYON, à la
+             place qu'il occupait : troisième entrée, même rangée, même
+             boîte d'icône, même écart — « rien d'autre ne bouge »
+             (décision du propriétaire). Le glyphe des réglages (les
+             curseurs) s'en va avec le mot : deux dessins pour un seul
+             geste n'auraient rien dit de plus. C'est le MÊME crayon
+             qu'au coin de la fenêtre d'un particulier (§2) — un seul
+             dessin pour un seul geste, sur les deux types de comptes.
+             ⚠️ IL SE NOMME POUR QUI NE VOIT PAS : le nom accessible de
+             l'entrée reste « Edit », porté par `aria-label`. */
+        aria-label="Edit"
+        title="Edit"
         className={classeEntree("modification", reglage)}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
-          <IconeReglages taille={reglage.taille} />
+          <IconeCrayon taille={reglage.taille} />
         </span>
-        Edit
       </Link>
     </nav>
   );
@@ -2105,7 +2119,12 @@ export function MenuEspace({
         réserve se paie — voir le jeu du web. */
     photoTete: "h-20 w-20",
     glypheTete: 42,
-    airTete: "",
+    /*  §1 (nº 821) — LA TÊTE EST DESCENDUE SOUS LA RANGÉE DE LA CROIX,
+        et elle y apporte son air : 8 px au-dessus de l'avatar (la
+        rangée des gestes s'arrête là), 12 en dessous du nom avant les
+        tuiles. Rien à réserver à droite — la croix n'est plus sur sa
+        ligne, et le nom est centré. */
+    airTete: "mt-2 pb-3",
     /*  ██ §6 (nº 641) — LE NOM ET L'ÉTAT GRANDISSENT, AU DOIGT SEUL ██
         LES DEUX NOMBRES SONT RELEVÉS SUR LE SITE, PAS CHOISIS :
         · le NOM prend 20 px, LE RANG DU TITRE DE PAGE — c'est
@@ -2160,18 +2179,19 @@ export function MenuEspace({
         voici, et ILS NE TOUCHENT QUE LA TÊTE — toucher au `gap-3`
         aurait écarté du même coup les tuiles, les encadrés et les
         lignes (piège nº 378/379).
-        `pr-8` — §1 : la croix a quitté la rangée pour l'ANGLE de la
-        fenêtre, en surimpression. Son bord gauche retombe à 47 px du
-        bord de la fenêtre (11 px de retrait pour sa cible de 36), donc
-        à 27 px À L'INTÉRIEUR de la colonne du contenu, qui s'arrête à
-        20. Sans réserve, un nom long passerait DESSOUS. Trente-deux
-        pixels la couvrent avec cinq de reste, et le nom se tronque
-        avant de l'atteindre.
-        ⚠️ LA RÉSERVE NE VAUT QUE POUR LA TÊTE : les tuiles, les
-        encadrés et les lignes gardent toute la largeur. */
+        `pr-8` — §1 : la croix avait quitté la rangée pour l'ANGLE de
+        la fenêtre, en surimpression, et un nom long serait passé
+        dessous : trente-deux pixels de réserve à droite l'en
+        empêchaient.
+        ██ §1 (nº 821) — LA RÉSERVE PART AVEC LA RANGÉE. La tête est
+        une COLONNE CENTRÉE : une réserve d'un seul côté la décalerait
+        de seize pixels vers la gauche — l'avatar ne serait plus au
+        centre, ce que le propriétaire demande précisément. Et le nom
+        ne peut plus passer sous la croix : il commence sous elle, pas
+        à côté. Il reste `mb-2` : l'air entre la tête et les tuiles. */
     photoTete: "h-16 w-16",
     glypheTete: 34,
-    airTete: "mb-2 pr-8",
+    airTete: "mb-2",
     //  §6 (nº 641) — les tailles de la nº 640, inchangées : seul le
     //  doigt grandit (voir la note du jeu du doigt).
     nomTete: "text-[16px]",
@@ -2247,10 +2267,23 @@ export function MenuEspace({
    * premier rendu, serveur compris, sans une seule requête.
    */
   const photoDeLaTete = fiche?.photo_profil ?? photoDuCompte;
+  /*  ██ §1 (nº 821) — L'AVATAR AU CENTRE, LE NOM DESSOUS ██
+      ==================================================================
+      DÉCISION DU PROPRIÉTAIRE, web et doigt : la photo passe AU CENTRE,
+      le nom centré dessous, et le sous-titre (l'état, pour un
+      professionnel) centré sous lui. AUCUN TITRE AU-DESSUS de l'avatar.
+      CE QUI PART AVEC : la rangée « photo à gauche, nom au milieu »
+      (nº 641) — c'est une colonne, désormais — et le mot « Edit » que
+      la seconde ligne d'un particulier portait (nº 649/657/662). Le
+      geste ne disparaît pas : il devient un CRAYON au coin haut gauche
+      (§2), en face de la croix.
+      ⚠️ LA RÈGLE DE LA PHOTO NE CHANGE PAS D'UN CARACTÈRE (nº 657) :
+      celle du portfolio quand il y en a un, celle de la personne
+      sinon — `photoDeLaTete`, juste au-dessus, est intacte. */
   const enTeteDuCompte = (reglages: ReglagesDuCompte) => (
     <div
       data-tete-compte=""
-      className={`flex items-center gap-3 ${reglages.airTete}`}
+      className={`flex flex-col items-center text-center ${reglages.airTete}`}
     >
       {photoDeLaTete ? (
         <PhotoRonde
@@ -2271,7 +2304,7 @@ export function MenuEspace({
           <IconeSilhouette taille={reglages.glypheTete} />
         </span>
       )}
-      <div className="min-w-0 flex-1">
+      <div className="mt-3 w-full min-w-0">
         <h2
           className={`block truncate font-semibold leading-tight text-sombre-texte ${reglages.nomTete}`}
         >
@@ -2292,7 +2325,10 @@ export function MenuEspace({
           {fiche ? fiche.nom : nomAfficheDuCompte || "My account"}
         </h2>
         {fiche ? (
-          <span className="mt-1 flex items-center gap-1.5">
+          //  §1 (nº 821) — la ligne d'état se centre avec le reste
+          //  (`justify-center`) : c'est le seul changement de cette
+          //  ligne — mêmes mots, même pastille, même taille.
+          <span className="mt-1 flex items-center justify-center gap-1.5">
             <span
               aria-hidden="true"
               className={`h-1.5 w-1.5 shrink-0 rounded-full ${COULEUR_ETAT[etat]}`}
@@ -2303,57 +2339,44 @@ export function MenuEspace({
               {LIBELLE_ETAT[etat]}
             </span>
           </span>
-        ) : (
-          /*  ██ §2 (nº 649) — LA SECONDE LIGNE D'UN PARTICULIER ██
-               ==========================================================
-               UN PROFESSIONNEL A DEUX LIGNES — son nom, puis son état
-               (nº 640) ; un particulier n'en avait qu'une. Il en a deux
-               à son tour : « Mon compte », puis « Éditer » (le mot de
-               la nº 662 ; « Modifier » jusque-là).
-               LA PLACE ET LA TAILLE SONT CELLES DE L'ÉTAT, au caractère :
-               même `mt-1`, même `leading-none`, même taille
-               (`statutTete` — 15,5 px au doigt, 13 au web). Rien n'est
-               choisi ici ; tout est repris. SEULE LA COULEUR S'EN
-               SÉPARE DEPUIS LA nº 662 (voir le §7 plus bas) : l'état
-               d'un professionnel reste en gris doux, ce geste-ci passe
-               au bleu des liens.
-               ⚠️ PAS DE PASTILLE, et c'est voulu : le point de couleur
-               dit un ÉTAT DE PUBLICATION (les six libellés de la
-               nº 640). « Éditer » n'est pas un état, c'est un geste.
-               ██ §7 (nº 662) — ET IL PREND LA COULEUR DES LIENS ██
-               Le propriétaire la veut EXACTEMENT celle des liens des
-               fiches — pas une teinte approchante. C'est donc
-               `LIEN_QUI_SORT` (components/lignes-profil), L'ÉCRITURE
-               UNIQUE de ces liens depuis la nº 388 : le bleu du jeton
-               `lien`, son éclaircissement au survol, et la transition,
-               d'un seul tenant. Aucune couleur n'est écrite ici.
-               ⚠️ LE GRIS DOUX ET SES DEUX SURVOLS S'EN VONT AVEC : une
-               seule classe de couleur par élément (règle nº 389), et
-               `LIEN_QUI_SORT` porte déjà la sienne et son survol.
-               ⚠️ ELLE NE MENAIT NULLE PART À LA nº 649, et sa note
-               annonçait ceci : « le jour où la fenêtre existera, elle
-               s'accrochera ici en une ligne ». C'EST CETTE LIGNE-LÀ
-               (§1, nº 657) — le bouton n'a pas changé d'un caractère,
-               il a reçu sa main. Ce qu'il ne promettait pas, il ne le
-               promet toujours pas : ni flèche, ni chevron.
-               ⚠️ MÊME ENCHAÎNEMENT QUE « LANGUE » ET « NOTIFICATIONS »
-               (nº 465) : au WEB, ouvrir « Éditer » ferme « Mon
-               compte » — une seule surface flottante à la fois ; au
-               DOIGT, « Mon compte » est une page opaque et RESTE
-               ouvert dessous, la refermer y fait retomber. */
-          <button
-            type="button"
-            onClick={() => {
-              if (!auDoigt) setOuvert(false);
-              setIdentiteOuverte(true);
-            }}
-            className={`mt-1 block leading-none ${LIEN_QUI_SORT} ${reglages.statutTete}`}
-          >
-            Edit
-          </button>
-        )}
+        ) : null}
       </div>
     </div>
+  );
+
+  /**
+   * ██ §2 (nº 821) — LE CRAYON D'UN PARTICULIER, EN HAUT À GAUCHE ██
+   * ==================================================================
+   * DÉCISION DU PROPRIÉTAIRE : le mot « Edit », qui vivait sous le nom
+   * (nº 649/657/662), part au COIN HAUT GAUCHE de la fenêtre, ALIGNÉ
+   * AVEC LA CROIX de fermeture, et devient une ICÔNE CRAYON BLEUE.
+   * LE BLEU EST CELUI DES LIENS D'ACTION, et il n'est pas réécrit ici :
+   * `LIEN_QUI_SORT` (components/lignes-profil) porte le jeton `lien`,
+   * son éclaircissement au survol et la transition — l'écriture unique
+   * depuis la nº 388, celle-là même que le mot portait.
+   * ⚠️ IL N'EXISTE QUE POUR UN PARTICULIER : un professionnel a son
+   * « Edit » dans le menu (§3). L'appelant décide, comme avant.
+   * ⚠️ SON GESTE EST CELUI DU MOT, AU CARACTÈRE : au web, ouvrir
+   * « Éditer » ferme « Mon compte » ; au doigt, la page reste dessous
+   * (nº 465). Rien n'a été réécrit, la main a suivi le dessin.
+   * ⚠️ IL SE NOMME POUR QUI NE VOIT PAS : `aria-label` et `title`
+   * portent le mot que l'icône remplace.
+   */
+  const crayonDuCompte = (
+    <button
+      type="button"
+      data-crayon-compte=""
+      onClick={() => {
+        if (!auDoigt) setOuvert(false);
+        setIdentiteOuverte(true);
+      }}
+      aria-label="Edit"
+      title="Edit"
+      className={`flex h-11 w-11 -ml-2 items-center justify-center
+                  rounded-full ${LIEN_QUI_SORT}`}
+    >
+      <IconeCrayon taille={22} />
+    </button>
   );
 
   const contenuDuCompte = (
@@ -3082,6 +3105,18 @@ export function MenuEspace({
                    hauteur maximale, et rien de collant. C'était déjà le
                    cas quand elle vivait dans la rangée du titre
                    (nº 541) — ce point ne change pas. */}
+              {/*  §2 (nº 821) — LE CRAYON D'UN PARTICULIER, EN FACE DE
+                   LA CROIX : mêmes 20 px du bord (`left-5 top-5`), et
+                   la même compensation que la croix — le dessin
+                   retombe à l'aplomb du bord GAUCHE des encadrés, comme
+                   celui de la croix retombe sur leur bord droit
+                   (la règle de la nº 483, appliquée à la paire
+                   44 / 22 : (44 − 22) / 2 = 11). */}
+              {!fiche && (
+                <div className="absolute left-5 top-5 -ml-[11px] -mt-[11px]">
+                  {crayonDuCompte}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setOuvert(false)}
@@ -3141,9 +3176,22 @@ export function MenuEspace({
                portfolio affiché, sinon le cercle gris à la silhouette —
                et cette règle n'est écrite qu'une fois, dans
                `enTeteDuCompte`. */}
+          {/*  ██ §1/§2 (nº 821) — LA TÊTE DESCEND SOUS LA RANGÉE ██
+               La nº 641 l'avait posée DANS la rangée de la croix (photo
+               à gauche, nom au milieu, croix à droite). Le propriétaire
+               veut l'avatar AU CENTRE et le nom dessous : une tête
+               centrée dans une rangée qui porte la croix serait centrée
+               sur ce qui reste, donc de travers. Elle passe donc
+               au-dessous, par le canal qui existe déjà pour cela
+               (`sousLeTitre`, nº 475/815) — TOUJOURS DANS LE BLOC FIXE :
+               l'avatar ne défile pas (§4).
+               ET LA RANGÉE, ELLE, PORTE LES DEUX GESTES : le crayon
+               d'un particulier à gauche (`actionsGauche`, §2), la croix
+               à droite — alignés, comme demandé. */}
           <PagePleinEcranMobile
             ariaLabel="My account"
-            tete={enTeteDuCompte(REGLAGES_DOIGT)}
+            actionsGauche={fiche ? undefined : crayonDuCompte}
+            sousLeTitre={enTeteDuCompte(REGLAGES_DOIGT)}
             surFermer={() => setOuvert(false)}
           >
             {/*  ██ §6 (nº 533) — LA RÉSERVE QUI TIENT LA BARRE DE

@@ -5,7 +5,7 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { CADRE_PHOTO_PORTFOLIO, LARGEUR_SITE } from "@/config/tatouage";
 import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
 import { RYTHME_TITRE_RESULTATS } from "@/components/LigneResultats";
-import { RESERVE_RANGEE } from "@/lib/reserve-barre";
+import { CIBLE_GESTE_BARRE, RESERVE_RANGEE } from "@/lib/reserve-barre";
 //  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
 //  du squelette de segment : voir le grand bloc de lib/liste-neuve.
 import { leSqueletteDeLaListeEstLa } from "@/lib/liste-neuve";
@@ -101,11 +101,18 @@ import { utilisateurConnu } from "@/lib/use-utilisateur";
  */
 
 /** Le rond d'action de la barre : même gabarit que les icônes (40). */
-function RondGris({ classe = "" }: { classe?: string }) {
+function RondGris({ classe = "", geste = false }: { classe?: string; geste?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`h-10 w-10 shrink-0 rounded-full bg-sombre-eleve ${classe}`}
+      /*  §6 (nº 821) — LES RONDS QUI ANNONCENT UN GESTE DE LA BARRE
+          (loupe, globe, fanion) PRENNENT SA CIBLE : 46 au doigt, 40 au
+          web (`CIBLE_GESTE_BARRE`, l'écriture unique). Sans cela, le
+          squelette promettrait une largeur que la barre ne tiendrait
+          pas, et la barre sauterait à l'arrivée — l'acquis de la
+          nº 815. Le rond de l'AVATAR, lui, garde ses 40 : le
+          propriétaire l'exclut de l'agrandissement. */
+      className={`${geste ? CIBLE_GESTE_BARRE : "h-10 w-10"} shrink-0 rounded-full bg-sombre-eleve ${classe}`}
     />
   );
 }
@@ -131,14 +138,15 @@ function ZoneDroite({ avecLoupe }: { avecLoupe: boolean }) {
                  flex items-center justify-end gap-3"
     >
       <span data-squelette-connecte="" className="contents">
-        {avecLoupe && <RondGris />}
-        <RondGris />
+        {avecLoupe && <RondGris geste />}
+        <RondGris geste />
+        {/*  Le dernier est l'AVATAR : il garde ses 40 (nº 821). */}
         <RondGris />
       </span>
       <span data-squelette-deconnecte="" className="contents">
-        <RondGris classe="lg:hidden" />
-        <RondGris />
-        <RondGris classe="lg:hidden" />
+        <RondGris geste classe="lg:hidden" />
+        <RondGris geste />
+        <RondGris geste classe="lg:hidden" />
         <span
           aria-hidden="true"
           className="hidden lg:block h-10 w-[133px] shrink-0 rounded-[12px] bg-sombre-eleve"

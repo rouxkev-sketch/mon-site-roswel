@@ -1956,6 +1956,26 @@ export const COULEURS_SOMBRE = {
   primaire: "#E11144",
   primaireFonce: "#B80E38",
   primaireVoile: "#270F1A",
+  /**
+   * ██ §5 (nº 821) — LA PRIMAIRE ÉCLAIRCIE, POUR LE SURVOL D'UN LIEN ██
+   * ==================================================================
+   * LE DÉFAUT DU PROPRIÉTAIRE : le lien « Delete » de la page Sécurité
+   * s'assombrissait au survol — « incohérent avec le site où tout
+   * s'ÉCLAIRCIT ». Il portait le rouge à 85 % au repos et plein au
+   * survol : sur le bleu nuit, 85 % donne un rouge PLUS SOMBRE, et le
+   * geste allait donc du sombre vers le vif — l'inverse de la
+   * grammaire des liens.
+   * LA RÈGLE DU SITE, celle des liens d'action (`sombre-lien` →
+   * `sombre-lien-clair`, nº 388) : une couleur pleine au repos, la
+   * MÊME éclaircie au survol. Il manquait la seconde pour le rouge.
+   * LE CALCUL, ET IL N'EST PAS AU HASARD : c'est #E11144 remonté de
+   * treize points de clarté — exactement l'écart des deux bleus
+   * (#7FA9EE → #A8C6F6). Même teinte, même saturation.
+   * ⚠️ ELLE NE REMPLACE PAS `primaire-clair` DE LA CHARTE CLAIRE
+   * (#FDEFF3, un rose presque blanc, fait pour un fond blanc) : les
+   * deux existent, chacune sur son fond.
+   */
+  primaireClair: "#EC416C",
 };
 
 /** Les textes du site, au même endroit que le reste. */

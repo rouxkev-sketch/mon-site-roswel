@@ -96,19 +96,27 @@ function Surtitre({ children }: { children: React.ReactNode }) {
  * BLANCHE (globals.css le dit déjà : « fait pour une page blanche »).
  * Un rouge orangé, étranger au bleu nuit du fond et à la marque.
  * LE REMÈDE : le rouge de la charte, #E11144 (`text-primaire`, la
- * primaire du site) — et le survol de la famille des liens d'action
- * (PastilleAction, nº 815) : une base légèrement retenue qui s'allume
- * au survol, jamais de soulignement. Ici, la retenue est l'opacité
- * (85 %), l'idiome déjà en place sur ces liens ; au survol, le rouge
- * plein, exactement #E11144.
+ * primaire du site).
+ *
+ * ██ §5 (nº 821) — ET LE SURVOL ÉCLAIRCIT, COMME TOUT LE SITE ██
+ * ------------------------------------------------------------------
+ * LA nº 820 avait posé le rouge à 85 % au repos et plein au survol.
+ * Le propriétaire l'a vu : « il s'assombrit », et il a raison — sur le
+ * bleu nuit, 85 % d'un rouge donne un rouge PLUS SOMBRE, si bien que
+ * le geste allait du sombre vers le vif, à l'envers de la grammaire du
+ * site (un lien d'action est plein au repos et S'ÉCLAIRCIT au survol,
+ * nº 388 : `sombre-lien` → `sombre-lien-clair`).
+ * DÉSORMAIS : plein #E11144 au repos, la MÊME teinte éclaircie au
+ * survol (`sombre-primaire-clair`, #EC416C — treize points de clarté,
+ * l'écart exact des deux bleus). Jamais de soulignement.
  * ⚠️ UNE SEULE ÉCRITURE POUR LES DEUX LIENS (pièges nº 378/379) : le
  * « Delete » d'un portfolio et celui du compte étaient décrits deux
- * fois, au caractère près. Ils partagent désormais cette constante —
- * ils ne peuvent plus diverger.
+ * fois, au caractère près. Ils partagent cette constante — ils ne
+ * peuvent plus diverger.
  */
 const LIEN_SUPPRIMER =
   `shrink-0 rounded-full px-4 min-h-[38px] ${TEXTE_BOUT_DE_LIGNE} ` +
-  "text-primaire/85 hover:text-primaire transition-colors";
+  "text-primaire hover:text-sombre-primaire-clair transition-colors";
 
 export function BlocSuppressions() {
   const { fiches, recharger, chargement } = useFichesDuCompte();

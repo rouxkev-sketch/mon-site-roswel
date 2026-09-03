@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { LANGUES_YOKOFOLIO } from "@/config/tatouage";
+//  §6 (nº 821) — la cible et le dessin des gestes de la barre.
+import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
 import { ETATS_ROND_BARRE, IconeCroix, IconeMonde } from "@/components/Icones";
 //  §1 (nº 655) — la largeur et l'encadré des fenêtres de la barre, là
 //  où vit `MenuDeVerre` : « Langue » prend ceux de « Mon compte ».
@@ -586,8 +588,13 @@ export function EntreeLangue({
   );
 }
 
-/** LE GLOBE DE LA BARRE FIXE (visiteur non connecté). */
-export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
+/** LE GLOBE DE LA BARRE FIXE (visiteur non connecté).
+    §6 (nº 821) — SA CIBLE N'EST PLUS UN NOMBRE : elle vaut 46 au
+    doigt et 40 au web, deux valeurs qu'un attribut de style ne sait
+    pas dire. Elle vient de l'écriture unique de la barre
+    (`CIBLE_GESTE_BARRE`, lib/reserve-barre), partagée avec la loupe,
+    le fanion et les ronds gris de l'habillage d'attente. */
+export function SelecteurLangue() {
   const [ouvert, setOuvert] = useState(false);
   /** L'habillage choisi AU CLIC : superposée (vrai mobile), ou le menu
       de verre ancré sous le globe (web). */
@@ -682,7 +689,6 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
         data-globe-barre=""
         // MÊME HAUTEUR que le bouton rose à sa droite : la barre garde
         // une seule ligne d'appui, sans décalage d'un pixel.
-        style={{ height: hauteur, width: hauteur }}
         //  ⚠️ PLUS DE ROSE OUVERT (nº 144-§2) : le rose est réservé
         //  aux accents forts, et une fenêtre ouverte n'en est pas
         //  un. Ouvert, le FOND S'ÉCLAIRCIT — le même traitement que
@@ -699,7 +705,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
              en est retiré (nº 507-§2) —, seul l'état enfoncé s'ajoute.
              ⚠️ LA BRANCHE « OUVERT » NE BOUGE PAS, et elle reste
              EXCLUSIVE : un seul fond peint à la fois (règle nº 389). */
-        className={`shrink-0 flex items-center justify-center rounded-full
+        className={`${CIBLE_GESTE_BARRE} shrink-0 flex items-center justify-center rounded-full
                    transition-colors text-sombre-texte
                    focus-visible:outline-2 focus-visible:outline-offset-2
                    focus-visible:outline-primaire ${
@@ -713,7 +719,7 @@ export function SelecteurLangue({ hauteur = 40 }: { hauteur?: number }) {
             RANG 24 (nº 147-§6) : les icônes de la BARRE — globe,
             fanion, compte — montent de 22 à 24 ; l'entrée « Langue »
             de la fenêtre « Mon compte », elle, garde son 22. */}
-        <IconeMonde taille={28} classe="mobile:h-6 mobile:w-6" />
+        <IconeMonde taille={28} classe={DESSIN_GESTE_BARRE} />
       </button>
 
       {/* ---- LE MENU SOUS LA BARRE (web) ----
