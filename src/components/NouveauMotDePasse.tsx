@@ -66,11 +66,12 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
  * L'écran de confirmation reprend LE PATRON DE LA PAGE CONTACT — la
  * pastille verte à coche, le titre, une phrase, mêmes airs. Rien
  * d'inventé : c'est le même assemblage, avec le texte de cette page.
- * ⚠️ IL NE CLIGNOTE PLUS. La version d'avant repartait au bout de
- * 1,6 s : le temps de lever les yeux, l'écran avait déjà changé, et
- * l'on ne savait pas si c'était fait. `TEMPS_DE_LECTURE` laisse la
- * confirmation LE TEMPS D'ÊTRE LUE avant le départ ; et le formulaire
- * est remplacé D'UN COUP, sans état intermédiaire.
+ * ⚠️ IL NE PART PLUS TOUT SEUL (nº 829). La nº 828 lui laissait 2,6 s
+ * avant de rediriger — mieux que les 1,6 s de la nº 827, mais c'était
+ * toujours une MINUTERIE : elle décide à la place du lecteur, et elle
+ * se trompe forcément pour quelqu'un (celui qu'on appelle, celui qui
+ * relit). L'écran RESTE, et le départ est un BOUTON. Le formulaire,
+ * lui, est remplacé d'un coup, sans état intermédiaire.
  *
  * ██ §3 (nº 828) — LE LIEN PÉRIMÉ ██
  * ==================================================================
@@ -82,12 +83,6 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
  */
 
 const LONGUEUR_MINIMALE = 8;
-
-/**
- * LE TEMPS LAISSÉ À LA CONFIRMATION avant de repartir. Voir le §2 :
- * 1,6 s ne suffisait pas à la lire.
- */
-const TEMPS_DE_LECTURE = 2600;
 
 /*  LE CHAMP — la copie exacte de celui de l'écran de connexion :
     bordure dans la boîte (transparente au repos, rouge en erreur), et
@@ -138,14 +133,6 @@ export function NouveauMotDePasse() {
       });
       if (error) throw error;
       setFait(true);
-      //  Le compte est connecté avec son nouveau mot de passe :
-      //  direction l'aiguillage d'arrivée, exactement comme après
-      //  toute autre connexion (passe nº 131 — une seule adresse
-      //  d'arrivée). Le départ attend que la confirmation ait été lue.
-      window.setTimeout(
-        () => router.push(ARRIVEE_APRES_CONNEXION),
-        TEMPS_DE_LECTURE
-      );
     } catch (erreur) {
       const brut =
         erreur instanceof Error ? erreur.message.toLowerCase() : "";
@@ -189,9 +176,23 @@ export function NouveauMotDePasse() {
             Password updated
           </h1>
           <p className="mt-3 text-sombre-texte-doux leading-relaxed">
-            You&apos;re signed in with your new password — taking you back
-            to YokoFolio.
+            You&apos;re signed in with your new password.
           </p>
+          {/*  §2 (nº 829) — LE GESTE EST AU LECTEUR. Voir la note de
+               tête : plus de minuterie, un bouton. Il porte les
+               mesures du bouton de second rang du site (40 px, texte
+               14, fond `sombre-eleve`) — le rose reste à l'action
+               finale, et ici l'action finale est FAITE. */}
+          <button
+            type="button"
+            onClick={() => router.push(ARRIVEE_APRES_CONNEXION)}
+            className="mt-7 inline-flex items-center justify-center rounded-full
+                       px-5 min-h-[40px] text-[14px] bg-sombre-eleve
+                       hover:bg-sombre-haut text-white font-semibold
+                       transition-colors"
+          >
+            Continue
+          </button>
         </div>
       </main>
     );

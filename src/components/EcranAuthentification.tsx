@@ -111,21 +111,26 @@ const CHAMP =
   "transition-colors focus:bg-sombre-haut";
 
 /**
- * ██ LES DEUX TEXTES DU BLOC « mot de passe oublié » (nº 828) ██
- * Ils vivent ICI, hors du composant, parce qu'un banc doit pouvoir les
- * lire au mot près et qu'ils ne dépendent que de l'adresse.
+ * ██ LE MESSAGE DU BLOC « mot de passe oublié » (nº 828, revu nº 829) ██
+ * Il vit ICI, hors du composant, parce qu'un banc doit pouvoir le lire
+ * au mot près et qu'il ne dépend que de l'adresse.
+ * ⚠️ IL N'Y EN A QU'UN, et c'est la décision de la nº 829. La nº 828
+ * en avait deux — « en route », puis « déjà envoyé » au second clic.
+ * Le propriétaire les ramène à un seul : recliquer ne change rien à ce
+ * qu'il y a à savoir, et deux textes pour un même état font croire
+ * qu'il s'est passé quelque chose. Le texte dit désormais lui-même que
+ * l'e-mail peut tarder — c'est ce que le second disait, et c'est la
+ * seule chose qu'il ajoutait.
  */
 const MESSAGE_EN_ROUTE = (adresse: string) =>
-  `An email is on its way to ${adresse}: open it and follow the link to choose a new password. Check your spam folder too.`;
-const MESSAGE_DEJA_ENVOYE = (adresse: string) =>
-  `An email was already sent to ${adresse}. Check your inbox and spam — it can take a few minutes.`;
+  `An email is on its way to ${adresse}. Open it and follow the link — it can take a few minutes. Check your spam folder too.`;
 
 /**
  * EST-CE LA LIMITE ANTI-ABUS ? Supabase la dit de plusieurs façons
  * selon la version (« rate limit », « too many requests », le code
  * `over_email_send_rate_limit`, ou un 429). On les reconnaît toutes :
  * ce n'est pas une faute de l'utilisateur, et ça ne doit jamais
- * s'afficher comme telle.
+ * s'afficher comme telle — le bloc reste tel quel.
  */
 function estUneLimite(erreur: unknown): boolean {
   const brut = erreur instanceof Error ? erreur.message.toLowerCase() : "";
@@ -419,19 +424,16 @@ export function EcranAuthentification({
    * confirmation au-dessus, l'erreur en dessous, pour un geste que
    * l'utilisateur venait de faire exprès.
    *
-   * LA RÈGLE : IL N'Y A QU'UN BLOC, et c'est le bloc d'information. Il
-   * dit d'abord que l'e-mail part, ensuite qu'il est DÉJÀ parti. Les
-   * deux textes sont des informations, pas des fautes — recliquer
-   * n'est pas une erreur, c'est de l'impatience, et l'impatience se
-   * répond, elle ne se gronde pas.
-   *
-   * ⚠️ ON NE REDEMANDE MÊME PAS À SUPABASE quand l'adresse n'a pas
-   * changé : le second envoi serait refusé de toute façon. On garde
-   * l'adresse déjà servie (`adresseDejaServie`) et l'on se contente de
-   * mettre le texte à jour. Changer d'adresse redemande, évidemment.
-   * ⚠️ ET SI SUPABASE REFUSE MALGRÉ TOUT (une demande partie d'un autre
-   * onglet, par exemple), on ne montre toujours pas d'erreur : le même
-   * bloc porte le second texte. Voir `estUneLimite`.
+   * LA RÈGLE, RESSERRÉE À LA nº 829 : IL N'Y A QU'UN BLOC, ET QU'UN
+   * TEXTE. Le premier clic envoie l'e-mail ; les suivants n'envoient
+   * RIEN et laissent le bloc tel quel. Recliquer n'est pas une erreur,
+   * c'est de l'impatience — et l'impatience se répond une fois, pas
+   * deux : un second texte ferait croire qu'il s'est passé quelque
+   * chose de nouveau, alors que non.
+   * ⚠️ LE MESSAGE PARAÎT AVANT MÊME L'ENVOI, et c'est voulu : le
+   * réseau peut prendre une seconde, et un bouton qui ne répond pas
+   * se reclique. Si l'envoi échoue vraiment (pas la limite), le bloc
+   * s'efface et l'erreur prend sa place.
    *
    * L'adresse dans le champ reste exigée avant tout : sans elle il n'y
    * a personne à qui écrire, et ÇA, c'est bien une erreur de saisie.
@@ -444,10 +446,13 @@ export function EcranAuthentification({
     }
     setErreurs({});
     setLienMotDePasseOublie(false);
-    if (adresseDejaServie === adresse) {
-      setInfo(MESSAGE_DEJA_ENVOYE(adresse));
-      return;
-    }
+    setInfo(MESSAGE_EN_ROUTE(adresse));
+    //  ⚠️ LES CLICS SUIVANTS N'ENVOIENT RIEN (nº 829). L'e-mail est
+    //  déjà parti à cette adresse : un second envoi serait refusé par
+    //  la limite anti-abus de Supabase, et surtout il n'apporterait
+    //  rien. Le bloc, lui, reste tel quel — c'est déjà le bon texte.
+    //  Changer d'adresse redemande, évidemment.
+    if (adresseDejaServie === adresse) return;
     setEnCours(true);
     try {
       const supabase = creerClientSupabaseNavigateur();
@@ -456,12 +461,14 @@ export function EcranAuthentification({
       });
       if (error) throw error;
       setAdresseDejaServie(adresse);
-      setInfo(MESSAGE_EN_ROUTE(adresse));
     } catch (erreur) {
+      //  Une limite n'est pas une faute de l'utilisateur : le bloc
+      //  garde son texte, et l'adresse est notée comme servie — un
+      //  e-mail est bien parti, d'ici ou d'un autre onglet.
       if (estUneLimite(erreur)) {
         setAdresseDejaServie(adresse);
-        setInfo(MESSAGE_DEJA_ENVOYE(adresse));
       } else {
+        setInfo(null);
         setErreurs({ general: messageErreur(erreur) });
       }
     } finally {

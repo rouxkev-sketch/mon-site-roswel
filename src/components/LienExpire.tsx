@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { IconeHorloge } from "@/components/Icones";
-import { PastilleEvenement } from "@/components/PastilleEvenement";
+import {
+  PastilleEvenement,
+  PROPORTION_LISTE,
+} from "@/components/PastilleEvenement";
 
 /**
  * ██ LE LIEN D'E-MAIL PÉRIMÉ (passe nº 828) ██
@@ -28,7 +31,19 @@ import { PastilleEvenement } from "@/components/PastilleEvenement";
 export function LienExpire() {
   return (
     <div className="mt-10 text-center">
-      <PastilleEvenement ton="info" symbole={IconeHorloge} classe="mx-auto" />
+      {/*  §1 (nº 829) — LE DESSIN À LA PROPORTION DE LA LISTE DES
+           NOTIFICATIONS. À la taille par défaut d'une pastille de
+           fenêtre, l'horloge occupe 43 % du rond, quand les icônes des
+           notifications en occupent la moitié : sur un écran qui ne
+           montre qu'elle, elle paraissait perdue. `PROPORTION_LISTE`
+           rend la taille qui rétablit cette moitié (28 dans 56) — la
+           mesure vit chez la pastille, avec les autres. */}
+      <PastilleEvenement
+        ton="info"
+        symbole={IconeHorloge}
+        dessin={PROPORTION_LISTE("fenetre")}
+        classe="mx-auto"
+      />
       <h1 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
         This link has expired or was already used
       </h1>

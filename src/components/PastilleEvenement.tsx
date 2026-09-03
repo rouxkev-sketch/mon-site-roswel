@@ -201,18 +201,55 @@ export const TRAIT_FAMILLE = 1.5;
  * fenêtre. En passant `IconeHorloge` lui-même, la pastille reste seule
  * juge de la taille ET de l'épaisseur.
  */
+/**
+ * ██ §1 (nº 829) — LA PROPORTION DU DESSIN, QUAND ELLE DOIT CHANGER ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE, sur la page du lien expiré : « l'icône
+ * horloge est trop petite ». Elle est pourtant à la taille prévue
+ * (24 px), et le rond aussi (56). LA CAUSE EST UNE PROPORTION, et elle
+ * se lit dans le tableau ci-dessus :
+ *   · `liste`   — 18 dans 36, le dessin occupe LA MOITIÉ du rond ;
+ *   · `fenetre` — 24 dans 56, il n'en occupe que 43 %.
+ * Une icône de fenêtre est donc RELATIVEMENT plus petite que celles
+ * que l'on voit toute la journée dans la liste des notifications.
+ * Sur un écran qui ne montre QU'ELLE, ça se voit.
+ *
+ * `dessin` permet de le corriger LÀ OÙ ON LE DEMANDE, sans toucher aux
+ * autres écrans : `PROPORTION_LISTE` rend la taille qui donne la même
+ * moitié de rond que la liste (28 dans 56).
+ * ⚠️ ELLE N'EST PAS LE DÉFAUT, et c'est voulu : les autres pastilles de
+ * fenêtre (Contact, hors-ligne, bienvenue, notifications vides) ne
+ * bougent pas d'un pixel. Si le propriétaire veut un jour la même
+ * proportion PARTOUT, c'est un seul nombre à changer — le `symbole` de
+ * `fenetre`, ci-dessus — et ce commentaire dit pourquoi.
+ */
+export function PROPORTION_LISTE(taille: TaillePastille): number {
+  const { symbole, boite } = GEOMETRIE_PASTILLE.liste;
+  //  La boîte s'écrit en classes Tailwind (`h-9 w-9`) : on lit le
+  //  nombre d'unités et on le convertit en pixels (1 unité = 4 px).
+  const unites = Number(/h-(\d+)/.exec(boite)?.[1] ?? 9);
+  const part = symbole / (unites * 4);
+  const cote = Number(/h-(\d+)/.exec(GEOMETRIE_PASTILLE[taille].boite)?.[1] ?? 14) * 4;
+  return Math.round(cote * part);
+}
+
 export function PastilleEvenement({
   ton,
   taille = "fenetre",
+  dessin,
   symbole: Symbole,
   classe = "",
 }: {
   ton: TonEvenement;
   taille?: TaillePastille;
+  /** La taille du dessin, quand la proportion par défaut ne convient
+      pas. Voir le §1 (nº 829) — un seul écran s'en sert. */
+  dessin?: number;
   symbole: ComposantIcone;
   classe?: string;
 }) {
-  const { boite, symbole } = GEOMETRIE_PASTILLE[taille];
+  const { boite, symbole: symboleParDefaut } = GEOMETRIE_PASTILLE[taille];
+  const symbole = dessin ?? symboleParDefaut;
   return (
     <span
       aria-hidden="true"
