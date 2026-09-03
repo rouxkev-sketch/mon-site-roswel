@@ -113,10 +113,12 @@ non commercial, hébergé aux États-Unis, public américain, pas d'avocat.
 8. **DMCA.**
    *Couvert (814)* : le propriétaire a enregistré un agent au Copyright
    Office — « DMCA Designated Agent », registration **DMCA-1079752**,
-   contact rouxkev@gmail.com (à remplacer par contact@yokofolio.com quand
-   la boîte existera, ET après mise à jour du registre — l'adresse
-   affichée doit être celle qui y figure ; c'est noté en commentaire dans
-   `legal/page.tsx`, constante `AGENT_DMCA`). La section « Copyright and
+   contact **contact@yokofolio.com** depuis la nº 835 : la boîte existe et
+   reçoit (redirection OVH vérifiée par le propriétaire). ⚠️ **IL RESTE À
+   METTRE À JOUR LE REGISTRE** du Copyright Office — l'adresse affichée
+   doit être celle qui y figure, et le registre porte encore l'ancienne.
+   C'est noté en commentaire dans `legal/page.tsx`, constante
+   `AGENT_DMCA`. La section « Copyright and
    DMCA » (ancre `/legal#dmca`) décrit : l'agent et son enregistrement
    (§ 512(c)(2)) ; les six éléments d'une notification (§ 512(c)(3)) ;
    le retrait rapide et l'avis à l'artiste ; la contre-notification, ses
@@ -177,13 +179,13 @@ non commercial, hébergé aux États-Unis, public américain, pas d'avocat.
     Terms — le même jour).
 17. **La boîte contact@yokofolio.com** (nouveau, nº 814). C'est l'adresse
     que la page légale affiche depuis la nº 322 ; le propriétaire dit à la
-    nº 814 qu'elle « existera » — elle n'existe donc peut-être pas encore.
+    nº 814 qu'elle « existera ». ⚠️ **CETTE RÉSERVE EST LEVÉE (nº 835)** :
+    la boîte contact@yokofolio.com existe et reçoit (redirection OVH,
+    vérifiée par le propriétaire). Les demandes de suppression et d'accès
+    de `/legal` arrivent donc bien quelque part.
     `/terms` n'affiche aucune adresse : les questions passent par la page
     de contact (le formulaire fonctionne, quelle que soit la boîte), les
-    notifications de droit d'auteur par l'agent DMCA. Tant que la boîte
-    n'existe pas, les demandes de suppression et d'accès de `/legal`
-    n'arrivent nulle part : à ouvrir, ou à remplacer par rouxkev@gmail.com
-    en attendant (constante `ÉDITEUR.contact`).
+    notifications de droit d'auteur par l'agent DMCA.
 18. **L'écran de consentement Google** (nouveau, nº 814). La console
     Google pointe « règles » et « confidentialité » vers `/legal`
     (nº 811). Depuis la nº 814, l'adresse des conditions d'utilisation est

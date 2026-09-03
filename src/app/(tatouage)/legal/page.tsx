@@ -87,9 +87,15 @@ const ÉDITEUR = {
  * L'AGENT DMCA (nº 814) — enregistré par le propriétaire au U.S.
  * Copyright Office. Le numéro d'enregistrement et l'adresse sont CEUX
  * DU REGISTRE : ils ne se changent pas ici sans changer le registre.
- * ⚠️ `contact` : rouxkev@gmail.com, l'adresse enregistrée — À REMPLACER
- * PAR contact@yokofolio.com QUAND LA BOÎTE EXISTERA (et après mise à
- * jour du registre : l'adresse affichée doit être celle qui y figure).
+ * ⚠️ `contact` : c'était rouxkev@gmail.com, l'adresse enregistrée, avec
+ * la consigne de la remplacer par contact@yokofolio.com QUAND LA BOÎTE
+ * EXISTERAIT. ELLE EXISTE ET REÇOIT (redirection OVH vérifiée par le
+ * propriétaire) : le remplacement est fait à la nº 835.
+ * ⚠️ ET IL RESTE UNE CHOSE À FAIRE, HORS DU CODE : mettre à jour
+ * l'enregistrement au U.S. Copyright Office. L'adresse AFFICHÉE ici
+ * doit être celle qui FIGURE AU REGISTRE — c'est tout l'intérêt d'un
+ * agent désigné. Tant que le registre porte l'ancienne, les deux se
+ * contredisent.
  * Les coordonnées complètes de l'agent (adresse postale, téléphone)
  * sont au registre public du Copyright Office ; la page le dit et n'en
  * invente aucune.
@@ -97,7 +103,7 @@ const ÉDITEUR = {
 const AGENT_DMCA = {
   nom: "DMCA Designated Agent",
   enregistrement: "DMCA-1079752",
-  contact: "rouxkev@gmail.com",
+  contact: "contact@yokofolio.com",
 };
 
 const HÉBERGEURS = [

@@ -2096,6 +2096,16 @@ export const TEXTES_TATOUAGE = {
  * DEUX CÔTÉS : l'écran /admin (affichage) et chaque API d'admin
  * (sécurité réelle, côté serveur).
  */
+/*  ⚠️ nº 835 — ELLE NE DOIT PLUS PARTIR DANS LE NAVIGATEUR. Un module
+    de garde CLIENT la comparait à l'adresse du visiteur ; la constante
+    entière se retrouvait donc dans un fichier servi à tout le monde,
+    adresse personnelle du propriétaire comprise (mesuré au bâti). Ce
+    module est supprimé : seul du code SERVEUR la lit désormais
+    (`lib/admin-yokofolio`, et la route `/api/admin/yokofolio/moi` qui
+    répond « admin : oui/non » sans rien dire de la liste).
+    ⚠️ ET ON NE LA REMPLACE PAS par l'adresse publique du site : ce
+    n'est pas un texte affiché, c'est LA CLÉ D'ENTRÉE de
+    l'administration — le compte Supabase du propriétaire. */
 export const COURRIELS_ADMIN = ["rouxkev@gmail.com"];
 
 /**

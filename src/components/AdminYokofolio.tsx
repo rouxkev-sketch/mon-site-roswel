@@ -12,7 +12,6 @@ import {
   MOTIFS_SIGNALEMENT,
   famillesStyles,
 } from "@/config/tatouage";
-import { estCourrielAdmin } from "@/lib/admin-yokofolio-client";
 //  §4 (nº 332) — un état qui vit dans l'adresse, une entrée par pas :
 //  l'écriture commune du C-6 (lib/etape-dans-adresse).
 import { useEtapeDansLAdresse } from "@/lib/etape-dans-adresse";
@@ -572,7 +571,55 @@ export function AdminYokofolio() {
       demande resterait écrite dans le champ de la suivante. */
   const [compteurLocalite, setCompteurLocalite] = useState(0);
 
-  const admin = pret && estCourrielAdmin(utilisateur?.email);
+  /**
+   * ██ §1 (nº 835) — LA LISTE DES ADMINISTRATEURS NE PART PLUS DANS LE
+   *                  NAVIGATEUR ██
+   * ------------------------------------------------------------------
+   * CE QUI ÉTAIT SERVI, ET MESURÉ AU BÂTI : cette ligne appelait
+   * `estCourrielAdmin`, qui compare à `COURRIELS_ADMIN` — donc la
+   * CONSTANTE ENTIÈRE partait dans un fichier de `.next/static`, servi
+   * à tout visiteur. L'adresse personnelle du propriétaire s'y lisait
+   * en clair, à qui ouvrait le programme de la page. Elle n'était
+   * affichée nulle part ; elle était simplement LÀ.
+   * ⚠️ ET ON NE POUVAIT PAS LA REMPLACER PAR L'ADRESSE OFFICIELLE : ce
+   * n'est pas un texte, c'est la CLÉ D'ENTRÉE de l'administration — le
+   * compte Supabase du propriétaire. La changer lui fermerait la porte.
+   * LA RÉPONSE EST DONC DE NE PLUS LA SERVIR : la route
+   * `/api/admin/yokofolio/moi` répond déjà « suis-je administrateur ? »
+   * CÔTÉ SERVEUR, sans rien dire de la liste. On la lui demande.
+   * ⚠️ LA SÉCURITÉ N'EN DÉPENDAIT PAS ET N'EN DÉPEND PAS : chaque API
+   * d'administration revérifie de son côté (`verifierAdmin`). Ce test
+   * ne décide que de CE QU'ON MONTRE — d'où le troisième état :
+   * `null` tant que la réponse n'est pas là, pour que « Restricted
+   * area » ne clignote pas au visage d'un vrai administrateur.
+   */
+  const [reponseDuServeur, setReponseDuServeur] = useState<boolean | null>(null);
+  /*  ⚠️ SANS COMPTE, LA RÉPONSE EST CONNUE D'AVANCE — et elle se DÉDUIT
+      au lieu de se poser. Un `setState` appelé droit dans un effet est
+      refusé par la règle `react-hooks/set-state-in-effect` (relevé au
+      lint dès le premier jet) : l'effet ne demande donc rien pour un
+      visiteur sans session, et `admin` vaut `false` par calcul. */
+  const admin = utilisateur ? reponseDuServeur : false;
+  useEffect(() => {
+    if (!pret || !utilisateur) return;
+    let abandonne = false;
+    (async () => {
+      try {
+        const reponse = await fetch("/api/admin/yokofolio/moi");
+        const donnees = (await reponse.json().catch(() => null)) as {
+          admin?: boolean;
+        } | null;
+        if (!abandonne) setReponseDuServeur(donnees?.admin === true);
+      } catch {
+        //  La route n'a pas répondu : on ne montre rien. L'API de
+        //  chaque action reste la seule vraie serrure.
+        if (!abandonne) setReponseDuServeur(false);
+      }
+    })();
+    return () => {
+      abandonne = true;
+    };
+  }, [pret, utilisateur]);
 
   const chargerFiches = useCallback(async () => {
     try {
@@ -1180,7 +1227,14 @@ export function AdminYokofolio() {
     motifsCoches.length > 0 && (!autreCoche || noteMotif.trim().length >= 5);
 
   /* ---------- LES PORTES ---------- */
-  if (!pret) return <main className="flex-1" aria-hidden="true" />;
+  /*  §1 (nº 835) — LA PORTE ATTEND LA RÉPONSE. `admin` vaut `null`
+      tant que le serveur n'a pas dit s'il l'est : sans cette attente,
+      un administrateur verrait « Restricted area » le temps d'un
+      aller-retour. Un visiteur non connecté, lui, est fixé tout de
+      suite (l'effet pose `false` sans rien demander). */
+  if (!pret || (utilisateur && admin === null)) {
+    return <main className="flex-1" aria-hidden="true" />;
+  }
   if (!utilisateur || !admin) {
     return (
       <main className="flex-1 mx-auto w-full max-w-[440px] px-5 pt-16 pb-24 text-center">
