@@ -280,6 +280,14 @@ function utilisateurDuJeton(req) {
       Buffer.from(charge.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString()
     );
     if (!json.sub) return null;
+    /*  §1 (nº 830) — LA GÉNÉRATION DU JETON. Le vrai service révoque
+        les sessions au changement d'adresse ; un jeton plus vieux que
+        la dernière révocation est refusé. Les jetons forgés par les
+        bancs n'en portent pas : ils valent la génération zéro, comme
+        avant, et rien ne change pour eux tant qu'aucune adresse n'a
+        bougé. */
+    const generationDuCompte = GENERATIONS.get(json.sub) ?? 0;
+    if ((json.generation ?? 0) < generationDuCompte) return null;
     const metaApp = json.app_metadata ?? {};
     //  §3 (nº 783) — CE QUE LE JETON DIT N'EST PLUS FORCÉMENT VRAI : un
     //  fournisseur délié depuis l'émission du jeton doit avoir disparu
@@ -289,7 +297,9 @@ function utilisateurDuJeton(req) {
       id: json.sub,
       aud: json.aud ?? "authenticated",
       role: json.role ?? "authenticated",
-      email: json.email ?? null,
+      //  §1 (nº 830) — L'ADRESSE COURANTE, pas celle du jeton.
+      email: ADRESSES.get(json.sub) ?? json.email ?? null,
+      new_email: CHANGEMENTS_EN_ATTENTE.get(json.sub) ?? null,
       app_metadata: { ...metaApp, provider: restants[0] ?? null, providers: restants },
       //  §3 (nº 783) — LA LISTE DES IDENTITÉS, que `getUserIdentities`
       //  lit pour savoir quoi délier (elle passe par `getUser`).
@@ -358,6 +368,26 @@ const SESSIONS = new Map();
 /*  Les jetons des LIENS D'E-MAIL (nº 827) : émis par `/auth/v1/recover`,
     consommés par `/auth/v1/verify`, à usage unique. */
 const JETONS_COURRIEL = new Map();
+/*  ██ §1 (nº 830) — LE CHANGEMENT D'ADRESSE, MODÉLISÉ ██
+    Jusqu'ici la doublure ne savait RIEN du changement d'adresse : un
+    `PUT /auth/v1/user` rendait la personne inchangée, et le banc
+    déclarait « ça marche » sur un mécanisme qui n'existait pas. Le
+    propriétaire, lui, butait dessus en production — impossible
+    d'enchaîner deux changements.
+    ON MODÉLISE DONC CE QUE FAIT LE VRAI SERVICE, en trois traits :
+     · `ADRESSES` — l'adresse COURANTE d'un compte, quand elle n'est
+       plus celle que porte son jeton (un jeton est signé une fois pour
+       toutes : il garde l'ancienne) ;
+     · `CHANGEMENTS_EN_ATTENTE` — l'adresse demandée, tant que le lien
+       n'a pas été ouvert ;
+     · `GENERATIONS` — le compteur de sessions valides d'un compte. Un
+       changement d'adresse RÉVOQUE LES SESSIONS EXISTANTES (c'est le
+       comportement du vrai service, le même qu'après un changement de
+       mot de passe) : un jeton d'une génération périmée ne vaut plus
+       rien. C'est LA règle qui reproduit le défaut. */
+const ADRESSES = new Map();
+const CHANGEMENTS_EN_ATTENTE = new Map();
+const GENERATIONS = new Map();
 let compteurDeSessions = 0;
 /*  §2 (nº 796) — le carnet des jetons DÉJÀ SERVIS, et le cran qui les
     refuse une seconde fois. Voir la note à la route /auth/v1/token. */
@@ -389,8 +419,11 @@ function sessionDeBanc({ identifiant, courriel, metaApp }) {
   };
   const jeton = [
     b64u({ alg: "HS256", typ: "JWT" }),
+    //  §1 (nº 830) — LE JETON PORTE SA GÉNÉRATION : c'est ce qui
+    //  permet de refuser celui d'avant un changement d'adresse.
     b64u({ sub: identifiant, aud: "authenticated", role: "authenticated",
       email: courriel, exp: expire, iat: Math.floor(Date.now() / 1000),
+      generation: GENERATIONS.get(identifiant) ?? 0,
       app_metadata: metaAJour, user_metadata: identite }),
     "signature-de-banc",
   ].join(".");
@@ -1063,6 +1096,22 @@ function repondre(req, res, u, brut) {
       return;
     }
     JETONS_COURRIEL.delete(jeton);
+    /*  §1 (nº 830) — LE CHANGEMENT S'APPLIQUE ICI, et il RÉVOQUE LES
+        SESSIONS EXISTANTES : c'est le comportement du vrai service
+        (le même qu'après un changement de mot de passe). Tout jeton
+        d'une génération antérieure est désormais refusé — et c'est
+        exactement ce qui cassait le SECOND changement d'adresse : la
+        page repartait avec le jeton d'avant. */
+    if (type === "email_change") {
+      ADRESSES.set(connu.compte.id, connu.compte.email);
+      CHANGEMENTS_EN_ATTENTE.delete(connu.compte.id);
+      GENERATIONS.set(connu.compte.id, (GENERATIONS.get(connu.compte.id) ?? 0) + 1);
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "adresse changée →", connu.compte.email,
+        "· génération", GENERATIONS.get(connu.compte.id)
+      );
+    }
     console.log(
       new Date().toISOString().slice(11, 19),
       "POST auth/verify →", connu.compte.email, type, "servi"
@@ -1296,6 +1345,61 @@ function repondre(req, res, u, brut) {
   }
 
   //  §1 (nº 688) — QUI EST CONNECTÉ. Voir la note de `utilisateurDuJeton`.
+  /*  §1 (nº 830) — LA DEMANDE DE CHANGEMENT D'ADRESSE. Le vrai
+      service ne change rien tout de suite : il RETIENT l'adresse
+      demandée et envoie un lien à celle-ci. On fait pareil, et l'on
+      met le jeton du lien dans le même carnet que les autres, pour
+      que le banc puisse le cliquer. */
+  if (u.pathname === "/auth/v1/user" && req.method === "PUT") {
+    const personne = utilisateurDuJeton(req);
+    if (!personne) {
+      console.log(new Date().toISOString().slice(11, 19), "PUT auth/user → JETON REFUSÉ");
+      res.writeHead(401, { "content-type": "application/json", "access-control-allow-origin": "*" });
+      res.end(JSON.stringify({ code: 401, msg: "Invalid Refresh Token: Session Expired" }));
+      return;
+    }
+    let demande = {};
+    try { demande = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
+    /*  §2 (nº 830) — LE MONDE OÙ UN SECOND CHANGEMENT EST REFUSÉ.
+        `CHANGEMENT_STRICT=1` fait répondre au service ce que le vrai
+        répond quand la « confirmation sécurisée » est active et qu'un
+        changement est déjà en vol. C'est L'UN des états qui produisent
+        ce que le propriétaire a vécu ; on ne sait pas lequel est le
+        sien, alors le banc joue LES DEUX — et l'écran doit se tenir
+        dans les deux. */
+    if (
+      demande.email &&
+      process.env.CHANGEMENT_STRICT === "1" &&
+      CHANGEMENTS_EN_ATTENTE.has(personne.id)
+    ) {
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "PUT auth/user (adresse) → REFUSÉ, un changement est déjà en attente"
+      );
+      res.writeHead(422, { "content-type": "application/json", "access-control-allow-origin": "*" });
+      res.end(JSON.stringify({
+        code: 422,
+        error_code: "email_change_pending",
+        msg: "An email change is already pending confirmation",
+      }));
+      return;
+    }
+    if (demande.email) {
+      const jeton = `jeton-courriel-${++compteurDeSessions}`;
+      CHANGEMENTS_EN_ATTENTE.set(personne.id, demande.email);
+      JETONS_COURRIEL.set(jeton, { type: "email_change", compte: { id: personne.id, email: demande.email } });
+      console.log(
+        new Date().toISOString().slice(11, 19),
+        "PUT auth/user (adresse) →", personne.email, "→", demande.email, "· jeton", jeton
+      );
+    } else {
+      console.log(new Date().toISOString().slice(11, 19), "PUT auth/user →", personne.email);
+    }
+    res.writeHead(200, { "content-type": "application/json", "access-control-allow-origin": "*" });
+    res.end(JSON.stringify({ ...personne, new_email: CHANGEMENTS_EN_ATTENTE.get(personne.id) ?? null }));
+    return;
+  }
+
   if (u.pathname === "/auth/v1/user") {
     const personne = utilisateurDuJeton(req);
     console.log(

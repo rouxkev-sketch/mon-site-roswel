@@ -258,6 +258,21 @@ export function Securite() {
 
   /* ---- 1. L'adresse e-mail ---- */
   const [nouvelEmail, setNouvelEmail] = useState("");
+  /*  §2 (nº 830) — L'ADRESSE DEMANDÉE ET PAS ENCORE CONFIRMÉE.
+      DEUX SOURCES, ET IL FAUT LES DEUX :
+       · `new_email`, que le service porte sur le compte — c'est elle
+         qui survit à un rechargement, à un autre appareil, à tout ;
+       · l'adresse qu'on VIENT de demander dans cet écran. Elle est
+         nécessaire parce que la session du navigateur est un jeton
+         signé À L'ÉMISSION : elle ne portera `new_email` qu'au
+         prochain renouvellement. Sans elle, la bannière n'aurait
+         paru qu'après un rechargement — c'est-à-dire jamais, au
+         moment où elle sert.
+      La première l'emporte : c'est celle du service. */
+  const [adresseDemandee, setAdresseDemandee] = useState<string | null>(null);
+  const adresseEnAttente =
+    (utilisateur as { new_email?: string } | null | undefined)?.new_email ??
+    adresseDemandee;
   const [messageEmail, setMessageEmail] = useState<string | null>(null);
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
   const [emailEnCours, setEmailEnCours] = useState(false);
@@ -338,12 +353,28 @@ export function Securite() {
         }
       );
       if (error) throw error;
+      setAdresseDemandee(propre);
       setMessageEmail(
         `A confirmation email is on its way to ${propre}: open it to confirm the change. Your current email stays valid until then.`
       );
       setNouvelEmail("");
     } catch (erreur) {
-      setErreurEmail(messageErreurAuth(erreur));
+      /*  §2 (nº 830) — LA LIMITE D'ENVOI N'EST PAS UNE FAUTE. Le
+          service refuse deux envois trop rapprochés ; c'est la même
+          règle que pour « mot de passe oublié » (nº 829), et elle se
+          répond dans le bloc d'information, pas sous le champ en
+          rouge. Tout le reste reste une erreur — et depuis la nº 830,
+          une erreur QUI DIT SON MOTIF. */
+      const brut =
+        erreur instanceof Error ? erreur.message.toLowerCase() : "";
+      if (brut.includes("rate limit") || brut.includes("too many") || brut.includes("for security purposes")) {
+        setMessageEmail(
+          `A confirmation email was already sent to ${propre}. Check your inbox and spam — it can take a few minutes.`
+        );
+        setNouvelEmail("");
+      } else {
+        setErreurEmail(messageErreurAuth(erreur));
+      }
     } finally {
       setEmailEnCours(false);
     }
@@ -576,6 +607,23 @@ export function Securite() {
               current
             </span>
           </div>
+
+          {/*  ██ §2 (nº 830) — LE CHANGEMENT EN ATTENTE SE VOIT ██
+               LE DÉFAUT DU PROPRIÉTAIRE : après un changement, en
+               refaire un tout de suite échouait sans explication. L'un
+               des états qui produisent ça, c'est un premier changement
+               ENCORE EN ATTENTE — le service en refuse un second tant
+               que le lien n'est pas ouvert. Cet état existait déjà,
+               mais RIEN NE LE MONTRAIT : l'écran affichait l'ancienne
+               adresse comme si de rien n'était.
+               Le service le dit dans `new_email` : on le dit aussi. */}
+          {adresseEnAttente && (
+            <p role="status" className={MESSAGE}>
+              A change to <strong>{adresseEnAttente}</strong> is waiting:
+              open the email we sent there to confirm it. Until then, this
+              address stays yours.
+            </p>
+          )}
 
           {/* GAP-4 (nº 134) : l'écart entre « Nouvelle adresse » et le
               bouton vaut EXACTEMENT celui entre l'adresse actuelle et

@@ -97,6 +97,11 @@ const EXCEPTIONS = [
     fichier: /^src\/lib\/tatoueurs-demo\.ts$/,
     raison: "fiches de démonstration, interdites en ligne (lib/catalogue-demonstration) : des données de banc, pas de l'interface",
   },
+  /*  ── nº 830 ── */
+  {
+    fichier: /^src\/lib\/email\.ts$/,
+    raison: "ce fichier n'écrit RIEN à l'écran : il expédie des courriels dont le contenu vient d'ailleurs (lib/courriel-habille). Ses seules chaînes françaises sont des lignes de JOURNAL SERVEUR, écrites pour le propriétaire quand un envoi est refusé (passe nº 830) — elles disent la cause et le geste qui la règle, et un propriétaire francophone doit pouvoir les lire",
+  },
   {
     fichier: /^src\/lib\/adresse\.ts$/,
     raison: "tables de RECONNAISSANCE : les noms français (Californie, Québec, Brésil, République française…) servent à reconnaître ce que rend le géocodeur ou ce que porte une vieille fiche, jamais à l'afficher — ce qui s'affiche est la colonne de droite, anglaise depuis la nº 805 (USA, UK, Germany, TX, QC)",

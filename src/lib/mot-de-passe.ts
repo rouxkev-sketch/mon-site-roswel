@@ -52,8 +52,32 @@ export const NIVEAUX_MOT_DE_PASSE = [
   { libelle: "Strong", couleur: "#4CAF7D", segments: 3 },
 ] as const;
 
-/** Les erreurs Supabase, traduites en français — jamais d'anglais
-    brut sous les yeux de quelqu'un. */
+/**
+ * ██ LES ERREURS D'AUTHENTIFICATION, DITES À L'ÉCRAN ██
+ * ==================================================================
+ * ⚠️ LA NOTE D'ORIGINE DISAIT « traduites en français » : elle est
+ * fausse depuis la traduction du site (nº 805-808) — tout ce qui suit
+ * est en anglais, comme le reste des écrans. Corrigé nº 830.
+ *
+ * ██ §1 (nº 830) — « Something went wrong » NE DIT RIEN, ET C'EST LE
+ * DÉFAUT ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : après un changement d'adresse validé,
+ * en refaire un tout de suite répondait « Something went wrong. Try
+ * again. » — une phrase qui n'apprend rien, ni à celui qui la lit, ni
+ * à celui qui doit la réparer. Le vrai motif venait pourtant du
+ * serveur, dans l'erreur : il était JETÉ ici, remplacé par ce
+ * repli.
+ * LA RÈGLE : le repli ne cache plus rien. Quand aucun cas connu ne
+ * correspond, on montre CE QUE LE SERVICE A DIT, en clair. C'est de
+ * l'anglais — comme tout le site depuis la nº 805 — et c'est
+ * infiniment plus utile qu'une formule vague. Le repli muet ne sert
+ * plus que lorsqu'il n'y a vraiment aucun texte.
+ * ⚠️ DEUX CAS SONT AJOUTÉS AU PASSAGE, tous deux rencontrés sur le
+ * changement d'adresse : la limite d'envoi (elle se dit déjà, plus
+ * bas) et LE CHANGEMENT DÉJÀ EN COURS, qui a sa phrase à lui — c'est
+ * l'état où l'on peut se trouver sans avoir rien fait de mal.
+ */
 export function messageErreurAuth(erreur: unknown): string {
   const brut =
     erreur instanceof Error ? erreur.message.toLowerCase() : String(erreur);
@@ -71,5 +95,17 @@ export function messageErreurAuth(erreur: unknown): string {
     return "Too many attempts in a row. Wait a few minutes, then try again.";
   if (brut.includes("fetch") || brut.includes("network"))
     return "Can't reach the server. Check your connection, then try again.";
-  return "Something went wrong. Try again.";
+  //  §1 (nº 830) — LE CHANGEMENT D'ADRESSE DÉJÀ EN COURS. Tant que le
+  //  premier n'est pas confirmé, le service en refuse un second : ce
+  //  n'est pas une faute, c'est un état, et il se dit comme tel.
+  if (
+    brut.includes("email change") ||
+    brut.includes("change already") ||
+    brut.includes("pending")
+  )
+    return "A change is already pending: confirm it from the email we sent, or wait a few minutes before asking for another.";
+  //  §1 (nº 830) — LE REPLI NE CACHE PLUS RIEN : à défaut de cas connu,
+  //  on montre le motif tel que le service l'a donné.
+  const dit = erreur instanceof Error ? erreur.message.trim() : "";
+  return dit.length > 0 ? dit : "Something went wrong. Try again.";
 }
