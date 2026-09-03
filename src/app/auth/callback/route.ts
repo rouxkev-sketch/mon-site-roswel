@@ -100,6 +100,9 @@ function origineReelle(request: Request): string {
  * bien par un échange PKCE. Les deux cohabitent.
  */
 
+/** La page qui dit qu'un lien d'e-mail a fait son temps (nº 828). */
+const PAGE_LIEN_EXPIRE = "/lien-expire";
+
 /** Les types de lien qu'un courriel de Supabase peut porter. */
 const TYPES_DE_LIEN = [
   "signup",
@@ -167,6 +170,16 @@ export async function GET(request: Request) {
       token_hash: jeton,
     });
     if (!error) return ouvrirEtRepartir(supabase);
+    /*  ██ §3 (nº 828) — UN LIEN MORT SE DIT, IL NE SE TAIT PAS ██
+        LE DÉFAUT DU PROPRIÉTAIRE : un lien expiré ou déjà cliqué
+        renvoyait à l'accueil avec `?erreur=connexion` — un paramètre
+        que personne ne lit, sur une page qui ne parle de rien. On
+        arrivait chez soi sans savoir pourquoi, et sans rien à faire.
+        Un jeton d'e-mail refusé n'a QU'UNE cause pour celui qui
+        clique : le lien a fait son temps, ou il a déjà servi. On le
+        dit donc, sur une page qui le dit — et qui donne le geste
+        suivant (redemander un lien). */
+    return NextResponse.redirect(`${origin}${PAGE_LIEN_EXPIRE}`);
   }
 
   //  2. LE RETOUR D'UN FOURNISSEUR EXTERNE : un code à échanger (PKCE).
@@ -176,6 +189,9 @@ export async function GET(request: Request) {
     if (!error) return ouvrirEtRepartir(supabase);
   }
 
-  // Rien d'exploitable : retour à l'accueil avec un signal d'erreur
+  /*  Rien d'exploitable. Ce repli ne sert plus qu'au chemin de
+      Google (un `code` refusé) et aux adresses tapées à la main : un
+      jeton d'e-mail refusé, lui, est reparti plus haut vers la page
+      qui l'explique. */
   return NextResponse.redirect(`${origin}/?erreur=connexion`);
 }

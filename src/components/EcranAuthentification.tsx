@@ -110,6 +110,38 @@ const CHAMP =
   "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
   "transition-colors focus:bg-sombre-haut";
 
+/**
+ * ██ LES DEUX TEXTES DU BLOC « mot de passe oublié » (nº 828) ██
+ * Ils vivent ICI, hors du composant, parce qu'un banc doit pouvoir les
+ * lire au mot près et qu'ils ne dépendent que de l'adresse.
+ */
+const MESSAGE_EN_ROUTE = (adresse: string) =>
+  `An email is on its way to ${adresse}: open it and follow the link to choose a new password. Check your spam folder too.`;
+const MESSAGE_DEJA_ENVOYE = (adresse: string) =>
+  `An email was already sent to ${adresse}. Check your inbox and spam — it can take a few minutes.`;
+
+/**
+ * EST-CE LA LIMITE ANTI-ABUS ? Supabase la dit de plusieurs façons
+ * selon la version (« rate limit », « too many requests », le code
+ * `over_email_send_rate_limit`, ou un 429). On les reconnaît toutes :
+ * ce n'est pas une faute de l'utilisateur, et ça ne doit jamais
+ * s'afficher comme telle.
+ */
+function estUneLimite(erreur: unknown): boolean {
+  const brut = erreur instanceof Error ? erreur.message.toLowerCase() : "";
+  const statut =
+    typeof erreur === "object" && erreur !== null && "status" in erreur
+      ? (erreur as { status?: number }).status
+      : undefined;
+  return (
+    statut === 429 ||
+    brut.includes("rate limit") ||
+    brut.includes("too many requests") ||
+    brut.includes("for security purposes") ||
+    brut.includes("only request this after")
+  );
+}
+
 /** LE MESSAGE (réussite / information) — fond élevé, comme Sécurité. */
 const MESSAGE =
   "rounded-lg bg-sombre-eleve px-4 py-3 text-[13.5px] leading-relaxed text-sombre-texte";
@@ -223,6 +255,10 @@ export function EcranAuthentification({
   /** « Mot de passe oublié ? » — proposé APRÈS un échec de connexion,
       pas avant : tant qu'on n'a pas buté, le lien n'est que du bruit. */
   const [lienMotDePasseOublie, setLienMotDePasseOublie] = useState(false);
+  /*  §1 (nº 828) — L'ADRESSE À QUI L'E-MAIL EST DÉJÀ PARTI. C'est ce
+      qui distingue le premier clic du second, et c'est tout ce qu'il
+      faut retenir : le bloc porte l'un ou l'autre texte selon elle. */
+  const [adresseDejaServie, setAdresseDejaServie] = useState<string | null>(null);
   /** §1 (nº 783) — le temps que le navigateur parte chez Google. */
   const [googleEnCours, setGoogleEnCours] = useState(false);
 
@@ -373,31 +409,61 @@ export function EcranAuthentification({
     }
   }
 
-  /** L'E-MAIL DE RÉINITIALISATION (Supabase) : le lien qu'il contient
-      ouvre /devenir-tatoueur/nouveau-mot-de-passe, où l'on choisit le
-      nouveau mot de passe. Il faut d'abord une adresse dans le champ. */
+  /**
+   * ██ §1 (nº 828) — « Forgot your password? » : UN SEUL BLOC ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT DU PROPRIÉTAIRE : au deuxième clic, l'écran répondait par
+   * un MESSAGE D'ERREUR SOUS LE CHAMP — Supabase refuse un second envoi
+   * trop rapproché (sa limite anti-abus), et ce refus remontait tel
+   * quel. Deux blocs se disputaient donc la même place : la
+   * confirmation au-dessus, l'erreur en dessous, pour un geste que
+   * l'utilisateur venait de faire exprès.
+   *
+   * LA RÈGLE : IL N'Y A QU'UN BLOC, et c'est le bloc d'information. Il
+   * dit d'abord que l'e-mail part, ensuite qu'il est DÉJÀ parti. Les
+   * deux textes sont des informations, pas des fautes — recliquer
+   * n'est pas une erreur, c'est de l'impatience, et l'impatience se
+   * répond, elle ne se gronde pas.
+   *
+   * ⚠️ ON NE REDEMANDE MÊME PAS À SUPABASE quand l'adresse n'a pas
+   * changé : le second envoi serait refusé de toute façon. On garde
+   * l'adresse déjà servie (`adresseDejaServie`) et l'on se contente de
+   * mettre le texte à jour. Changer d'adresse redemande, évidemment.
+   * ⚠️ ET SI SUPABASE REFUSE MALGRÉ TOUT (une demande partie d'un autre
+   * onglet, par exemple), on ne montre toujours pas d'erreur : le même
+   * bloc porte le second texte. Voir `estUneLimite`.
+   *
+   * L'adresse dans le champ reste exigée avant tout : sans elle il n'y
+   * a personne à qui écrire, et ÇA, c'est bien une erreur de saisie.
+   */
   async function demanderReinitialisation() {
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+    const adresse = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(adresse)) {
       setErreurs({ email: "Enter your email address above first." });
       return;
     }
-    setEnCours(true);
     setErreurs({});
+    setLienMotDePasseOublie(false);
+    if (adresseDejaServie === adresse) {
+      setInfo(MESSAGE_DEJA_ENVOYE(adresse));
+      return;
+    }
+    setEnCours(true);
     try {
       const supabase = creerClientSupabaseNavigateur();
-      const { error } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        {
-          redirectTo: `${window.location.origin}/auth/callback?next=/devenir-tatoueur/nouveau-mot-de-passe`,
-        }
-      );
+      const { error } = await supabase.auth.resetPasswordForEmail(adresse, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/devenir-tatoueur/nouveau-mot-de-passe`,
+      });
       if (error) throw error;
-      setLienMotDePasseOublie(false);
-      setInfo(
-        `An email is on its way to ${email.trim()}: open it and follow the link to choose a new password. Check your spam folder too.`
-      );
+      setAdresseDejaServie(adresse);
+      setInfo(MESSAGE_EN_ROUTE(adresse));
     } catch (erreur) {
-      setErreurs({ general: messageErreur(erreur) });
+      if (estUneLimite(erreur)) {
+        setAdresseDejaServie(adresse);
+        setInfo(MESSAGE_DEJA_ENVOYE(adresse));
+      } else {
+        setErreurs({ general: messageErreur(erreur) });
+      }
     } finally {
       setEnCours(false);
     }

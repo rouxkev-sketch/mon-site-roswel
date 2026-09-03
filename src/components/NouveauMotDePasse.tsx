@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-//  §B9 (nº 788) — l'œil partagé (voir erreurs-formulaire).
-import { BoutonOeil, PLACE_DE_L_OEIL } from "@/components/erreurs-formulaire";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  AIR_AVANT_BOUTON,
+  bordureChamp,
+  BoutonOeil,
+  MessageErreur,
+  PLACE_DE_L_OEIL,
+} from "@/components/erreurs-formulaire";
+import { IconeCocheListe } from "@/components/Icones";
+import { JaugeMotDePasse } from "@/components/JaugeMotDePasse";
+import { LienExpire } from "@/components/LienExpire";
+import { PastilleEvenement } from "@/components/PastilleEvenement";
 import { creerClientSupabaseNavigateur } from "@/lib/supabase/client";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
@@ -12,21 +20,82 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
 /**
  * CHOISIR UN NOUVEAU MOT DE PASSE
  * ================================
- * La page qu'ouvre le lien de l'e-mail « Mot de passe oublié ? »
- * (Supabase y connecte la personne le temps de la réinitialisation,
- * via /auth/callback). Un seul travail : le nouveau mot de passe,
- * saisi deux fois, huit caractères au minimum.
+ * La page qu'ouvre le lien de l'e-mail « Forgot your password? » (le
+ * jeton du lien est vérifié par /auth/callback, qui ouvre la session
+ * puis mène ici). Un seul travail : le nouveau mot de passe, saisi
+ * deux fois.
  *
- * Lien périmé ou déjà utilisé : pas de session — on le dit, et on
- * ramène vers la connexion pour redemander un e-mail.
+ * ██ §1 (nº 828) — CETTE PAGE AVAIT ÉCHAPPÉ AUX CHARTES ██
+ * ==================================================================
+ * Elle était la dernière à porter la robe d'avant, et l'on y arrive
+ * par un e-mail — c'est-à-dire au pire moment pour découvrir un écran
+ * qui ne ressemble pas au site. SIX ÉCARTS, tous corrigés ici, tous
+ * repris de l'écran de connexion et du standard nº 788 :
+ *
+ *  1. LE FOCUS. Le champ prenait un contour ROSE et un halo
+ *     (`focus:border-primaire focus:ring-primaire/25`). La charte
+ *     réserve le rose au sélecteur et à l'action finale : un champ
+ *     actif ne fait que S'ÉCLAIRCIR (`focus:bg-sombre-haut`) ;
+ *  2. LES TITRES AU-DESSUS DES CHAMPS sont partis. Le libellé vit
+ *     DANS le champ, comme partout ailleurs. Il reste porté aux
+ *     lecteurs d'écran par `aria-label` — un champ sans nom
+ *     accessible serait un recul ;
+ *  3. LA JAUGE DE ROBUSTESSE s'affiche sous le premier champ dès la
+ *     frappe. C'est le composant de la création de compte, à
+ *     l'identique — il ne se montre pas tant que le champ est vide ;
+ *  4. L'ŒIL EST SUR LES DEUX CHAMPS. Il n'était que sur le premier :
+ *     on pouvait donc relire ce qu'on tapait, mais pas ce qu'on
+ *     recopiait — exactement le champ où l'on se trompe. Un seul
+ *     état pour les deux, comme à la connexion : ce qu'on relit, on
+ *     le relit en entier ;
+ *  5. LE BOUTON prend les mesures de « Sign up » / « Log in » :
+ *     pleine largeur, 44 px au web et 48 px au doigt, texte 14.
+ *     ⚠️ UNE SEULE CLASSE PAR PROPRIÉTÉ (règle nº 389) : `not-mobile:`
+ *     et `mobile:` sont l'exacte négation l'une de l'autre, il n'y a
+ *     pas de hauteur de base qu'une variante viendrait contredire. Et
+ *     l'appareil se lit par ces variantes, jamais par une largeur
+ *     d'écran (piège nº 60) ;
+ *  6. LES ERREURS suivent le standard nº 788 : contour rouge sur le
+ *     champ fautif, message rouge dessous, sans fond ni encadré. Le
+ *     pavé rouge à fond plein qui s'affichait en bas est parti —
+ *     y compris pour l'erreur générale, qui se met désormais sous le
+ *     bouton, dans la même typographie que les autres.
+ *
+ * ██ §2 (nº 828) — CE QUI SE PASSE APRÈS ██
+ * ==================================================================
+ * L'écran de confirmation reprend LE PATRON DE LA PAGE CONTACT — la
+ * pastille verte à coche, le titre, une phrase, mêmes airs. Rien
+ * d'inventé : c'est le même assemblage, avec le texte de cette page.
+ * ⚠️ IL NE CLIGNOTE PLUS. La version d'avant repartait au bout de
+ * 1,6 s : le temps de lever les yeux, l'écran avait déjà changé, et
+ * l'on ne savait pas si c'était fait. `TEMPS_DE_LECTURE` laisse la
+ * confirmation LE TEMPS D'ÊTRE LUE avant le départ ; et le formulaire
+ * est remplacé D'UN COUP, sans état intermédiaire.
+ *
+ * ██ §3 (nº 828) — LE LIEN PÉRIMÉ ██
+ * ==================================================================
+ * Sans session, cette page ne peut rien faire : le lien a expiré, ou
+ * il a déjà servi. Elle montre alors l'écran partagé `LienExpire`, le
+ * MÊME que la page /lien-expire où /auth/callback envoie quand la
+ * vérification du jeton échoue — une seule écriture pour les deux
+ * chemins (piège nº 378).
  */
 
 const LONGUEUR_MINIMALE = 8;
 
+/**
+ * LE TEMPS LAISSÉ À LA CONFIRMATION avant de repartir. Voir le §2 :
+ * 1,6 s ne suffisait pas à la lire.
+ */
+const TEMPS_DE_LECTURE = 2600;
+
+/*  LE CHAMP — la copie exacte de celui de l'écran de connexion :
+    bordure dans la boîte (transparente au repos, rouge en erreur), et
+    un focus qui n'est qu'un FOND PLUS CLAIR. */
 const CHAMP =
-  "w-full min-h-[52px] rounded-xl border bg-sombre-eleve px-4 text-base " +
+  "w-full min-h-[52px] rounded-lg border bg-sombre-eleve-clair px-4 text-base " +
   "text-sombre-texte placeholder:text-sombre-texte-doux outline-none " +
-  "transition-colors focus:border-primaire focus:ring-2 focus:ring-primaire/25";
+  "transition-colors focus:bg-sombre-haut";
 
 export function NouveauMotDePasse() {
   const router = useRouter();
@@ -34,10 +103,21 @@ export function NouveauMotDePasse() {
 
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const [visible, setVisible] = useState(false);
+  const [motDePasseVisible, setMotDePasseVisible] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [fait, setFait] = useState(false);
+
+  /*  §1-6 (nº 788) — L'ERREUR S'EFFACE À LA CORRECTION. Une erreur qui
+      survit à sa réparation apprend à ne plus lire les erreurs. */
+  const oublier = (champ: string) =>
+    setErreurs((precedentes) => {
+      if (!precedentes[champ] && !precedentes.general) return precedentes;
+      const suite = { ...precedentes };
+      delete suite[champ];
+      delete suite.general;
+      return suite;
+    });
 
   async function enregistrer(evenement: React.FormEvent) {
     evenement.preventDefault();
@@ -58,10 +138,14 @@ export function NouveauMotDePasse() {
       });
       if (error) throw error;
       setFait(true);
-      // Le compte est connecté avec son nouveau mot de passe :
-      // direction « MA FICHE », exactement comme après toute autre
-      // connexion (passe nº 131 — une seule adresse d'arrivée).
-      window.setTimeout(() => router.push(ARRIVEE_APRES_CONNEXION), 1600);
+      //  Le compte est connecté avec son nouveau mot de passe :
+      //  direction l'aiguillage d'arrivée, exactement comme après
+      //  toute autre connexion (passe nº 131 — une seule adresse
+      //  d'arrivée). Le départ attend que la confirmation ait été lue.
+      window.setTimeout(
+        () => router.push(ARRIVEE_APRES_CONNEXION),
+        TEMPS_DE_LECTURE
+      );
     } catch (erreur) {
       const brut =
         erreur instanceof Error ? erreur.message.toLowerCase() : "";
@@ -82,26 +166,33 @@ export function NouveauMotDePasse() {
     return <main className="flex-1" aria-hidden="true" />;
   }
 
-  /* ---------- LIEN PÉRIMÉ (pas de session) ---------- */
+  /* ---------- §3 — LIEN PÉRIMÉ (pas de session) ---------- */
   if (!utilisateur) {
     return (
-      <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pt-12 sm:pt-16 pb-24 text-center">
-        <h1 className="text-[clamp(1.5rem,4vw,1.9rem)] font-bold text-sombre-texte">
-          This link is no longer valid
-        </h1>
-        <p className="mt-3 text-sombre-texte-doux leading-relaxed">
-          It expired, or it was already used. Request a new email from the
-          login page (&quot;Forgot your password?&quot;) — it only takes
-          a minute.
-        </p>
-        <Link
-          href="/devenir-tatoueur"
-          className="mt-7 inline-flex items-center justify-center rounded-full
-                     px-7 min-h-[52px] bg-primaire hover:bg-primaire-fonce
-                     text-white font-semibold transition-colors"
-        >
-          Back to login
-        </Link>
+      <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pb-24">
+        <LienExpire />
+      </main>
+    );
+  }
+
+  /* ---------- §2 — C'EST FAIT ---------- */
+  if (fait) {
+    return (
+      <main className="flex-1 mx-auto w-full max-w-[440px] px-5 sm:px-6 pb-24">
+        <div className="mt-10 text-center">
+          <PastilleEvenement
+            ton="valide"
+            symbole={IconeCocheListe}
+            classe="mx-auto"
+          />
+          <h1 className="mt-5 text-[clamp(1.3rem,3vw,1.6rem)] font-bold text-sombre-texte">
+            Password updated
+          </h1>
+          <p className="mt-3 text-sombre-texte-doux leading-relaxed">
+            You&apos;re signed in with your new password — taking you back
+            to YokoFolio.
+          </p>
+        </div>
       </main>
     );
   }
@@ -117,98 +208,82 @@ export function NouveauMotDePasse() {
         you&apos;ll remember.
       </p>
 
-      {fait ? (
-        <p
-          role="status"
-          className="mt-8 rounded-xl border border-primaire/40 bg-primaire/10 px-4 py-3 text-sm text-sombre-texte"
-        >
-          Saved: your password is changed. Heading to your
-          portfolio…
-        </p>
-      ) : (
-        <form onSubmit={enregistrer} noValidate className="mt-8 flex flex-col gap-4">
-          <div>
-            <label
-              htmlFor="nouveau-mdp"
-              className="block text-sm font-medium text-sombre-texte mb-1.5"
-            >
-              New password
-            </label>
-            <div className="relative">
-              <input
-                id="nouveau-mdp"
-                type={visible ? "text" : "password"}
-                autoComplete="new-password"
-                value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
-                aria-invalid={Boolean(erreurs.motDePasse)}
-                placeholder={`At least ${LONGUEUR_MINIMALE} characters`}
-                style={{ paddingRight: PLACE_DE_L_OEIL }}
-                className={`${CHAMP} ${
-                  erreurs.motDePasse ? "border-erreur" : "border-sombre-bordure"
-                }`}
-              />
-              {/*  §B9 (nº 788) — LE MÊME ŒIL QUE PARTOUT AILLEURS. La
-                   consigne dit « partout où ce mécanisme existe » : cette
-                   page est l'aboutissement de « Mot de passe oublié ? »,
-                   à deux clics de la connexion. La laisser au mot aurait
-                   fait une incohérence qu'on rencontre en une minute. */}
-              <BoutonOeil visible={visible} surBascule={() => setVisible((v) => !v)} />
-            </div>
-            {erreurs.motDePasse && (
-              <p className="mt-1.5 text-[13px] text-erreur">
-                {erreurs.motDePasse}
-              </p>
-            )}
+      <form onSubmit={enregistrer} noValidate className="mt-8 flex flex-col gap-4">
+        <div>
+          <div className="relative">
+            <input
+              id="nouveau-mdp"
+              type={motDePasseVisible ? "text" : "password"}
+              autoComplete="new-password"
+              value={motDePasse}
+              onChange={(e) => {
+                setMotDePasse(e.target.value);
+                oublier("motDePasse");
+              }}
+              aria-invalid={Boolean(erreurs.motDePasse)}
+              aria-label="New password"
+              placeholder="New password"
+              style={{ paddingRight: PLACE_DE_L_OEIL }}
+              className={`${CHAMP} ${bordureChamp(Boolean(erreurs.motDePasse))}`}
+            />
+            <BoutonOeil
+              visible={motDePasseVisible}
+              surBascule={() => setMotDePasseVisible((v) => !v)}
+            />
           </div>
+          {erreurs.motDePasse && (
+            <MessageErreur>{erreurs.motDePasse}</MessageErreur>
+          )}
+          {/*  §1-3 — LA JAUGE, dès la frappe. Le composant ne rend rien
+               tant que le champ est vide : il n'y a rien à mesurer, et
+               une jauge à zéro ressemblerait à un reproche. */}
+          <JaugeMotDePasse motDePasse={motDePasse} />
+        </div>
 
-          <div>
-            <label
-              htmlFor="nouveau-mdp-confirmation"
-              className="block text-sm font-medium text-sombre-texte mb-1.5"
-            >
-              Confirm the password
-            </label>
+        <div>
+          <div className="relative">
             <input
               id="nouveau-mdp-confirmation"
-              type={visible ? "text" : "password"}
+              type={motDePasseVisible ? "text" : "password"}
               autoComplete="new-password"
               value={confirmation}
-              onChange={(e) => setConfirmation(e.target.value)}
+              onChange={(e) => {
+                setConfirmation(e.target.value);
+                oublier("confirmation");
+              }}
               aria-invalid={Boolean(erreurs.confirmation)}
-              placeholder="The same one, once more"
-              className={`${CHAMP} ${
-                erreurs.confirmation ? "border-erreur" : "border-sombre-bordure"
-              }`}
+              aria-label="Retype your new password"
+              placeholder="Retype your new password"
+              style={{ paddingRight: PLACE_DE_L_OEIL }}
+              className={`${CHAMP} ${bordureChamp(Boolean(erreurs.confirmation))}`}
             />
-            {erreurs.confirmation && (
-              <p className="mt-1.5 text-[13px] text-erreur">
-                {erreurs.confirmation}
-              </p>
-            )}
+            <BoutonOeil
+              visible={motDePasseVisible}
+              surBascule={() => setMotDePasseVisible((v) => !v)}
+            />
           </div>
-
-          {erreurs.general && (
-            <p
-              role="alert"
-              className="rounded-xl border border-erreur/50 bg-erreur/10 px-4 py-3 text-sm text-sombre-texte"
-            >
-              {erreurs.general}
-            </p>
+          {erreurs.confirmation && (
+            <MessageErreur>{erreurs.confirmation}</MessageErreur>
           )}
+        </div>
 
-          <button
-            type="submit"
-            disabled={enCours}
-            className="mt-1 inline-flex items-center justify-center rounded-full
-                       min-h-[52px] bg-primaire hover:bg-primaire-fonce
-                       text-white font-semibold transition-colors
-                       disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {enCours ? "One moment…" : "Save password"}
-          </button>
-        </form>
-      )}
+        <button
+          type="submit"
+          disabled={enCours}
+          className={`${AIR_AVANT_BOUTON} inline-flex w-full items-center justify-center
+                     rounded-full px-5 not-mobile:min-h-[44px] mobile:min-h-[48px]
+                     text-[14px] bg-primaire hover:bg-primaire-fonce
+                     text-white font-semibold transition-colors
+                     disabled:opacity-60 disabled:cursor-not-allowed`}
+        >
+          {enCours ? "One moment…" : "Save password"}
+        </button>
+
+        {/*  §1-6 — L'ERREUR GÉNÉRALE dans la même typographie que les
+             autres, sous le geste qui l'a produite. Plus d'encadré à
+             fond plein : le standard nº 788 vaut aussi pour elle. */}
+        {erreurs.general && <MessageErreur>{erreurs.general}</MessageErreur>}
+      </form>
     </main>
   );
 }
