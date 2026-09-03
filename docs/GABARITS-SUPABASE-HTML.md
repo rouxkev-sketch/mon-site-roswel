@@ -1,6 +1,5 @@
-# Les trois gabarits d'e-mails Supabase, habillés — passe nº 817,
-# couleurs verrouillées à la nº 822,
-# couleurs verrouillées à la nº 822
+# Les trois gabarits d'e-mails Supabase, habillés
+### passe nº 817 · couleurs verrouillées nº 822 · **tête refaite nº 823**
 
 Ces trois e-mails ne sont **pas dans le dépôt** : Supabase les envoie à
 notre place, et leurs gabarits vivent dans son tableau de bord
@@ -9,42 +8,102 @@ un — le **Subject** dans le champ du sujet, le **Body** dans le corps
 (mode source / HTML).
 
 Les textes sont ceux de la nº 805 (docs/GABARITS-SUPABASE-EN.md), au mot
-près. Ce qui change : l'habillage — le logo YokoFolio, le bouton d'action
-dans le rouge du site, un pied de page sobre — le même que celui des cinq
-e-mails que le site envoie lui-même (`src/lib/courriel-habille.ts`). Si
-l'un des deux change un jour, l'autre doit suivre.
+près. Ce qui change : l'habillage — la tête de marque, le bouton d'action
+dans le rouge du site, un pied de page sobre — le même que celui des huit
+e-mails que le site envoie lui-même (`src/lib/courriel-habille.ts`). Ce
+document est **fabriqué à partir de ce fichier-là** : les deux ne peuvent
+pas diverger.
+
+## ⚠️ CE QUI CHANGE À LA nº 823 — LA TÊTE DU COURRIEL
+
+**Il faut recoller les trois gabarits.** La tête n'est plus la même.
+
+Gmail **inverse** les couleurs d'un e-mail sombre, et **son inversion ne
+peut pas être désactivée** : il ignore `color-scheme` et les requêtes de
+média. Les quatre verrous de la nº 822 restent (ils servent chez Apple
+Mail, iOS et Outlook récent), mais ils ne suffisaient pas : dans Gmail le
+courriel arrivait clair, et le logo disparaissait.
+
+La cause, relevée dans les pixels des deux fichiers officiels :
+
+| fichier | ce qu'il contient | ce qu'il devient sur fond clair |
+| --- | --- | --- |
+| `yokofolio-icone.png` | 99 % de rouge de marque | **se lit** (4,8:1 sur blanc, 4,0:1 sur le bleu nuit) |
+| `yokofolio-logo.png` | le cœur (43 %) **+ le mot en BLANC PUR** (22 %) | le mot **disparaît** |
+
+Ce n'était donc pas le cœur, c'était **le mot**. La tête est maintenant
+faite des deux seules choses qui traversent une inversion :
+
+- **le CŒUR**, en image — aucun client mail n'inverse une image, et le
+  rouge se lit sur les deux fonds ;
+- **le nom « YokoFolio », en TEXTE** — un texte s'inverse *avec* son
+  fond, donc leur contraste est conservé quoi qu'il arrive.
+
+Aucune image officielle n'a été touchée (règle nº 356 du dépôt : on ne
+recadre pas, on ne recolore pas, on ne fabrique pas de variante).
+
+### Ce que ça donne, mesuré
+
+Contrastes WCAG lus dans les pixels d'une capture, la transformation
+faite au canevas en épargnant les rectangles d'image. **Deux**
+transformations, parce que les clients n'emploient pas tous la même :
+l'*inversion franche* (255 − v par canal) et la *bascule de clarté*
+(le clair et le sombre retournés, teinte gardée).
+
+| | cœur | nom | titre | texte | bouton |
+| --- | --- | --- | --- | --- | --- |
+| tel quel | 4,0 | 17,2 | 14,8 | 14,8 | 4,8 |
+| inversion franche | 4,2 | 17,1 | 14,8 | 14,8 | 14,0 |
+| bascule de clarté | 4,2 | 17,0 | 14,5 | 14,5 | 4,9 |
+
+Les seuils WCAG AA sont 4,5:1 pour du texte courant et 3:1 pour du
+grand texte gras et pour un dessin : **tout passe, dans les trois
+sens**. Le cœur tient parce que son rouge est une couleur *moyenne* —
+4,0 sur le bleu nuit, 4,2 sur le clair. Ni du blanc ni du noir
+n'auraient cette propriété : c'est le rouge de la marque qui sauve la
+tête.
+
+> **Une plaque de fond sous le logo ne marcherait pas** : une plaque
+> posée en HTML est une couleur de fond, et l'inversion la retourne comme
+> le reste — la plaque sombre devient claire, et le mot blanc disparaît
+> de nouveau. Le seul support que l'inversion ne touche pas, c'est le PNG
+> lui-même. **Si tu veux ton logotype complet dans les e-mails, il faut
+> fournir un PNG qui porte son propre fond** (un liseré clair autour des
+> lettres, ou une plaque cuite dans l'image).
 
 ## Ce qu'il faut savoir en collant
 
 - **Les variables entre accolades doubles sont celles de Supabase**, à
   garder telles quelles et à leur place :
   `{{ .ConfirmationURL }}` (le lien du bouton), `{{ .SiteURL }}` (l'adresse
-  du site, réglée dans *Authentication → URL Configuration* — elle sert au
-  logo et au pied de page), `{{ .Email }}` / `{{ .NewEmail }}` (les
+  du site, réglée dans *Authentication → URL Configuration* — elle sert à
+  l'image et au pied de page), `{{ .Email }}` / `{{ .NewEmail }}` (les
   adresses, gabarit 3 seulement).
-- **Le logo est chargé depuis le site** (`{{ .SiteURL }}/yokofolio-logo.png`,
-  le fichier officiel de `public/`) : un e-mail n'embarque pas d'image.
-  Tant que *Site URL* vaut `https://yokofolio.com`, le logo s'affiche.
+- **L'image est chargée depuis le site**
+  (`{{ .SiteURL }}/yokofolio-icone.png`, le fichier officiel de
+  `public/`) : un e-mail n'embarque pas d'image. Tant que *Site URL* vaut
+  `https://yokofolio.com`, le cœur s'affiche. Et si le lecteur bloque les
+  images, il reste le nom **en texte** : la tête tient quand même.
 - **HTML d'e-mail robuste** : des tables, des styles en ligne, les
   attributs `bgcolor`/`width`, un bouton « à l'épreuve des balles », un
-  commentaire conditionnel pour Outlook, aucune police chargée. Fond
-  sombre (le logo est blanc sur transparent).
-- **LES COULEURS SONT VERROUILLÉES (nº 822)** : un client en mode sombre
-  ne doit plus inverser le courriel (Gmail sombre le rendait clair, et le
-  logo blanc disparaissait). Quatre couches le disent : `color-scheme:
-  only dark` (méta et feuille), les couleurs en ligne avec
-  `!important`, une feuille dans l'en-tête qui redit les mêmes couleurs
-  sous `prefers-color-scheme: dark`, et les sélecteurs
-  `[data-ogsc]`/`[data-ogsb]` d'Outlook.com. **La petite feuille de
-  style de l'en-tête fait partie du gabarit : la coller aussi.**
+  commentaire conditionnel pour Outlook, aucune police chargée.
+- **Les couleurs restent verrouillées (nº 822)** pour les clients qui
+  savent lire ces verrous : `color-scheme: only dark` (méta et feuille),
+  les couleurs en ligne avec `!important`, une feuille dans l'en-tête qui
+  redit les mêmes couleurs sous `prefers-color-scheme: dark`, et les
+  sélecteurs `[data-ogsc]`/`[data-ogsb]` d'Outlook.com. **La petite
+  feuille de style de l'en-tête fait partie du gabarit : la coller
+  aussi.**
 - **Le nom d'expéditeur** et l'adresse d'envoi se règlent ailleurs
   (*Authentication → SMTP Settings*) : ils ne sont pas dans le gabarit.
 - Une fois collés, **rejouer les trois parcours** (inscription, mot de
   passe oublié, changement d'adresse) sur un compte d'essai et lire les
-  trois e-mails reçus dans Gmail et dans Outlook : c'est la seule
-  vérification possible.
+  trois e-mails reçus dans Gmail (mode sombre **et** mode clair) et dans
+  Outlook : c'est la seule vérification possible.
 
----## 1 · Confirm signup — déclenché par l'inscription par mot de passe
+---
+
+## 1 · Confirm signup — déclenché par l'inscription par mot de passe
 
 **Subject**
 
@@ -99,7 +158,10 @@ Confirm your YokoFolio account
           <tr>
             <td class="yf-fond" align="left" bgcolor="#0B0F14" style="background-color:#0B0F14 !important;padding:0 4px 24px 4px;">
               <a href="{{ .SiteURL }}" style="text-decoration:none;">
-                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td style="padding:0 10px 0 0;" valign="middle"><img src="{{ .SiteURL }}/yokofolio-icone.png" width="26" height="30" alt="" style="display:block;border:0;outline:none;width:26px;height:30px;"></td>
+                  <td class="yf-titre" valign="middle" style="font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:30px;font-weight:bold;letter-spacing:-0.2px;color:#F2F2F4 !important;">YokoFolio</td>
+                </tr></table>
               </a>
             </td>
           </tr>
@@ -188,7 +250,10 @@ Reset your YokoFolio password
           <tr>
             <td class="yf-fond" align="left" bgcolor="#0B0F14" style="background-color:#0B0F14 !important;padding:0 4px 24px 4px;">
               <a href="{{ .SiteURL }}" style="text-decoration:none;">
-                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td style="padding:0 10px 0 0;" valign="middle"><img src="{{ .SiteURL }}/yokofolio-icone.png" width="26" height="30" alt="" style="display:block;border:0;outline:none;width:26px;height:30px;"></td>
+                  <td class="yf-titre" valign="middle" style="font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:30px;font-weight:bold;letter-spacing:-0.2px;color:#F2F2F4 !important;">YokoFolio</td>
+                </tr></table>
               </a>
             </td>
           </tr>
@@ -277,7 +342,10 @@ Confirm your new email address
           <tr>
             <td class="yf-fond" align="left" bgcolor="#0B0F14" style="background-color:#0B0F14 !important;padding:0 4px 24px 4px;">
               <a href="{{ .SiteURL }}" style="text-decoration:none;">
-                <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td style="padding:0 10px 0 0;" valign="middle"><img src="{{ .SiteURL }}/yokofolio-icone.png" width="26" height="30" alt="" style="display:block;border:0;outline:none;width:26px;height:30px;"></td>
+                  <td class="yf-titre" valign="middle" style="font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:30px;font-weight:bold;letter-spacing:-0.2px;color:#F2F2F4 !important;">YokoFolio</td>
+                </tr></table>
               </a>
             </td>
           </tr>

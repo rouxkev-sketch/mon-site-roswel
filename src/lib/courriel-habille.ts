@@ -35,11 +35,11 @@ import { adresseDuSite } from "@/lib/site";
  *  · les couleurs de la charte, en dur dans le HTML (les jetons de
  *    COULEURS_SOMBRE : ce sont les mêmes valeurs, lues ici, jamais
  *    recopiées).
- * LE FOND EST SOMBRE, COMME LE SITE : le logo (`yokofolio-logo.png`)
- * est un mot blanc et un cœur rouge sur fond transparent — sur un
- * courriel blanc il disparaîtrait. `color-scheme: dark` prévient les
- * clients qui inversent les couleurs.
- * ⚠️ LE LOGO EST CHARGÉ DEPUIS LE SITE (adresse absolue) : un courriel
+ * LE FOND EST SOMBRE, COMME LE SITE — mais il ne peut PAS le rester
+ * chez tout le monde : voir le §1 de la nº 823 plus bas, qui dit ce
+ * que la tête du courriel est devenue pour survivre à l'inversion de
+ * Gmail (le CŒUR seul, en image, et le nom en TEXTE).
+ * ⚠️ L'IMAGE EST CHARGÉE DEPUIS LE SITE (adresse absolue) : un courriel
  * n'embarque pas d'image. C'est le fichier officiel de `public/`,
  * jamais une copie.
  *
@@ -86,6 +86,66 @@ export function echapperHtml(texte: string): string {
 }
 
 /**
+ * ██ §1 (nº 823) — ON NE COMBAT PLUS L'INVERSION, ON Y SURVIT ██
+ * ==================================================================
+ * CE QUE LA nº 822 A ESSAYÉ, ET POURQUOI ÇA NE SUFFIT PAS. Elle
+ * verrouillait les couleurs (les quatre couches décrites plus bas).
+ * LE PROPRIÉTAIRE A VÉRIFIÉ DANS GMAIL : son inversion NE PEUT PAS
+ * être désactivée — Gmail ignore `color-scheme` et les requêtes de
+ * média. Le courriel arrivait donc clair, et le logo devenait
+ * invisible.
+ *
+ * LA CAUSE, RELEVÉE DANS LES PIXELS DES DEUX FICHIERS OFFICIELS (une
+ * lecture, aucune écriture) :
+ *  · `yokofolio-icone.png` — 99 % de ses pixels visibles portent le
+ *    rouge de la marque. Une seule couleur, et une couleur MOYENNE :
+ *    4,8:1 sur du blanc, 4,0:1 sur le bleu nuit. Ce cœur se lit sur
+ *    les deux fonds, sans rien lui faire ;
+ *  · `yokofolio-logo.png` — le même cœur (43 %) PLUS le mot, qui est
+ *    du BLANC PUR (22 % des pixels visibles) sur du transparent. Sur
+ *    un fond redevenu clair, le mot n'a plus aucun contraste : c'est
+ *    LUI qui disparaissait, pas le cœur.
+ *
+ * LA NOUVELLE RÈGLE : le courriel doit rester lisible AVEC OU SANS
+ * inversion. Ce qui la traverse sans dommage, ce sont deux choses :
+ *  · LES IMAGES — aucun client ne les inverse ; le cœur reste rouge
+ *    quoi qu'il arrive, et le rouge se lit des deux côtés ;
+ *  · LE TEXTE — il s'inverse AVEC son fond, donc leur contraste est
+ *    conservé quoi qu'il arrive.
+ * LA TÊTE DU COURRIEL EST FAITE DE CES DEUX-LÀ : le cœur (image) et
+ * le nom « YokoFolio » ÉCRIT EN TEXTE, à la place du logo blanc.
+ *
+ * CE QUE LE BANC MESURE (contrastes WCAG lus dans les pixels de la
+ * capture, la transformation faite au canevas en épargnant les
+ * rectangles d'image — deux transformations, parce que les clients
+ * n'emploient pas tous la même) :
+ *
+ *                        cœur   nom   titre  texte  bouton
+ *   tel quel              4,0   17,2   14,8   14,8    4,8
+ *   inversion franche     4,2   17,1   14,8   14,8   14,0
+ *   bascule de clarte     4,2   17,0   14,5   14,5    4,9
+ *
+ * Les seuils WCAG AA : 4,5 pour du texte courant, 3 pour du grand
+ * texte gras et pour un dessin. Tout passe, DANS LES TROIS SENS.
+ * Le cœur tient parce que son rouge est une couleur MOYENNE : 4,0 sur
+ * le bleu nuit, 4,2 sur le clair. Ni le blanc ni le noir n'auraient
+ * cette propriété — c'est le rouge de la marque qui sauve la tête.
+ * ⚠️ AUCUNE IMAGE OFFICIELLE N'EST TOUCHÉE, et c'est la règle du dépôt
+ * (nº 356/467) : on n'a ni recadré, ni recoloré, ni fabriqué de
+ * variante du logo. On emploie l'icône telle quelle, à ses
+ * proportions (285 × 324 → 26 × 30), et le nom devient du texte.
+ * ⚠️ POURQUOI PAS « UNE PLAQUE DE FOND SOUS LE LOGO », qui semble la
+ * réponse évidente : une plaque posée en HTML est une COULEUR DE
+ * FOND, et une couleur de fond, l'inversion la retourne comme le
+ * reste. Une plaque sombre devient claire, et le mot blanc disparaît
+ * de nouveau — la plaque ne protège rien. Il n'y a qu'un support que
+ * l'inversion ne touche pas : le PNG lui-même.
+ * ⚠️ SI LE PROPRIÉTAIRE VEUT SON LOGOTYPE DANS LES COURRIELS, il faut
+ * donc une image qui porte SON PROPRE FOND (un liseré clair autour
+ * des lettres, ou une plaque sombre CUITE DANS LE PNG) : celle-là
+ * traverserait l'inversion comme le cœur. C'est une image à FOURNIR —
+ * le dépôt interdit d'en fabriquer une (règle nº 356).
+ *
  * ██ §1 (nº 822) — LES COULEURS NE DÉPENDENT PLUS DU LECTEUR ██
  * ==================================================================
  * LE DÉFAUT DU PROPRIÉTAIRE : le courriel s'INVERSE selon le thème du
@@ -108,10 +168,11 @@ export function echapperHtml(texte: string): string {
  *     qu'Outlook.com pose sur ce qu'il a retouché : on repasse derrière.
  * Les classes `yf-*` n'existent que pour 3 et 4 : elles ne portent
  * aucune couleur par elles-mêmes, elles servent de prise.
- * ⚠️ CE QUI NE PEUT PAS ÊTRE GARANTI, ET JE LE DIS : Gmail (Android
- * surtout) applique parfois sa propre transformation sans rien
- * demander. Ces quatre couches sont ce que le métier sait faire ; le
- * banc les vérifie en thème clair ET sombre (le rendu, pas la promesse).
+ * ⚠️ CES QUATRE COUCHES RESTENT — elles servent chez ceux qui les
+ * lisent (Apple Mail, iOS, Outlook récent), et elles ne coûtent rien.
+ * Elles ne sont simplement plus la seule défense : GMAIL LES IGNORE
+ * (relevé du propriétaire, nº 823), et c'est le §1 ci-dessus qui tient
+ * quand elles ne tiennent pas.
  *
  * Le texte de la charte, blanc ; le texte doux, gris.
  */
@@ -200,7 +261,10 @@ export function habillerCourriel(
           <tr>
             <td class="yf-fond" align="left" bgcolor="${fond}" style="background-color:${fond} !important;padding:0 4px 24px 4px;">
               <a href="${echapperHtml(site)}" style="text-decoration:none;">
-                <img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.logo}" width="170" alt="${MARQUE_YOKOFOLIO.nom}" style="display:block;border:0;outline:none;width:170px;height:auto;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td style="padding:0 10px 0 0;" valign="middle"><img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.icone}" width="26" height="30" alt="" style="display:block;border:0;outline:none;width:26px;height:30px;"></td>
+                  <td class="yf-titre" valign="middle" style="font-family:${POLICE};font-size:22px;line-height:30px;font-weight:bold;letter-spacing:-0.2px;color:${TEXTE} !important;">${MARQUE_YOKOFOLIO.nom}</td>
+                </tr></table>
               </a>
             </td>
           </tr>
