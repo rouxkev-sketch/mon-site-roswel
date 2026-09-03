@@ -169,8 +169,15 @@ echo ""
 #  --------------------------------------------------------------
 #  On se place DANS le dossier : `d` cherche `.vercel/project.json`
 #  à côté de lui, et le fabrique au premier passage.
+#  ⚠️ nº 831 — ON LUI PASSE CE QUI RESTE DE TA LIGNE. Depuis la nº 831,
+#  `d` vérifie les variables de production avant de déployer et sait
+#  recevoir `--sans-verification` ; `shift` retire le nom du zip, et
+#  tout ce que tu as tapé après lui arrive tel quel. Ainsi
+#  « sh livre 831.zip --sans-verification » fonctionne comme
+#  « sh d --sans-verification ».
+shift
 cd "$DOSSIER"
-sh d
+sh d "$@"
 cd ..
 
 #  --------------------------------------------------------------

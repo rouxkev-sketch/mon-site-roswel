@@ -1,0 +1,32 @@
+#  ██ nº 831 — CE QUI NE MONTE PAS CHEZ VERCEL ██
+#  ==================================================================
+#  LE DÉFAUT QUI A MENÉ ICI : le site en production n'envoyait aucun
+#  e-mail. Le diagnostic de la nº 830 a montré que `RESEND_API_KEY`
+#  valait VIDE au runtime, alors qu'elle est posée chez Vercel depuis
+#  des semaines — la production ne tournait donc pas sur les variables
+#  du tableau de bord.
+#
+#  POURQUOI CE FICHIER : `sh d` déploie DEPUIS LE DOSSIER (et non
+#  depuis un dépôt Git). Tout ce que le dossier contient monte chez
+#  Vercel — `.env.local` compris, avec la vraie clé secrète de la base
+#  que `livre` vient d'y remettre. Deux conséquences, et aucune n'est
+#  souhaitable :
+#
+#   1. LA CLÉ VOYAGE. Elle quitte le Mac à chaque mise en ligne et se
+#      retrouve dans le paquet servi en ligne. La règle du projet dit
+#      qu'elle vit à un seul endroit ; ce fichier la remet à sa place.
+#   2. ON NE SAIT PLUS QUI GAGNE. Next lit `process.env` d'abord et
+#      `.env.local` ensuite (mesuré, et documenté : « Environment
+#      Variable Load Order ») : une variable absente du tableau de bord
+#      mais présente dans le fichier fait marcher le site QUAND MÊME —
+#      jusqu'au jour où une ligne y est vide, et là plus rien ne part,
+#      sans un mot. C'est exactement l'histoire de RESEND_API_KEY.
+#
+#  DEPUIS CE FICHIER, LE TABLEAU DE BORD EST LA SEULE SOURCE en ligne,
+#  et `d` vérifie qu'il est complet AVANT de déployer (voir le script).
+#
+#  ⚠️ CE FICHIER NE CHANGE RIEN EN LOCAL : `npm run dev` et les bancs
+#  continuent de lire `.env.local` sur ta machine. Il ne parle que de
+#  ce qui MONTE.
+.env
+.env.*

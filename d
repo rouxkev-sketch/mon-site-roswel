@@ -56,6 +56,34 @@ set -e
 EQUIPE="yokofolio-team"
 PROJET="yokofolio"
 
+#  ██ nº 831 — LA VÉRIFICATION DES VARIABLES, ET POURQUOI ELLE EXISTE ██
+#  ------------------------------------------------------------------
+#  LE DÉFAUT DU PROPRIÉTAIRE : le site en ligne n'envoyait aucun e-mail.
+#  Le diagnostic de la nº 830 a montré que `RESEND_API_KEY` était VIDE
+#  au runtime, alors qu'elle est posée chez Vercel depuis des semaines.
+#  La production ne tournait donc pas sur les variables du tableau de
+#  bord — et rien, nulle part, ne le disait.
+#
+#  DEUX CHOSES CHANGENT ICI, ET ELLES VONT ENSEMBLE :
+#   1. `.vercelignore` (à côté de ce script) empêche désormais les
+#      fichiers `.env*` de partir chez Vercel. Ta clé secrète ne voyage
+#      plus, et le site ne peut plus tourner sur un fichier de passage :
+#      LE TABLEAU DE BORD DEVIENT LA SEULE SOURCE.
+#   2. Ce script vérifie donc, AVANT de déployer, que ce tableau de bord
+#      porte bien tout ce que le code lit. S'il manque quelque chose, la
+#      mise en ligne n'a pas lieu et tu lis le nom qui manque.
+#
+#  ⚠️ AUCUNE VALEUR N'EST LUE NI AFFICHÉE : `vercel env ls` ne sert qu'à
+#  obtenir des NOMS de variables (voir outils/verifier-variables-vercel).
+#
+#  SI LA VÉRIFICATION EST IMPOSSIBLE (hors ligne, CLI trop ancienne),
+#  le script s'arrête aussi — mais il te donne la commande pour passer
+#  outre en connaissance de cause :   sh d --sans-verification
+VERIFIER="oui"
+if [ "$1" = "--sans-verification" ]; then
+  VERIFIER="non"
+fi
+
 echo ""
 echo "▲  Déploiement de $PROJET en PRODUCTION"
 echo ""
@@ -80,7 +108,48 @@ if [ ! -f .vercel/project.json ]; then
 fi
 
 #  --------------------------------------------------------------
-#  2. LE DÉPLOIEMENT.
+#  2. LES VARIABLES DE PRODUCTION, VÉRIFIÉES AVANT (nº 831).
+#  --------------------------------------------------------------
+#  `--json` fait écrire à la CLI un objet sur la sortie standard ; ses
+#  messages, eux, partent ailleurs. On passe cet objet au vérificateur
+#  SANS JAMAIS L'AFFICHER : il contient les valeurs des variables non
+#  marquées « sensitive », et elles ne doivent apparaître nulle part.
+#  Le vérificateur n'en extrait que les noms.
+if [ "$VERIFIER" = "oui" ]; then
+  echo "→  Vérification des variables de production…"
+  REPONSE=$(vercel env ls production --json 2>/dev/null || true)
+  RESULTAT=0
+  printf '%s' "$REPONSE" | node outils/verifier-variables-vercel.mjs || RESULTAT=$?
+  REPONSE=""
+  if [ "$RESULTAT" != "0" ]; then
+    echo ""
+    if [ "$RESULTAT" = "1" ]; then
+      echo "✖  Mise en ligne annulée : le site partirait amputé."
+      echo ""
+      echo "   Ajoute (ou corrige) ces variables dans Vercel :"
+      echo "     Settings → Environment Variables, cible « Production »,"
+      echo "   puis relance :   sh d"
+      echo ""
+      echo "   ⚠️ Le NOM va dans « Key », la VALEUR dans « Value » — une"
+      echo "      variable dont la valeur est son propre nom ne sert à"
+      echo "      rien (c'est le cas de RESEND_EXPEDITEUR aujourd'hui)."
+    else
+      echo "✖  Mise en ligne annulée : je n'ai pas pu vérifier les"
+      echo "   variables (hors ligne, projet non lié, ou CLI ancienne)."
+      echo ""
+      echo "   Tu peux regarder toi-même :   vercel env ls production"
+      echo "   Puis déployer sans cette vérification :"
+      echo ""
+      echo "       sh d --sans-verification"
+    fi
+    echo ""
+    exit 1
+  fi
+  echo ""
+fi
+
+#  --------------------------------------------------------------
+#  3. LE DÉPLOIEMENT.
 #  --------------------------------------------------------------
 #    --prod             met en PRODUCTION (le vrai site), pas en
 #                       préproduction — c'est le raccourci officiel de
@@ -91,7 +160,7 @@ fi
 vercel deploy --prod --non-interactive
 
 #  --------------------------------------------------------------
-#  3. LA FIN.
+#  4. LA FIN.
 #  --------------------------------------------------------------
 #  `set -e` en tête arrête le script à la première erreur : si Vercel
 #  échoue, son message reste à l'écran et les deux lignes ci-dessous ne

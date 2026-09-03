@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifierAdmin } from "@/lib/admin-yokofolio";
 import { diagnosticCourriel } from "@/lib/email";
+import { diagnosticVariables } from "@/lib/diagnostic-variables";
 
 /**
  * ██ nº 830 — LE DIAGNOSTIC DES E-MAILS, EN UN APPEL ██
@@ -33,6 +34,15 @@ import { diagnosticCourriel } from "@/lib/email";
  * expéditeur part et peut écrire à qui on lui nomme.
  * ⚠️ ELLE NE MONTRE JAMAIS LA CLÉ — seulement si elle est là, et sa
  * longueur. C'est la règle du dépôt sur les secrets, sans exception.
+ *
+ * ██ §1 (nº 831) — ELLE DIT AUSSI D'OÙ VIENNENT LES VARIABLES ██
+ * La nº 830 avait répondu « la clé est absente » ; le propriétaire a
+ * alors montré qu'elle est bien posée chez Vercel. Il manquait la
+ * moitié de la réponse : LA SOURCE. `diagnosticVariables` la donne —
+ * hébergeur ou fichier `.env` monté avec le dossier — et signale les
+ * deux pièges de saisie déjà vus (valeur vide, valeur qui répète le
+ * nom). Le bloc s'ajoute aux DEUX emplois ci-dessous, parce que la
+ * question se pose autant avant un envoi qu'après.
  */
 
 export async function GET() {
@@ -43,7 +53,11 @@ export async function GET() {
       { status: refus.statut }
     );
   }
-  return NextResponse.json({ ok: true, ...(await diagnosticCourriel()) });
+  return NextResponse.json({
+    ok: true,
+    ...(await diagnosticCourriel()),
+    chaine: diagnosticVariables(),
+  });
 }
 
 export async function POST(requete: NextRequest) {
@@ -67,5 +81,6 @@ export async function POST(requete: NextRequest) {
   return NextResponse.json({
     ok: true,
     ...(await diagnosticCourriel(destinataire)),
+    chaine: diagnosticVariables(),
   });
 }
