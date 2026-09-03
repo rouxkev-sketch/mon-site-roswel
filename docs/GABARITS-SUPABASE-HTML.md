@@ -1,5 +1,5 @@
 # Les trois gabarits d'e-mails Supabase, habillés
-### **passe nº 825 — les e-mails sont passés en FOND CLAIR**
+### passe nº 825 (fond clair) · **nº 826 — carte, logotype, action**
 
 Ces trois e-mails ne sont **pas dans le dépôt** : Supabase les envoie à
 notre place, et leurs gabarits vivent dans son tableau de bord
@@ -8,110 +8,86 @@ un — le **Subject** dans le champ du sujet, le **Body** dans le corps
 (mode source / HTML).
 
 Ce document est **fabriqué à partir de `src/lib/courriel-habille.ts`** :
-la coquille en sort telle quelle, les deux ne peuvent pas diverger. Les
-textes sont ceux de la nº 805, au mot près.
+la coquille en sort telle quelle, les deux ne peuvent pas diverger.
 
-## ⚠️ IL FAUT RECOLLER LES TROIS — tout l'habillage a changé
+## ⚠️ IL FAUT RECOLLER LES TROIS
 
-### Pourquoi le fond passe au clair
+### 1. La carte n'a plus de contour
 
-Trois passes ont essayé de garder un e-mail **sombre** :
+Le cheveu gris ajouté à la nº 825 est retiré. Le blanc franc de la carte
+suffit à la détacher du blanc cassé de la page.
 
-- **nº 822** — verrouiller les couleurs (`color-scheme: only dark`, des
-  `!important` partout, une feuille sous `prefers-color-scheme`, les
-  sélecteurs d'Outlook.com). Gmail ignore tout ça : son inversion ne se
-  désactive pas ;
-- **nº 823** — n'employer que ce que l'inversion ne touche pas (le cœur
-  en image, le nom en texte). Ça tenait, mais on perdait la
-  typographie ;
-- **nº 824** — le logotype sur une plaque qui est une image. Ça tenait
-  aussi, au prix d'une image de service et d'un bouton dont le rouge
-  avait dû quitter le milieu de l'échelle.
+### 2. Le logotype officiel est revenu, sur sa plaque
 
-**La décision : arrêter de lutter.** C'est le fond sombre qui causait
-tout — un client qui l'inverse produit un clair sale, et chaque parade
-coûtait quelque chose. L'e-mail passe en **clair**, comme le font
-Instagram ou Stripe : un client en mode sombre en tire alors un **sombre
-propre**, ce qui est le sens naturel de sa transformation. Le site, lui,
-ne change pas : il reste sombre.
+Le mot du logotype est **blanc** : il lui faut un fond sombre. Et ce fond
+ne peut pas être une **couleur** — une couleur, l'inversion la retourne,
+et le mot disparaîtrait sur un fond redevenu clair. C'est donc une
+**image** (`plaque-courriel.png`, un carré de 16 px du bleu nuit du
+site, qui se répète), et **une image ne s'inverse chez personne** : la
+plaque reste sombre dans tous les modes, le logotype lisible dessus, le
+courriel clair tout autour.
 
-### Ce qui a disparu du gabarit
+Le logotype à mot noir que la nº 825 attendait **n'est plus nécessaire** :
+il n'y a plus rien à déposer.
 
-Les quatre couches anti-inversion n'ont plus d'objet. Sont partis les
-deux `meta` `color-scheme`, **toute la feuille de style de l'en-tête**
-(il n'y a plus de bloc `<style>` à coller), les classes `yf-*` qui ne
-servaient que de prise pour elles, les sélecteurs `[data-ogsc]`, la
-plaque d'image, et **tous les `!important`**. Le gabarit est d'autant
-plus court.
+> Si le lecteur bloque les images, ni la plaque ni le logotype ne
+> s'affichent. La cellule porte donc un repli complet : sa couleur de
+> fond est celle de la plaque, et son texte est blanc et gras — le
+> `alt` (« YokoFolio ») se lit alors sur le sombre.
 
-### La tête, et le fichier à déposer
+### 3. L'action est un lien texte, plus un badge
 
-La tête porte le **logotype complet à mot NOIR**,
-`{{ .SiteURL }}/yokofolio-logo-noir.png` — le blanc serait invisible sur
-un fond clair. **Ce fichier est fourni par le propriétaire.** S'il n'est
-pas encore dans `public/`, l'e-mail affiche simplement le texte
-« YokoFolio » à la place : rien n'est cassé, mais le logotype manque.
+Le bouton rouge a disparu. Même libellé, **sans soulignement**, dans le
+bleu des liens d'action — mais dans sa version pour **fond clair**.
 
-> ⚠️ **Ce que le clair ne règle pas, et il faut le savoir** : une image ne
-> s'inverse chez personne. Le logotype à mot noir est parfait sur
-> l'e-mail clair ; si un client retourne l'e-mail en sombre, le mot reste
-> noir sur un fond devenu sombre — seul le cœur, rouge et de clarté
-> moyenne, se lit encore. Le remède, si tu le veux un jour, est celui des
-> marques qui envoient clair : un logotype dont le **mot** est d'une
-> couleur **moyenne** (le rouge de la marque, par exemple), lisible sur
-> les deux fonds. C'est une image à fournir.
+**Pourquoi pas le `#7FA9EE` du site :** ce bleu est fait pour le fond
+**sombre** du site, où il vaut 8,1:1. Sur la carte blanche il ne vaut que
+**2,4:1**, et **2,0:1** une fois l'e-mail inversé — il y serait illisible.
+Celui du gabarit, `#1C62D4`, est son homologue pour fond clair : **même
+teinte (217°) et même saturation (0,77)**, seule la clarté descend
+(0,72 → 0,47). Il vaut 5,6:1 sur la carte et ne descend pas sous 4,8:1
+dans les autres sens.
 
 ### Ce que ça donne, mesuré
 
 Contrastes WCAG lus dans les pixels d'une capture ; la transformation est
-faite au canevas en épargnant les rectangles d'image. Deux
-transformations, parce que les clients n'emploient pas tous la même :
-l'*inversion franche* (255 − v par canal) et la *bascule de clarté* (le
-clair et le sombre retournés, teinte gardée). **Les dix e-mails donnent
-les mêmes chiffres** — c'est le même gabarit.
+faite au canevas en épargnant les rectangles d'image (**la plaque
+comprise**, puisqu'elle en est une). Deux transformations, parce que les
+clients n'emploient pas tous la même. **Les dix e-mails donnent les mêmes
+chiffres** — c'est le même gabarit.
 
-| | titre | texte | bouton | pied |
-| --- | --- | --- | --- | --- |
-| clair | 19,2 | 19,2 | 4,8 | 5,4 |
-| inversion franche | 18,5 | 18,5 | 13,9 | 7,1 |
-| bascule de clarté | 18,2 | 18,2 | 4,9 | 6,7 |
+| | mot | cœur | titre | texte | lien | pied |
+| --- | --- | --- | --- | --- | --- | --- |
+| clair | 18,9 | 4,0 | 19,2 | 19,2 | 5,6 | 5,4 |
+| inversion franche | 18,9 | 4,0 | 18,5 | 18,5 | 9,1 | 7,1 |
+| bascule de clarté | 18,9 | 4,0 | 18,2 | 18,2 | 4,8 | 6,7 |
 
 Seuils WCAG AA : 4,5:1 pour du texte courant, 3:1 pour du grand texte
-gras. **Tout passe dans les trois sens** — et c'est la différence avec
-les trois passes précédentes : ce n'est plus une parade qui tient, c'est
-le sens naturel de la transformation.
+gras et pour un dessin. **Tout passe dans les trois sens** — et le mot et
+le cœur du logotype **ne bougent pas d'un dixième** : c'est la
+démonstration que la tête est invariante.
 
-### Le poids : le gabarit n'y était pour rien
-
-Gmail coupait les e-mails (les trois points, vers 102 Ko). **Mesuré,
-chacun des dix pèse entre 2,4 et 3,4 Ko** — trente fois sous le seuil.
-Le gabarit n'était donc pas en cause. Il a quand même maigri, puisque
-les couches anti-inversion n'avaient plus d'objet : ces trois gabarits
-passent de **5 450 à 3 017 octets, −45 %**. Si la coupure revient, il
-faut la chercher ailleurs (une pièce jointe, une signature, un fil de
-réponse cité).
-
-### Le bouton
-
-Retour au **rouge vif `#E11144`**, typographie **`#FEFEFE`** (un blanc
-cassé : les moteurs qui n'inversent que le blanc *pur* le laissent
-passer). La nº 824 avait dû l'assombrir pour survivre à l'inversion d'un
-e-mail sombre ; la raison a disparu avec le fond sombre.
+Poids : chacun des dix e-mails pèse **moins de 4 Ko**, vingt-cinq fois
+sous le seuil de coupure de Gmail (~102 Ko).
 
 ## Ce qu'il faut savoir en collant
 
 - **Les variables entre accolades doubles sont celles de Supabase**, à
   garder telles quelles et à leur place :
-  `{{ .ConfirmationURL }}` (le lien du bouton), `{{ .SiteURL }}` (l'adresse
-  du site, réglée dans *Authentication → URL Configuration* — elle sert à
-  l'image et au pied de page), `{{ .Email }}` / `{{ .NewEmail }}` (les
-  adresses, gabarit 3 seulement).
-- **Une seule image est chargée depuis le site** : le logotype. Un e-mail
-  n'embarque pas d'image ; tant que *Site URL* vaut
-  `https://yokofolio.com`, il s'affiche.
+  `{{ .ConfirmationURL }}` (le lien d'action), `{{ .SiteURL }}` (l'adresse
+  du site, réglée dans *Authentication → URL Configuration* — elle sert
+  aux deux images et au pied de page), `{{ .Email }}` / `{{ .NewEmail }}`
+  (les adresses, gabarit 3 seulement).
+- **DEUX images sont chargées depuis le site**, et les deux comptent :
+  `{{ .SiteURL }}/yokofolio-logo.png` (le logotype officiel) et
+  `{{ .SiteURL }}/plaque-courriel.png` (la plaque). Un e-mail n'embarque
+  pas d'image.
+- **La plaque est écrite DEUX FOIS dans la cellule** — l'attribut
+  `background` (pour Outlook) et la propriété `background-image` (pour
+  les autres). Ne pas en supprimer une : ce n'est pas un doublon.
 - **HTML d'e-mail robuste** : des tables, des styles en ligne, les
-  attributs `bgcolor`/`width`, un bouton « à l'épreuve des balles », un
-  commentaire conditionnel pour Outlook, aucune police chargée.
+  attributs `bgcolor`/`width`, un commentaire conditionnel pour
+  Outlook, aucune police chargée, **aucun bloc `<style>`**.
 - **Le nom d'expéditeur** et l'adresse d'envoi se règlent ailleurs
   (*Authentication → SMTP Settings*) : ils ne sont pas dans le gabarit.
 - Une fois collés, **rejouer les trois parcours** (inscription, mot de
@@ -147,21 +123,21 @@ Confirm your YokoFolio account
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
             <td align="left" style="padding:0 0 20px 0;line-height:0;">
-              <a href="{{ .SiteURL }}" style="text-decoration:none;"><img src="{{ .SiteURL }}/yokofolio-logo-noir.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;"></a>
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td background="{{ .SiteURL }}/plaque-courriel.png" bgcolor="#0B0F14" style="background-color:#0B0F14;background-image:url('{{ .SiteURL }}/plaque-courriel.png');background-repeat:repeat;border-radius:12px;padding:10px 14px;font-family:Arial, Helvetica, sans-serif;font-size:20px;line-height:33px;font-weight:bold;color:#FEFEFE;">
+                    <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" height="33" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:33px;">
+                  </td>
+                </tr></table>
+              </a>
             </td>
           </tr>
           <tr>
-            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid #E6E8EC;border-radius:16px;padding:32px 28px;">
+            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:16px;padding:32px 28px;">
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Welcome to YokoFolio!</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">One last step: confirm your email address to activate your account.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">This link expires in 24 hours. If you didn't create an account, just ignore this email.</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
-            <tr>
-              <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
-                <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FEFEFE;text-decoration:none;border-radius:999px;">Confirm my email</a>
-              </td>
-            </tr>
-          </table>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .ConfirmationURL }}" style="color:#1C62D4;text-decoration:none;font-weight:bold;">Confirm my email</a></p>
             </td>
           </tr>
           <tr>
@@ -206,21 +182,21 @@ Reset your YokoFolio password
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
             <td align="left" style="padding:0 0 20px 0;line-height:0;">
-              <a href="{{ .SiteURL }}" style="text-decoration:none;"><img src="{{ .SiteURL }}/yokofolio-logo-noir.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;"></a>
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td background="{{ .SiteURL }}/plaque-courriel.png" bgcolor="#0B0F14" style="background-color:#0B0F14;background-image:url('{{ .SiteURL }}/plaque-courriel.png');background-repeat:repeat;border-radius:12px;padding:10px 14px;font-family:Arial, Helvetica, sans-serif;font-size:20px;line-height:33px;font-weight:bold;color:#FEFEFE;">
+                    <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" height="33" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:33px;">
+                  </td>
+                </tr></table>
+              </a>
             </td>
           </tr>
           <tr>
-            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid #E6E8EC;border-radius:16px;padding:32px 28px;">
+            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:16px;padding:32px 28px;">
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Forgot your password?</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">No problem. Click the button below to choose a new one.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">This link expires in 1 hour. If you didn't ask for it, ignore this email — your password stays the same.</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
-            <tr>
-              <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
-                <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FEFEFE;text-decoration:none;border-radius:999px;">Choose a new password</a>
-              </td>
-            </tr>
-          </table>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .ConfirmationURL }}" style="color:#1C62D4;text-decoration:none;font-weight:bold;">Choose a new password</a></p>
             </td>
           </tr>
           <tr>
@@ -265,21 +241,21 @@ Confirm your new email address
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
             <td align="left" style="padding:0 0 20px 0;line-height:0;">
-              <a href="{{ .SiteURL }}" style="text-decoration:none;"><img src="{{ .SiteURL }}/yokofolio-logo-noir.png" width="170" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:auto;"></a>
+              <a href="{{ .SiteURL }}" style="text-decoration:none;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td background="{{ .SiteURL }}/plaque-courriel.png" bgcolor="#0B0F14" style="background-color:#0B0F14;background-image:url('{{ .SiteURL }}/plaque-courriel.png');background-repeat:repeat;border-radius:12px;padding:10px 14px;font-family:Arial, Helvetica, sans-serif;font-size:20px;line-height:33px;font-weight:bold;color:#FEFEFE;">
+                    <img src="{{ .SiteURL }}/yokofolio-logo.png" width="170" height="33" alt="YokoFolio" style="display:block;border:0;outline:none;width:170px;height:33px;">
+                  </td>
+                </tr></table>
+              </a>
             </td>
           </tr>
           <tr>
-            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border:1px solid #E6E8EC;border-radius:16px;padding:32px 28px;">
+            <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;border-radius:16px;padding:32px 28px;">
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Confirm your new email</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">You asked to change the email address on your YokoFolio account, from {{ .Email }} to {{ .NewEmail }}.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">Confirm the change below. Until then, your current address stays valid.</p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
-            <tr>
-              <td bgcolor="#E11144" style="background-color:#E11144;border-radius:999px;">
-                <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:13px 28px;font-family:Arial, Helvetica, sans-serif;font-size:14px;line-height:18px;font-weight:bold;color:#FEFEFE;text-decoration:none;border-radius:999px;">Confirm this change</a>
-              </td>
-            </tr>
-          </table>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .ConfirmationURL }}" style="color:#1C62D4;text-decoration:none;font-weight:bold;">Confirm this change</a></p>
             </td>
           </tr>
           <tr>

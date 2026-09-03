@@ -45,18 +45,6 @@ export const MARQUE_YOKOFOLIO = {
   nom: "YokoFolio",
   slogan: "Tattoo portfolios, by style",
   logo: "/yokofolio-logo.png",
-  /**
-   * LE MÊME LOGOTYPE, MOT EN NOIR (passe nº 825) — mot #0B0F14 et cœur
-   * rouge, fond transparent. Il n'existe QUE pour les COURRIELS, qui
-   * sont passés en fond clair : le logotype blanc y serait invisible.
-   * Le site, lui, reste sombre et garde `logo`.
-   * ⚠️ FICHIER FOURNI PAR LE PROPRIÉTAIRE. S'il manque dans
-   * `public/`, l'e-mail affiche le `alt` (« YokoFolio ») et rien
-   * d'autre n'est cassé — mais il faut le déposer. NE PAS le
-   * fabriquer en recolorant `logo` : c'est une image officielle
-   * (règle nº 356).
-   */
-  logoNoir: "/yokofolio-logo-noir.png",
   /** Le CŒUR SEUL, carré : onglet du navigateur et écran d'accueil. */
   icone: "/yokofolio-icone.png",
   /**

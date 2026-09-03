@@ -1,13 +1,13 @@
-import { COULEURS_SOMBRE, MARQUE_YOKOFOLIO } from "@/config/tatouage";
+import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { adresseDuSite } from "@/lib/site";
 
 /**
  * ██ nº 817 — L'HABILLAGE DES COURRIELS DU SITE, ÉCRIT UNE FOIS ██
  * ==================================================================
  * LE DÉFAUT D'ORIGINE : les courriels que le site envoie partaient en
- * TEXTE NU. Ils prennent la charte — le logotype, le bouton d'action
- * dans le rouge de la marque, un pied de page sobre — et ils la
- * prennent ICI, tous : un seul gabarit, plusieurs contenus.
+ * TEXTE NU. Ils prennent la charte — le logotype, un lien d'action, un
+ * pied de page sobre — et ils la prennent ICI, tous : un seul gabarit,
+ * plusieurs contenus.
  *
  * CE QUE C'EST : une fonction qui reçoit un titre, des paragraphes, une
  * action facultative et une note, et rend LES DEUX VERSIONS du
@@ -34,9 +34,6 @@ import { adresseDuSite } from "@/lib/site";
  *  · des STYLES EN LIGNE sur chaque élément, plus les attributs HTML
  *    équivalents là où un client les préfère (`bgcolor`, `width`,
  *    `align`) ;
- *  · le BOUTON « à l'épreuve des balles » : une cellule de table au fond
- *    rouge, et le lien dedans — Outlook peint la cellule même quand il
- *    ne sait rien du lien ;
  *  · la largeur de 560 px tenue par un commentaire conditionnel pour
  *    Outlook (`<!--[if mso]>`) et par `max-width` pour les autres ;
  *  · des polices système (Arial, Helvetica) — aucune police chargée.
@@ -53,8 +50,8 @@ import { adresseDuSite } from "@/lib/site";
  *    touche pas : le cœur (une image) et le nom ÉCRIT EN TEXTE. Ça
  *    tenait, mais le propriétaire perdait SA typographie ;
  *  · nº 824 — LE LOGOTYPE SUR UNE PLAQUE QUI EST UNE IMAGE. Ça tenait
- *    aussi, mais au prix d'une image de service et d'un bouton dont le
- *    rouge avait dû quitter le milieu de l'échelle.
+ *    aussi, mais tout le reste du courriel restait sombre, donc
+ *    inversé.
  *
  * LA DÉCISION DU PROPRIÉTAIRE (nº 825) : ARRÊTER DE LUTTER. C'est le
  * FOND SOMBRE qui causait tout — un client qui l'inverse produit un
@@ -72,41 +69,58 @@ import { adresseDuSite } from "@/lib/site";
  * `!important` qui n'existaient que pour résister à Gmail. Le HTML
  * est d'autant plus léger.
  *
+ * ██ §1 (nº 826) — LA TÊTE, LA CARTE ET L'ACTION ██
+ * ==================================================================
+ * Trois retouches du propriétaire sur le courriel clair :
+ *
+ * 1. LA CARTE N'A PLUS DE CONTOUR. Le cheveu gris de la nº 825 est
+ *    retiré : le blanc franc suffit à la détacher du blanc cassé.
+ *
+ * 2. LE LOGOTYPE OFFICIEL EST REVENU, SUR SA PLAQUE (le montage de la
+ *    nº 824, reposé sur un courriel clair). Le mot du logotype est
+ *    BLANC : il lui faut un fond sombre, et ce fond ne peut pas être
+ *    une COULEUR — une couleur, l'inversion la retourne. C'est donc
+ *    une IMAGE (`plaque-courriel.png`), et une image ne s'inverse chez
+ *    personne : la plaque reste sombre dans tous les modes, le
+ *    logotype lisible dessus, le courriel clair tout autour.
+ *    ⚠️ C'est ce qui rend inutile un logotype à mot noir : la nº 825
+ *    en attendait un, la nº 826 n'en a plus besoin. `logoNoir` a
+ *    disparu de la marque avec cette passe.
+ *    ⚠️ SI LES IMAGES SONT BLOQUÉES, ni la plaque ni le logotype ne
+ *    s'affichent. La cellule porte donc un repli complet : sa couleur
+ *    de fond est celle de la plaque, et son texte est blanc et gras —
+ *    le `alt` (« YokoFolio ») se lit alors sur le sombre.
+ *
+ * 3. L'ACTION EST UN LIEN TEXTE, plus un badge rouge. Même libellé,
+ *    sans soulignement, dans le bleu des liens d'action — mais dans sa
+ *    version pour FOND CLAIR (voir `LIEN_ACTION` plus bas : le bleu du
+ *    site est fait pour du sombre et ne vaudrait que 2,4:1 ici).
+ *
  * CE QUE LE BANC MESURE, SUR LES DIX (contrastes WCAG lus dans les
  * pixels d'une capture ; la transformation est faite au canevas en
- * epargnant les rectangles d'image, et l'on en essaie DEUX, les
- * clients n'employant pas tous la meme) :
+ * epargnant les rectangles d'image — LA PLAQUE COMPRISE, puisqu'elle
+ * en est une — et l'on en essaie DEUX, les clients n'employant pas
+ * tous la meme) :
  *
- *                        titre  texte  bouton  pied
- *   clair                 19,2   19,2    4,8    5,4
- *   inversion franche     18,5   18,5   13,9    7,1
- *   bascule de clarte     18,2   18,2    4,9    6,7
+ *                        mot   coeur  titre  texte  lien   pied
+ *   clair               18,9    4,0    19,2   19,2   5,6    5,4
+ *   inversion franche   18,9    4,0    18,5   18,5   9,1    7,1
+ *   bascule de clarte   18,9    4,0    18,2   18,2   4,8    6,7
  *
  * Seuils AA : 4,5 pour du texte courant, 3 pour du grand texte gras.
- * Tout passe DANS LES TROIS SENS — et c'est la difference avec les
- * trois passes precedentes : ce n'est plus une parade qui tient, c'est
- * le sens naturel de la transformation.
+ * Tout passe DANS LES TROIS SENS. LE MOT ET LE CŒUR DU LOGOTYPE NE
+ * BOUGENT PAS D'UN DIXIÈME entre les trois : ce n'est pas une
+ * coïncidence, c'est la démonstration — deux couches d'image l'une sur
+ * l'autre, rien à recalculer. Le lien, lui, s'inverse avec sa carte et
+ * garde son contraste (4,8 au pire).
  *
- * LE POIDS, l'autre raison de la passe : le propriétaire voyait Gmail
- * COUPER ses courriels (les trois points, vers 102 Ko). Mesuré, chacun
- * des dix pèse entre 2,4 et 3,4 Ko — TRENTE FOIS sous le seuil. Le
- * gabarit n'y était donc pour rien ; il a quand même maigri (les
- * gabarits Supabase passent de 5 450 à 3 017 octets, −45 %) parce que
- * les couches anti-inversion n'avaient plus d'objet. Si la coupure
- * revient, la chercher AILLEURS que dans ce fichier.
- *
- * ⚠️ CE QUE LE CLAIR NE RÈGLE PAS, ET IL FAUT LE SAVOIR : une IMAGE ne
- * s'inverse chez personne. Le logotype à mot NOIR est parfait sur le
- * courriel clair ; si un client retourne le courriel en sombre, le mot
- * reste noir sur un fond devenu sombre — seul le cœur, rouge et de
- * clarté moyenne, se lit encore. Le remède, si le propriétaire le veut
- * un jour, est celui des marques qui envoient clair : un logotype dont
- * le MOT est d'une couleur MOYENNE (le rouge de la marque, par
- * exemple), qui se lit sur les deux fonds. C'est une image à FOURNIR —
- * le dépôt interdit d'en fabriquer une (règle nº 356).
+ * LE POIDS : le propriétaire voyait Gmail COUPER ses courriels (les
+ * trois points, vers 102 Ko). Mesuré, chacun des dix pèse moins de
+ * 4 Ko — VINGT-CINQ FOIS sous le seuil. Le gabarit n'y est pour rien ;
+ * si la coupure revient, la chercher AILLEURS que dans ce fichier.
  */
 export type ActionCourriel = {
-  /** Le mot du bouton. */
+  /** Le mot du lien. */
   libelle: string;
   /** L'adresse absolue qu'il ouvre. */
   url: string;
@@ -118,9 +132,9 @@ export type ContenuCourriel = {
   /** Les paragraphes, en texte nu : les retours à la ligne sont
       gardés, tout le reste est échappé. */
   paragraphes: string[];
-  /** Le bouton rouge, s'il y a un geste à faire. */
+  /** Le lien d'action, s'il y a un geste à faire. */
   action?: ActionCourriel | null;
-  /** La ligne grise sous le bouton (« If you didn't ask for this… »). */
+  /** La ligne grise sous le lien (« If you didn't ask for this… »). */
   note?: string | null;
 };
 
@@ -146,15 +160,14 @@ const POLICE = "Arial, Helvetica, sans-serif";
  * Le site est sombre ; le courriel ne l'est plus (voir le §1 de la
  * nº 825). Ces valeurs ne sont donc PAS celles de `COULEURS_SOMBRE`,
  * et ce n'est pas un oubli : un courriel clair est ce qu'un client en
- * mode sombre sait retourner proprement.
- * Seul le ROUGE est commun aux deux — c'est la marque.
+ * mode sombre sait retourner proprement. La seule couleur du site qui
+ * reste employée telle quelle est celle de la PLAQUE, et pour cause :
+ * c'est le fond sur lequel le logotype officiel est dessiné.
  */
 /** Le fond de la page : un blanc cassé, très légèrement bleuté. */
 const FOND = "#F5F6F8";
 /** La carte : blanc franc, posée sur le fond cassé. */
 const CARTE = "#FFFFFF";
-/** Le trait qui détache la carte du fond — un cheveu, pas un cadre. */
-const TRAIT = "#E6E8EC";
 /** Le texte courant et les titres : le bleu nuit du site, qui se lit
     ici comme un noir (19,2:1 sur la carte). */
 const TEXTE = "#0B0F14";
@@ -167,6 +180,33 @@ const TEXTE_DOUX = "#5F6670";
  * le « corriger » en `#FFFFFF`.
  */
 const BLANC_CASSE = "#FEFEFE";
+/**
+ * LA PLAQUE DE LA TÊTE (revenue de la nº 824 à la nº 826) : un carré de
+ * 16 px du bleu nuit du site, qui se répète derrière le logotype.
+ * Étant une IMAGE, elle ne s'inverse chez personne — c'est tout son
+ * intérêt : le logotype officiel, dont le mot est BLANC, garde un fond
+ * sombre quel que soit le mode du lecteur, alors même que le courriel
+ * autour est clair.
+ * ⚠️ Ce n'est PAS une image de marque et ce n'est la variante de rien :
+ * un rectangle d'une seule couleur. La règle nº 356 n'est pas en jeu —
+ * aucun pixel du logotype n'est touché, il est posé PAR-DESSUS.
+ */
+const PLAQUE = "/plaque-courriel.png";
+/** Le fond de la plaque, et le repli si l'image ne se charge pas. */
+const PLAQUE_FOND = "#0B0F14";
+/**
+ * ██ LE BLEU DU LIEN D'ACTION — CELUI D'UN FOND CLAIR ██
+ * Le site emploie `#7FA9EE` pour ses liens d'action. Ce bleu est fait
+ * pour LE FOND SOMBRE du site, où il vaut 8,1:1 ; SUR LA CARTE BLANCHE
+ * DU COURRIEL IL NE VAUT QUE 2,4:1 — et 2,0:1 une fois le courriel
+ * inversé. Il y serait illisible.
+ * Celui-ci est son homologue pour fond clair : MÊME TEINTE (217°) et
+ * MÊME SATURATION (0,77), seule la clarté descend (0,72 → 0,47). Il
+ * vaut 5,6:1 sur la carte, 4,6:1 sous une bascule de clarté et 9,1:1
+ * sous une inversion franche — au-dessus du seuil AA dans les trois
+ * sens, ce qu'aucun bleu plus clair ne fait.
+ */
+const LIEN_ACTION = "#1C62D4";
 
 /** Un paragraphe du corps : 15 px, interligne 23. */
 function paragraphe(texte: string): string {
@@ -188,28 +228,16 @@ export function habillerCourriel(
   site: string = adresseDuSite()
 ): CourrielHabille {
   const domaine = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  //  LE ROUGE DU BOUTON : la primaire, pleine (`#E11144`). La nº 824
-  //  l'avait assombrie pour survivre à l'inversion d'un courriel
-  //  sombre ; le courriel est clair, la raison a disparu.
-  const rouge = COULEURS_SOMBRE.primaire;
-
+  //  L'ACTION EST UN LIEN TEXTE (nº 826), plus un badge : le bouton
+  //  rouge a disparu, le libellé ne change pas, et il n'est pas
+  //  souligné — c'est sa couleur qui le désigne.
   const bouton = contenu.action
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
-            <tr>
-              <td bgcolor="${rouge}" style="background-color:${rouge};border-radius:999px;">
-                <a href="${echapperHtml(contenu.action.url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:14px;line-height:18px;font-weight:bold;color:${BLANC_CASSE};text-decoration:none;border-radius:999px;">${echapperHtml(contenu.action.libelle)}</a>
-              </td>
-            </tr>
-          </table>`
+    ? `<p style="margin:24px 0 0 0;font-family:${POLICE};font-size:15px;line-height:23px;"><a href="${echapperHtml(contenu.action.url)}" style="color:${LIEN_ACTION};text-decoration:none;font-weight:bold;">${echapperHtml(contenu.action.libelle)}</a></p>`
     : "";
   const note = contenu.note
     ? `<p style="margin:16px 0 0 0;font-family:${POLICE};font-size:13px;line-height:20px;color:${TEXTE_DOUX};">${echapperHtml(contenu.note).replaceAll("\n", "<br>")}</p>`
     : "";
 
-  //  ⚠️ LE LOGOTYPE N'A PAS DE HAUTEUR IMPOSÉE, et c'est voulu : le
-  //  fichier à mot noir est fourni par le propriétaire, et on ne
-  //  connaît pas ses proportions exactes. Une largeur et `height:auto`
-  //  ne déforment rien, quel que soit son export.
   const html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
@@ -225,11 +253,17 @@ export function habillerCourriel(
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
             <td align="left" style="padding:0 0 20px 0;line-height:0;">
-              <a href="${echapperHtml(site)}" style="text-decoration:none;"><img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.logoNoir}" width="170" alt="${MARQUE_YOKOFOLIO.nom}" style="display:block;border:0;outline:none;width:170px;height:auto;"></a>
+              <a href="${echapperHtml(site)}" style="text-decoration:none;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td background="${echapperHtml(site)}${PLAQUE}" bgcolor="${PLAQUE_FOND}" style="background-color:${PLAQUE_FOND};background-image:url('${echapperHtml(site)}${PLAQUE}');background-repeat:repeat;border-radius:12px;padding:10px 14px;font-family:${POLICE};font-size:20px;line-height:33px;font-weight:bold;color:${BLANC_CASSE};">
+                    <img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.logo}" width="170" height="33" alt="${MARQUE_YOKOFOLIO.nom}" style="display:block;border:0;outline:none;width:170px;height:33px;">
+                  </td>
+                </tr></table>
+              </a>
             </td>
           </tr>
           <tr>
-            <td bgcolor="${CARTE}" style="background-color:${CARTE};border:1px solid ${TRAIT};border-radius:16px;padding:32px 28px;">
+            <td bgcolor="${CARTE}" style="background-color:${CARTE};border-radius:16px;padding:32px 28px;">
               <h1 style="margin:0 0 18px 0;font-family:${POLICE};font-size:22px;line-height:28px;font-weight:bold;color:${TEXTE};">${echapperHtml(contenu.titre)}</h1>
               ${contenu.paragraphes.map(paragraphe).join("\n              ")}
               ${bouton}
