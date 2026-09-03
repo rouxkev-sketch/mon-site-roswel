@@ -35,6 +35,9 @@ import {
 //  §1 (nº 650) — l'alignement des menus ancrés aux boutons ronds de la
 //  barre, calculé là où vit la règle de placement.
 import { ALIGNEMENT_BOUTON_ROND_BARRE } from "@/components/placement-menu";
+//  §7 (nº 822) — la croix prend la cible et le dessin des gestes de la
+//  barre (l'écriture unique de la nº 821).
+import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
 import { useVoileDeLaPage } from "@/components/VoileDeLaPage";
 import type { GenreNotification, Notification } from "@/lib/notifications";
 //  §4 (nº 465) — au doigt, l'écran devient une PAGE plein écran (le
@@ -836,12 +839,19 @@ export function FenetreNotifications({
               type="button"
               onClick={onFermer}
               aria-label="Close"
-              className="-mr-[9px] w-9 h-9 shrink-0 flex items-center justify-center
+              /*  §7 (nº 822) — LA CROIX PREND LA TAILLE DES ICÔNES DE
+                   LA BARRE (28 de dessin dans 40 de cible au web) : le
+                   propriétaire la trouve trop petite. Sa compensation
+                   suit : (40 − 28) / 2 = 6 px au lieu des 9 que valait
+                   la paire 36 / 18 — le dessin retombe au même endroit.
+                   Même écriture unique que la croix de « Mon compte »
+                   (lib/reserve-barre). */
+              className={`-mr-[6px] ${CIBLE_GESTE_BARRE} shrink-0 flex items-center justify-center
                          rounded-full text-sombre-texte-doux
                          hover:text-sombre-texte hover:bg-sombre-eleve
-                         transition-colors"
+                         transition-colors`}
             >
-              <IconeCroix taille={18} />
+              <IconeCroix taille={28} classe={DESSIN_GESTE_BARRE} />
             </button>
           </div>
           {corps}

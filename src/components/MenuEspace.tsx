@@ -138,6 +138,9 @@ import {
 //  composant vit dans le tronc, et son import direct pesait 62 Ko
 //  compressés sur toutes les pages (voir client-a-la-demande).
 import { clientSupabaseALaDemande } from "@/lib/supabase/client-a-la-demande";
+//  §6/§7 (nº 822) — la cible et le dessin des gestes de la barre : le
+//  crayon et la croix les prennent (l'écriture unique de la nº 821).
+import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
 //  nº 820 — quitter son compte mène à l'accueil, et le trajet est
 //  déclaré pour que les gardes des pages du compte ne le doublent pas.
 import {
@@ -1846,15 +1849,22 @@ export function MenuEspace({
              geste n'auraient rien dit de plus. C'est le MÊME crayon
              qu'au coin de la fenêtre d'un particulier (§2) — un seul
              dessin pour un seul geste, sur les deux types de comptes.
-             ⚠️ IL SE NOMME POUR QUI NE VOIT PAS : le nom accessible de
-             l'entrée reste « Edit », porté par `aria-label`. */
-        aria-label="Edit"
-        title="Edit"
+             ██ §2 (nº 822) — ET LE MOT REVIENT À CÔTÉ DU DESSIN ██
+             La nº 821 l'avait retiré : la ligne n'était plus qu'un
+             crayon au milieu de deux entrées qui se nomment. Le
+             propriétaire tranche — le crayon PLUS le mot, comme
+             « Add a portfolio » et « My portfolio » portent leur icône
+             et leur nom. La ligne redevient une entrée de menu comme
+             ses voisines ; seul le glyphe a changé depuis la nº 820
+             (le crayon a remplacé les curseurs des réglages).
+             ⚠️ LES PARTICULIERS NE CHANGENT PAS : leur crayon reste
+             seul, au coin haut gauche de la fenêtre (§2 nº 821). */
         className={classeEntree("modification", reglage)}
       >
         <span className={`${reglage.boite} text-sombre-texte/80`}>
           <IconeCrayon taille={reglage.taille} />
         </span>
+        Edit
       </Link>
     </nav>
   );
@@ -2120,11 +2130,17 @@ export function MenuEspace({
     photoTete: "h-20 w-20",
     glypheTete: 42,
     /*  §1 (nº 821) — LA TÊTE EST DESCENDUE SOUS LA RANGÉE DE LA CROIX,
-        et elle y apporte son air : 8 px au-dessus de l'avatar (la
-        rangée des gestes s'arrête là), 12 en dessous du nom avant les
-        tuiles. Rien à réserver à droite — la croix n'est plus sur sa
-        ligne, et le nom est centré. */
-    airTete: "mt-2 pb-3",
+        et elle y apporte son air. Rien à réserver à droite — la croix
+        n'est plus sur sa ligne, et le nom est centré.
+        ██ §4 (nº 822) — LES DEUX AIRS SONT ÉGAUX, ET C'EST MESURÉ ██
+        Le propriétaire les veut identiques : l'air AU-DESSUS de
+        l'avatar = l'air entre le dernier texte (le sous-titre d'un
+        professionnel, le nom d'un particulier) et LE BAS DU BANDEAU
+        FIXE. Le bandeau porte déjà 4 px sous lui (`pb-1`,
+        PagePleinEcranMobile) : la tête pose donc DOUZE pixels sous
+        elle — 12 + 4 = 16 — et SEIZE au-dessus. Un seul nombre à
+        l'œil, des deux côtés. */
+    airTete: "mt-4 pb-3",
     /*  ██ §6 (nº 641) — LE NOM ET L'ÉTAT GRANDISSENT, AU DOIGT SEUL ██
         LES DEUX NOMBRES SONT RELEVÉS SUR LE SITE, PAS CHOISIS :
         · le NOM prend 20 px, LE RANG DU TITRE DE PAGE — c'est
@@ -2188,9 +2204,23 @@ export function MenuEspace({
         de seize pixels vers la gauche — l'avatar ne serait plus au
         centre, ce que le propriétaire demande précisément. Et le nom
         ne peut plus passer sous la croix : il commence sous elle, pas
-        à côté. Il reste `mb-2` : l'air entre la tête et les tuiles. */
-    photoTete: "h-16 w-16",
-    glypheTete: 34,
+        à côté.
+        ██ §5 (nº 822) — ET L'AIR DU DESSOUS ÉGALE CELUI DU DESSUS ██
+        Même règle qu'au doigt (§4). AU-DESSUS de l'avatar : l'air du
+        haut du contenu (`airHaut`, 20 px depuis la nº 557). EN
+        DESSOUS du nom : ce `mb-2` (8 px) PLUS le `gap-3` de la colonne
+        qui porte la tête et les tuiles (12 px) — vingt pixels, soit
+        exactement l'air du dessus. Les deux se lisent égaux, et c'est
+        le banc qui le vérifie, pas cette note. */
+    /*  §3 (nº 822) — L'AVATAR PASSE À 80 px AU WEB AUSSI (64 avant) :
+        le propriétaire le trouve trop petit, et 80 est le haut de la
+        fourchette qu'il donne (« ~72-80 », le standard des fenêtres de
+        profil). Les deux surfaces portent désormais LA MÊME taille —
+        le doigt l'avait déjà depuis la nº 641. Le glyphe du repli suit
+        le même rapport (42/80, comme au doigt) : le cercle gris d'un
+        particulier reste dessiné pareil, ni plus maigre ni plus gras. */
+    photoTete: "h-20 w-20",
+    glypheTete: 42,
     airTete: "mb-2",
     //  §6 (nº 641) — les tailles de la nº 640, inchangées : seul le
     //  doigt grandit (voir la note du jeu du doigt).
@@ -2372,10 +2402,27 @@ export function MenuEspace({
       }}
       aria-label="Edit"
       title="Edit"
-      className={`flex h-11 w-11 -ml-2 items-center justify-center
-                  rounded-full ${LIEN_QUI_SORT}`}
+      /*  ██ §6/§7 (nº 822) — ALIGNÉ SUR LA MARGE, ET À LA TAILLE DES
+           ICÔNES DE LA BARRE ██
+           LE DÉFAUT DU PROPRIÉTAIRE : « il déborde dans la marge
+           gauche ». LA CAUSE, MESURÉE : la cible était tirée de 8 px
+           (`-ml-2`) alors que le vide entre elle et son dessin en vaut
+           dix — le dessin retombait donc DEUX pixels À DROITE de la
+           marge, et la cible, elle, deux pixels EN DEHORS. La règle de
+           la nº 483 veut qu'on décale de (cible − dessin) / 2 : la
+           cible fait 46 et le dessin 26 (les mesures de la barre,
+           nº 821), soit DIX pixels. Le dessin retombe alors PILE sur
+           la marge du contenu.
+           ⚠️ LA CIBLE NE RÉTRÉCIT PAS : ce sont ses 46 px qui se
+           déplacent (la règle de la nº 483, mot pour mot).
+           ⚠️ LE DESSIN PREND LA TAILLE DES ICÔNES DE LA BARRE (§7) :
+           26 au doigt, 28 au web — l'écriture unique
+           (`DESSIN_GESTE_BARRE`, lib/reserve-barre), la même que la
+           loupe, le globe et le fanion. */
+      className={`flex ${CIBLE_GESTE_BARRE} mobile:-ml-[10px] not-mobile:-ml-[6px]
+                  items-center justify-center rounded-full ${LIEN_QUI_SORT}`}
     >
-      <IconeCrayon taille={22} />
+      <IconeCrayon taille={28} classe={DESSIN_GESTE_BARRE} />
     </button>
   );
 
@@ -3113,7 +3160,14 @@ export function MenuEspace({
                    (la règle de la nº 483, appliquée à la paire
                    44 / 22 : (44 − 22) / 2 = 11). */}
               {!fiche && (
-                <div className="absolute left-5 top-5 -ml-[11px] -mt-[11px]">
+                /*  §6 (nº 822) — L'ENVELOPPE NE PORTE PLUS QUE LA
+                     MARGE (20 px) ET LE CALAGE VERTICAL : le décalage
+                     horizontal appartient au bouton, qui seul connaît
+                     l'écart entre sa cible et son dessin (voir
+                     `crayonDuCompte`). Verticalement, (40 − 28) / 2 =
+                     6 : le dessin retombe à 20 px du haut, l'aplomb de
+                     la croix. */
+                <div className="absolute left-5 top-5 -mt-[6px]">
                   {crayonDuCompte}
                 </div>
               )}
@@ -3121,13 +3175,23 @@ export function MenuEspace({
                 type="button"
                 onClick={() => setOuvert(false)}
                 aria-label="Close"
-                className="absolute right-5 top-5 -mr-[9px] -mt-[9px]
-                           w-9 h-9 flex items-center justify-center
+                /*  §7 (nº 822) — LA CROIX PREND LA TAILLE DES ICÔNES
+                     DE LA BARRE : le propriétaire la trouve trop
+                     petite (18 px de dessin dans 36 de cible). Elle
+                     passe au dessin de la barre — 28 au web, 26 au
+                     doigt — dans sa cible (40 / 46), par l'écriture
+                     unique (lib/reserve-barre). Sa compensation suit :
+                     (40 − 28) / 2 = 6 px, à la place des 9 que valait
+                     la paire 36 / 18 — le dessin retombe au même
+                     endroit qu'avant, à l'aplomb du bord des encadrés
+                     et du haut de l'avatar. */
+                className={`absolute right-5 top-5 -mr-[6px] -mt-[6px]
+                           ${CIBLE_GESTE_BARRE} flex items-center justify-center
                            rounded-full text-sombre-texte-doux
                            hover:text-sombre-texte hover:bg-sombre-eleve
-                           transition-colors"
+                           transition-colors`}
               >
-                <IconeCroix taille={18} />
+                <IconeCroix taille={28} classe={DESSIN_GESTE_BARRE} />
               </button>
               {contenuDuCompte(REGLAGES_WEB, enTeteDuCompte(REGLAGES_WEB))}
             </div>

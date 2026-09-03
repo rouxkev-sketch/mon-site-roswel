@@ -3,6 +3,9 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { IconeCroix } from "@/components/Icones";
+//  §7 (nº 822) — la croix prend la cible et le dessin des gestes de la
+//  barre (l'écriture unique de la nº 821).
+import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
 
 /**
  * L'EN-TÊTE DE PAGE PLEIN ÉCRAN, ET LA PAGE QUI LE PORTE (nº 465)
@@ -119,11 +122,20 @@ export function EnTetePleinEcran({
         type="button"
         onClick={surFermer}
         aria-label={ariaLabelFermer}
-        className="flex h-11 w-11 -mr-2 items-center justify-center
+        /*  §7 (nº 822) — LA CROIX PREND LA TAILLE DES ICÔNES DE LA
+             BARRE : 26 de dessin dans 46 de cible au doigt (l'écriture
+             unique, lib/reserve-barre), au lieu de 22 dans 44 — le
+             propriétaire la trouve trop petite. Le retrait suit le
+             même calcul qu'avant : (cible − dessin) / 2 = 10 px, pour
+             que le dessin retombe sur la marge de la barre (`px-4`).
+             ⚠️ CETTE CROIX EST CELLE DES CINQ ÉCRANS PLEIN ÉCRAN (Mon
+             compte, Notifications, Langue, recherche, conventions) :
+             une seule écriture, elles grandissent ensemble. */
+        className={`flex ${CIBLE_GESTE_BARRE} -mr-[10px] items-center justify-center
                    text-sombre-texte-doux active:text-sombre-texte
-                   transition-colors"
+                   transition-colors`}
       >
-        <IconeCroix taille={22} />
+        <IconeCroix taille={28} classe={DESSIN_GESTE_BARRE} />
       </button>
     </div>
   );

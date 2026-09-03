@@ -85,7 +85,36 @@ export function echapperHtml(texte: string): string {
     .replaceAll("'", "&#39;");
 }
 
-/** Le texte de la charte, blanc ; le texte doux, gris. */
+/**
+ * ██ §1 (nº 822) — LES COULEURS NE DÉPENDENT PLUS DU LECTEUR ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : le courriel s'INVERSE selon le thème du
+ * client mail — Gmail en sombre rendait l'e-mail CLAIR (et le logo,
+ * blanc sur transparent, devenait invisible), et l'inverse ailleurs.
+ * LA CAUSE : un client en mode sombre RECALCULE les couleurs d'un
+ * message qu'il croit clair (ou clair-compatible). Le message ne disait
+ * pas assez fort qu'il a UN SEUL habillage.
+ * CE QU'ON DIT DÉSORMAIS, ET DANS LES QUATRE LANGUES QUE LES CLIENTS
+ * PARLENT :
+ *  1. `color-scheme: only dark` (méta ET feuille) — « ce courriel n'a
+ *     qu'un habillage, ne le recalcule pas ». Apple Mail, iOS et
+ *     Outlook récent le respectent ;
+ *  2. les couleurs en INLINE avec `!important` — un style en ligne
+ *     prioritaire résiste aux réécritures de Gmail ;
+ *  3. une feuille dans l'en-tête qui REDIT les mêmes couleurs sous
+ *     `@media (prefers-color-scheme: dark)` — Gmail (web et
+ *     application) lit cette feuille ;
+ *  4. les sélecteurs `[data-ogsc]` / `[data-ogsb]` — les marques
+ *     qu'Outlook.com pose sur ce qu'il a retouché : on repasse derrière.
+ * Les classes `yf-*` n'existent que pour 3 et 4 : elles ne portent
+ * aucune couleur par elles-mêmes, elles servent de prise.
+ * ⚠️ CE QUI NE PEUT PAS ÊTRE GARANTI, ET JE LE DIS : Gmail (Android
+ * surtout) applique parfois sa propre transformation sans rien
+ * demander. Ces quatre couches sont ce que le métier sait faire ; le
+ * banc les vérifie en thème clair ET sombre (le rendu, pas la promesse).
+ *
+ * Le texte de la charte, blanc ; le texte doux, gris.
+ */
 const POLICE = "Arial, Helvetica, sans-serif";
 const TEXTE = "#F2F2F4";
 const TEXTE_DOUX = "#A8A8B0";
@@ -93,7 +122,7 @@ const TEXTE_DOUX = "#A8A8B0";
 /** Un paragraphe du corps : 15 px, interligne 23. */
 function paragraphe(texte: string): string {
   return (
-    `<p style="margin:0 0 14px 0;font-family:${POLICE};font-size:15px;line-height:23px;color:${TEXTE};">` +
+    `<p class="yf-texte" style="margin:0 0 14px 0;font-family:${POLICE};font-size:15px;line-height:23px;color:${TEXTE} !important;">` +
     echapperHtml(texte).replaceAll("\n", "<br>") +
     "</p>"
   );
@@ -117,14 +146,14 @@ export function habillerCourriel(
   const bouton = contenu.action
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 4px 0;">
             <tr>
-              <td bgcolor="${rouge}" style="background-color:${rouge};border-radius:999px;">
-                <a href="${echapperHtml(contenu.action.url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF;text-decoration:none;border-radius:999px;">${echapperHtml(contenu.action.libelle)}</a>
+              <td class="yf-bouton" bgcolor="${rouge}" style="background-color:${rouge} !important;border-radius:999px;">
+                <a href="${echapperHtml(contenu.action.url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:14px;line-height:18px;font-weight:bold;color:#FFFFFF !important;text-decoration:none;border-radius:999px;">${echapperHtml(contenu.action.libelle)}</a>
               </td>
             </tr>
           </table>`
     : "";
   const note = contenu.note
-    ? `<p style="margin:16px 0 0 0;font-family:${POLICE};font-size:13px;line-height:20px;color:${TEXTE_DOUX};">${echapperHtml(contenu.note).replaceAll("\n", "<br>")}</p>`
+    ? `<p class="yf-doux" style="margin:16px 0 0 0;font-family:${POLICE};font-size:13px;line-height:20px;color:${TEXTE_DOUX} !important;">${echapperHtml(contenu.note).replaceAll("\n", "<br>")}</p>`
     : "";
 
   const html = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -132,34 +161,60 @@ export function habillerCourriel(
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <meta name="supported-color-schemes" content="dark">
+  <meta name="color-scheme" content="only dark">
+  <meta name="supported-color-schemes" content="only dark">
   <title>${echapperHtml(contenu.titre)}</title>
+  <style type="text/css">
+    /*  nº 822 — LE THÈME DU LECTEUR NE DÉCIDE PLUS DES COULEURS :
+        « only dark » dit aux clients qui savent lire (Apple Mail, iOS,
+        Outlook récent) que ce courriel a UN SEUL habillage et qu'il ne
+        faut rien recalculer. */
+    :root { color-scheme: only dark; supported-color-schemes: only dark; }
+    /*  Le mode sombre du client ne doit rien changer : on redit les
+        mêmes couleurs, en priorité. */
+    @media (prefers-color-scheme: dark) {
+      .yf-fond { background-color: ${fond} !important; }
+      .yf-carte { background-color: ${carte} !important; }
+      .yf-texte, .yf-titre { color: ${TEXTE} !important; }
+      .yf-doux, .yf-doux a { color: ${TEXTE_DOUX} !important; }
+      .yf-bouton { background-color: ${rouge} !important; }
+      .yf-bouton a { color: #FFFFFF !important; }
+    }
+    /*  OUTLOOK.COM en mode sombre marque les éléments qu'il a
+        retouchés (data-ogsc pour la couleur, data-ogsb pour le
+        fond) : on remet les nôtres derrière lui. */
+    [data-ogsc] .yf-fond, [data-ogsb] .yf-fond { background-color: ${fond} !important; }
+    [data-ogsc] .yf-carte, [data-ogsb] .yf-carte { background-color: ${carte} !important; }
+    [data-ogsc] .yf-texte, [data-ogsc] .yf-titre { color: ${TEXTE} !important; }
+    [data-ogsc] .yf-doux, [data-ogsc] .yf-doux a { color: ${TEXTE_DOUX} !important; }
+    [data-ogsc] .yf-bouton, [data-ogsb] .yf-bouton { background-color: ${rouge} !important; }
+    [data-ogsc] .yf-bouton a { color: #FFFFFF !important; }
+  </style>
 </head>
-<body style="margin:0;padding:0;background-color:${fond};" bgcolor="${fond}">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${fond}" style="background-color:${fond};">
+<body class="yf-fond" style="margin:0;padding:0;background-color:${fond} !important;" bgcolor="${fond}">
+  <table role="presentation" class="yf-fond" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${fond}" style="background-color:${fond} !important;">
     <tr>
       <td align="center" style="padding:32px 16px;">
         <!--[if mso]><table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;margin:0 auto;">
           <tr>
-            <td align="left" style="padding:0 4px 24px 4px;">
+            <td class="yf-fond" align="left" bgcolor="${fond}" style="background-color:${fond} !important;padding:0 4px 24px 4px;">
               <a href="${echapperHtml(site)}" style="text-decoration:none;">
                 <img src="${echapperHtml(site)}${MARQUE_YOKOFOLIO.logo}" width="170" alt="${MARQUE_YOKOFOLIO.nom}" style="display:block;border:0;outline:none;width:170px;height:auto;">
               </a>
             </td>
           </tr>
           <tr>
-            <td bgcolor="${carte}" style="background-color:${carte};border-radius:16px;padding:32px 28px;">
-              <h1 style="margin:0 0 18px 0;font-family:${POLICE};font-size:22px;line-height:28px;font-weight:bold;color:${TEXTE};">${echapperHtml(contenu.titre)}</h1>
+            <td class="yf-carte" bgcolor="${carte}" style="background-color:${carte} !important;border-radius:16px;padding:32px 28px;">
+              <h1 class="yf-titre" style="margin:0 0 18px 0;font-family:${POLICE};font-size:22px;line-height:28px;font-weight:bold;color:${TEXTE} !important;">${echapperHtml(contenu.titre)}</h1>
               ${contenu.paragraphes.map(paragraphe).join("\n              ")}
               ${bouton}
               ${note}
             </td>
           </tr>
           <tr>
-            <td align="left" style="padding:20px 4px 0 4px;font-family:${POLICE};font-size:12.5px;line-height:18px;color:${TEXTE_DOUX};">
-              ${MARQUE_YOKOFOLIO.nom} &middot; <a href="${echapperHtml(site)}" style="color:${TEXTE_DOUX};text-decoration:none;">${echapperHtml(domaine)}</a>
+            <td class="yf-doux yf-fond" align="left" bgcolor="${fond}" style="background-color:${fond} !important;padding:20px 4px 0 4px;font-family:${POLICE};font-size:12.5px;line-height:18px;color:${TEXTE_DOUX} !important;">
+              ${MARQUE_YOKOFOLIO.nom} &middot; <a href="${echapperHtml(site)}" style="color:${TEXTE_DOUX} !important;text-decoration:none;">${echapperHtml(domaine)}</a>
             </td>
           </tr>
         </table>
