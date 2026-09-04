@@ -1545,8 +1545,11 @@ export function libelleTypeFiche(
   etablissement?: string | null
 ): string {
   const nature = natureDeLaFiche(slug, etablissement);
-  if (nature === "artiste") return "Artiste";
-  return nature === "prive" ? "Studio" : "Salon";
+  //  nº 838 — les trois libellés du lexique (Kevin, §1) : ils étaient
+  //  restés en français sur chaque carte, la ligne de la fiche, le menu
+  //  « Profile » de Ma sélection et la liste des suivis.
+  if (nature === "artiste") return "Artist";
+  return nature === "prive" ? "Private Studio" : "Tattoo Shop";
 }
 
 /**
@@ -1993,7 +1996,7 @@ export const TEXTES_TATOUAGE = {
    * phrases. Celles-ci décrivent honnêtement ce que fait le site.
    */
   paragrapheAccueil:
-    "Pick a style, a city and a distance: yokofolio shows the tattoo artists " +
+    "Pick a style, a city and a distance: YokoFolio shows the tattoo artists " +
     "working in that style near you, and a picture of their work in that " +
     "exact style. Every result links to the artist's portfolio " +
     "on Instagram and TikTok.",

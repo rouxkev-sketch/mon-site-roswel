@@ -74,7 +74,7 @@ export async function POST(requete: NextRequest) {
   const destinataire = corps?.destinataire?.trim();
   if (!destinataire || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(destinataire)) {
     return NextResponse.json(
-      { ok: false, message: "Give a destinataire to write to." },
+      { ok: false, message: "Give a recipient to write to." },
       { status: 400 }
     );
   }

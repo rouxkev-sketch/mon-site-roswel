@@ -564,7 +564,7 @@ export function EcranAuthentification({
         {enRattachement
           ? creer
             ? "Create your account"
-            : "Connecte-toi"
+            : "Log in"
           : creer
             ? "Create your account"
             : "Welcome back"}

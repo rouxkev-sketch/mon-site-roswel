@@ -342,7 +342,7 @@ export async function POST(requete: NextRequest) {
         return NextResponse.json(
           {
             ok: false,
-            message: `"${collision.nom ?? slug}" already has this spot in this country. Pick another name.`,
+            message: `"${collision.nom ?? slug}" is already on the list for this country. Pick another name.`,
           },
           { status: 409 }
         );

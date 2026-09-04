@@ -332,7 +332,7 @@ export type EntreeFiltre = {
 export const PROFIL = "profil";
 /** Le titre des deux menus (§2-a et §2-b de la nº 316). */
 export const GROUPE_STYLES = "Styles";
-export const GROUPE_PROFIL = "Profil";
+export const GROUPE_PROFIL = "Profile";
 
 /** La clé d'un type, dans la table des comptes comme dans l'adresse —
     une seule écriture pour les deux. Les natures sont celles de

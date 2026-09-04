@@ -254,7 +254,7 @@ export function BlocAutreAdresse({
         //  Le fantôme du champ n'a plus qu'à dire COMMENT le chercher,
         //  et le redire deux fois à deux centimètres d'écart était du
         //  bruit.
-        texteIndicatif="Search a name"
+        texteIndicatif="Search by name"
         choisie={null}
         surChoix={(fiche) => {
           if (fiche)

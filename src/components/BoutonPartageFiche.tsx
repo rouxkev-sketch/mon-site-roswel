@@ -437,7 +437,7 @@ export function BoutonPartageFiche({
     //  seul le rendu grandit.
     { cle: "whatsapp", libelle: "WhatsApp", icone: <IconePartageWhatsApp taille={28} /> },
     { cle: "sms", libelle: "SMS", icone: <IconePartageSms taille={28} /> },
-    { cle: "email", libelle: "E-mail", icone: <IconePartageEmail taille={28} /> },
+    { cle: "email", libelle: "Email", icone: <IconePartageEmail taille={28} /> },
     { cle: "facebook", libelle: "Facebook", icone: <IconePartageFacebook taille={28} /> },
   ].map((entree) => ({
     ...entree,

@@ -76,8 +76,8 @@ export async function generateImageMetadata({
       size,
       contentType,
       alt: titre
-        ? `${titre} — yokofolio`
-        : "yokofolio — Your next tattoo starts with a style",
+        ? `${titre} — YokoFolio`
+        : "YokoFolio — Your next tattoo starts with a style",
     },
   ];
 }

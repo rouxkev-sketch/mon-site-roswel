@@ -28,7 +28,7 @@ import {
  */
 
 export const alt =
-  "yokofolio — Your next tattoo starts with a style";
+  "YokoFolio — Your next tattoo starts with a style";
 export const size = TAILLE_PARTAGE;
 export const contentType = TYPE_PARTAGE;
 

@@ -101,7 +101,7 @@ export async function chargerConventionsAcceptees(
     .eq("etat", "acceptee")
     .order("nom", { ascending: true });
   if (error) {
-    console.warn("[conventions] catalogue non lu :", error.message);
+    console.warn("[conventions] catalog not read:", error.message);
     return [];
   }
   //  UNE ACCEPTÉE SANS NOM OU SANS PAYS N'EST PAS UNE ENTRÉE DE MENU :

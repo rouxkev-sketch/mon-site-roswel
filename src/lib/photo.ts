@@ -34,7 +34,7 @@ export async function compresserPhoto(
   /*  §1 (nº 699) — le plafond, avant toute lecture du contenu. */
   if (fichier.size > TAILLE_MAX_PHOTO_OCTETS) {
     throw new Error(
-      `This image is too heavy (${Math.round(fichier.size / 1024 / 1024)} MB). ` +
+      `This image is too large (${Math.round(fichier.size / 1024 / 1024)} MB). ` +
         `The maximum is ${TAILLE_MAX_PHOTO_OCTETS / 1024 / 1024} MB.`
     );
   }

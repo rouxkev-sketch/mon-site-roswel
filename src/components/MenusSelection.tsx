@@ -321,7 +321,7 @@ export function MenusSelection({
                  vivant : 16 px — c'est `text-base`, le jeton même que
                  ce champ passe en `taillePolice` : ils ne peuvent pas
                  diverger. Blanc et gras, inchangés. */}
-            <span className="text-base font-bold text-white">Filtrer</span>
+            <span className="text-base font-bold text-white">Filter</span>
           </>
         }
         //  §5 (nº 258) — LA FLÈCHE PREND L'AIR DES MOTS DU BADGE

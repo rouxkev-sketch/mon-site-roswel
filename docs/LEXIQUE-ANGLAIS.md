@@ -34,7 +34,7 @@ message.
 | style | **style** | |
 | variante (de style) | **variant** | aucune n'était visible dans le périmètre 804 ; à appliquer en 806 si le catalogue en montre |
 | nature (réalisation / flash) | **Type** : **Tattoo** / **Flash** | la limace `tatouage` reste `tatouage` |
-| rendu (noir / noir et gris / couleur) | **Ink** : **Black** / **Black & grey** / **Color** | les valeurs vivent en lib (805) ; le titre de groupe « Ink » est posé dans le moteur |
+| rendu (noir / noir et gris / couleur) | **Ink** : **Black** / **Black & gray** / **Color** | les valeurs vivent en lib (805) ; le titre de groupe « Ink » est posé dans le moteur ; **gray** depuis la 806 (la ligne disait encore « grey » — mise au pas à la 838) |
 | technique | **Technique** | |
 | booking ouvert / fermé / délai | **Books open** / **Books closed** / **Waitlist** (« 3-month wait ») | le mot des tatoueurs américains |
 | équipe du salon | **shop team** (« Is your team on YokoFolio? ») | |
@@ -260,6 +260,44 @@ message.
 > dans tous les cas où la route a réussi. La ligne de la 819 ci-dessus
 > reste vraie pour les textes ; leur lieu est désormais le toast.
 
+
+### Ajouts de la 838 (relecture page par page — fin du chantier)
+
+Dix-neuf corrections d'office, toutes dans le code (aucune phrase nouvelle :
+des mots restés en français, des fautes d'anglais, deux graphies) :
+
+| Français (ou l'anglais fautif) | Anglais | Note |
+|---|---|---|
+| Artiste · Studio · Salon (le type d'un portfolio : chaque carte, la ligne de la fiche, le menu « Profile » de Ma sélection, la liste des suivis) | **Artist** · **Private Studio** · **Tattoo Shop** | `libelleTypeFiche` (config/tatouage) et les deux replis de `lib/modes-exercice` : les trois mots de la table 1 étaient restés en français |
+| Connecte-toi (l'écran de connexion, la bascule vers la connexion) | **Log in** | `EcranAuthentification` |
+| Langue (le titre du menu des langues) | **Language** | `SelecteurLangue` — le bouton disait déjà « Language: English » |
+| Filtrer (le bouton des filtres, au doigt) | **Filter** | `MenusSelection` |
+| Profil (le groupe « Profil » des filtres de Ma sélection) | **Profile** | `GROUPE_PROFIL` (lib/filtres-selection) |
+| E-mail (la fenêtre de partage) | **Email** | `BoutonPartageFiche` — la graphie de la table 1, sans trait d'union |
+| Non lu — (lecteur d'écran, messages de l'admin) | **Unread —** | `AdminYokofolio` |
+| catalogue non lu (avertissement console des conventions) | **catalog not read** | `lib/conventions` |
+| (raison non dite) (journal des positions) | **(reason not given)** | `lib/restitution-position`, deux fois |
+| « Give a destinataire to write to. » (diagnostic courriel de l'admin) | **Give a recipient to write to.** | un mot français resté dans une phrase anglaise |
+| « yokofolio — Your next tattoo… » et « … — yokofolio » (les images de partage, texte de repli et titre) | **YokoFolio — Your next tattoo starts with a style** · **`<titre>` — YokoFolio** | trois fichiers : les deux `opengraph-image` et `lib/image-partage-fiche` — la marque porte ses majuscules |
+| « yokofolio shows the tattoo artists… » (paragraphe d'accueil) | **YokoFolio shows…** | `paragrapheAccueil` (config/tatouage) |
+| « Search a name » (texte indicatif, autre adresse) | **Search by name** | `BlocAutreAdresse` |
+| « one small and one capital letter » (règle du mot de passe) | **one lower-case letter and one capital letter** | `lib/mot-de-passe` — « lower-case » AVEC trait d'union : sans lui, Tailwind lit `lowercase` comme une classe et la feuille CSS gagne une règle (piège 472) |
+| « This image is too heavy » (photo trop lourde) | **This image is too large** | `lib/photo` |
+| « already has this spot in this country » (collision de convention, admin) | **is already on the list for this country** | `demandes-convention/route` |
+
+> **Ce qui vit en base et n'est pas dans le code** (règle 808) : les
+> libellés des styles acceptés (`suggestions_style.label`). La doublure de
+> l'atelier montre encore « Néo-japonais » sur l'accueil ; sur le vrai
+> site, c'est le SQL de la 807 (`docs/SQL-807-STYLES-AJOUTES.md`) qui fait
+> foi — rien de neuf à coller. Aucun autre texte venu de la base n'est
+> apparu à l'écran pendant la relecture (144 captures, web et doigt).
+
+> **En attente d'arbitrage (rien de changé)** — des phrases correctes mais
+> perfectibles, listées dans le compte rendu de la 838 avec leur
+> traduction : la relance « Retype the new password », la chute des
+> e-mails de suppression « the deletion goes ahead », le bouton d'admin
+> « Reopen the first block », l'état vide du démarchage, la question de
+> la mise hors ligne « Why is this portfolio leaving the site? ».
 
 ## 3 · Le ton
 

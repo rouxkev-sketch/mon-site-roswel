@@ -176,7 +176,7 @@ export function poserLaPosition(
   cle?: string,
   /** §3 (nº 426) — POURQUOI cette pose : écrit dans la ligne POSE du
       journal. Plus aucun poseur anonyme. */
-  raison = "(raison non dite)"
+  raison = "(reason not given)"
 ) {
   //  RIEN À RESTITUER : ON NE TOUCHE À RIEN (nº 185-b).
   if (position <= 0) {
@@ -322,7 +322,7 @@ export function libererSiPageQuittee() {
  * `DefilementEnHaut`. Toute autre restitution passerait à côté de la
  * rangée.
  */
-export function rendreLaPlace(url: string, raison = "(raison non dite)") {
+export function rendreLaPlace(url: string, raison = "(reason not given)") {
   const place = lireLaPlace(url);
   /*  §1 (nº 660) — CE QU'ON A LU, ET SOUS QUELLE CLÉ. C'est la
       première des trois questions du propriétaire — « quand elle lit

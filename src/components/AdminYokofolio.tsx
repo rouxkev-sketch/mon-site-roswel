@@ -2053,7 +2053,7 @@ export function AdminYokofolio() {
                           className="mr-2 inline-block h-[8px] w-[8px] rounded-full bg-primaire align-middle"
                         />
                       )}
-                      {!m.traite && <span className="sr-only">Non lu — </span>}
+                      {!m.traite && <span className="sr-only">Unread — </span>}
                       {m.nom}
                     </p>
                     <p className="text-[12.5px] text-sombre-texte-doux">

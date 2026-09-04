@@ -73,7 +73,7 @@ export async function texteAlternatifPartage(
 ): Promise<string> {
   const { tatoueur, demonstration } = await ficheLue(slug);
   if (!tatoueur || demonstration) {
-    return "yokofolio — Your next tattoo starts with a style";
+    return "YokoFolio — Your next tattoo starts with a style";
   }
   const style = tags.style || tatoueur.styles[0] || "";
   return (

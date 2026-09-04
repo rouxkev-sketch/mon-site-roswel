@@ -23,7 +23,7 @@ export function evaluerMotDePasse(mdp: string) {
     },
     {
       cle: "casse",
-      libelle: "one small and one capital letter",
+      libelle: "one lower-case letter and one capital letter",
       ok: /[a-z]/.test(mdp) && /[A-Z]/.test(mdp),
     },
     { cle: "chiffre", libelle: "a number", ok: /\d/.test(mdp) },

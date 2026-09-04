@@ -562,7 +562,7 @@ export function EntreeLangue({
       <span className={`${boite} text-sombre-texte/80`}>
         <IconeMonde taille={taille} />
       </span>
-      <span className="flex-1 truncate">Langue</span>
+      <span className="flex-1 truncate">Language</span>
       {/*  §2 (nº 549) — LE NOM EN TOUTES LETTRES, PLUS LE CODE.
            D'OÙ IL VIENT : de `LANGUES_YOKOFOLIO` (config/tattoo), la
            liste unique des langues — c'est le MÊME `label` que l'écran
