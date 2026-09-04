@@ -455,13 +455,14 @@ export function CorpsSquelette({
                IL NE RESTE DONC QUE LA RANGÉE DES BADGES, et depuis la
                nº 848 elle n'a plus de marge du tout : tout l'air
                au-dessus est au bloc (§3a, LigneResultats).
-               ██ §2 (nº 848) — LA HAUTEUR SUIT CELLE DES VRAIS BADGES ██
-               Elle valait TRENTE pixels, sur les deux appareils. Depuis
-               que l'air intérieur est égal sur les quatre côtés
-               (`FiltresActifs`, §2), un badge fait 44 px au doigt et 46
-               au web — le squelette qui en promet 30 ferait remonter
-               toute la page de 14 à 16 px à l'arrivée. Ce sont les DEUX
-               MÊMES nombres, et ils sont mesurés au banc, pas déduits.
+               ██ §3 (nº 850) — LA HAUTEUR SUIT CELLE DES VRAIS BADGES ██
+               Elle a suivi trois fois : 30 px (nº 847), 44/46 (nº 848),
+               et 26 au doigt / 28 au web depuis que l'air se mesure sur
+               les LETTRES et non sur la boîte de ligne (`FiltresActifs`,
+               nº 850). Un squelette qui promettrait l'ancienne hauteur
+               ferait sauter toute la page à l'arrivée des cartes — de
+               dix-huit pixels cette fois. Ces deux nombres-là sont
+               mesurés au banc, jamais déduits.
                ⚠️ ET LA MARGE COPIÉE S'EN VA AVEC ELLE : elle était posée
                ici par largeur de fenêtre (640 px) là où la rangée la
                posait par APPAREIL (règle nº 60) — deux pixels de saut sur
@@ -472,12 +473,12 @@ export function CorpsSquelette({
                Leurs largeurs ne décident de rien (la rangée est une ligne
                de flexion, sa hauteur ne dépend pas d'elles) ; elles sont
                prises sur les libellés les plus courants et MESURÉES à
-               l'écran, au milieu des deux appareils : « 14 portfolios »
-               fait 110 px au doigt et 118 au web, « Blackwork » 126 et
-               133. D'où 114 et 130. */}
+               l'écran, au milieu des deux appareils : « 35 portfolios »
+               fait 114 px au doigt et 125 au web, « Blackwork » 120 et
+               131. D'où 120 et 126 (nº 850). */}
           <div data-squelette-badges="" className="flex items-center gap-2">
-            <div className="mobile:h-[44px] not-mobile:h-[46px] w-[114px] rounded-lg bg-sombre-eleve" />
-            <div className="mobile:h-[44px] not-mobile:h-[46px] w-[130px] rounded-lg bg-sombre-eleve" />
+            <div className="mobile:h-[26px] not-mobile:h-[28px] w-[120px] rounded-lg bg-sombre-eleve" />
+            <div className="mobile:h-[26px] not-mobile:h-[28px] w-[126px] rounded-lg bg-sombre-eleve" />
           </div>
         </div>
       ) : (

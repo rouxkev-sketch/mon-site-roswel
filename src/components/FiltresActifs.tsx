@@ -93,64 +93,127 @@ import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * nº 389) : `mobile:` est le vrai appareil (règle nº 60), `not-mobile:`
  * son exact complément — rien à départager par l'ordre de la feuille.
  */
+/**
+ * ██ §1 (nº 850) — LA BOÎTE DE LIGNE DEVIENT LA BOÎTE DES CAPITALES ██
+ * ------------------------------------------------------------------
+ * LE PROPRIÉTAIRE, sur l'air de la nº 848 : « il a été mesuré jusqu'à la
+ * BOÎTE DE LIGNE et non jusqu'aux LETTRES ». C'est exact, et c'est toute
+ * l'erreur : une boîte de ligne de 22 px autour d'un texte de 15 px
+ * contient déjà six pixels de vide en haut et six en bas — l'air de dix
+ * pixels que la nº 848 ajoutait par-dessus faisait DIX-SEPT pixels à
+ * l'œil, pour douze à gauche. D'où un badge très haut et l'air « beaucoup
+ * trop grand en haut et en bas ».
+ * LE REMÈDE : la boîte de ligne est ramenée à LA HAUTEUR DES CAPITALES,
+ * mesurée à l'écran sur l'encre peinte (dix pixels au doigt pour un corps
+ * de 15, douze au web pour un corps de 16). Le rembourrage EST alors
+ * l'air visuel, à un pixel de contour près — on peut le lire dans le code
+ * et le retrouver à l'écran, ce qui était impossible avant.
+ * ⚠️ CE N'EST PAS UN RÉGLAGE APPROXIMATIF : les deux valeurs sortent
+ * d'une mesure de l'encre (banc 850), pas d'un rapport supposé entre le
+ * corps et la capitale — chaque fonte a le sien.
+ * ⚠️ LE DÉBORD DES JAMBAGES EST VOULU : « g », « y » et « p » descendent
+ * sous la ligne de base, donc sous cette boîte, et vivent dans le
+ * rembourrage du bas. C'est la règle donnée — l'air se mesure « du haut
+ * de capitale à la ligne de base » —, et c'est ce que fait tout badge
+ * bien composé : sinon un mot avec jambage serait plus haut qu'un autre.
+ */
 const ECRITURE_BADGE =
   "mobile:text-[15px] not-mobile:text-[16px] " +
-  "mobile:leading-[22px] not-mobile:leading-[24px] " +
+  "mobile:leading-[10px] not-mobile:leading-[12px] " +
   "font-medium text-sombre-texte";
 
 /**
- * ██ §2-§3b (nº 848) — L'AIR INTÉRIEUR, ÉGAL SUR LES QUATRE CÔTÉS ██
+ * ██ §1-§2-§3 (nº 850) — L'AIR VISUEL : DOUZE SUR LES CÔTÉS, HUIT EN
+ * HAUT ET EN BAS ██
  * ------------------------------------------------------------------
- * LE PROPRIÉTAIRE : « l'air doit être ÉGAL sur tout le contour : à
- * gauche du texte = à droite de la croix = au-dessus = au-dessous du
- * texte (une seule valeur) », au doigt (§2) comme au web (§3b).
- * C'EST LA RÈGLE nº 497 DU SITE, MOT POUR MOT, et elle est déjà écrite
- * — pour les plaques : « DANS UNE PLAQUE, L'AIR INTÉRIEUR EST LE MÊME
- * EN HAUT, EN BAS, À GAUCHE ET À DROITE. Un seul nombre, sur les quatre
- * côtés » (components/plaque). Les badges de cette rangée la prennent à
- * leur tour.
+ * LA RÈGLE DONNÉE : « l'air VISUEL — du bord du badge jusqu'aux glyphes
+ * (haut de capitale, ligne de base) et jusqu'à la première lettre / au
+ * bord de la croix — suit la proportion standard des badges : horizontal
+ * légèrement supérieur au vertical ». L'ordre de grandeur donné est
+ * 12 px sur les côtés, 8 en haut et en bas.
  *
- * LA VALEUR : DIX PIXELS, un cran de l'échelle. Elle se choisit entre
- * deux bornes, et les deux sont mesurées :
- *  · l'air HORIZONTAL valait 12 à gauche (nº 846) — descendre plus bas
- *    que 10 le rendrait plus serré qu'avant, alors qu'on nous demande
- *    d'aérer ;
- *  · l'air VERTICAL valait (30 − 22,5) / 2 = 3,75 px : c'est LUI le
- *    « trop compact », et c'est lui qui monte à 10.
- * LA HAUTEUR SUIT, et le propriétaire l'a prévu : 10 + 22 + 10, plus le
- * contour d'un pixel en haut et en bas, fait 44 au doigt ; 10 + 24 + 10
- * + 2 fait 46 au web (contre 30 partout à la nº 847).
- * ⚠️ LE CONTOUR COMPTE DANS LA HAUTEUR DES DEUX ROBES, et c'est pourquoi
- * les badges PLEINS en portent un TRANSPARENT (voir leur note) : sans
- * lui, ils seraient de deux pixels plus courts que le badge du compte, et
- * la rangée cesserait d'être une rangée.
- * ⚠️ LE SQUELETTE D'ATTENTE SUIT AUSSI (SquelettesDePage) : il promet
- * ces deux hauteurs-là, sans quoi la page sauterait à chaque arrivée —
- * le banc nº 845 le mesure.
- * ⚠️ `p-2.5` ET RIEN D'AUTRE : une seule déclaration de rembourrage,
- * jamais quatre à tenir d'accord (piège nº 389).
+ * CE QUI ÉTAIT MESURÉ AVANT (nº 848), À L'ENCRE, sur les trois badges :
+ *   au doigt   haut 17 · bas 17 · gauche 12 · droite 18
+ *   au web     haut 16 · bas 18 · gauche 12 · droite 18
+ * Le vertical était donc DEUX FOIS le nombre voulu, aux deux appareils —
+ * « beaucoup trop d'air haut/bas », à la lettre. Et à droite, la croix
+ * laissait six pixels de plus que le texte à gauche, alors qu'elle doit
+ * laisser le MÊME.
+ *
+ * CE QUE CES QUATRE NOMBRES VALENT MAINTENANT :
+ *  · HAUT et BAS — 7 px de rembourrage plus le trait d'un pixel font 8,
+ *    et c'est tout : la boîte de ligne vaut désormais les capitales
+ *    (voir `ECRITURE_BADGE`), elle n'ajoute donc plus rien. AU WEB, LES
+ *    DEUX NOMBRES DIFFÈRENT D'UN PIXEL (8 en haut, 6 en bas) et c'est
+ *    ce qui rend l'air ÉGAL : à ce corps-là, la fonte pose ses capitales
+ *    un pixel au-dessus du milieu de sa boîte. Mesuré, pas supposé —
+ *    sans cette compensation on lisait 7 au-dessus des capitales pour 9
+ *    sous la ligne de base. C'est L'AIR qu'on égalise, jamais la boîte ;
+ *  · GAUCHE — 10 px plus le trait font 12 au doigt (la première lettre
+ *    laisse un pixel de flanc) ; 12 plus le trait font 14 au web. LE WEB
+ *    EN A UN CRAN DE PLUS parce que le propriétaire le dit (« au web,
+ *    pas assez d'air gauche/droite »), et parce que son texte est d'un
+ *    cran plus grand : 12 px autour d'un corps de 16 se lit plus serré
+ *    que 12 autour d'un corps de 15 ;
+ *  · DROITE — le même nombre que gauche, sur la même déclaration. Ce qui
+ *    rattrape le vide propre au dessin de la croix se règle SUR LA CROIX
+ *    (voir `CROIX_BADGE`), pas ici : le badge du compte, lui, n'a pas de
+ *    croix et veut bien ses 12 (ou 14) à droite de sa dernière lettre.
+ * LA HAUTEUR SUIT : 8 + 10 + 8 = 26 au doigt, 8 + 12 + 8 = 28 au web
+ * (contre 44 et 46 à la nº 848). Le squelette d'attente les reprend.
+ *
+ * ⚠️ UNE SEULE ÉCRITURE POUR LES TROIS BADGES, c'est la consigne : cette
+ * constante est lue par le compte comme par les filtres.
+ * ⚠️ AUCUNE PROPRIÉTÉ N'EST ÉCRITE DEUX FOIS (piège nº 389) : le doigt
+ * pose son haut et son bas d'un seul geste, le web les pose séparément —
+ * et les deux variantes s'excluent (règle nº 60 : c'est l'APPAREIL qui
+ * tranche, jamais une largeur), il n'y a donc jamais deux classes en
+ * concurrence sur le même rembourrage.
  */
-const AIR_BADGE = "p-2.5";
+const AIR_BADGE =
+  "mobile:py-[7px] not-mobile:pt-[8px] not-mobile:pb-[6px] " +
+  "mobile:px-[10px] not-mobile:px-[12px]";
 
 /**
- * ██ §2-§3b (nº 848) — LA CROIX PREND LA BOÎTE DE LA LIGNE DE TEXTE ██
+ * ██ §3 (nº 850) — LA CROIX : SA CIBLE RESTE GRANDE, SON AIR EST CELUI
+ * DU TEXTE ██
  * ------------------------------------------------------------------
- * POURQUOI ELLE NE PEUT PAS ÊTRE PLUS GRANDE : si sa boîte dépassait
- * celle du texte, la rangée intérieure serait plus haute que le texte,
- * et l'air AU-DESSUS DU TEXTE ne vaudrait plus l'air à sa gauche — la
- * consigne serait fausse d'exactement la moitié de l'écart. Elle vaut
- * donc 22 px au doigt et 24 au web, la boîte de ligne posée juste
- * au-dessus.
- * ⚠️ LE DESSIN, LUI, GRANDIT (§3c) : 16 px au doigt (inchangé), 18 au
- * web — un cran de plus que la nº 847. La boîte se resserre autour de
- * lui (trois pixels de vide de chaque côté) ; ce n'est pas elle qu'on
- * vise, c'est LE BADGE ENTIER, large de 90 px au moins.
+ * DEUX CHOSES SE DISPUTAIENT CETTE BOÎTE, et la nº 848 en avait sacrifié
+ * une :
+ *  · C'EST UNE CIBLE À TOUCHER. Vingt-deux pixels au doigt, vingt-quatre
+ *    au web : on ne descend pas en dessous, sous peine de rendre le
+ *    retrait d'un filtre pénible à viser ;
+ *  · C'EST AUSSI CE QUI FIXE LA HAUTEUR DE LA RANGÉE, si on la laisse
+ *    faire — et 22 px de croix dans un badge dont le texte n'en mesure
+ *    que 10 rouvrirait exactement le défaut qu'on corrige.
+ * LES DEUX TIENNENT PAR UNE MARGE NÉGATIVE : la croix garde sa boîte
+ * pleine, mais n'en présente que la hauteur du texte à la mise en page
+ * (`-my-[6px]` — six pixels rendus en haut et six en bas, soit 22 − 12 au
+ * doigt et 24 − 12 au web ; le même nombre des deux côtés du site, et
+ * c'est une coïncidence heureuse, pas un calcul commun). Elle déborde
+ * alors dans le rembourrage du badge, qui l'accueille sans grandir.
+ *
+ * ██ ET SON AIR À DROITE EST CELUI DU TEXTE À GAUCHE ██
+ * LA CONSIGNE : « la croix garde le même air à sa droite que le texte à
+ * sa gauche ». Or ce qu'on VOIT d'une croix n'est pas sa boîte : le
+ * dessin laisse du vide autour de lui, MESURÉ à sept pixels entre le
+ * bord droit de la boîte et la dernière encre du trait (trois de boîte
+ * autour du dessin, quatre dans le dessin lui-même). Sans rien faire,
+ * l'air à droite valait donc 18 quand celui de gauche valait 12.
+ * `-mr-[6px]` rend ces six pixels-là : la boîte avance de six vers le
+ * bord, l'encre de la croix se retrouve à la même distance que la
+ * première lettre, et la CIBLE, elle, n'a pas rétréci d'un pixel.
+ * ⚠️ C'EST UNE CORRECTION OPTIQUE, et elle se règle ICI plutôt que sur
+ * le rembourrage du badge : le badge du COMPTE n'a pas de croix, et son
+ * air à droite doit rester celui de sa dernière lettre.
+ * ⚠️ LE DESSIN NE CHANGE PAS (nº 848-§3c) : 16 px au doigt, 18 au web.
  * ⚠️ LA TAILLE DU GLYPHE EST UNE CLASSE, PAS UN ATTRIBUT, pour le web :
  * `taille` est un nombre, il ne connaît pas l'appareil. C'est l'écriture
  * du site pour ce cas précis (`DESSIN_GESTE_BARRE`, lib/reserve-barre).
  */
 const CROIX_BADGE =
-  "mobile:h-[22px] mobile:w-[22px] not-mobile:h-[24px] not-mobile:w-[24px]";
+  "mobile:h-[22px] mobile:w-[22px] not-mobile:h-[24px] not-mobile:w-[24px] " +
+  "-my-[6px] -mr-[6px]";
 
 /** UN FILTRE AFFICHÉ : ce qu'il dit, et ce que sa croix retire. */
 export type FiltreAffiche = {

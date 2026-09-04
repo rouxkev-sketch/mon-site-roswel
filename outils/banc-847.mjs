@@ -223,9 +223,13 @@ for (const mode of ["doigt", "web"]) {
         b.croixGlyphe === (mode === "doigt" ? "16" : "18") &&
         b.croixBoite === (mode === "doigt" ? "22x22" : "24x24")),
       m.badges.map((b) => `${b.croixBoite} glyphe ${b.croixGlyphe}`).join(" | "));
-    verif("et TOUS les badges ont la même hauteur, celle que le squelette promet (nº 848-§2)",
-      tous.every((b) => b.h === (mode === "doigt" ? 44 : 46)),
-      tous.map((b) => b.h).join(" | "));
+    /*  LA HAUTEUR A CHANGÉ TROIS FOIS : 30 (nº 847), 44/46 (nº 848),
+        26/28 depuis que l'air se mesure sur les LETTRES (nº 850). Ce
+        banc-ci ne vérifie donc que ce qui ne bouge pas : la rangée est
+        HOMOGÈNE. Le nombre, lui, se mesure au banc 850, avec la règle
+        qui le décide. */
+    verif("et TOUS les badges de la rangée ont la même hauteur",
+      tous.every((b) => b.h === tous[0].h), tous.map((b) => b.h).join(" | "));
 
     /*  §5 — LE FOND DES BADGES À CROIX, MESURÉ PLUS SOMBRE.
         On ne récite pas la valeur : on compare la LUMINOSITÉ des deux

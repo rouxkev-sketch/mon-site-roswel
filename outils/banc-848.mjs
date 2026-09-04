@@ -184,26 +184,26 @@ for (const mode of ["doigt", "web"]) {
       /^#[0-9A-Fa-f]{6}$/.test(m.jeton) && jetonRendu,
       `--rw-sombre-carte-clair = ${m.jeton || "(absent)"} pour un fond ${m.filtres[0].fond}`);
 
-    /*  ██ §2 / §3b — L'AIR ÉGAL SUR LES QUATRE CÔTÉS ██
-        LE PROPRIÉTAIRE : « à gauche du texte = à droite de la croix =
-        au-dessus = au-dessous du texte (une seule valeur) ». C'est la
-        règle nº 497 du site, appliquée aux badges. */
-    const airs = tous.flatMap((b) => [b.gauche, b.haut, b.bas, b.droite]);
-    const UN = airs[0];
-    verif("l'air intérieur est le MÊME sur les quatre côtés, et le même pour tous les badges",
-      airs.every((a) => Math.abs(a - UN) <= 0.5),
-      tous.map((b) => `${b.texte.slice(0, 12)} ⟨${b.gauche}·${b.haut}·${b.bas}·${b.droite}⟩`).join(" | "));
-    verif("cette valeur unique est un cran de l'échelle, et elle AÈRE (l'ancien vertical valait 3,75 px)",
-      UN === 10, `${UN} px`);
-    /*  LA CROIX NE PEUT PAS ÊTRE PLUS HAUTE QUE LA LIGNE : si elle
-        l'était, « au-dessus du texte » cesserait de valoir « à gauche du
-        texte », et la consigne serait fausse de la moitié de l'écart. */
-    verif("la croix prend EXACTEMENT la boîte de la ligne de texte — sans quoi l'air ne peut pas être égal",
-      m.filtres.every((b) => b.croixHauteur === b.interligne),
-      m.filtres.map((b) => `croix ${b.croixBoite} pour un interligne de ${b.interligne}`).join(" | "));
-    verif("la hauteur du badge suit l'air : deux airs, une ligne, et le trait",
-      tous.every((b) => b.hauteur === (doigt ? 44 : 46)),
-      `${tous.map((b) => b.hauteur).join(" | ")} (attendu ${doigt ? 44 : 46})`);
+    /*  ██ L'AIR INTÉRIEUR : LA RÈGLE A CHANGÉ À LA nº 850 ██
+        CE QUE CE BANC MESURAIT ICI (nº 848) : « un seul nombre sur les
+        quatre côtés », pris du bord du badge jusqu'à la BOÎTE DE LIGNE.
+        LE PROPRIÉTAIRE A TRANCHÉ AUTREMENT à la nº 850 : ce qui compte
+        est l'air VISUEL, jusqu'aux LETTRES — et il n'est pas égal des
+        quatre côtés mais proportionné (12 ou 14 sur les côtés, 8 en haut
+        et en bas). Une boîte de ligne de 22 px autour d'un texte de 15
+        contenant déjà six pixels de vide en haut et en bas, la mesure
+        d'ici disait 10 là où l'œil voyait 17.
+        CE POINT-LÀ EST DONC MESURÉ AU BANC 850, sur l'encre peinte, et
+        n'est plus mesuré ici : deux bancs ne diront pas deux vérités sur
+        le même sujet. Ce qui reste ici est ce qui n'a pas changé — la
+        rangée est HOMOGÈNE, et sa hauteur est celle que le squelette
+        promet. */
+    verif("tous les badges de la rangée ont la MÊME hauteur",
+      tous.every((b) => b.hauteur === tous[0].hauteur),
+      tous.map((b) => b.hauteur).join(" | "));
+    verif("… et c'est celle que le squelette d'attente promet (nº 850)",
+      tous[0].hauteur === (doigt ? 26 : 28),
+      `${tous[0].hauteur} px (attendu ${doigt ? 26 : 28})`);
 
     /*  ██ §3c — LE TEXTE ET LA CROIX, AU WEB ██
         « un cran de plus qu'à la nº 847 » : le corps y valait 15 px sur
@@ -268,9 +268,14 @@ for (const mode of ["doigt", "web"]) {
   verif("le dessin de la croix aussi",
     d && w && w.filtres[0].glyphe > d.filtres[0].glyphe,
     d && w ? `${d.filtres[0].glyphe} px au doigt, ${w.filtres[0].glyphe} au web` : "relevé manquant");
-  verif("et la hauteur du badge suit, sans que l'air change de valeur",
-    d && w && w.compte.hauteur > d.compte.hauteur && w.compte.gauche === d.compte.gauche,
-    d && w ? `${d.compte.hauteur} → ${w.compte.hauteur} px, air ${d.compte.gauche} px des deux côtés` : "relevé manquant");
+  /*  nº 850 — L'AIR N'EST PLUS LE MÊME AUX DEUX APPAREILS : le web en a
+      un cran de plus sur les côtés (le propriétaire l'a demandé), et son
+      texte est plus grand. Ce qui reste vrai, et qu'on garde : le badge
+      du web est PLUS HAUT que celui du doigt, parce que ses lettres le
+      sont. Le détail des quatre airs se mesure au banc 850. */
+  verif("et la hauteur du badge suit celle des lettres",
+    d && w && w.compte.hauteur > d.compte.hauteur,
+    d && w ? `${d.compte.hauteur} → ${w.compte.hauteur} px` : "relevé manquant");
 }
 
 //  ══ 3 · LE SQUELETTE D'ATTENTE PROMET LA MÊME RANGÉE ═════════════════
@@ -326,7 +331,8 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1200);
     const vrai = await page.evaluate((R) => new Function("return " + R)()(), RANGEE);
 
-    const attendue = mode === "doigt" ? 44 : 46;
+    //  nº 850 — les deux hauteurs que l'air visuel appelle désormais.
+    const attendue = mode === "doigt" ? 26 : 28;
     verif("les badges gris ont la hauteur des vrais badges",
       gris.hauteurs.every((h) => h === attendue),
       `${gris.hauteurs.join(" | ")} pour ${attendue} attendus`);
