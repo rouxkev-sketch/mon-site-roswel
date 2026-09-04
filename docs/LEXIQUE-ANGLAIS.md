@@ -241,6 +241,26 @@ message.
 > passe : avec l'ancien libellé en place, le recenseur en trouve un ;
 > avec le nouveau, zéro.
 
+### Ajouts de la 837 (le toast de confirmation)
+
+| Français | Anglais | Note |
+|---|---|---|
+| la confirmation d'une réactivation (portfolio, page « My portfolio ») | **Deletion canceled: your portfolio is back as it was.** | `ReactivationParCourriel` → le toast du site (`components/Toast`) : bloc sombre, pastille à coche verte, en bas à gauche au web, en bas au centre au doigt, cinq secondes, puis il s'efface seul — la ligne nue sous la barre fixe (819/832) est partie |
+| la confirmation d'une réactivation (compte AVEC portfolio(s), page « My selection ») | **Deletion canceled: your account and your portfolios are back as they were.** | même toast ; la route `/api/tatoueur/reactiver` rend le nombre de portfolios revenus, et la phrase suit |
+| la confirmation d'une réactivation (compte SANS portfolio) | **Deletion canceled: your account is back as it was.** | même toast ; la phrase raccourcie n'apparaît que sur un zéro certain |
+| l'échec d'une réactivation | **Reactivation failed. Try again.** (inchangé) · le message de la route pour un portfolio (inchangé) | le même toast, en rouge, avec la croix (ton « probleme » de la famille des pastilles) |
+
+> **La phrase « Your account is active — the deletion is canceled. » (832)
+> n'existe plus.** Elle répondait au cas où la route n'avait « rien à
+> annuler » — or c'est le cas NORMAL : demander la suppression déconnecte,
+> et la connexion qui suit le clic annule déjà la suppression (l'écran de
+> connexion et `auth/callback` appellent la route). À l'arrivée, l'écran
+> disait « déjà actif » à quelqu'un dont le clic venait d'annuler la
+> suppression. La confirmation parle du geste : « Deletion canceled »,
+> dans tous les cas où la route a réussi. La ligne de la 819 ci-dessus
+> reste vraie pour les textes ; leur lieu est désormais le toast.
+
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

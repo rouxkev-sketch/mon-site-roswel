@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
-import { reactiverCompte } from "@/lib/suppression-compte";
+import { portfoliosDuCompte, reactiverCompte } from "@/lib/suppression-compte";
 import { creerNotification } from "@/lib/notifications";
 
 /**
@@ -15,6 +15,17 @@ import { creerNotification } from "@/lib/notifications";
  * Aucune suppression en cours, ou migration pas encore passée : la
  * réponse dit simplement `reactive: false`. Se connecter ne doit
  * JAMAIS échouer à cause de cette route.
+ *
+ * ██ §1 (nº 837) — ET ELLE DIT COMBIEN DE PORTFOLIOS SONT REVENUS ██
+ * ------------------------------------------------------------------
+ * Le toast de confirmation (`ReactivationParCourriel`) adapte sa
+ * phrase : « your account and your portfolios » ou « your account »
+ * seul. `portfolios` est le décompte de `portfoliosDuCompte`
+ * (lib/suppression-compte, où vit toute la mécanique) — lu APRÈS la
+ * réactivation, pour compter ce qui est revenu et non ce qui allait
+ * revenir. `null` quand la base n'a pas répondu : l'écran prend alors
+ * la phrase complète, et la route ne peut pas échouer pour un compte
+ * de phrases.
  */
 export async function POST() {
   const supabase = await creerClientSupabaseServeur();
@@ -37,5 +48,6 @@ export async function POST() {
         "Logging back in canceled the account deletion: your portfolios are restored as they were.",
     });
   }
-  return NextResponse.json({ ok: true, reactive });
+  const portfolios = await portfoliosDuCompte(user.id);
+  return NextResponse.json({ ok: true, reactive, portfolios });
 }

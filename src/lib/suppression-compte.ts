@@ -152,6 +152,43 @@ export async function reactiverCompte(utilisateurId: string): Promise<boolean> {
   }
 }
 
+/**
+ * ██ §1 (nº 837) — COMBIEN DE PORTFOLIOS LE COMPTE TIENT DEBOUT ██
+ * ------------------------------------------------------------------
+ * Le toast de confirmation (`ReactivationParCourriel`) adapte sa
+ * phrase : « your account and your portfolios » ou « your account »
+ * seul. Ce décompte est LA réponse, et il vit ici avec le reste de la
+ * mécanique — les routes ne font que l'appeler.
+ * CE QU'IL COMPTE : les fiches du compte SANS échéance propre — la
+ * même borne que `reactiverCompte`, juste au-dessus : une fiche
+ * supprimée seule garde son échéance et ne revient pas avec le
+ * compte, elle n'est donc pas comptée comme « revenue ».
+ * ⚠️ IL NE LÈVE JAMAIS : `null` quand la base n'a pas répondu (ou que
+ * la clé de service manque). L'écran prend alors la phrase complète,
+ * et se connecter ne peut pas échouer pour un compte de phrases.
+ * ⚠️ POURQUOI PAS `chargerFichesDuCompte` (lib/fiches-compte) : c'est
+ * un module du NAVIGATEUR (« use client », il lit la session de
+ * l'écran) — appelé depuis une route, il lève au lieu de répondre.
+ * Mesuré au banc de cette passe : le décompte rendait `null` à tout
+ * coup.
+ */
+export async function portfoliosDuCompte(
+  utilisateurId: string
+): Promise<number | null> {
+  try {
+    const admin = creerClientSupabaseAdmin();
+    const { data, error } = await admin
+      .from("tatoueurs")
+      .select("id")
+      .eq("user_id", utilisateurId)
+      .is("purge_le", null);
+    if (error || !Array.isArray(data)) return null;
+    return data.length;
+  } catch {
+    return null;
+  }
+}
+
 /** La suppression en cours pour ce compte, s'il y en a une. */
 export async function suppressionEnCours(
   utilisateurId: string

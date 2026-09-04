@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PARAM_REACTIVER, REACTIVER_COMPTE } from "@/lib/reactivation";
+import { Toast, type TonToast } from "@/components/Toast";
 
 /**
  * ██ nº 832 — LE BOUTON DU COURRIEL, JOUÉ SUR LA PAGE D'ARRIVÉE ██
@@ -36,10 +37,41 @@ import { PARAM_REACTIVER, REACTIVER_COMPTE } from "@/lib/reactivation";
  * portfolio jouée à l'envers. Aucune règle n'est réécrite ici : elles
  * vivent côté serveur, et deux appelants pour une même route (un
  * bouton, un lien de courriel) est le fonctionnement normal.
+ *
+ * ██ §1 (nº 837) — LA CONFIRMATION EST UN TOAST, PLUS UNE LIGNE NUE ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE : la phrase s'affichait en paragraphe nu
+ * sous la barre fixe — dans le flux, sans forme. Elle passe par le
+ * toast du site (`components/Toast`, une seule écriture) : bloc
+ * sombre, pastille à coche verte, cinq secondes, puis plus rien. Ce
+ * composant ne peint donc plus AUCUN élément dans la page : il rend le
+ * toast tant qu'il a quelque chose à dire, et le retire quand le toast
+ * a fini.
+ *
+ * ET LE MESSAGE DU COMPTE S'ADAPTE, sur consigne : « your account and
+ * your portfolios are back » quand des portfolios sont revenus avec le
+ * compte, « your account is back » quand il n'en avait aucun. C'est
+ * la route qui compte (`/api/tatoueur/reactiver` rend `portfolios`),
+ * et l'écran ne fait que choisir la phrase.
+ *
+ * ⚠️ LA TROISIÈME PHRASE DE LA nº 832 (« Your account is active — the
+ * deletion is canceled. ») DISPARAÎT, ET IL FAUT DIRE POURQUOI. Elle
+ * répondait au cas où la route n'avait « rien à annuler ». Or c'est le
+ * CAS NORMAL, pas le cas rare : demander la suppression déconnecte, on
+ * clique donc le bouton déconnecté, et la CONNEXION qui suit annule
+ * déjà la suppression (`EcranAuthentification` appelle la route juste
+ * après le mot de passe ; `auth/callback` fait de même pour un lien ou
+ * Google). À l'arrivée, la route répondait « rien à annuler », et
+ * l'écran disait « déjà actif » à quelqu'un dont le clic venait,
+ * précisément, d'annuler la suppression. La confirmation parle du
+ * GESTE, pas de l'ordre des appels : « Deletion canceled », dans tous
+ * les cas où la route a réussi.
  */
 export function ReactivationParCourriel() {
   const router = useRouter();
-  const [dit, setDit] = useState<string | null>(null);
+  const [dit, setDit] = useState<{ ton: TonToast; message: string } | null>(
+    null
+  );
 
   useEffect(() => {
     const adresse = new URL(window.location.href);
@@ -66,16 +98,23 @@ export function ReactivationParCourriel() {
           });
           const donnees = (await reponse.json().catch(() => null)) as {
             ok?: boolean;
-            reactive?: boolean;
+            portfolios?: number | null;
           } | null;
           if (!reponse.ok || !donnees?.ok) {
             throw new Error("Reactivation failed. Try again.");
           }
-          setDit(
-            donnees.reactive
-              ? "Deletion canceled: your account and your portfolios are back as they were."
-              : "Your account is active — the deletion is canceled."
-          );
+          /*  §1 (nº 837) — LA PHRASE SUIT LE COMPTE DE PORTFOLIOS. Un
+              compte inconnu (`null` : la base n'a pas répondu à ce
+              décompte-là) prend la phrase complète — c'est celle du
+              courriel, et celle de la plupart des comptes. Seul un
+              zéro certain la raccourcit. */
+          setDit({
+            ton: "valide",
+            message:
+              donnees.portfolios === 0
+                ? "Deletion canceled: your account is back as it was."
+                : "Deletion canceled: your account and your portfolios are back as they were.",
+          });
         } else {
           const reponse = await fetch("/api/tatoueur/supprimer-fiche", {
             method: "POST",
@@ -89,26 +128,27 @@ export function ReactivationParCourriel() {
           if (!reponse.ok || !donnees?.ok) {
             throw new Error(donnees?.message ?? "The operation failed.");
           }
-          setDit("Deletion canceled: your portfolio is back as it was.");
+          setDit({
+            ton: "valide",
+            message: "Deletion canceled: your portfolio is back as it was.",
+          });
         }
         //  LA PAGE MONTRE CE QUI VIENT DE REVENIR : sans cela, on
         //  arriverait sur « My portfolio » ou « My selection » dans
         //  l'état d'avant l'annulation.
         router.refresh();
       } catch (e) {
-        setDit(e instanceof Error ? e.message : "Reactivation failed. Try again.");
+        setDit({
+          ton: "probleme",
+          message:
+            e instanceof Error ? e.message : "Reactivation failed. Try again.",
+        });
       }
     })();
   }, [router]);
 
   if (!dit) return null;
   return (
-    <p
-      role="status"
-      className="mx-auto w-full max-w-[640px] px-4 sm:px-6 pt-4 text-[13.5px]
-                 leading-relaxed text-sombre-texte"
-    >
-      {dit}
-    </p>
+    <Toast ton={dit.ton} message={dit.message} onFini={() => setDit(null)} />
   );
 }
