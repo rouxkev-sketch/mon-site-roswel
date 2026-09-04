@@ -85,7 +85,7 @@ export const viewport: Viewport = {
  * ARTISANS vivaient ici et s'appliquaient donc partout par défaut ;
  * une liste d'adresses tenue à la main devait ensuite les retirer des
  * pages de yokofolio — et trois adresses nées après cette liste
- * (/mes-favoris, /apres-connexion, /rejoindre/<jeton>) n'y figuraient
+ * (/my-favorites, /after-login, /join/<jeton>) n'y figuraient
  * pas : elles affichaient la barre fixe de l'ancien produit. L'habillage
  * est descendu dans la mise en page du groupe (artisans) — groupe
  * SUPPRIMÉ à la passe nº 760, avec cet habillage. La racine ne porte

@@ -77,7 +77,7 @@ import { ARRIVEE_APRES_CONNEXION } from "@/config/tatouage";
  * ==================================================================
  * Sans session, cette page ne peut rien faire : le lien a expiré, ou
  * il a déjà servi. Elle montre alors l'écran partagé `LienExpire`, le
- * MÊME que la page /lien-expire où /auth/callback envoie quand la
+ * MÊME que la page /link-expired où /auth/callback envoie quand la
  * vérification du jeton échoue — une seule écriture pour les deux
  * chemins (piège nº 378).
  */

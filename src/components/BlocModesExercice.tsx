@@ -143,7 +143,7 @@ const TITRE_INTERTITRE =
     1/2 », « Studio 2/2 ». */
 //  ██ nº 402 — TROIS MODES, ET LES NOMS TOMBENT LE « EN » ██
 //  « À domicile » est supprimé du site (le type `GenreMode` ne le
-//  connaît même plus — voir GENRES_MODE, config/tatouage) ; « En
+//  connaît même plus — voir GENRES_MODE, config/tattoo) ; « En
 //  studio » et « En salon » deviennent « Studio » et « Salon ».
 //  ██ nº 414 — QUATRE MODES : LE MODE SANS LIEU ARRIVE ██
 //  L'artiste qui CHERCHE un lieu. La mécanique est celle de l'ancien

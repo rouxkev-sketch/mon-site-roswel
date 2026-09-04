@@ -16,7 +16,7 @@
  *
  * ⚠️ CE N'EST PAS LA CHARTE DES ÉCRANS SOMBRES. Le bleu nuit, le rose
  * vif, les gris de carte — tout ce qui fait l'apparence de YokoFolio —
- * vivent dans `COULEURS_SOMBRE` (src/config/tatouage.ts). Ce
+ * vivent dans `COULEURS_SOMBRE` (src/config/tattoo.ts). Ce
  * fichier-ci ne porte que la couche CLAIRE, celle qui reste sous
  * l'autre.
  *

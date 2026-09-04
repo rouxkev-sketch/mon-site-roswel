@@ -60,7 +60,7 @@ import {
  * d'écran — posés SANS CONDITION depuis la nº 662, puisque seules les
  * langues à venir passent par cette ligne) avec la mention « bientôt » — c'est elle qui explique, plus
  * aucune phrase au-dessus de la liste. La structure est prête : voir
- * LANGUES_YOKOFOLIO dans src/config/tatouage.ts.
+ * LANGUES_YOKOFOLIO dans src/config/tattoo.ts.
  * §1 (nº 655) — LE TRI EN DEUX ENCADRÉS LIT CE MÊME DRAPEAU, et rien
  * d'autre : la disponible en haut, les à venir en dessous.
  *
@@ -96,7 +96,7 @@ function langueDuJour() {
  * langue différents selon qu'on est connecté ou non — la raison écrite
  * en toutes lettres à la nº 543-§2, et je ne la rouvre pas.
  * ⚠️ RIEN N'EST DÉCIDÉ ICI SUR QUI EST DISPONIBLE : c'est le drapeau
- * `actif` de `LANGUES_YOKOFOLIO` (config/tatouage) qui trie, et il dit
+ * `actif` de `LANGUES_YOKOFOLIO` (config/tattoo) qui trie, et il dit
  * ANGLAIS depuis la nº 465. Le jour où une deuxième langue s'ouvrira,
  * elle montera d'elle-même dans l'encadré du haut.
  * ⚠️ UNE BOÎTE VIDE NE S'AFFICHE PAS : sans langue active, l'encadré
@@ -564,7 +564,7 @@ export function EntreeLangue({
       </span>
       <span className="flex-1 truncate">Langue</span>
       {/*  §2 (nº 549) — LE NOM EN TOUTES LETTRES, PLUS LE CODE.
-           D'OÙ IL VIENT : de `LANGUES_YOKOFOLIO` (config/tatouage), la
+           D'OÙ IL VIENT : de `LANGUES_YOKOFOLIO` (config/tattoo), la
            liste unique des langues — c'est le MÊME `label` que l'écran
            « Langue » affiche dans sa liste (`ListeDesLangues`, plus
            haut dans ce fichier). Rien n'est écrit de neuf : « English »,

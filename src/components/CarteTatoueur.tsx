@@ -127,7 +127,7 @@ function CarteTatoueurNue({
   /** GRAND ÉCRAN (≥ 1024 px) : ouvre la FENÊTRE de fiche par-dessus la
       grille au lieu de naviguer (mécanique d'Instagram). Le lien reste
       un vrai lien : clic du milieu, Ctrl+clic et moteurs de recherche
-      vont toujours à la page /tatoueur/nom. */
+      vont toujours à la page /artist/nom. */
   /** §2 (nº 371) — L'OUVERTURE EN FENÊTRE reçoit désormais LA PHOTO
       REGARDÉE : sans elle, le web rouvrait la première du carrousel
       alors que le doigt, lui, l'emportait déjà dans l'adresse. Les
@@ -387,8 +387,8 @@ function CarteTatoueurNue({
     if (photoRegardee) suite.set("photo", photoRegardee);
     const requete = suite.toString();
     return requete
-      ? `/tatoueur/${tatoueur.slug}?${requete}`
-      : `/tatoueur/${tatoueur.slug}`;
+      ? `/artist/${tatoueur.slug}?${requete}`
+      : `/artist/${tatoueur.slug}`;
   })();
 
   /** LA BALISE DE POPULARITÉ : chaque clic vers la fiche est signalé
@@ -610,7 +610,7 @@ function CarteTatoueurNue({
           {/*  §2 (nº 648) — LA PLAQUE D'ATTENTE, rentrée de 2 px : le
                fond clair a quitté le cadre pour cesser de dépasser sous
                la photo. Le pourquoi et le calcul sont écrits une seule
-               fois, avec la constante (config/tatouage). */}
+               fois, avec la constante (config/tattoo). */}
           <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
           {/*  ⚠️ LA SOURCE NE DÉPEND PAS DE LA DISPOSITION (nº 175-§5),
                ET CELA DOIT LE RESTER.

@@ -126,12 +126,12 @@ export function lireRequeteDeLaPage(chemin: string): string | null {
  * POURQUOI UNE JUMELLE, ET PAS `lireRequeteDeLaPage`. La mémoire de la
  * nº 360 appartient à LA PAGE DE FICHE (un seul lecteur à la fois,
  * c'est écrit dans sa note) ; la mosaïque, qui vit sur DEUX chemins
- * (« / » et « /recherche » — `estLaMosaique`, lib/chemin-recherche),
+ * (« / » et « /search » — `estLaMosaique`, lib/chemin-recherche),
  * a donc SA mémoire, et la même règle :
  *  · tant que l'adresse est celle de la mosaïque, on lit et on
  *    mémorise ;
  *  · dès qu'une SURFACE possède l'adresse (la fenêtre de fiche pousse
- *    /tatoueur/nom par un pushState brut), on rend la valeur
+ *    /artist/nom par un pushState brut), on rend la valeur
  *    MÉMORISÉE, inchangée — donc AUCUN rendu chez l'abonné.
  * C'EST TOUTE LA RÉPARATION DE LA nº 732 : la nº 673 lisait ici
  * l'adresse BRUTE (`lireRequeteCourante`), et chaque ouverture de

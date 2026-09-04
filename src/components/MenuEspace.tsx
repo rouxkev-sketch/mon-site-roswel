@@ -258,7 +258,7 @@ export const EMPREINTE_ZONE_COMPTE =
  * POURQUOI ELLE S'EN VA. L'état qu'elle protégeait (`notifications`)
  * ne mourait pas avec le document mais À CHAQUE CHANGEMENT DE ROUTE :
  * la barre fixe est rendue par les PAGES, jamais par la mise en page —
- * naviguer de « / » vers « /recherche » la démonte, l'état repart vide,
+ * naviguer de « / » vers « /search » la démonte, l'état repart vide,
  * et la marque, elle, restait. Plus de relecture, plus de compteur,
  * plus de point rose : le défaut que le propriétaire relève au point 1
  * de la nº 672.
@@ -584,7 +584,7 @@ export function MenuEspace({
       ouvrent la bonne — même après un rechargement complet. */
   const versFiche = useCallback(
     (suffixe = "") => {
-      const base = "/devenir-tatoueur/fiche";
+      const base = "/become-an-artist/portfolio";
       const params = [fiche ? `fiche=${fiche.id}` : "", suffixe]
         .filter(Boolean)
         .join("&");
@@ -894,7 +894,7 @@ export function MenuEspace({
    * CE QUI NE MARCHAIT PAS, ET LE PROPRIÉTAIRE LE VOYAIT DANS LA
    * RECHERCHE : la barre fixe est rendue par les PAGES, jamais par la
    * mise en page — un clic sur une carte de style change de route
-   * (« / » → « /recherche »), React démonte cette barre et en monte une
+   * (« / » → « /search »), React démonte cette barre et en monte une
    * neuve. L'état `notifications` repartait vide, l'ancienne marque de
    * module disait « déjà semé », et le point rose s'éteignait pour tout
    * le reste de la visite.
@@ -1208,7 +1208,7 @@ export function MenuEspace({
   }
 
   /** L'adresse d'une création — la même depuis les deux entrées. */
-  const ADRESSE_NOUVELLE = "/devenir-tatoueur/fiche?fiche=nouvelle";
+  const ADRESSE_NOUVELLE = "/become-an-artist/portfolio?fiche=nouvelle";
 
   /** ALLER CRÉER UNE FICHE, pour de bon.
       DEUX CAS, ET IL FAUT LES DEUX :
@@ -1919,12 +1919,12 @@ export function MenuEspace({
       />
 
       <Link
-        href="/devenir-tatoueur/securite"
+        href="/become-an-artist/security"
         replace={liensRemplacent}
         //  §1 (nº 677) — L'UNE DES DEUX QUE LA nº 676 AVAIT OUBLIÉES :
         //  elle clignotait encore, et le propriétaire l'a vu.
         onClick={(evenement) => {
-          if (!partirVers("securite", "/devenir-tatoueur/securite")) {
+          if (!partirVers("securite", "/become-an-artist/security")) {
             evenement.preventDefault();
           }
         }}
@@ -2517,14 +2517,14 @@ export function MenuEspace({
         </button>
 
         <Link
-          href="/mes-favoris"
+          href="/my-favorites"
           replace={liensRemplacent}
           //  §1 (nº 677) — LA SECONDE OUBLIÉE DE LA nº 676. C'est une
           //  TUILE, pas une ligne : sa surbrillance d'attente est celle
           //  de son propre état enfoncé (`bg-sombre-eleve-clair`), pas
           //  celle des lignes — deux dessins, deux éclaircissements.
           onClick={(evenement) => {
-            if (!partirVers("selection", "/mes-favoris")) {
+            if (!partirVers("selection", "/my-favorites")) {
               evenement.preventDefault();
             }
           }}

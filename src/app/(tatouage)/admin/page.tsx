@@ -10,7 +10,7 @@ import { AdminYokofolio } from "@/components/AdminYokofolio";
  * il n'en reste aucun fichier. Cette page-ci est la seule chose que
  * /admin affiche : l'interface yokofolio (fiches à valider,
  * signalements), réservée aux comptes de COURRIELS_ADMIN
- * (src/config/tatouage.ts).
+ * (src/config/tattoo.ts).
  *
  * `noindex` : une porte d'administration n'a rien à faire dans Google.
  */

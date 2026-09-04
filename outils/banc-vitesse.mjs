@@ -123,10 +123,10 @@ function cookieDuCompte() {
     poids du tronc à l'état pur. */
 const PAGES = [
   { nom: "accueil", chemin: "/" },
-  { nom: "recherche", chemin: "/recherche" },
-  { nom: "fiche", chemin: "/tatoueur/demo-trash-polka-0" },
-  { nom: "ma-selection", chemin: "/mes-favoris", compte: true },
-  { nom: "editeur", chemin: "/devenir-tatoueur/fiche", compte: true },
+  { nom: "recherche", chemin: "/search" },
+  { nom: "fiche", chemin: "/artist/demo-trash-polka-0" },
+  { nom: "ma-selection", chemin: "/my-favorites", compte: true },
+  { nom: "editeur", chemin: "/become-an-artist/portfolio", compte: true },
   { nom: "legal", chemin: "/legal" },
 ];
 
@@ -224,19 +224,19 @@ async function mesurerLeRetour(nav) {
       position s'est cassée par le passé.
       ⚠️ L'ACCUEIL N'A PAS DE LIEN DE FICHE, et c'est normal : il
       montre des CARTES DE STYLE qui mènent à la recherche. Viser
-      `/tatoueur/` dessus ne mesurait rien (la première version de ce
+      `/artist/` dessus ne mesurait rien (la première version de ce
       banc s'y est trompée). C'est la MOSAÏQUE DE RÉSULTATS qui porte
       les fiches — et c'est elle, la vraie épreuve de la position :
       près de trois écrans de haut. */
   const parcours = [
     { nom: "accueil → style → retour", depart: "/",
-      lien: 'a[href^="/recherche?style"]' },
+      lien: 'a[href^="/search?style"]' },
     { nom: "mosaïque → fiche → retour",
-      depart: "/recherche?style=realisme&nature=tatouage",
-      lien: 'a[href^="/tatoueur/"]' },
+      depart: "/search?style=realisme&nature=tatouage",
+      lien: 'a[href^="/artist/"]' },
     { nom: "style+ville → fiche → retour",
-      depart: "/tatouage/trash-polka/lyon-0-0",
-      lien: 'a[href^="/tatoueur/"]' },
+      depart: "/tattoo/trash-polka/lyon-0-0",
+      lien: 'a[href^="/artist/"]' },
   ];
   for (const p of parcours) {
     const ctx = await nav.newContext(TELEPHONE);
@@ -314,7 +314,7 @@ async function mesurerLeRetour(nav) {
     dans le navigateur, pas dans le banc, pas dans la doublure. C'est
     exactement ce que la nº 702 a mesuré. */
 async function mesurerLesTemoins(nav) {
-  const CIBLE = "/recherche?style=realisme&nature=tatouage";
+  const CIBLE = "/search?style=realisme&nature=tatouage";
   const releve = [];
   const preparer = async () => {
     const ctx = await nav.newContext(TELEPHONE);
@@ -338,7 +338,7 @@ async function mesurerLesTemoins(nav) {
   }
   {
     const { ctx, onglet, y } = await preparer();
-    await onglet.goto(BASE + "/tatoueur/demo-realisme-0", { waitUntil: "networkidle" });
+    await onglet.goto(BASE + "/artist/demo-realisme-0", { waitUntil: "networkidle" });
     await onglet.waitForTimeout(1500);
     await onglet.goBack({ waitUntil: "networkidle" });
     await onglet.waitForTimeout(3000);

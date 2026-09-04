@@ -48,11 +48,11 @@ const useEffetAvantPeinture =
  * le clic navigue vers la page complète, comme avant.
  *
  * L'ADRESSE SUIT LA FENÊTRE : à l'ouverture, `pushState` écrit
- * /tatoueur/nom dans la barre du navigateur (partage possible) — Next
+ * /artist/nom dans la barre du navigateur (partage possible) — Next
  * sait lire ces pushState natifs. La fenêtre n'est montrée QUE tant
  * que l'adresse correspond : refermer, c'est faire machine arrière
  * dans l'historique, et le bouton « précédent » du navigateur referme
- * donc naturellement. Un rechargement sur /tatoueur/nom sert la vraie
+ * donc naturellement. Un rechargement sur /artist/nom sert la vraie
  * page — le référencement ne voit jamais la fenêtre.
  *
  * Le drapeau `data-fenetre-fiche` posé sur <html> prévient
@@ -365,7 +365,7 @@ export function GrilleTatoueurs({
   //  et son gel du corps l'attendent au retour.
   const visible =
     ficheOuverte !== null &&
-    (pathname === `/tatoueur/${ficheOuverte.slug}` || profondeurPile > 0);
+    (pathname === `/artist/${ficheOuverte.slug}` || profondeurPile > 0);
 
   /*  ⚠️ STABLE D'UN RENDU À L'AUTRE (nº 219-§1) : c'est ce qui permet
       aux cartes d'être mémorisées. Elle ne lit aucune valeur du rendu —
@@ -429,7 +429,7 @@ export function GrilleTatoueurs({
     window.history.pushState(
       { fenetreFiche: true },
       "",
-      `/tatoueur/${tatoueur.slug}${requete ? `?${requete}` : ""}`
+      `/artist/${tatoueur.slug}${requete ? `?${requete}` : ""}`
     );
     entreePoussee.current = true;
     setPhotoOuverte(photoRegardee);

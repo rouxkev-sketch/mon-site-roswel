@@ -74,7 +74,7 @@ import {
 
 /** Une page de DÉTAIL — une fiche. Elle s'ouvre toujours en haut. */
 function estUnePageDeDetail(chemin: string): boolean {
-  return chemin.startsWith("/tatoueur/");
+  return chemin.startsWith("/artist/");
 }
 
 export function MemoireNavigation() {
@@ -331,7 +331,7 @@ export function MemoireNavigation() {
        * EFFACE la demande au lieu d'en poser une.
        */
       const versUneFiche = (lien.getAttribute("href") ?? "").startsWith(
-        "/tatoueur/"
+        "/artist/"
       );
       if (!versUneFiche) {
         oublierRestaurationPosition();

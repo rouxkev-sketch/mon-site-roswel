@@ -11,7 +11,7 @@ import { useSearchParams } from "next/navigation";
  * près) : dans l'aperçu « Ma fiche », cliquer la carte d'un membre
  * d'équipe ou d'un salon lié doit ouvrir la fiche en FENÊTRE
  * SUPERPOSÉE (la pile de la nº 506). Or la fenêtre pousse
- * `/tatoueur/<slug>` — une adresse qui ne porte NI `?fiche=…` NI
+ * `/artist/<slug>` — une adresse qui ne porte NI `?fiche=…` NI
  * `?vue=apercu`. Tant que l'écran lisait l'adresse BRUTE
  * (`useSearchParams`), cette poussée faisait DEUX dégâts d'un coup :
  *  · la CLÉ REACT d'`EspaceFiche` (`?fiche` en fait partie — c'est
@@ -49,7 +49,7 @@ import { useSearchParams } from "next/navigation";
  * demandée) consomment CE crochet — deux lectures gelées qui ne
  * peuvent pas diverger.
  */
-export const CHEMIN_PAGE_FICHE = "/devenir-tatoueur/fiche";
+export const CHEMIN_PAGE_FICHE = "/become-an-artist/portfolio";
 
 export function useParametresDeLaPageFiche(): ReturnType<
   typeof useSearchParams

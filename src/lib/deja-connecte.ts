@@ -7,7 +7,7 @@
  *  - le bouton du compte dit « Se connecter » au lieu de « Rejoindre »
  *    (la formule d'invitation est réservée à qui n'a jamais eu de
  *    compte ici) ;
- *  - la page /devenir-tatoueur s'ouvre sur l'onglet « Me connecter »
+ *  - la page /become-an-artist s'ouvre sur l'onglet « Me connecter »
  *    au lieu de « Créer mon compte ».
  *
  * ⚠️ IL VIT DANS UN COOKIE, PLUS DANS LE STOCKAGE LOCAL (nº 203-§1a).

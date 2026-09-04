@@ -72,7 +72,7 @@ function propre(valeur: string | undefined | null): string | null {
 /**
  * LE NIVEAU DE PRÉCISION du résultat, d'après ce que Photon en dit —
  * et c'est lui qui décidera COMMENT on cherche (distance, région ou
- * pays entier ; voir lib/tatoueurs).
+ * pays entier ; voir lib/artists).
  * Une rue ou un numéro = une adresse ; une ville, un village, un
  * quartier = une ville ; un État, une région, un département = une
  * région ; un PAYS a son niveau à lui.

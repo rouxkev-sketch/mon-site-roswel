@@ -213,11 +213,11 @@ r.style.backgroundColor=${fond};
    et c'est FicheSelonLAdresse qui lève la garde, une fois la fiche
    resemée. « entree=lien » (règle 6) retire la photo tout court.
    nº 360 — L'ADRESSE EXACTE D'UNE FICHE, et elle seule : l'ancien
-   test (« commence par /tatoueur/ ») posait la garde aussi sur la
+   test (« commence par /artist/ ») posait la garde aussi sur la
    page de carrousel partagé et sur le jumeau complet — où PERSONNE ne
    la lève (FicheSelonLAdresse n'y est pas montée) : photo masquée
    pour toujours. */
-try{if(/^\\/tatoueur\\/[^\\/]+$/.test(location.pathname)){var qf=location.search;
+try{if(/^\\/artist\\/[^\\/]+$/.test(location.pathname)){var qf=location.search;
 if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
 if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
@@ -359,13 +359,13 @@ else if(nav==="navigate"&&!derniereOnglet&&adresse==="/"&&visites&&visites.coura
    La ligne s'écrit au journal de la sonde : aucun repli muet.
 
    ██ §2 (nº 653) — LES DEUX ADRESSES DE LA MOSAÏQUE ██
-   Depuis la nº 652, une recherche vit à « /recherche » et non plus
+   Depuis la nº 652, une recherche vit à « /search » et non plus
    sous « / » avec une requête. LES DEUX TESTS DE CHEMIN S'ÉLARGISSENT,
    et rien d'autre ne bouge :
-    · l'ARRIVÉE nue peut être « / » ou « /recherche » — le routeur peut
+    · l'ARRIVÉE nue peut être « / » ou « /search » — le routeur peut
       replier vers l'une comme vers l'autre ;
     · la DERNIÈRE ADRESSE de l'onglet peut commencer par « /? » (la
-      forme d'avant, encore servie par le proxy) ou par « /recherche? »
+      forme d'avant, encore servie par le proxy) ou par « /search? »
       (la forme d'aujourd'hui).
    ⚠️ TOUTES LES AUTRES CONDITIONS RESTENT : navigation de document,
    référent du site, aucune marque de rattrapage, aucun départ voulu,

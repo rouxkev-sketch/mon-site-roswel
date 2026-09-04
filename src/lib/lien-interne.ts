@@ -63,9 +63,9 @@ export const ENTREE_LIEN = "lien";
  * §4 (nº 330) — LA CONSIGNE, POSÉE SUR N'IMPORTE QUELLE ADRESSE.
  * ------------------------------------------------------------------
  * `adresseDeLienInterne` ne savait écrire que l'adresse PUBLIQUE d'un
- * portfolio (`/tatoueur/<slug>`). Or « Mon portfolio », dans le menu
+ * portfolio (`/artist/<slug>`). Or « Mon portfolio », dans le menu
  * « Mon espace », mène au portfolio par une AUTRE route — celle de
- * l'espace tatoueur, en aperçu (`/devenir-tatoueur/fiche?…&vue=apercu`).
+ * l'espace tatoueur, en aperçu (`/become-an-artist/portfolio?…&vue=apercu`).
  * C'est le même geste et la même attente : on arrive sur un portfolio
  * par un lien, la photo du haut ne monte pas.
  * L'ÉCRITURE RESTE UNIQUE — c'est celle-ci, et `adresseDeLienInterne`
@@ -80,5 +80,5 @@ export function avecConsigneDeLienInterne(adresse: string): string {
 /** L'adresse d'un portfolio ouvert DEPUIS UN AUTRE PORTFOLIO. Écrite
     une fois, employée par tous les liens internes. */
 export function adresseDeLienInterne(slug: string): string {
-  return avecConsigneDeLienInterne(`/tatoueur/${slug}`);
+  return avecConsigneDeLienInterne(`/artist/${slug}`);
 }

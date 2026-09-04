@@ -9,7 +9,7 @@
  *
  * QUATRE NIVEAUX DE PRÉCISION, un seul type : c'est `precision` qui
  * dit ce que la personne a choisi — et c'est LUI qui décide COMMENT
- * on cherche (voir lib/tatoueurs) :
+ * on cherche (voir lib/artists) :
  *  - « adresse »  : numéro + rue + ville (salon avec pignon sur rue)
  *                   → recherche par DISTANCE, avec le rayon ;
  *  - « ville »    : la ville seule (artiste sans adresse publique)

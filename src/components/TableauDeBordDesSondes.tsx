@@ -289,7 +289,7 @@ export default function TableauDeBordDesSondes() {
           <input
             value={adresse}
             onChange={(evenement) => setAdresse(evenement.target.value)}
-            placeholder="/recherche?style=realisme&nature=tatouage"
+            placeholder="/search?style=realisme&nature=tatouage"
             style={{
               width: "100%",
               minHeight: 44,

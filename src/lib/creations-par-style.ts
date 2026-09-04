@@ -82,7 +82,7 @@ const abonnes = new Set<() => void>();
  * AUTOMATIQUE :
  *  · LA MOSAÏQUE (`IndexTatoueurs`) les demande à son montage. Elle
  *    n'est montée que par `RenduAccueil` — donc « / » et
- *    « /recherche », les deux pages bâties autour du menu des styles.
+ *    « /search », les deux pages bâties autour du menu des styles.
  *    Sur celles-là RIEN NE CHANGE : les nombres sont là avant qu'on
  *    ouvre le menu, exactement comme avant ;
  *  · LE MENU LUI-MÊME, à son ouverture. C'est le filet : sur une page

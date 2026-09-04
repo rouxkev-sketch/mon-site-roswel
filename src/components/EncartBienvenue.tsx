@@ -83,7 +83,7 @@ export function EncartBienvenue() {
           Find your style
         </LienAccueil>
         <Link
-          href="/devenir-tatoueur/fiche?fiche=nouvelle"
+          href="/become-an-artist/portfolio?fiche=nouvelle"
           className="inline-flex items-center justify-center rounded-full
                      px-7 min-h-[40px] text-[14px] bg-sombre-eleve
                      hover:bg-sombre-haut

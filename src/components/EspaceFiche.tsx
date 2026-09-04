@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 //  §1 (nº 733) — la lecture GELÉE des paramètres de cette page : sous
-//  une fenêtre superposée (l'adresse est /tatoueur/…), la clé ne doit
+//  une fenêtre superposée (l'adresse est /artist/…), la clé ne doit
 //  pas bouger — voir la cause complète dans lib/parametres-page-fiche.
 import { useParametresDeLaPageFiche } from "@/lib/parametres-page-fiche";
 import { FormulaireFiche } from "@/components/FormulaireFiche";
@@ -36,7 +36,7 @@ import { FormulaireFiche } from "@/components/FormulaireFiche";
  * s'incrémente. Même effet, même remontage.
  *
  * ⚠️ §1 (nº 733) — LA CLÉ NE SUIT QUE LES ADRESSES DE LA PAGE. La
- * fenêtre superposée (pile nº 506) pousse `/tatoueur/<slug>`, une
+ * fenêtre superposée (pile nº 506) pousse `/artist/<slug>`, une
  * adresse SANS `?fiche=` : lue brute, elle faisait retomber la clé
  * sur « derniere » et DÉMONTAIT le formulaire — la fenêtre naissante
  * avec, et le remplaçant montrait la modification (le défaut relevé

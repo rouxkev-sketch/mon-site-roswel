@@ -7,7 +7,7 @@ import { COULEURS_SOMBRE } from "@/config/tatouage";
  *
  * Grâce à ça, chaque couleur n'est écrite qu'à UN seul endroit — la
  * couche claire dans `src/config/charte.ts`, la couche sombre dans
- * `src/config/tatouage.ts` : ce fichier fait juste le pont entre les
+ * `src/config/tattoo.ts` : ce fichier fait juste le pont entre les
  * réglages et l'affichage. Il n'y a rien à modifier ici.
  *
  * (nº 761 — la couche claire venait de `src/config/roswel.ts`, le

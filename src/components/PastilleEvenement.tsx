@@ -88,7 +88,7 @@ import type { ComposantIcone } from "@/components/Icones";
  * ⚠️ POURQUOI CE TON SURVIT ALORS QUE L'OR MEURT. Le propriétaire
  * demande de retirer « ce qui ne sert plus » ; voici la réponse
  * précise, cas par cas :
- *  · LE JETON `or` EST SUPPRIMÉ, et de partout — config/tatouage,
+ *  · LE JETON `or` EST SUPPRIMÉ, et de partout — config/tattoo,
  *    lib/theme, globals.css. Il était né à la nº 672 pour cette seule
  *    étoile ; plus aucun porteur, il meurt avec elle ;
  *  · LE TON `marque`, LUI, RESTE NÉCESSAIRE, et ce n'est pas un

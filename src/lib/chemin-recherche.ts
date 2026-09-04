@@ -5,7 +5,7 @@
  * « /accueil-recherche » — un JUMEAU que personne ne tapait, atteint
  * par une réécriture du proxy, et dont l'adresse n'apparaissait jamais
  * dans la barre du navigateur (nº 357). Le propriétaire lui donne son
- * nom : « /recherche ». L'adresse visible change désormais pendant une
+ * nom : « /search ». L'adresse visible change désormais pendant une
  * recherche, sur les deux appareils, et c'est sa décision.
  *
  * POURQUOI UNE CONSTANTE PLUTÔT QUE QUATRE CHAÎNES. Quatre endroits
@@ -30,7 +30,7 @@
  * page. Un lien « /?style=realisme » déjà partagé sert exactement la
  * même chose qu'avant — aucune redirection, aucune erreur.
  */
-export const ADRESSE_RECHERCHE = "/recherche";
+export const ADRESSE_RECHERCHE = "/search";
 
 /**
  * ██ §1 (nº 656) — ON NE PRÉPARE JAMAIS LA RECHERCHE À L'AVANCE ██
@@ -38,13 +38,13 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET INSTRUIT À LA BOÎTE NOIRE
  * (nº 654), le 27 août à 10:02 : un clic sur la carte « Néo-japonais »
  * écrivait la BONNE demande —
- *   CLIC LIEN · vers /recherche?style=neo-japonais&nature=tatouage
+ *   CLIC LIEN · vers /search?style=neo-japonais&nature=tatouage
  * — et servait pourtant « Toutes les réalisations », c'est-à-dire
  * `nature=tatouage` SEUL. Personne n'avait réécrit l'adresse.
  *
  * LA CAUSE, ET ELLE EST DANS LE NAVIGATEUR, PAS DANS LE SITE. Next
  * PRÉPARE À L'AVANCE (`prefetch`) les pages des liens qui entrent à
- * l'écran. Pour une route DYNAMIQUE — « /recherche » en est une, le
+ * l'écran. Pour une route DYNAMIQUE — « /search » en est une, le
  * rapport de compilation l'écrit « ƒ » —, ce qu'il range n'est pas la
  * page complète mais LE SEGMENT DE ROUTE, et ce segment se range SOUS
  * LE CHEMIN, pas sous les critères. Deux liens qui mènent au MÊME
@@ -54,14 +54,14 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * QUI REMPLISSAIT LA CASE, NOMMÉ : le lien « Voir plus » du bas de
  * l'accueil (IndexTatoueurs). Sur l'accueil, les critères servis se
  * réduisent à la nature — son adresse vaut donc
- * « /recherche?nature=tatouage&page=2&melange=… », soit très
+ * « /search?nature=tatouage&page=2&melange=… », soit très
  * exactement « Toutes les réalisations ». Il portait `prefetch={true}`
  * depuis la nº 422, et préparait cette page dès qu'il entrait à
  * l'écran. Les cartes de style sont un second émetteur du même genre :
- * chacune prépare « /recherche », et la première arrivée décide pour
+ * chacune prépare « /search », et la première arrivée décide pour
  * ses voisines.
  *
- * LA RÈGLE, DÉSORMAIS : AUCUN lien menant à « /recherche » ne prépare
+ * LA RÈGLE, DÉSORMAIS : AUCUN lien menant à « /search » ne prépare
  * sa page. Chaque clic part chercher la page fraîche, avec les
  * critères exacts du lien cliqué. Elle est écrite ICI, à côté du
  * chemin, pour qu'on ne puisse pas fabriquer une adresse de recherche
@@ -96,7 +96,7 @@ export const ADRESSE_RECHERCHE = "/recherche";
  * RAISON qui se corrige.
  * OÙ EST LA SUITE : la nº 665 pose le second verrou, celui qui interdit
  * de RELIRE la réserve après coup — `unstable_dynamicStaleTime = 0`,
- * écrit sur la page elle-même (app/(tatouage)/recherche/page.tsx), avec
+ * écrit sur la page elle-même (app/(tatouage)/search/page.tsx), avec
  * le relevé du banc qui dit ce que ce verrou change et ce qu'il ne
  * change pas.
  *
@@ -114,7 +114,7 @@ export const ADRESSE_RECHERCHE = "/recherche";
 export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;
 
 /**
- * ██ §1 (nº 653, déménagée nº 732) — « / » ET « /recherche » SONT UN
+ * ██ §1 (nº 653, déménagée nº 732) — « / » ET « /search » SONT UN
  * MÊME ÉCRAN ██
  * ==================================================================
  * LE CONSTAT DE LA nº 653, mot pour mot : ces deux adresses servent LA

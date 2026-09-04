@@ -62,7 +62,7 @@
 /** Mesure la hauteur libre autour de `zone` (le cadre de la photo de
     tête) et pose sur elle `--photo-hauteur-libre` et
     `--photo-largeur` — la variable que la classe de largeur lit
-    (LARGEUR_PHOTO_FICHE, config/tatouage). Rend le nettoyage. */
+    (LARGEUR_PHOTO_FICHE, config/tattoo). Rend le nettoyage. */
 export function observerLargeurPhotoFiche(zone: HTMLElement): () => void {
   const racine = zone.closest("[data-racine-fiche]");
   let posee = -1;

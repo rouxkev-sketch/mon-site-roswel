@@ -30,7 +30,7 @@
 //     elle la doublure répond en une milliseconde et TOUT paraît
 //     rapide, ce qui ne mesure rien ;
 //   · `SLUGS_UNIQUES=1` donne un slug par fiche et par ville. Sans ce
-//     cran, `/tatoueur/<slug>` et `/tatouage/<style>/<ville>` rendent
+//     cran, `/artist/<slug>` et `/tattoo/<style>/<ville>` rendent
 //     404 : les gabarits partagent leurs slugs, et une lecture unique
 //     (`maybeSingle`) reçoit quatorze réponses. Les DEUX pages les plus
 //     vues du produit étaient donc les seules qu'on ne pouvait pas
@@ -128,21 +128,21 @@ async function decoupageDuDocument(page) {
 //  produits, et ils ne se touchent jamais.
 const PAGES = [
   { nom: "Accueil",                chemin: "/",                                         session: false },
-  { nom: "Recherche",              chemin: "/recherche?style=realisme&nature=tatouage", session: false },
-  { nom: "Fiche publique",         chemin: "/tatoueur/demo-realisme-0",                 session: false },
-  { nom: "Portfolio complet",      chemin: "/tatoueur/demo-realisme-0/complet",         session: false },
-  { nom: "Style + ville",          chemin: "/tatouage/realisme/lyon-1-0",                   session: false },
-  { nom: "Devenir tatoueur",       chemin: "/devenir-tatoueur",                         session: false },
+  { nom: "Recherche",              chemin: "/search?style=realisme&nature=tatouage", session: false },
+  { nom: "Fiche publique",         chemin: "/artist/demo-realisme-0",                 session: false },
+  { nom: "Portfolio complet",      chemin: "/artist/demo-realisme-0/full",         session: false },
+  { nom: "Style + ville",          chemin: "/tattoo/realisme/lyon-1-0",                   session: false },
+  { nom: "Devenir tatoueur",       chemin: "/become-an-artist",                         session: false },
   { nom: "Contact",                chemin: "/contact",                                  session: false },
   { nom: "About",                  chemin: "/about",                                    session: false },
   { nom: "Legal",                  chemin: "/legal",                                    session: false },
   { nom: "Terms",                  chemin: "/terms",                                    session: false },
-  { nom: "Nouveau mot de passe",   chemin: "/devenir-tatoueur/nouveau-mot-de-passe",    session: false },
-  { nom: "Éditeur de portfolio",   chemin: "/devenir-tatoueur/fiche?fiche=demo-0-0",    session: true },
-  { nom: "Éditeur — création",     chemin: "/devenir-tatoueur/fiche?fiche=nouvelle",    session: true },
-  { nom: "Sécurité",               chemin: "/devenir-tatoueur/securite",                session: true },
-  { nom: "Ma sélection",           chemin: "/mes-favoris",                              session: true },
-  { nom: "Après connexion",        chemin: "/apres-connexion",                          session: true },
+  { nom: "Nouveau mot de passe",   chemin: "/become-an-artist/new-password",    session: false },
+  { nom: "Éditeur de portfolio",   chemin: "/become-an-artist/portfolio?fiche=demo-0-0",    session: true },
+  { nom: "Éditeur — création",     chemin: "/become-an-artist/portfolio?fiche=nouvelle",    session: true },
+  { nom: "Sécurité",               chemin: "/become-an-artist/security",                session: true },
+  { nom: "Ma sélection",           chemin: "/my-favorites",                              session: true },
+  { nom: "Après connexion",        chemin: "/after-login",                          session: true },
   { nom: "Administration",         chemin: "/admin",                                    session: true },
 ];
 
@@ -171,13 +171,13 @@ const FENETRES = [
   /*  LE PANNEAU DES FILTRES N'EST PAS UN DIALOGUE : il se déplie dans
       la barre, et le bouton porte `aria-expanded`. C'est LUI le repère
       — chercher un `[role="dialog"]` ne pouvait rien donner. */
-  { nom: "Filtres (web)", depart: "/recherche?style=realisme&nature=tatouage", session: false,
+  { nom: "Filtres (web)", depart: "/search?style=realisme&nature=tatouage", session: false,
     ouvrir: 'button[aria-label="Filtres"]:visible',
     pret: 'button[aria-label="Filtres"][aria-expanded="true"]:visible' },
-  { nom: "Recherche (doigt)", depart: "/recherche?style=realisme&nature=tatouage", session: false,
+  { nom: "Recherche (doigt)", depart: "/search?style=realisme&nature=tatouage", session: false,
     ouvrir: 'button[aria-label^="Rechercher"]:visible',
     pret: '[aria-label="Rechercher un tatoueur"]:visible' },
-  { nom: "Suppression du compte", depart: "/devenir-tatoueur/securite", session: true,
+  { nom: "Suppression du compte", depart: "/become-an-artist/security", session: true,
     ouvrir: 'button:has-text("Supprimer"):visible', pret: DIALOGUE_VISIBLE },
 ];
 const APPAREILS = [

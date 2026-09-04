@@ -97,7 +97,7 @@ export type Tatoueur = {
   /** « artiste » ou « salon » — le choix qui structure la fiche. */
   type_fiche?: string | null;
   /** LA NATURE DU LIEU — « salon » ou « prive ». Lue uniquement quand
-      `type_fiche` vaut « salon » (voir config/tatouage :
+      `type_fiche` vaut « salon » (voir config/tattoo :
       natureDeLaFiche). Absente des fiches d'artiste. */
   etablissement?: string | null;
   /** HÉRITAGE (migration nº 21) — plus lu depuis la nº 26 : les modes
@@ -307,7 +307,7 @@ export type FiltresTatoueurs = {
   photosMax?: number;
   /** LA VILLE D'UNE PAGE « style + ville » — son slug exact, celui de
       l'adresse. Rien à voir avec `villeNom`, qui compare des noms de
-      commune : ici on veut LA page /tatouage/blackwork/lyon-1er. */
+      commune : ici on veut LA page /tattoo/blackwork/lyon-1er. */
   slugVille?: string;
   /** CLASSER PAR POPULARITÉ AVANT DE COUPER, et pas seulement à
       l'intérieur de la page. Les pages « style + ville » le font
@@ -645,7 +645,7 @@ export { natureCherchee, styleConnu };
 /** Ne garde que les slugs de filtre CONNUS (adresse ou API malmenée)
     ET ENCORE VIVANTS — nº 444 : les groupes ARTISTE (`mode`) et LIEU
     (`type`) ont quitté l'écran, un vieux lien qui les porte encore est
-    ignoré proprement (voir SLUGS_FILTRES_RETIRES, config/tatouage).
+    ignoré proprement (voir SLUGS_FILTRES_RETIRES, config/tattoo).
     C'est LA porte unique de la recherche : la garde y suffit pour le
     serveur, la base et l'API. */
 export function filtresConnus(slugs: string[] | undefined): string[] {
@@ -995,7 +995,7 @@ function filtrer(
   // LA VILLE D'UNE PAGE DE RÉFÉRENCEMENT — le slug de l'adresse, tel
   // quel : c'est lui qui fait la page, quel que soit le pays.
   // ⚠️ SUR N'IMPORTE LEQUEL DE SES LIEUX : un artiste en guest à
-  // Bordeaux a sa place sur /tatouage/blackwork/bordeaux. Les modes et
+  // Bordeaux a sa place sur /tattoo/blackwork/bordeaux. Les modes et
   // les studios n'ont pas de colonne « slug » — on le calcule, avec la
   // MÊME fonction que partout ailleurs.
   if (filtres.slugVille) {
@@ -1201,7 +1201,7 @@ function pointDeReference(
 
 /**
  * LE POINT DE RÉFÉRENCE D'UNE PAGE « style + ville » (adresses de
- * référencement : /tatouage/realisme/lyon-1er).
+ * référencement : /tattoo/realisme/lyon-1er).
  * LA SOURCE A CHANGÉ : ce sont désormais LES FICHES ELLES-MÊMES qui
  * disent où se trouve une ville — chacune porte son nom de ville, son
  * slug et ses coordonnées, où qu'elle soit dans le monde. Plus besoin
@@ -1649,7 +1649,7 @@ export async function listerTatoueurs(
    * ██ §1 (nº 682) — LE SCORE PART AVEC LA RECHERCHE, PLUS AVANT ELLE ██
    * ------------------------------------------------------------------
    * CE QUI EST MESURÉ, ET C'EST LA SEULE RAISON DE CE CHANGEMENT. Le
-   * temps serveur de « /recherche » suit une droite : on l'a relevé à
+   * temps serveur de « /search » suit une droite : on l'a relevé à
    * trois latences de base simulées (banc nº 681, doublure nº 670) —
    *      latence   0 ms →   38 ms
    *      latence 120 ms →  518 ms
@@ -2174,7 +2174,7 @@ export async function lireTatoueur(slug: string): Promise<{
       return { tatoueur: sansProprietaire(fiche), demonstration: false };
     }
     // Table présente mais fiche absente : on regarde tout de même la
-    // démonstration, pour que /tatoueur/atelier-corvus réponde avant
+    // démonstration, pour que /artist/atelier-corvus réponde avant
     // que les vraies fiches existent.
     const demo = demoPublique(slug);
     return { tatoueur: demo, demonstration: demo !== null };
@@ -2259,7 +2259,7 @@ export async function ficheExistanteNonPubliee(
 /**
  * LA FICHE VUE PAR SON PROPRIÉTAIRE — publiée ou non
  * ---------------------------------------------------
- * La page /tatoueur/<slug> montre au TATOUEUR CONNECTÉ sa propre
+ * La page /artist/<slug> montre au TATOUEUR CONNECTÉ sa propre
  * fiche même quand elle n'est pas (encore) publiée, avec son état :
  *  - « attente » : pas publiée, OU des modifications (`brouillon`)
  *    attendent la validation ;

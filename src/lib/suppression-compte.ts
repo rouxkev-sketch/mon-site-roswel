@@ -41,7 +41,7 @@ import {
  * clairement.
  */
 
-/** LE DÉLAI DE RÉFLEXION vit dans la CONFIG (config/tatouage.ts) :
+/** LE DÉLAI DE RÉFLEXION vit dans la CONFIG (config/tattoo.ts) :
     l'écran de confirmation l'annonce, cette mécanique l'applique — le
     même chiffre, forcément. (Ce fichier parle à la clé de service :
     il ne doit JAMAIS être importé par un composant du navigateur.) */
@@ -61,7 +61,7 @@ function structureAbsente(message: string): boolean {
 /*  L'échéance d'une demande faite maintenant.
     §1 (nº 696) — LE NOMBRE DE JOURS EST DÉSORMAIS UN ARGUMENT, et
     c'est tout ce qu'il a fallu pour que l'administration ait le sien
-    (sept, config/tatouage). Le tatoueur garde ses trente par défaut :
+    (sept, config/tattoo). Le tatoueur garde ses trente par défaut :
     aucun appel existant ne change. Une seule écriture pour les deux
     délais — deux calculs auraient fini par diverger d'un jour. */
 export function echeanceSuppression(

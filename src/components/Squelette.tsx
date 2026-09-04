@@ -101,7 +101,7 @@ export function SqueletteFormulaire() {
  *    `gap-8 lg:gap-10` : les classes de la rangée de FicheTatoueur,
  *    340 étant LA largeur de colonne choisie par le propriétaire
  *    (nº 300) ;
- *  · LE CADRE — `LARGEUR_PHOTO_FICHE` (config/tatouage, l'écriture
+ *  · LE CADRE — `LARGEUR_PHOTO_FICHE` (config/tattoo, l'écriture
  *    unique posée à cette passe) + `CADRE_PHOTO_PORTFOLIO`, et LA
  *    MESURE DE LA VRAIE PAGE (`observerLargeurPhotoFiche`,
  *    lib/mesure-photo-fiche — extraite à cette passe) : la silhouette

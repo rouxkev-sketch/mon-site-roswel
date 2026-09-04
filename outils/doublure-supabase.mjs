@@ -8,7 +8,7 @@
  *
  * POURQUOI ELLE EXISTE. L'atelier où tournent les passes n'a pas le
  * droit de joindre la vraie base : l'accueil y sortait donc VIDE — pas
- * une carte de style, pas un portfolio, aucun lien vers « /recherche ».
+ * une carte de style, pas un portfolio, aucun lien vers « /search ».
  * Or les défauts les plus tenaces du site (le bug des styles, nº 656,
  * 665, 669) ne se jouent QU'ENTRE CES LIENS-LÀ. Trois passes ont été
  * instruites sans pouvoir cliquer une seule carte. Avec cette doublure,
@@ -84,7 +84,7 @@ const STYLES_AJOUTES_DOUBLURE = [
 const STYLES = ["trash-polka", "realisme", "blackwork", "neo-japonais"];
 //  ASSEZ DE MONDE pour que la mosaïque de l'accueil déborde et que
 //  le lien « Voir plus » apparaisse : c'est LUI qui porte l'adresse
-//  « /recherche?nature=tatouage… » du relevé du propriétaire.
+//  « /search?nature=tatouage… » du relevé du propriétaire.
 const PAR_STYLE = 14;
 
 /**
@@ -93,7 +93,7 @@ const PAR_STYLE = 14;
  * ------------------------------------------------------------------
  * LE DÉFAUT DE BANC QUE CE CRAN CORRIGE, et ce n'en est pas un du site.
  * Les quatorze gabarits d'un style PARTAGENT leur slug (`demo-realisme`
- * pour les quatorze). `/tatoueur/[slug]` lit UNE fiche : quatorze
+ * pour les quatorze). `/artist/[slug]` lit UNE fiche : quatorze
  * réponses pour une lecture unique, et la page rend 404. La fiche
  * publique — la page la plus vue du produit — était donc la seule
  * qu'on ne pouvait pas mesurer.
@@ -443,7 +443,7 @@ const TATOUEURS = STYLES.flatMap((style, s) =>
   slug: SLUGS_UNIQUES ? `demo-${style}-${k}` : `demo-${style}`,
   nom: `Atelier ${style}`,
   publie: true, ville_nom: "Lyon", ville_code_postal: "69001",
-  /*  §1 (nº 681) — SANS `ville_slug`, `/tatouage/<style>/<ville>` rend
+  /*  §1 (nº 681) — SANS `ville_slug`, `/tattoo/<style>/<ville>` rend
       404 : `chargerStyleVille` ne retrouve aucune ville, et la page
       « style + ville » était la seconde qu'on ne pouvait pas mesurer.
       Le champ manquait au gabarit ; l'ajouter ne change rien à ce qui

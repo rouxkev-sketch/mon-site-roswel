@@ -93,10 +93,10 @@ function Garde() {
      * LE DÉFAUT, MESURÉ AU BANC (mouchards dans cette garde) : ouvrir
      * un membre d'équipe en fenêtre superposée, la refermer, RE-cliquer
      * le même membre — rien, pendant douze secondes. Ligne à ligne :
-     *   clic armé vers /tatoueur/nom?entree=lien       ← le href (nº 329)
-     *   ARRIVÉE ici=/tatoueur/nom                      ← la pile a commis
+     *   clic armé vers /artist/nom?entree=lien       ← le href (nº 329)
+     *   ARRIVÉE ici=/artist/nom                      ← la pile a commis
      *                                                    SANS ?entree=lien
-     *   AVALÉ clic vers /tatoueur/nom?entree=lien      ← le re-clic meurt
+     *   AVALÉ clic vers /artist/nom?entree=lien      ← le re-clic meurt
      * La pile des fiches ne transporte QUE `selection` (nº 587) : la
      * consigne `entree=lien` du href n'est jamais commise. Comparée à
      * l'ADRESSE COMPLÈTE, l'arrivée ne correspondait donc jamais, et
@@ -109,7 +109,7 @@ function Garde() {
      * D'AFFICHAGE (la photo regardée, `entree=lien`, `selection`),
      * jamais des destinations distinctes une fois la page là.
      * ⚠️ L'AVALEMENT DU §4, LUI, COMPARE TOUJOURS L'ADRESSE COMPLÈTE :
-     * deux recherches du même chemin (`/recherche?style=…`) restent
+     * deux recherches du même chemin (`/search?style=…`) restent
      * deux destinations — on n'avale que le VRAI re-clic, à
      * l'identique. Seule l'extinction s'assouplit.
      * ⚠️ CE QU'ON ACCEPTE EN ÉCHANGE, ET C'EST MINCE : deux liens de

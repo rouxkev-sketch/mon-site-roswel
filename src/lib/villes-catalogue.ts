@@ -3,7 +3,7 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { TATOUEURS_DEMO } from "@/lib/tatoueurs-demo";
 import { lieuDepuisFiche, type LieuTrouve } from "@/lib/geocodage";
 //  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
-//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+//  lecture. Une seule écriture (voir sa note dans lib/artists).
 import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
@@ -109,7 +109,7 @@ export async function villesDuCatalogue(
         n'existait que par un portfolio en suppression différée était
         encore proposée ici : on la choisissait, et la recherche ne
         rendait rien. La même règle que partout, par la même écriture
-        (`listeEnLigne`, lib/tatoueurs). */
+        (`listeEnLigne`, lib/artists). */
     const lignes = await listeEnLigne<LigneVille>((verrous) =>
       supabase
         .from("tatoueurs")

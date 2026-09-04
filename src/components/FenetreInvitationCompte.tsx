@@ -172,7 +172,7 @@ export function FenetreInvitationCompte({
         type="button"
         onClick={() => {
           /*  ██ §5 (nº 397) — CE BOUTON OUVRE L'ONGLET CONNEXION ██
-               Le site n'a qu'UNE page de compte (`/devenir-tatoueur`),
+               Le site n'a qu'UNE page de compte (`/become-an-artist`),
                qui porte les deux modes sur une bascule interne — il
                n'existe pas d'adresse de connexion séparée. Jusqu'à cette
                passe, les deux boutons y menaient sans rien dire, et la

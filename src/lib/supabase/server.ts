@@ -53,7 +53,7 @@ export async function creerClientSupabaseServeur() {
  * ====================================================================
  * Même adresse, même clé publique, MAIS AUCUNE LECTURE DE COOKIES :
  * ce client voit la base exactement comme un visiteur déconnecté.
- * C'est le client du CATALOGUE (lib/tatoueurs), qui est, par
+ * C'est le client du CATALOGUE (lib/artists), qui est, par
  * conception, le même pour tout le monde depuis la nº 275 (« la
  * mosaïque applique la même règle que la base — estEnLigne, rien
  * d'autre ») : la session n'y changeait RIEN, mais sa simple lecture

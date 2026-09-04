@@ -11,7 +11,7 @@ import Link from "next/link";
  *  · `IndexTatoueurs` — « Aucun tatoueur ne correspond à cette
  *    recherche. Élargir le rayon, ou effacer le lieu pour chercher
  *    partout. » (c'est celle que le propriétaire lit) ;
- *  · `/tatouage/<style>/<ville>` — « Personne n'est encore référencé
+ *  · `/tattoo/<style>/<ville>` — « Personne n'est encore référencé
  *    en … à … Voir tous les tatoueurs ».
  * Il n'y en a plus qu'une, ici, et les deux pages l'appellent.
  *
@@ -43,7 +43,7 @@ import Link from "next/link";
     deux — une page serveur ne sait passer qu'une adresse. */
 export type IssueAucunResultat = {
   libelle: string;
-  /** Pour une page rendue par le serveur (`/tatouage/…`). */
+  /** Pour une page rendue par le serveur (`/tattoo/…`). */
   href?: string;
   /** Pour la mosaïque, qui relance la recherche sans changer de page. */
   surClic?: () => void;

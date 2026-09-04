@@ -1059,7 +1059,7 @@ export function ContenuFiche({
    * en route ». Et c'est vrai qu'il disparaissait, mais pas d'un défaut
    * : d'une décision, prise ici, et mal placée.
    * POURQUOI ELLE ÉTAIT MAL PLACÉE. Une adresse DÉCRIT un écran (point
-   * 5 de la règle de navigation) : `/tatoueur/x#profil`, c'est « la
+   * 5 de la règle de navigation) : `/artist/x#profil`, c'est « la
    * fiche, à sa section profil ». La mutiler pour se souvenir qu'on a
    * déjà joué un mouvement, c'est ranger un souvenir dans la
    * description. Le souvenir a désormais sa place : LA MARQUE DANS
@@ -1576,7 +1576,7 @@ export function ContenuFiche({
    * ne sont plus une section : ils se posent DIRECTEMENT SOUS LA BIO,
    * sans rien au-dessus d'eux, comme la fin de la présentation. Ils
    * vivent donc à part, plus bas dans ce fichier (`badgesDeStyle`).
-   * ⚠️ ILS RESTENT DES LIENS vers /tatouage/<style>/<ville> : c'est la
+   * ⚠️ ILS RESTENT DES LIENS vers /tattoo/<style>/<ville> : c'est la
    * valeur de référencement du site, elle ne part pas avec le titre.
    *
    * §2 — LES QUATRE AUTRES FUSIONNENT SOUS « PRATIQUE ». Toutes leurs
@@ -1644,7 +1644,7 @@ export function ContenuFiche({
    * auraient eu sous elle. Aucune règle conditionnelle à écrire — la
    * marge ne dépend pas de son voisin.
    * ⚠️ ET CE SONT TOUJOURS DES LIENS (§1, la consigne insiste) : vers
-   * /tatouage/<style>/<ville>, la valeur de référencement du site.
+   * /tattoo/<style>/<ville>, la valeur de référencement du site.
    */
   /**
    * ██ §2 (nº 384) — LES STYLES QUITTENT LES CAPSULES POUR UNE LIGNE ██
@@ -1657,7 +1657,7 @@ export function ContenuFiche({
    * (voir en tête de fichier). Même gris doux, mêmes 15 px, même
    * interligne, même boîte d'icône de 22 px, même écart de 10 px.
    *
-   * LES STYLES RESTENT DES LIENS : `/tatouage/<style>/<ville>`,
+   * LES STYLES RESTENT DES LIENS : `/tattoo/<style>/<ville>`,
    * inchangé — c'est la valeur de référencement du site, et la
    * consigne a toujours insisté dessus. Seule leur PEAU change ; le
    * survol reprend celui des lignes cliquables (le fond monte d'un
@@ -1933,7 +1933,7 @@ export function ContenuFiche({
          *
          * LE TRAIT (§2) : `border-b` + `TRAIT_SEPARATION` — UN pixel,
          * `#3B3B42`, le jeton unique des séparations du site (nº 315,
-         * config/tatouage). Aucune couleur ni épaisseur inventée, et
+         * config/tattoo). Aucune couleur ni épaisseur inventée, et
          * comme il est porté par la rangée débordée, il court d'un bord
          * à l'autre, marges comprises. Partout : page et fenêtre.
          *
@@ -2097,7 +2097,7 @@ export function ContenuFiche({
              rangée). Même bouton que partout (`BoutonPartageFiche`,
              l'action existante), habillage « icone » — la flèche nue,
              cible de 40 px —, et le lien partagé est LE PROFIL
-             (`/tatoueur/<slug>`).
+             (`/artist/<slug>`).
              ██ §2 (nº 473) — ET L'APERÇU LES A AUSSI ██
              La condition `!apercu` est levée : « Mon compte → Mon
              portfolio » doit montrer CE QUE LE PUBLIC VOIT, à
@@ -2125,7 +2125,7 @@ export function ContenuFiche({
         <div className="flex shrink-0 items-center gap-3">
           <BoutonPartageFiche
             nomArtisan={tatoueur.nom}
-            cheminFiche={`/tatoueur/${tatoueur.slug}`}
+            cheminFiche={`/artist/${tatoueur.slug}`}
             variante="icone"
             avecFenetre
             sombre

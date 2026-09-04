@@ -10,7 +10,7 @@ import {
  * LES STYLES NÉS D'UNE SUGGESTION — le chargement côté SERVEUR
  * ============================================================
  * Le catalogue des trente-huit styles vit dans le code
- * (src/config/tatouage.ts). Ceux que l'administration a acceptés
+ * (src/config/tattoo.ts). Ceux que l'administration a acceptés
  * vivent en base (supabase/yokofolio-suggestions-styles.sql). Ce
  * fichier fait le pont : il lit les seconds et les POSE dans le
  * registre du fichier de réglages, d'où tout le site les lit ensuite

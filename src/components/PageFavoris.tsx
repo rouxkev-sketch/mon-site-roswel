@@ -263,7 +263,7 @@ export function PageFavoris({
    * qu'on est précisément en train de parcourir.
    *
    * ⚠️ LA MÊME MÉCANIQUE QUE LA MOSAÏQUE, à la lettre — `pushState`
-   * vers /tatoueur/…, le drapeau `data-fenetre-fiche` posé AVANT lui
+   * vers /artist/…, le drapeau `data-fenetre-fiche` posé AVANT lui
    * (DefilementEnHaut le lit à ce moment-là), la note de rechargement,
    * et la fenêtre qui ne vit que tant que l'adresse est la sienne. Le
    * bouton « précédent » la referme sans une ligne de plus.
@@ -309,7 +309,7 @@ export function PageFavoris({
   const [profondeurPile, setProfondeurPile] = useState(0);
   const visible =
     ficheOuverte !== null &&
-    (pathname === `/tatoueur/${ficheOuverte.slug}` || profondeurPile > 0);
+    (pathname === `/artist/${ficheOuverte.slug}` || profondeurPile > 0);
 
   const ouvrirLaFiche = useCallback(
     async (
@@ -346,7 +346,7 @@ export function PageFavoris({
       /**
        * §1 (nº 314) — L'ADRESSE GARDE SA REQUÊTE, ET C'EST TOUT LE BUG.
        * ----------------------------------------------------------------
-       * CE QUI ÉTAIT ÉCRIT : `pushState(…, `/tatoueur/${slug}`)` — une
+       * CE QUI ÉTAIT ÉCRIT : `pushState(…, `/artist/${slug}`)` — une
        * adresse SANS AUCUNE requête. Or L'ONGLET DE CETTE PAGE VIT DANS
        * LA REQUÊTE (`?selection=suivis:…`, lu par `lireSelection` à
        * travers `lireRequeteCourante()`, qui rend `window.location.search`).
@@ -365,7 +365,7 @@ export function PageFavoris({
       window.history.pushState(
         { fenetreFiche: true },
         "",
-        `/tatoueur/${slug}${window.location.search}`
+        `/artist/${slug}${window.location.search}`
       );
       entreePoussee.current = true;
       setFicheOuverte(fiche);
@@ -384,7 +384,7 @@ export function PageFavoris({
     /*  §1 (nº 318) — ET LA MACHINE ARRIÈRE, comme la mosaïque (son
         `fermer` ne fait que ça). L'ouverture POUSSE une entrée
         d'historique ; la croix, le voile et Échap doivent la
-        CONSOMMER — sans quoi l'adresse restait /tatoueur/… sur une
+        CONSOMMER — sans quoi l'adresse restait /artist/… sur une
         page qui montre « Ma sélection », et le compte de l'historique
         divergeait de celui de la pile posée à cette passe (une entrée
         par fenêtre, un cran par retour). Le bouton « précédent »,
@@ -776,7 +776,7 @@ export function PageFavoris({
                           //  §4 (nº 302) — la photo elle-même.
                           photo: photoVoulue,
                         },
-                        `/tatoueur/${photo.tatoueurSlug}?style=${photo.style}` +
+                        `/artist/${photo.tatoueurSlug}?style=${photo.style}` +
                           `&nature=${natureConnue(photo.nature)}&rendu=${
                             photo.rendu ?? RENDU_PAR_DEFAUT
                           }&photo=${photoVoulue}`

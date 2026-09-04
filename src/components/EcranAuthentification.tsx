@@ -197,7 +197,7 @@ export function EcranAuthentification({
       rattache, elle le dit. Ailleurs, « Ma fiche », comme depuis la
       passe nº 131. */
   const arrivee = rattachement
-    ? `/rejoindre/${rattachement.jeton}`
+    ? `/join/${rattachement.jeton}`
     : (suiteSure(suite) ?? ARRIVEE_APRES_CONNEXION);
   const { utilisateur, pret } = useUtilisateur();
 
@@ -457,7 +457,7 @@ export function EcranAuthentification({
     try {
       const supabase = creerClientSupabaseNavigateur();
       const { error } = await supabase.auth.resetPasswordForEmail(adresse, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/devenir-tatoueur/nouveau-mot-de-passe`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/become-an-artist/new-password`,
       });
       if (error) throw error;
       setAdresseDejaServie(adresse);

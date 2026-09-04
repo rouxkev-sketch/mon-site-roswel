@@ -101,7 +101,7 @@ import { souscrireAdresse } from "@/lib/adresse-courante";
  * LA FICHE COMPLÈTE D'UN TATOUEUR — le mode d'ARRIVÉE DIRECTE
  * ============================================================
  * C'est la page qu'ouvre un lien partagé ou un moteur de recherche
- * (/tatoueur/nom). Depuis la GRILLE, c'est la FENÊTRE (FenetreFiche)
+ * (/artist/nom). Depuis la GRILLE, c'est la FENÊTRE (FenetreFiche)
  * qui s'ouvre à la place — même mécanique qu'Instagram : la fenêtre
  * pour naviguer, la page pour arriver.
  *
@@ -678,7 +678,7 @@ export function FicheTatoueur({
         Sur l'aperçu, ce composant est rendu DANS `{vue === "apercu" &&
         …}` (FormulaireFiche), et `vue` se lit dans l'ADRESSE
         (`?vue=apercu`). Or la pile, en ouvrant une fenêtre, POUSSE
-        `/tatoueur/<slug>` — une adresse SANS ce paramètre. La vue
+        `/artist/<slug>` — une adresse SANS ce paramètre. La vue
         rebascule donc sur « modification », ce composant est démonté,
         ET LA PILE AVEC LUI : la fenêtre n'apparaissait jamais, il ne
         restait que la page de modification. La pile changeait
@@ -958,7 +958,7 @@ export function FicheTatoueur({
                 grille est `auto`, la photo la remplit exactement, et se
                 centrer dans sa propre largeur ne déplace rien. */
             /*  §2 (nº 776) — les trois classes de la largeur web vivent
-                dans LARGEUR_PHOTO_FICHE (config/tatouage), partagées
+                dans LARGEUR_PHOTO_FICHE (config/tattoo), partagées
                 avec la silhouette d'attente. Mêmes classes qu'avant, au
                 caractère près — seul le foyer change. */
             className={`${LARGEUR_PHOTO_FICHE} mobile:-mx-4 mobile:max-w-none ${
@@ -1768,8 +1768,8 @@ export function FicheTatoueur({
                     web ouvre sa galerie sans changer d'adresse, et ne
                     passe jamais ici. */
                 const destination = requete
-                  ? `/tatoueur/${tatoueur.slug}?${requete}`
-                  : `/tatoueur/${tatoueur.slug}`;
+                  ? `/artist/${tatoueur.slug}?${requete}`
+                  : `/artist/${tatoueur.slug}`;
                 let retirerLEcoute = () => {};
                 let posee = false;
                 const poserEnHautALArrivee = () => {

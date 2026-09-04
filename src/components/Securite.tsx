@@ -48,7 +48,7 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
 /**
  * LA PAGE « SÉCURITÉ » — le compte, pas la fiche
  * ================================================
- * Adresse : /devenir-tatoueur/securite
+ * Adresse : /become-an-artist/security
  * Ouverte depuis le menu « Mon espace », juste sous « Ma fiche ».
  *
  * ELLE S'APPELAIT « CONFIDENTIALITÉ » (jusqu'à la passe nº 129). Le mot
@@ -353,7 +353,7 @@ export function Securite() {
       const { error } = await supabase.auth.updateUser(
         { email: propre },
         {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/devenir-tatoueur/securite`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/become-an-artist/security`,
         }
       );
       if (error) throw error;
@@ -441,7 +441,7 @@ export function Securite() {
         // C'EST ICI QUE LA PORTE DE SECOURS S'OUVRE (nº 129) : on ne
         // se souvient plus de son mot de passe, on ne peut donc pas en
         // choisir un nouveau. Le lien mène au parcours déjà en place —
-        // un e-mail, puis /devenir-tatoueur/nouveau-mot-de-passe.
+        // un e-mail, puis /become-an-artist/new-password.
         setLienOubli(true);
         return;
       }
@@ -466,7 +466,7 @@ export function Securite() {
 
   /** LE PARCOURS DE RÉINITIALISATION, celui qui existe déjà : Supabase
       envoie un e-mail dont le lien ouvre
-      /devenir-tatoueur/nouveau-mot-de-passe. Ici on connaît déjà
+      /become-an-artist/new-password. Ici on connaît déjà
       l'adresse du compte — rien à ressaisir. */
   async function envoyerLienDeSecours() {
     const adresse = utilisateur?.email ?? "";
@@ -476,7 +476,7 @@ export function Securite() {
     try {
       const supabase = creerClientSupabaseNavigateur();
       const { error } = await supabase.auth.resetPasswordForEmail(adresse, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/devenir-tatoueur/nouveau-mot-de-passe`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/become-an-artist/new-password`,
       });
       if (error) throw error;
       setLienOubli(false);

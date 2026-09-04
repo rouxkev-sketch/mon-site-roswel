@@ -30,7 +30,7 @@ import {
  * §2 (nº 332) — IL COUVRE MAINTENANT TOUT LE SITE.
  * ------------------------------------------------------------------
  * ⚠️ CE QU'IL ÉTAIT, ET POURQUOI CE N'ÉTAIT PAS ASSEZ. Il ne jouait
- * que sur une FICHE (`/tatoueur/…`), que sur un VRAI MOBILE, et il
+ * que sur une FICHE (`/artist/…`), que sur un VRAI MOBILE, et il
  * renvoyait à la mosaïque retenue par le journal persistant. C'était
  * le défaut d'origine de la nº 194, resté ouvert jusqu'ici : sur
  * l'accueil, sur « Ma sélection », sur les pages vitrines, un retour

@@ -273,7 +273,7 @@ function BlocDUnSuivi({
             //  Aucune série demandée : la fiche s'ouvre sur ce qu'elle
             //  montre par défaut, comme le ferait sa page.
             { cle: `suivi-${suivi.slug}`, style: "", nature: "", rendu: "", photo: "" },
-            `/tatoueur/${suivi.slug}`
+            `/artist/${suivi.slug}`
           )
         }
         /*  §3 (nº 254) — L'ÉCART PASTILLE-TEXTE SE REMET À L'ÉCHELLE :
@@ -298,7 +298,7 @@ function BlocDUnSuivi({
                une sélection entièrement contenue dans un lien fait
                écrire à WebKit l'ADRESSE du lien à la place du texte.
             L'un sans l'autre laisserait le geste à moitié fait : on
-            surlignerait le nom et l'on collerait « /tatoueur/le-slug ».
+            surlignerait le nom et l'on collerait « /artist/le-slug ».
             La raison complète vit dans lib/copie-du-texte.
             ⚠️ RIEN D'AUTRE NE CHANGE : le clic ouvre toujours le
             portfolio — en fenêtre au web, en navigation au doigt
@@ -643,7 +643,7 @@ function RangeeDeVignettes({
                mosaïque le fait. */}
           <Link
             href={
-              `/tatoueur/${suivi.slug}?style=${photo.style}` +
+              `/artist/${suivi.slug}?style=${photo.style}` +
               `&nature=${photo.nature}` +
               (photo.rendu ? `&rendu=${photo.rendu}` : "") +
               `&photo=${photo.id}`
@@ -667,7 +667,7 @@ function RangeeDeVignettes({
                   rendu: photo.rendu ?? "",
                   photo: photo.id,
                 },
-                `/tatoueur/${suivi.slug}?style=${photo.style}` +
+                `/artist/${suivi.slug}?style=${photo.style}` +
                   `&nature=${photo.nature}` +
                   (photo.rendu ? `&rendu=${photo.rendu}` : "") +
                   `&photo=${photo.id}`
@@ -683,7 +683,7 @@ function RangeeDeVignettes({
           >
             {/*  §2 (nº 648) — la plaque d'attente, rentrée de 2 px,
                  comme sur les cartes : le fond clair ne dépasse plus
-                 sous la vignette (config/tatouage). */}
+                 sous la vignette (config/tattoo). */}
             <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
             {/* eslint-disable-next-line @next/next/no-img-element --
                 photo déposée par le tatoueur, servie telle quelle. */}

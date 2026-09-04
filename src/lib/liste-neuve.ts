@@ -136,7 +136,7 @@ export function ouvrirLaListeEnHaut(
  * ██ §2 (nº 722) — « LE SQUELETTE DE LA LISTE EST LÀ » ██
  * ==================================================================
  * LE DÉFAUT MESURÉ (banc de la passe) : accueil défilé → clic sur une
- * carte de style → le squelette de `/recherche` s'affiche… À L'ANCIENNE
+ * carte de style → le squelette de `/search` s'affiche… À L'ANCIENNE
  * HAUTEUR (26 relevés à y=136 sur ~2 s), et la remontée ne joue qu'à
  * l'arrivée des cartes. La règle nº 334 — « la remontée est jouée à
  * l'arrivée, pour ne pas se voir sur la page qu'on quitte » — date

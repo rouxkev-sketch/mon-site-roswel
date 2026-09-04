@@ -4,7 +4,7 @@
  * Formule de Haversine — la même que la fonction `distance_km` posée
  * en base.
  * ⚠️ CE QU'ELLE SERT AUJOURD'HUI (nº 765) : le CLASSEMENT PAR
- * DISTANCE du catalogue des tatoueurs (`lib/tatoueurs`, trois appels).
+ * DISTANCE du catalogue des tatoueurs (`lib/artists`, trois appels).
  * Elle listait autrefois les communes couvertes par un artisan, dans
  * l'accordéon « Zone » de sa fiche — cet écran est parti à la nº 760,
  * et la table `communes` avec la nº 764.

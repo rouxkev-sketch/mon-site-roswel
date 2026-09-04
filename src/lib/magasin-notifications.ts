@@ -24,7 +24,7 @@ import { lireDuServeur } from "@/lib/lecture-navigateur";
  *    dix pages de `app/(tatouage)/…` et dans `BarreSelection` — la
  *    mise en page du groupe, elle, n'en monte aucune ;
  *  · UNE NAVIGATION DOUCE VERS UNE AUTRE ROUTE DÉMONTE DONC LA BARRE.
- *    L'accueil (« / ») et la recherche (« /recherche ») sont deux
+ *    L'accueil (« / ») et la recherche (« /search ») sont deux
  *    segments de page distincts depuis la nº 652 : React démonte le
  *    premier arbre et en monte un second. `MenuEspace` est neuf, son
  *    état `notifications` repart vide, `nonLues` retombe à zéro ;

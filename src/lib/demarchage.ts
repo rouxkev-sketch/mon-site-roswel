@@ -126,7 +126,7 @@ export function messageDemarchage(
   const destinataire = fiches[0].nom;
 
   const lienFiche = (f: FicheDemarchee) =>
-    f.slug ? `${adresse}/tatoueur/${f.slug}` : "(link coming soon)";
+    f.slug ? `${adresse}/artist/${f.slug}` : "(link coming soon)";
 
   //  LE MOT JUSTE POUR CE QU'ON A PRÉPARÉ. Un artiste a un
   //  « portfolio » ; un salon et un studio ont une « page » — leur
@@ -172,5 +172,5 @@ export function messageDemarchage(
 /** L'adresse publique d'un lien de rattachement — une seule écriture,
     partagée par le message, le tableau et la page elle-même. */
 export function lienDeRattachement(adresse: string, jeton: string): string {
-  return `${adresse}/rejoindre/${jeton}`;
+  return `${adresse}/join/${jeton}`;
 }

@@ -23,7 +23,7 @@
  *     jamais une limace, jamais un point. La ville est un NOM (« Paris »
  *     se dit « Paris »), la rue est un nom (« Rue Trousseau » ne se
  *     traduit pas), et les limaces font les adresses publiques
- *     (/tatouage/<style>/<ville>) : y toucher casserait le
+ *     (/tattoo/<style>/<ville>) : y toucher casserait le
  *     référencement acquis ;
  *  4. il REFUSE d'écrire quand le géocodeur ne répond pas au point ce
  *     que la ligne dit du pays (`countrycode` ≠ `code_pays`) : un point

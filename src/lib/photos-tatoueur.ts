@@ -77,7 +77,7 @@ import { libelleStyle } from "@/config/tatouage";
     la contrainte de base et bascule leurs photos. TROIS RENDUS
     DISTINCTS, AUCUN ENGLOBEMENT : « Noir et gris » ne contient plus le
     tout noir. Cet ordre est celui de PARTOUT — les encadrés du
-    formulaire, le filtre du moteur (FILTRE_RENDU, config/tatouage) et
+    formulaire, le filtre du moteur (FILTRE_RENDU, config/tattoo) et
     les galeries d'une fiche (`seriesDeLaCategorie`,
     `rendusDuPortfolio`) le lisent tous ici. */
 export const RENDUS_PHOTO = [
@@ -92,7 +92,7 @@ export const SLUGS_RENDUS = new Set<string>(RENDUS_PHOTO.map((r) => r.slug));
 
 /** LE RENDU D'UN STYLE MONOCHROME — « Noir », la seule galerie qu'un
     style tout noir propose (nº 404 ; l'étiquette `monochrome` vient de
-    la nº 400 — voir `estStyleMonochrome`, config/tatouage). PAR NOM,
+    la nº 400 — voir `estStyleMonochrome`, config/tattoo). PAR NOM,
     JAMAIS PAR POSITION : c'est une VALEUR — celle que les dépôts
     écrivent sur un style replié et que la migration pose — pas un rang
     d'affichage ; réordonner `RENDUS_PHOTO` ne doit pas pouvoir la
@@ -210,8 +210,8 @@ export function natureConnue(slug: string | null | undefined): string {
     « tatouage » par défaut : ici, l'absence est une VRAIE réponse —
     « je n'ai rien demandé » — et ne doit surtout pas devenir un
     filtre. Une adresse bricolée à la main ne vide donc pas la page,
-    elle cherche simplement tout. Vivait dans lib/tatoueurs ; déménagée
-    ici (nº 359) pour la même raison que `styleConnu` (config/tatouage) :
+    elle cherche simplement tout. Vivait dans lib/artists ; déménagée
+    ici (nº 359) pour la même raison que `styleConnu` (config/tattoo) :
     la fiche préparée d'avance lit ses tags dans le navigateur. */
 export function natureCherchee(slug: string | undefined): string {
   return slug && SLUGS_NATURES.has(slug) ? slug : "";

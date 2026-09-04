@@ -736,7 +736,13 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   `banc-vitesse`, `banc-resilience-703`, `banc-supabase-differe`,
   `reference-vitesse.json`) et le recenseur (le lot « C · pages
   éditoriales » reconnaît les nouveaux dossiers) suivent.
-- **Les autres adresses restent françaises** (voir §5 du lexique) —
+- ⚠️ **CE QUI SUIT EST FAIT DEPUIS LA nº 836** (voir §17) : les adresses
+  ci-dessous ne sont plus françaises. La liste est gardée telle quelle
+  parce qu'elle dit ce qui A ÉTÉ PROPOSÉ — les noms retenus par le
+  propriétaire diffèrent sur trois points (`/become-an-artist` et non
+  `/account`, `/my-favorites` et non `/my-selection`, et le déménagement
+  de `/tatouage` et `/tatoueur` a bien eu lieu dans la même passe).
+- **Les autres adresses restaient françaises** (voir §5 du lexique) —
   la liste, avec une proposition anglaise pour la passe dédiée :
   `/devenir-tatoueur` → `/account` (la page du compte : Sign up / Log
   in) ; `/devenir-tatoueur/securite` → `/account/security` ;
@@ -779,3 +785,39 @@ remplacer** le français par l'anglais, sans mécanique à deux langues.
   propose plus (il n'ouvre que la création), donc jamais peint, mais le
   mot est là. Le recenseur ne l'a pas vu : c'est la seconde branche d'un
   ternaire de JSX. À corriger à la prochaine passe de textes.
+
+## 17 · Ce que la 836 a fait pour la langue (les adresses)
+
+Le dernier morceau. **Toutes les adresses du site parlent anglais** ;
+chaque ancienne redirige en **301** (`lib/chemins-anglais`, lue par
+`next.config` — une seule écriture, et le banc `adresses-836` la
+vérifie ligne à ligne) :
+
+| avant | après |
+| --- | --- |
+| `/devenir-tatoueur` | `/become-an-artist` |
+| `/devenir-tatoueur/fiche` | `/become-an-artist/portfolio` |
+| `/devenir-tatoueur/securite` | `/become-an-artist/security` |
+| `/devenir-tatoueur/nouveau-mot-de-passe` | `/become-an-artist/new-password` |
+| `/mes-favoris` | `/my-favorites` |
+| `/recherche` | `/search` |
+| `/apres-connexion` | `/after-login` |
+| `/lien-expire` | `/link-expired` |
+| `/rejoindre/<jeton>` | `/join/<jeton>` |
+| `/tatouage/<style>/<ville>` | `/tattoo/<style>/<ville>` |
+| `/tatoueur/<slug>` | `/artist/<slug>` |
+| `/tatoueur/<slug>/complet` | `/artist/<slug>/full` |
+| `/tatoueur/<slug>/partage` | `/artist/<slug>/share` |
+
+**Ce qui n'a PAS bougé, et pourquoi** : `/api/…` et `/auth/callback`
+(techniques — et Supabase connaît la seconde par cœur, sa liste de
+redirections autorisées la nomme) ; `/photos/…` et `/images-demo/…`
+(deux tuyaux d'images) ; les **limaces** des styles et des artistes
+(une limace publiée ne change jamais, règle nº 230 — seul le préfixe
+change) ; les **noms des paramètres dynamiques** (`[ville]`, `[jeton]`),
+qui n'apparaissent dans aucune adresse — seule leur valeur le fait.
+
+⚠️ **Le nom de l'écran « My selection » et son adresse `/my-favorites`
+ne disent plus la même chose** : le propriétaire a demandé cette
+adresse-là, le §15 proposait `/my-selection`. À trancher un jour, dans
+un sens ou dans l'autre.

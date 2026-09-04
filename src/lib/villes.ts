@@ -8,7 +8,7 @@
  * POURQUOI LE NUMÉRO RESTE ICI : c'est lui qui distingue deux
  * arrondissements dans le formulaire, et surtout c'est de lui que
  * sortent les SLUGS déjà publiés et indexés
- * (/tatoueur/atelier-corvus-lyon-1er, /tatouage/realisme/lyon-1er). Les
+ * (/artist/atelier-corvus-lyon-1er, /tattoo/realisme/lyon-1er). Les
  * changer casserait tous les liens partagés.
  *
  * ⚠️ POUR AFFICHER une ville — cartes, fiches, moteur, titres — c'est

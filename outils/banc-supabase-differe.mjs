@@ -91,7 +91,7 @@ const PAGES = [
   { nom: "legal", chemin: "/legal", litLaBase: false },
   { nom: "terms", chemin: "/terms", litLaBase: false },
   { nom: "contact", chemin: "/contact", litLaBase: false },
-  { nom: "recherche", chemin: "/recherche?style=realisme&nature=tatouage", litLaBase: true },
+  { nom: "recherche", chemin: "/search?style=realisme&nature=tatouage", litLaBase: true },
 ];
 
 /*  DEUX VISITEURS, et c'est le cœur de la mesure : celui qui n'a pas

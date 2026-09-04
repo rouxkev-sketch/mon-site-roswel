@@ -100,9 +100,9 @@ function lire(genre: Genre, id: string, defaut: boolean): boolean {
  * tatoueur à suivre.
  */
 const SANS_COEURS = [
-  "/devenir-tatoueur/securite",
-  "/devenir-tatoueur/fiche",
-  "/apres-connexion",
+  "/become-an-artist/security",
+  "/become-an-artist/portfolio",
+  "/after-login",
   "/admin",
 ];
 
@@ -189,7 +189,7 @@ export function reprendreLeGeste(genre: Genre, id: string): boolean {
 export function versLaConnexion(mode?: "creer" | "connexion"): string {
   const ici = `${window.location.pathname}${window.location.search}`;
   const suite = `suite=${encodeURIComponent(ici)}`;
-  return `/devenir-tatoueur?${suite}${mode ? `&mode=${mode}` : ""}`;
+  return `/become-an-artist?${suite}${mode ? `&mode=${mode}` : ""}`;
 }
 
 /** Le chemin de retour, nettoyé : interne, et rien d'autre. */
@@ -333,7 +333,7 @@ export async function ecrireFavori(
     const reponse = await fetch(
       genre === "photo"
         ? "/api/yokofolio/favoris/photo"
-        : "/api/yokofolio/favoris/tatoueur",
+        : "/api/yokofolio/favoris/artist",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

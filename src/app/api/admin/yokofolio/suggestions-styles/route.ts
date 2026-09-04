@@ -291,7 +291,7 @@ export async function POST(requete: NextRequest) {
    * risque » se MESURE, il ne se devine pas : elle est écrite dans les
    * portfolios (`tatoueurs.styles`, et la clé de `photos_styles` qui
    * va avec) et sur chaque photo (`photos_tatoueur.style`), et elle
-   * fait l'adresse publique /tatouage/<limace>/<ville>. On compte donc
+   * fait l'adresse publique /tattoo/<limace>/<ville>. On compte donc
    * ce qui la porte : ZÉRO → la limace est recalculée du nouveau nom
    * (après le même contrôle de collision qu'à l'acceptation) ; SINON
    * elle reste, seul le libellé change, et la réponse dit combien de
@@ -778,7 +778,7 @@ function lienDuPortfolio(
   try {
     return {
       libelle: "Open my portfolio",
-      url: `${adresseDuSite()}/devenir-tatoueur/fiche`,
+      url: `${adresseDuSite()}/become-an-artist/portfolio`,
     };
   } catch (erreur) {
     noter(

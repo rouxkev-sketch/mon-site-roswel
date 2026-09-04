@@ -128,7 +128,7 @@ export const LANGUES_YOKOFOLIO = [
 /**
  * LES STYLES DE TATOUAGE — la liste à faire évoluer
  * -------------------------------------------------
- * `slug` sert dans les adresses (/tatouage/fine-line/lyon) : une fois
+ * `slug` sert dans les adresses (/tattoo/fine-line/lyon) : une fois
  * publié, un slug ne se change plus sans casser le référencement.
  * `label` est ce qui s'affiche.
  * `couleur` habille les images de démonstration (rectangles colorés)
@@ -192,7 +192,7 @@ export const STYLES_TATOUAGE = [
    * ⚠️ LE SLUG NE BOUGE PAS, ET C'EST TOUT CE QUI COMPTE : il était
    * DÉJÀ français (`neo-traditionnel`). C'est lui qui est écrit en base
    * (colonne `styles` des fiches, colonne `style` des photos), lui qui
-   * fait l'adresse de la vitrine (`/tatouage/neo-traditionnel/<ville>`),
+   * fait l'adresse de la vitrine (`/tattoo/neo-traditionnel/<ville>`),
    * lui que portent les favoris et les liens déjà partagés. Changer le
    * seul libellé ne touche donc QUE ce qui s'affiche — aucune galerie
    * ne peut disparaître, aucune migration n'est nécessaire.
@@ -211,7 +211,7 @@ export const STYLES_TATOUAGE = [
   //  §1 (nº 291) — CHICANO NE BOUGE PAS : premier niveau, à sa lettre.
   { slug: "chicano", label: "Chicano", couleur: "#57544B" },
   //  §1 (nº 291) — DÉPLACÉ dans « Cultures du monde » : il quitte le
-  //  premier niveau. Son slug, sa page /tatouage/tribal/<ville> et les
+  //  premier niveau. Son slug, sa page /tattoo/tribal/<ville> et les
   //  fiches qui le portent ne bougent pas — une famille est un
   //  RANGEMENT, jamais une donnée.
   { slug: "tribal", label: "Tribal", couleur: "#3E3E36" },
@@ -386,10 +386,10 @@ export function styleDuCatalogue(slug: string | null | undefined): boolean {
 }
 
 /** Le style demandé est-il connu ? Sinon on l'ignore plutôt que de vider
-    la page. Vivait dans lib/tatoueurs ; déménagée ici (nº 359) parce que
+    la page. Vivait dans lib/artists ; déménagée ici (nº 359) parce que
     la fiche préparée d'avance lit ses tags DANS LE NAVIGATEUR
-    (FicheSelonLAdresse) — et lib/tatoueurs, qui parle à la base, ne peut
-    pas y entrer. lib/tatoueurs la ré-exporte : aucun appelant n'a bougé. */
+    (FicheSelonLAdresse) — et lib/artists, qui parle à la base, ne peut
+    pas y entrer. lib/artists la ré-exporte : aucun appelant n'a bougé. */
 export function styleConnu(slug: string | undefined): string {
   return slug && styleDuCatalogue(slug) ? slug : "";
 }
@@ -421,7 +421,7 @@ function parLibelle(a: { label: string }, b: { label: string }): number {
  * qu'on trouve ensemble. Elle porte un nom et une porte dans le menu
  * « Explorer » ; elle N'EST PAS CHERCHABLE : son slug n'existe pas
  * dans STYLES_TATOUAGE, donc `lireValeurExplorer` le refuse et aucune
- * page /tatouage/cultures-du-monde/<ville> ne peut exister. Ouvrir
+ * page /tattoo/cultures-du-monde/<ville> ne peut exister. Ouvrir
  * une famille ne fait qu'une chose : montrer ce qu'elle contient.
  *
  * ⚠️ ET ELLE N'EST JAMAIS DÉCLARABLE. La fenêtre « Ajouter un style »
@@ -435,7 +435,7 @@ export const FAMILLES_STYLES = [
     //  devenu « Cultures du monde », slug compris. LE SLUG POUVAIT
     //  CHANGER SANS RIEN CASSER, et c'est vérifié : une famille n'est
     //  pas cherchable, elle n'a donc JAMAIS eu d'adresse publique
-    //  (/tatouage/traditionnel-ethnique/<ville> a toujours répondu
+    //  (/tattoo/traditionnel-ethnique/<ville> a toujours répondu
     //  404, par construction) — rien à rediriger. En base, il ne vit
     //  qu'à un seul endroit, `suggestions_style.famille` : voir la
     //  migration nº 67, qui le renomme et refait sa contrainte.
@@ -1018,7 +1018,7 @@ export const SLUGS_FILTRES = new Set<string>(
  * partagé, un signet) doit s'ouvrir NORMALEMENT — sans erreur, et sans
  * mosaïque secrètement filtrée par un critère que plus aucun bouton ne
  * peut défaire. `filtresVivants` les retire donc partout où `exclure`
- * est lu : au serveur (lib/tatoueurs, `filtresConnus` — la porte
+ * est lu : au serveur (lib/artists, `filtresConnus` — la porte
  * unique de la recherche) comme au navigateur (MoteurTatouage,
  * `criteresComplets` — la porte unique des critères). Le paramètre
  * survit dans l'adresse sans plus rien faire, exactement comme les
@@ -1565,7 +1565,7 @@ export function libelleTypeFiche(
  * avait vingt tatoueurs à dix minutes.
  * ⚠️ LA BASE, ELLE, RESTE EN KILOMÈTRES (`p_rayon_km`, `yf_distance_km`,
  * `modes_exercice.rayon_km`) : la conversion se fait à la frontière,
- * dans lib/tatoueurs (`milesEnKm`, lib/geo). Aucun SQL n'a bougé.
+ * dans lib/artists (`milesEnKm`, lib/geo). Aucun SQL n'a bougé.
  * MÊMES PALIERS SUR WEB ET SUR SMARTPHONE : les pilules du panneau et
  * le curseur de la fenêtre lisent la même liste.
  */
@@ -1711,7 +1711,7 @@ export const DELAI_SUPPRESSION_ADMIN_JOURS = 7;
  * façon pas interroger un magasin de navigateur.
  *
  */
-export const ARRIVEE_APRES_CONNEXION = "/apres-connexion";
+export const ARRIVEE_APRES_CONNEXION = "/after-login";
 
 /**
  * L'ARRIVÉE, ET IL N'Y EN A PLUS QU'UNE (nº 313-§2).
@@ -1722,7 +1722,7 @@ export const ARRIVEE_APRES_CONNEXION = "/apres-connexion";
  * voulu. Le nom est retiré pour qu'aucune passe future ne le retrouve
  * et ne rétablisse la bifurcation par mégarde.
  */
-export const ARRIVEE_SANS_PORTFOLIO = "/mes-favoris";
+export const ARRIVEE_SANS_PORTFOLIO = "/my-favorites";
 
 /**
  * LA BIO DU TATOUEUR — FACULTATIVE, plafonnée.
@@ -2054,7 +2054,7 @@ export const TEXTES_TATOUAGE = {
    * comme lorsqu'une catégorie l'accompagne.
    * ⚠️ CE N'EST PAS `CATEGORIES_EXPLORER` : quand aucune catégorie
    * n'est choisie, la mosaïque ne filtre RIEN par nature — elle montre
-   * les réalisations ET les flashs (lib/tatoueurs : `!natureVoulue`
+   * les réalisations ET les flashs (lib/artists : `!natureVoulue`
    * laisse tout passer). Emprunter le mot « Toutes les réalisations »
    * à la catégorie « tatouage » ferait croire à un filtre qui n'existe
    * pas. C'est donc un texte À PART, et le propriétaire l'a nommé
@@ -2340,7 +2340,7 @@ export const ECRITURE_TITRE_SECTION =
  *
  * ⚠️ ET LA LECTURE DE LA RÈGLE, QUI FAIT TOUTE SA PORTÉE : UN BADGE DE
  * STYLE SE CLIQUE QUAND MÊME. C'est un LIEN vers
- * /tatouage/<style>/<ville> — la valeur de référencement du site.
+ * /tattoo/<style>/<ville> — la valeur de référencement du site.
  * CLIQUER POUR ALLER QUELQUE PART N'EST PAS AGIR : un lien de
  * navigation reste une ÉTIQUETTE, et prend donc les angles arrondis.
  * Seul ce qui DÉCLENCHE quelque chose — envoyer, choisir, basculer —

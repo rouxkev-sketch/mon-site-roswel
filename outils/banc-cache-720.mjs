@@ -75,7 +75,7 @@ function famille(url) {
 
 const PAGES = [
   { nom: "accueil", chemin: "/" },
-  { nom: "recherche", chemin: "/recherche?nature=tatouage" },
+  { nom: "recherche", chemin: "/search?nature=tatouage" },
 ];
 
 /*  ██ DEUX MONDES, POUR SÉPARER LES DEUX MÉMOIRES ██

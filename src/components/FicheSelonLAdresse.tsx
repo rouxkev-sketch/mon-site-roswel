@@ -7,7 +7,7 @@ import {
   lireRequeteDeLaPage,
   lireRequeteServeur,
 } from "@/lib/adresse-courante";
-//  ⚠️ PAS D'IMPORT DE FONCTION DEPUIS lib/tatoueurs ICI : ce module
+//  ⚠️ PAS D'IMPORT DE FONCTION DEPUIS lib/artists ICI : ce module
 //  parle à la base (client Supabase serveur) et n'entre pas dans un
 //  composant client. `styleConnu` et `natureCherchee` ont déménagé
 //  chez leurs données pour cette raison précise (nº 359). Le TYPE, lui,
@@ -40,7 +40,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *     battement plus tard — le lien « portfolio » (`entree=lien`)
  *     semblait mort.
  *  2. PENDANT LA VIE DE LA FICHE, l'adresse appartient parfois à une
- *     SURFACE : la pile des fiches pose `/tatoueur/autre` par un
+ *     SURFACE : la pile des fiches pose `/artist/autre` par un
  *     pushState BRUT (la page plein écran de la nº 284 en posait une
  *     autre, jusqu'à sa suppression à la nº 602).
  *     Lire ces adresses-là resemait la fiche SOUS la surface : la
@@ -51,7 +51,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * LA RÈGLE, qui est exactement le contrat d'avant la nº 359 (le
  * serveur lisait la requête UNE fois, à l'arrivée, et les surfaces
  * n'existaient pas pour lui) :
- *  · tant que l'adresse n'est pas `/tatoueur/<slug>` : la lecture rend
+ *  · tant que l'adresse n'est pas `/artist/<slug>` : la lecture rend
  *    ce qu'elle a MÉMORISÉ — et rien du tout (`null`) si la page n'a
  *    encore jamais possédé l'adresse (l'arrivée n'est pas commise :
  *    on ne sème pas de tags faux, on attend le battement) ;
@@ -91,7 +91,7 @@ export function FicheSelonLAdresse({
   tatoueur: Tatoueur;
   demonstration: boolean;
 }) {
-  const cheminDeLaPage = `/tatoueur/${tatoueur.slug}`;
+  const cheminDeLaPage = `/artist/${tatoueur.slug}`;
   /*  LA LECTURE BORNÉE À NOTRE ADRESSE (lib/adresse-courante). `null`
       = « la page n'a encore jamais possédé l'adresse » — un état que
       la chaîne vide ne peut pas dire, puisqu'une adresse nue EST une

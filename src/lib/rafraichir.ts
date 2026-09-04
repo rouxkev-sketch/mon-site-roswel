@@ -31,7 +31,7 @@ export function rafraichirPagesPubliques(slug?: string | null): void {
     // toutes les pages qu'il a produites à partir de lui. On ne peut
     // pas deviner lesquelles : une fiche peut changer de ville, et
     // elle apparaît sur autant de pages qu'elle a de styles.
-    "/tatouage/[style]/[ville]",
+    "/tattoo/[style]/[ville]",
     // Le plan du site : il liste les fiches publiées.
     "/sitemap.xml",
   ];
@@ -45,7 +45,7 @@ export function rafraichirPagesPubliques(slug?: string | null): void {
   }
   if (slug) {
     try {
-      revalidatePath(`/tatoueur/${slug}`);
+      revalidatePath(`/artist/${slug}`);
     } catch {
       // Idem.
     }

@@ -145,11 +145,11 @@ export function poserSelection(menu: MenuSelection, valeur: string): void {
       LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE DANS SON JOURNAL, cinq fois
       de suite et à l'identique :
 
-          POSÉE      /mes-favoris                  par la surface
-          REMPLACÉE  /mes-favoris?selection=…      par la surface
+          POSÉE      /my-favorites                  par la surface
+          REMPLACÉE  /my-favorites?selection=…      par la surface
           REPRISE    (history.back)                par la surface
-          popstate   /mes-favoris                  par le navigateur
-          REMPLACÉE  /mes-favoris?selection=…      par le routeur
+          popstate   /my-favorites                  par le navigateur
+          REMPLACÉE  /my-favorites?selection=…      par le routeur
 
       SOLDE NUL. Le panneau posait son étape, écrivait le filtre DESSUS
       (ce `replaceState`), puis la REPRENAIT en se refermant — parce que

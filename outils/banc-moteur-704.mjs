@@ -128,7 +128,7 @@ for (const { nom: appareil, ...options } of APPAREILS) {
     const ctx = await nav.newContext(options);
     await ctx.addCookies([cookieSession()]);
     const page = await ctx.newPage();
-    await page.goto(`${BASE}/mes-favoris`, { waitUntil: "load", timeout: 30000 });
+    await page.goto(`${BASE}/my-favorites`, { waitUntil: "load", timeout: 30000 });
     await page.waitForTimeout(1500);
     /*  On descend d'abord : sans cela la page est déjà en haut et le
         témoin ne prouverait rien. */
@@ -155,7 +155,7 @@ for (const { nom: appareil, ...options } of APPAREILS) {
     await page.waitForTimeout(2000);
     /*  Chaque carte porte le style dans SON adresse : on compare ce
         que la carte PROMET à ce que la page RÉPOND. */
-    const cartes = await page.locator('a[href^="/recherche?style="]:visible').all();
+    const cartes = await page.locator('a[href^="/search?style="]:visible').all();
     const cas = [];
     for (const carte of cartes.slice(0, 6)) {
       const href = await carte.getAttribute("href");

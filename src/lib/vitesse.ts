@@ -271,7 +271,7 @@ function baseDe(debut: number, fin: number): MesureVitesse["base"] {
  * ⚠️ LE PREMIER ÉCRAN ET LE TOTAL SONT DEUX CHOSES ICI AUSSI, et pour
  * la même raison que pour une navigation douce (voir l'entête). Le
  * premier essai arrêtait la liste des requêtes à `domContentLoaded` :
- * sur `/devenir-tatoueur/fiche`, les TROIS lectures de base du
+ * sur `/become-an-artist/portfolio`, les TROIS lectures de base du
  * formulaire partent APRÈS la peinture, et la ligne BASE restait vide
  * sur la page même qui en avait le plus besoin. La décomposition du
  * navigateur (réseau + serveur + rendu) explique le PREMIER ÉCRAN et

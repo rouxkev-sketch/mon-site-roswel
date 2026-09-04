@@ -27,8 +27,8 @@ export const revalidate = 86400;
  *
  * CE QU'IL LISTE, ET RIEN D'AUTRE :
  *  - l'accueil, « Qui sommes-nous », « Contact », les mentions légales ;
- *  - les fiches /tatoueur/nom des tatoueurs PUBLIÉS ;
- *  - les pages /tatouage/style/ville qui EXISTENT vraiment (au moins
+ *  - les fiches /artist/nom des tatoueurs PUBLIÉS ;
+ *  - les pages /tattoo/style/ville qui EXISTENT vraiment (au moins
  *    un tatoueur — jamais de page vide dans un plan de site).
  *
  * CE QU'IL N'ANNONCE JAMAIS :
@@ -108,7 +108,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const fiches = await fichesPourLePlan();
     for (const fiche of fiches) {
       pages.push({
-        url: `${base}/tatoueur/${fiche.slug}`,
+        url: `${base}/artist/${fiche.slug}`,
         lastModified: fiche.date ?? aujourdhui,
         changeFrequency: "weekly",
         priority: 0.8,
@@ -125,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const couple of couples) {
       const [style, ville] = couple.split("|");
       pages.push({
-        url: `${base}/tatouage/${style}/${ville}`,
+        url: `${base}/tattoo/${style}/${ville}`,
         lastModified: aujourdhui,
         changeFrequency: "daily",
         priority: 0.9,

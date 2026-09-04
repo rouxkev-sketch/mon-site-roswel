@@ -84,7 +84,7 @@ import type { LieuTrouve } from "@/lib/geocodage";
  * LES FILTRES SONT DES INTERRUPTEURS TOUS ALLUMÉS : on ÉTEINT ce
  * qu'on ne veut pas voir, on ne coche pas ce qu'on veut. Tout allumé
  * = aucun filtrage. Les critères ne portent donc que les slugs
- * ÉTEINTS (`exclure`) — la règle exacte vit dans src/lib/tatoueurs.ts
+ * ÉTEINTS (`exclure`) — la règle exacte vit dans src/lib/artists.ts
  * (passeLesFiltres). TROIS groupes désormais : Technique, Composition
  * et ARTISTE / SALON (voir GROUPES_FILTRES) — le type de fiche est un
  * critère de recherche comme un autre, pas un cas particulier.
@@ -131,7 +131,7 @@ export type CritèresTatouage = {
       monde entier. */
   lieu: LieuTrouve | null;
   /** Le rayon autour d'une ville ou d'une adresse, EN MILES (nº 806 ;
-      la base reste en km, lib/tatoueurs convertit). ZÉRO est une vraie
+      la base reste en km, lib/artists convertit). ZÉRO est une vraie
       valeur : la ville seule. Sans objet pour une région, un pays. */
   rayonMi: number;
   /** Les INTERRUPTEURS ÉTEINTS (« ce que je ne veux pas voir ») —
@@ -230,7 +230,7 @@ export function libelleLieu(criteres: CritèresTatouage): string {
  * RESTE, et il ne revient pas.
  *
  * LA CAUSE EST CONNUE ET DÉJÀ ÉCRITE (nº 508, et le §nº 364 juste sous
- * `filtresOuverts`) : « / » et « /recherche » sont DEUX
+ * `filtresOuverts`) : « / » et « /search » sont DEUX
  * SEGMENTS DE ROUTE, et la barre est montée PAR LA PAGE. Au premier
  * passage de l'un à l'autre, tout l'arbre est démonté puis remonté ;
  * `filtresOuverts` repart de `false`. Le brouillon de la nº 364 avait
@@ -314,7 +314,7 @@ export function MoteurTatouage({
    * refaire la page à Next) est corrigée dans PageRechercheMobile.
    * Mais un état d'écran ne doit pas dépendre de la survie d'un
    * composant : il vit désormais dans un module
-   * (src/lib/recherche-mobile.ts), que rien ne remet à zéro sinon un
+   * (src/lib/search-mobile.ts), que rien ne remet à zéro sinon un
    * vrai rechargement de page.
    *
    * · `ouverte`   — la page est-elle à l'écran ;
@@ -371,7 +371,7 @@ export function MoteurTatouage({
    * Chaque badge appelait `annoncer` → `surChangement` → `chercher`
    * (EnTeteTatouage), c'est-à-dire `router.push("/?exclure=…")`. Or
    * DEPUIS LA nº 357, l'accueil nu est PRÉRENDU et l'accueil À REQUÊTE
-   * est servi par le jumeau `/recherche` (réécriture du proxy) :
+   * est servi par le jumeau `/search` (réécriture du proxy) :
    * ce sont DEUX ROUTES. Le premier badge quitte donc « / » pour le
    * jumeau — et comme la barre est rendue PAR LA PAGE (page → Rendu
    * Accueil → IndexTatoueurs → EnTeteTatouage → ce moteur), tout ce
@@ -771,7 +771,7 @@ export function MoteurTatouage({
     //  ------------------------------------------------------------
     //  Un groupe VIDE ne veut pas dire « ne me montre rien » : il veut
     //  dire QU'ON ABANDONNE CE CRITÈRE — la base ne reçoit alors aucun
-    //  filtre pour lui (voir `allumesDuGroupe`, src/lib/tatoueurs.ts).
+    //  filtre pour lui (voir `allumesDuGroupe`, src/lib/artists.ts).
     //
     //  ⚠️ DEUX GROUPES NE SE VIDENT PLUS DU TOUT (passe nº 151-§3) :
     //  TECHNIQUE et RENDU gardent chacun au moins un badge allumé —
@@ -958,7 +958,7 @@ export function MoteurTatouage({
            RENDU se comportaient hier.
            Leurs slugs restent connus de la base et des adresses : la
            garde des vieux liens vit dans `filtresVivants`
-           (config/tatouage), appelée par `criteresComplets` ici même
+           (config/tattoo), appelée par `criteresComplets` ici même
            et par `filtresConnus` au serveur. */}
       {groupeDeBadges(
         parGroupe.get("technique")!,

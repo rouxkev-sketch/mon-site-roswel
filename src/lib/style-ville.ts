@@ -6,7 +6,7 @@ import { memoireCourte } from "@/lib/memoire-courte";
 /**
  * LA LECTURE D'UNE PAGE STYLE + VILLE, FAITE UNE SEULE FOIS
  * ==========================================================
- * « /tatouage/blackwork/lyon » a désormais TROIS lecteurs : les
+ * « /tattoo/blackwork/lyon » a désormais TROIS lecteurs : les
  * métadonnées, l'image de partage et le corps de la page. Comme pour
  * une fiche (voir lib/fiche-lue), tout le monde appelle LA MÊME
  * instance de `cache`.
@@ -52,7 +52,7 @@ import { memoireCourte } from "@/lib/memoire-courte";
  * répondu ». Voir la page, qui n'en tire pas les mêmes conclusions.
  */
 /*  §1 (nº 725) — LE MÉCANISME A DÉMÉNAGÉ dans `lib/memoire-courte`,
-    sans changer d’un iota : `/recherche` en avait besoin à son tour, et
+    sans changer d’un iota : `/search` en avait besoin à son tour, et
     deux copies auraient fini par diverger (piège nº 378). Le grand bloc
     qui l’explique vit là-bas, désormais. */
 export const chargerStyleVille = memoireCourte(
@@ -116,7 +116,7 @@ async function lireStyleVille(
      *
      * ⚠️ PAS DE `Promise.all`, ET C'EST UNE MESURE QUI L'A DÉCIDÉ. Le
      * premier jet attendait les deux d'un coup ; la fumée a montré
-     * l'effet de bord : « /tatouage/realisme/ville-inconnue » — une
+     * l'effet de bord : « /tattoo/realisme/ville-inconnue » — une
      * adresse qui finit en page introuvable — passait de UN aller-retour
      * à TROIS : 400 ms au banc au lieu de 145, parce qu'attendre les
      * deux, c'est attendre LE PLUS LONG. On rend donc la page

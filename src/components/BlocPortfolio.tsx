@@ -357,7 +357,7 @@ export function BlocPortfolio({
    * ██ §2 (nº 400) — LE RENDU N'A PAS DE SENS SUR UN STYLE TOUT NOIR ██
    * ==================================================================
    * Un style ENTIÈREMENT NOIR — le blackwork — porte l'étiquette
-   * `monochrome` dans le catalogue (config/tatouage). Lui proposer
+   * `monochrome` dans le catalogue (config/tattoo). Lui proposer
    * plusieurs rendus n'a aucun sens : il ne reste qu'un encadré,
    * inerte.
    * ██ nº 404 — CET ENCADRÉ UNIQUE DIT DÉSORMAIS « NOIR » ██
@@ -2038,7 +2038,7 @@ export function BlocPortfolio({
               lieu de s'en aller avec la première ligne.
               · SA COULEUR est le jeton de trait du site, par son
                 écriture unique — `TRAIT_SEPARATION_FOND`
-                (`bg-sombre-trait`, config/tatouage l. 2030) : aucune
+                (`bg-sombre-trait`, config/tattoo l. 2030) : aucune
                 couleur en dur, aucun contour (la charte les proscrit
                 hors erreur) — un filet d'un pixel, pas une bordure.
               · ELLE S'ARRÊTE AUX MARGES DE L'INTERFACE : posée dans

@@ -31,7 +31,7 @@ import {
  * ET C'EST LA MINIATURE QUI SORT quand elle existe : une carte de
  * 300 px n'a aucune raison de télécharger une image de 1080.
  *
- * POURQUOI UN FICHIER À PART, et pas dans lib/tatoueurs.ts ? Parce que
+ * POURQUOI UN FICHIER À PART, et pas dans lib/artists.ts ? Parce que
  * les CARTES sont affichées côté navigateur : elles ne peuvent pas
  * importer un fichier qui, lui, parle à la base de données côté
  * serveur. Cette règle-ci ne dépend de rien — elle vit donc seule, et
@@ -309,17 +309,17 @@ export function cheminDuCarrousel(
   style: string,
   serie: { nature: string; rendu: string } | null
 ): string {
-  if (!style && !serie) return `/tatoueur/${slug}`;
+  if (!style && !serie) return `/artist/${slug}`;
   const suite = new URLSearchParams();
   if (style) suite.set("style", style);
   if (serie?.nature) suite.set("nature", serie.nature);
   if (serie?.rendu) suite.set("rendu", serie.rendu);
   const requete = suite.toString();
-  return requete ? `/tatoueur/${slug}?${requete}` : `/tatoueur/${slug}`;
+  return requete ? `/artist/${slug}?${requete}` : `/artist/${slug}`;
 }
 
 /*  §1 (nº 602) — `cheminDeLaFenetreCarrousel` EST SUPPRIMÉE, CODE
-    COMPRIS. Elle écrivait l'adresse `/tatoueur/<slug>/carrousel` de la
+    COMPRIS. Elle écrivait l'adresse `/artist/<slug>/carrousel` de la
     page plein écran de la nº 284. La nº 455 lui avait déjà retiré son
     dernier appelant ; la nº 602 supprime la page, sa route serveur et
     la surveillance d'adresse qui la montait — cette écriture n'a donc

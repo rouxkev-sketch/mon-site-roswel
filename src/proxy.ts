@@ -57,13 +57,13 @@ export async function proxy(request: NextRequest) {
       agent
     );
   const ficheTaguee =
-    /^\/tatoueur\/[^/]+$/.test(request.nextUrl.pathname) &&
+    /^\/artist\/[^/]+$/.test(request.nextUrl.pathname) &&
     request.nextUrl.search !== "";
   const versLeJumeauDeFiche = robotDApercu && ficheTaguee;
   const fabriquerReponse = () =>
     versLeJumeau
       ? //  §1 (nº 652) — LE FILET DE L'ANCIENNE ADRESSE. La recherche
-        //  a son adresse à elle (`/recherche`) et les liens du site y
+        //  a son adresse à elle (`/search`) et les liens du site y
         //  mènent directement ; cette réécriture, elle, RESTE — un
         //  lien « /?style=… » déjà partagé, ou un signet, continue de
         //  servir la même page, sans redirection ni erreur. Le chemin
@@ -78,7 +78,9 @@ export async function proxy(request: NextRequest) {
       : versLeJumeauDeFiche
         ? NextResponse.rewrite(
             new URL(
-              request.nextUrl.pathname + "/complet" + request.nextUrl.search,
+              //  nº 836 — « /complet » s'appelle « /full » depuis que
+              //  les adresses parlent anglais (lib/chemins-anglais).
+              request.nextUrl.pathname + "/full" + request.nextUrl.search,
               request.url
             ),
             { request }

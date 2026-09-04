@@ -123,7 +123,7 @@
  *    `distanceParFiche`, mais aucun appelant ne la lui passe ;
  *  · `carrouselsDeLaFiche` sait lire un `contexte.distanceKm` — même
  *    chose, personne ne l'écrit ;
- *  · la recherche CALCULE pourtant les distances (lib/tatoueurs,
+ *  · la recherche CALCULE pourtant les distances (lib/artists,
  *    `effective` — la distance au lieu le plus proche, rayon de
  *    déplacement défalqué), mais elle ne s'en sert QUE pour trier les
  *    fiches ; ce nombre ne survit pas à l'éclatement en carrousels.

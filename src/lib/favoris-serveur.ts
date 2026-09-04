@@ -2,14 +2,14 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { natureConnue } from "@/lib/photos-tatoueur";
 import { modesActifs, type ModeExerciceFiche } from "@/lib/modes-exercice";
 //  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
-//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+//  lecture. Une seule écriture (voir sa note dans lib/artists).
 import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**
  * CE QUE LA PAGE « MES FAVORIS » LIT — côté serveur
  * ==================================================
  * TROIS LECTURES SIMPLES, ET PAS UNE JOINTURE IMBRIQUÉE. C'est la
- * règle de la maison (voir `garnirFiches` dans lib/tatoueurs) et elle
+ * règle de la maison (voir `garnirFiches` dans lib/artists) et elle
  * a ici une deuxième raison : `favoris_photos` et `photos_tatoueur`
  * n'ont pas les mêmes politiques de lecture. Une imbriquée mélangerait
  * les deux dans une seule requête, et le moindre changement de
@@ -340,7 +340,7 @@ export async function lireLesFavoris(
         encore en ligne ». Un message faux, en plus d'un lien mort.
         LA MÊME RÈGLE PARTOUT, DÉSORMAIS : `listeEnLigne` demande les
         quatre colonnes d'`estEnLigne` et filtre avec elle (voir sa note
-        dans lib/tatoueurs).
+        dans lib/artists).
         ⚠️ RIEN N'EST EFFACÉ, ET C'EST TOUT LE POINT : le favori et le
         suivi RESTENT en base. Ils sont MASQUÉS le temps de la
         suppression différée, et REVIENNENT si elle est annulée — la
@@ -398,7 +398,7 @@ export async function lireLesFavoris(
         region: fiche.region,
         pays: fiche.pays,
         codePays: fiche.code_pays,
-        //  LES MÊMES REPLIS QUE `normaliser` dans lib/tatoueurs : une
+        //  LES MÊMES REPLIS QUE `normaliser` dans lib/artists : une
         //  fiche d'avant la migration nº 38 n'a ni l'une ni l'autre.
         typeFiche: fiche.type_fiche ?? "salon",
         etablissement: fiche.etablissement ?? "salon",
@@ -439,7 +439,7 @@ export async function lireLesFavoris(
               //  qui vient d'arriver sur une fiche déjà validée « est
               //  visible de son auteur, JAMAIS du public ». Deux
               //  lectures du site la tenaient — la recherche en base, et
-              //  `garnirFiches` (lib/tatoueurs) — mais celle-ci NE LA
+              //  `garnirFiches` (lib/artists) — mais celle-ci NE LA
               //  DEMANDAIT MÊME PAS : la bande de « Ma sélection »
               //  montrait donc les photos en attente à tous ceux qui
               //  suivent l'artiste. Relevé nº 637, fermé à la nº 638.
@@ -522,7 +522,7 @@ export async function lireLesFavoris(
     for (const ligne of lignesBrutes) {
       //  ██ §1 (nº 638) — RÈGLE 6 DE LA nº 285, TENUE ICI AUSSI ██
       //  Le test est écrit comme celui de `garnirFiches`
-      //  (lib/tatoueurs) : STRICTEMENT `=== true`, jamais « faux ou
+      //  (lib/artists) : STRICTEMENT `=== true`, jamais « faux ou
       //  absent ». Sans la migration la colonne n'existe pas, la valeur
       //  est `undefined`, la photo est gardée, et rien ne change.
       //  ⚠️ ET LE COMPTE DE NOUVEAUTÉS SUIT TOUT SEUL : il se calcule

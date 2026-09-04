@@ -44,7 +44,7 @@ import { MENU_SUIVIS, PARAM_SELECTION } from "@/lib/filtres-selection";
 /** La clé du magasin local, écrite ici et nulle part ailleurs. */
 export const CLE_MEMOIRE_SELECTION = "yokofolio:selection";
 /** La page dont on parle — la seule qui ait cette mémoire. */
-export const CHEMIN_SELECTION = "/mes-favoris";
+export const CHEMIN_SELECTION = "/my-favorites";
 /** La clé `dataset` sur <html> : `html[data-selection-memoire]`. */
 export const ATTRIBUT_MEMOIRE_SELECTION = "selectionMemoire";
 export const MEMOIRE_CARTES = "cartes";

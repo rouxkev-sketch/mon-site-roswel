@@ -19,7 +19,7 @@ export function PontApercuFiche({ slug }: { slug: string }) {
   useEffect(() => {
     try {
       if (/(^|; )sb-[^=]*-auth-token/.test(document.cookie)) {
-        window.location.replace(`/tatoueur/${slug}/complet`);
+        window.location.replace(`/artist/${slug}/full`);
       }
     } catch {
       // cookies illisibles : le message suffit

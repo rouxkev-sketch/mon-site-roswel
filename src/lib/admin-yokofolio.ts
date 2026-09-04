@@ -5,7 +5,7 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  * LE GARDE DE L'ADMIN YOKOFOLIO — côté serveur
  * =============================================
  * /admin et ses API sont réservés aux comptes Supabase dont l'adresse
- * figure dans COURRIELS_ADMIN (src/config/tatouage.ts). L'écran
+ * figure dans COURRIELS_ADMIN (src/config/tattoo.ts). L'écran
  * vérifie pour l'affichage ; CHAQUE API revérifie ici — c'est la
  * sécurité réelle, celle qu'aucun navigateur ne contourne.
  */

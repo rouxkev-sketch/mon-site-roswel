@@ -333,7 +333,7 @@
  *    L'ACCUEIL NU EST PRÉRENDU (verdict nº 356 : le rendu dynamique
  *    est la cause signée des éjections). La mise en page du groupe et
  *    la racine ne lisent PLUS la requête ; le jumeau dynamique
- *    la recherche (« /recherche » depuis la nº 652 ; jusque-là le jumeau
+ *    la recherche (« /search » depuis la nº 652 ; jusque-là le jumeau
  *    « accueil-recherche ») est servie par RÉÉCRITURE du proxy dès que
  *    « / » porte une requête — le filet des liens déjà partagés ; le
  *    catalogue lit Supabase en ANONYME (lib/supabase/server) ; la
@@ -497,7 +497,7 @@ export const PREFIXE_DEFILEMENT = "yokofolio:defilement:";
  * ------------------------------------------------------------------
  * RIEN, et ce n'est pas une formule : la clé contient LE CHEMIN, parce
  * que l'adresse canonique le contient. Depuis la nº 652, une recherche
- * se range donc sous « yokofolio:defilement:/recherche?style=… » et
+ * se range donc sous « yokofolio:defilement:/search?style=… » et
  * l'accueil sous « yokofolio:defilement:/ ». DEUX CLÉS QUI NE PEUVENT PAS
  * SE CONFONDRE — c'est exactement la garantie que la nº 184 cherchait,
  * et le déménagement la renforce au lieu de l'entamer.
@@ -758,7 +758,7 @@ export function laRepriseVientDuSite(): boolean {
  * §1 (nº 446) — « CETTE ARRIVÉE VEUT LE HAUT » : LA SORTIE CONFIRMÉE
  * ==================================================================
  * LE DÉFAUT QU'ELLE FERME (relevé du propriétaire, mobile) : sur la
- * fiche de création (/devenir-tatoueur/fiche), quitter par le bouton
+ * fiche de création (/become-an-artist/portfolio), quitter par le bouton
  * « précédent » ouvre la fenêtre de confirmation (la sentinelle de
  * GardeSaisie) ; « Quitter sans enregistrer » repart alors par
  * `history.go(-2)` — une VRAIE traversée d'historique. À l'arrivée

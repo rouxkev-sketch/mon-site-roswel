@@ -7,8 +7,8 @@
  * le moteur qui pilote la grille, ailleurs un moteur qui y ramène.
  *
  * POURQUOI UN GROUPE ENTRE PARENTHÈSES ? « (tatouage) » n'apparaît
- * PAS dans les adresses : l'index reste « /tatoueurs », la fiche
- * « /tatoueur/nom ». Les parenthèses servent uniquement à donner un
+ * PAS dans les adresses : l'index reste « /artists », la fiche
+ * « /artist/nom ». Les parenthèses servent uniquement à donner un
  * habillage commun à ces pages-là, sans toucher aux autres produits.
  *
  * L'en-tête et le pied de page BLANCS du produit artisans ne peuvent

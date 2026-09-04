@@ -530,11 +530,11 @@ export function AdminDemarchage() {
                                   <>
                                     {" · "}
                                     <Link
-                                      href={`/tatoueur/${fiche.slug}`}
+                                      href={`/artist/${fiche.slug}`}
                                       target="_blank"
                                       className="underline underline-offset-2 hover:text-primaire"
                                     >
-                                      /tatoueur/{fiche.slug}
+                                      /artist/{fiche.slug}
                                     </Link>
                                   </>
                                 )}
@@ -778,7 +778,7 @@ function EcranMessage({
             </span>
             {fiche.slug && (
               <Link
-                href={`/tatoueur/${fiche.slug}`}
+                href={`/artist/${fiche.slug}`}
                 target="_blank"
                 className="shrink-0 inline-flex items-center gap-1.5 text-[12.5px]
                            text-sombre-texte-doux hover:text-primaire transition-colors"

@@ -180,7 +180,7 @@ function useClicVersFiche() {
         faire. */
     if (!laLargeurVeutUneFenetre()) return;
     evenement.preventDefault();
-    ouvrirFiche(slug, `/tatoueur/${slug}`);
+    ouvrirFiche(slug, `/artist/${slug}`);
   };
 }
 

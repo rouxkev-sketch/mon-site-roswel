@@ -32,8 +32,8 @@ import { catalogueDesStyles } from "@/lib/catalogue-styles";
  * ======================
  * Adresse : /
  *
- * (Cette page répondait à « /tatoueurs » ; yokofolio occupe désormais
- * la racine du site, et « /tatoueurs » y redirige — voir
+ * (Cette page répondait à « /artists » ; yokofolio occupe désormais
+ * la racine du site, et « /artists » y redirige — voir
  * next.config.ts. Le site vitrine de l'agence est passé sur
  * « /agence ».)
  *
@@ -111,7 +111,7 @@ function pageDemandee(params: ParametresAccueil): number {
  * ██ §1 (nº 725) — LE `cache` DE REACT NE TENAIT PAS SA PROMESSE ██
  * ------------------------------------------------------------------
  * CETTE NOTE DISAIT « faite une seule fois », et c'était FAUX — mesuré
- * au journal de la doublure sur UN affichage de /recherche : DIX-HUIT
+ * au journal de la doublure sur UN affichage de /search : DIX-HUIT
  * requêtes envoyées à la base, plusieurs lignes en double ou en triple
  * (`popularite_tatoueurs` ×3, `rpc/rechercher_tatoueurs` ×2,
  * `tatoueurs` ×3, `photos_tatoueur` ×3). La cause est celle que la
@@ -134,7 +134,7 @@ async function lireAccueil(requete: string, taillePage: number) {
       bricolée à la main ne doit pas vider la page. Or le catalogue a
       DEUX moitiés : les quarante et un styles du CODE, connus toujours,
       et ceux NÉS D'UNE SUGGESTION, qui vivent en base et sont posés
-      dans un REGISTRE DE MODULE (config/tatouage) par la mise en page
+      dans un REGISTRE DE MODULE (config/tattoo) par la mise en page
       du groupe. « Néo-japonais » — celui du relevé du propriétaire —
       est du second genre.
       LA MISE EN PAGE ET LA PAGE SE RENDENT EN PARALLÈLE. C'est le
@@ -211,7 +211,7 @@ async function lireAccueil(requete: string, taillePage: number) {
     limite: taillePage * page,
     //  §1 (nº 425) — LA TAILLE DE PAGE N'EST PLUS TRANSMISE : la règle
     //  « deux carrousels d'un même artiste par page » travaille sur une
-    //  fenêtre CONSTANTE (lib/tatoueurs), identique pour la page
+    //  fenêtre CONSTANTE (lib/artists), identique pour la page
     //  prérendue (repli 24) et le jumeau (cookie) — c'était la source
     //  de la réorganisation des cartes au premier « Voir plus ».
     jourMelange,
@@ -223,7 +223,7 @@ async function lireAccueil(requete: string, taillePage: number) {
     //  qu'une CARTE montre ; il ne décide plus de rien d'autre. Ce qui
     //  décidait, à son insu, QUELLES CARTES EXISTENT, c'était le
     //  nombre de photos demandé À LA BASE — il n'est plus lu ici (voir
-    //  PHOTOS_LUES_PAR_FICHE, config/tatouage).
+    //  PHOTOS_LUES_PAR_FICHE, config/tattoo).
     //  ⚠️ CE SONT DES LIGNES, PAS DES IMAGES : rien n'est téléchargé de
     //  plus à l'affichage — la carte ne monte que sa première photo,
     //  et les suivantes au premier geste (nº 211-§5).
@@ -340,7 +340,7 @@ export async function metadonneesAccueil(
  * LE RENDU PARTAGÉ DE L'ACCUEIL (nº 357) — deux routes l'appellent :
  *  · `/` (page.tsx) — PRÉRENDUE, régénérée périodiquement : aucun
  *    accès aux cookies ni aux paramètres, tout arrive en propriétés ;
- *  · `/recherche` (jumeau dynamique) — atteinte par RÉÉCRITURE
+ *  · `/search` (jumeau dynamique) — atteinte par RÉÉCRITURE
  *    du proxy quand « / » porte une requête : elle lit cookies et
  *    paramètres comme avant. L'adresse du navigateur reste « / ».
  * L'ancienne note « l'accueil reste dynamique » (passe performance)

@@ -16,7 +16,7 @@ import {
  * CE QUE C'EST : l'écran qui le dit, et qui donne la suite. Il vit ICI
  * et pas dans une page, parce qu'il sert à DEUX endroits (piège
  * nº 378) :
- *  · la page /lien-expire, où /auth/callback envoie quand la
+ *  · la page /link-expired, où /auth/callback envoie quand la
  *    vérification du jeton échoue ;
  *  · la page du nouveau mot de passe, quand on l'ouvre sans session
  *    (un lien recliqué, un signet gardé).
@@ -60,7 +60,7 @@ export function LienExpire() {
            de la page Contact : 40 px de haut, 14 px de texte, fond
            `sombre-eleve` — le rose reste à l'action finale. */}
       <Link
-        href="/devenir-tatoueur?mode=connexion"
+        href="/become-an-artist?mode=connexion"
         className="mt-7 inline-flex items-center justify-center rounded-full
                    px-5 min-h-[40px] text-[14px] bg-sombre-eleve
                    hover:bg-sombre-haut text-white font-semibold

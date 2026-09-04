@@ -60,7 +60,7 @@
   {
    "nom": "accueil → style → retour",
    "aChange": true,
-   "arrivee": "/recherche?style=blackwork&nature=tatouage",
+   "arrivee": "/search?style=blackwork&nature=tatouage",
    "positionAvant": 195,
    "positionApres": 136,
    "ecart": 59,
@@ -73,7 +73,7 @@
   {
    "nom": "mosaïque → fiche → retour",
    "aChange": true,
-   "arrivee": "/tatoueur/demo-realisme-0?style=realisme&rendu=noir&nature=tatouage&photo=photo-demo-1-0-0",
+   "arrivee": "/artist/demo-realisme-0?style=realisme&rendu=noir&nature=tatouage&photo=photo-demo-1-0-0",
    "positionAvant": 1145,
    "positionApres": 0,
    "ecart": 1145,
@@ -81,12 +81,12 @@
    "hauteurAvant": 2752,
    "hauteurApres": 2752,
    "revenu": true,
-   "revenuSur": "/recherche?style=realisme&nature=tatouage"
+   "revenuSur": "/search?style=realisme&nature=tatouage"
   },
   {
    "nom": "style+ville → fiche → retour",
    "aChange": true,
-   "arrivee": "/tatoueur/demo-trash-polka-0?style=trash-polka&rendu=noir&nature=tatouage&photo=photo-demo-0-0-0",
+   "arrivee": "/artist/demo-trash-polka-0?style=trash-polka&rendu=noir&nature=tatouage&photo=photo-demo-0-0-0",
    "positionAvant": 307,
    "positionApres": 173,
    "ecart": 134,
@@ -94,7 +94,7 @@
    "hauteurAvant": 1356,
    "hauteurApres": 1356,
    "revenu": true,
-   "revenuSur": "/tatouage/trash-polka/lyon-0-0"
+   "revenuSur": "/tattoo/trash-polka/lyon-0-0"
   }
  ],
  "temoins": [

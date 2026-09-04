@@ -46,7 +46,7 @@ import { suiteSure } from "@/lib/favoris-yokofolio";
  */
 /** La page des réglages du compte — là où l'on revient quand c'est de
     là qu'on est parti lier Google (§3, nº 783). */
-export const RETOUR_SECURITE = "/devenir-tatoueur/securite";
+export const RETOUR_SECURITE = "/become-an-artist/security";
 
 export function adresseDeRetour(suite?: string): string {
   const origine = window.location.origin;

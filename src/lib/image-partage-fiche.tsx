@@ -31,7 +31,7 @@ import {
  * LA COMPOSITION VIT DONC ICI, et deux appelants la consomment :
  *  · `opengraph-image.tsx` — l'aperçu par défaut d'une fiche, sans
  *    carrousel : rien ne change pour lui ;
- *  · la route `/tatoueur/<slug>/partage` — la même image, mais pour LE
+ *  · la route `/artist/<slug>/share` — la même image, mais pour LE
  *    CARROUSEL que l'adresse désigne. C'est elle que les métadonnées
  *    annoncent quand le lien porte des tags (voir la page de fiche).
  * Une seule composition, donc aucune chance que les deux divergent.

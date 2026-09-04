@@ -51,7 +51,7 @@ import { lireDuServeur } from "@/lib/lecture-navigateur";
  * entrée dans SECTIONS) et une ZONE DE CONTENU.
  *
  * ACCÈS : les comptes dont l'adresse figure dans COURRIELS_ADMIN
- * (src/config/tatouage.ts). L'écran vérifie pour l'affichage ; chaque
+ * (src/config/tattoo.ts). L'écran vérifie pour l'affichage ; chaque
  * API revérifie côté serveur — c'est elle, la vraie serrure.
  *
  * SECTIONS :
@@ -1247,7 +1247,7 @@ export function AdminYokofolio() {
             : "Log in with an admin account to open this page."}
         </p>
         <Link
-          href={utilisateur ? "/" : "/devenir-tatoueur"}
+          href={utilisateur ? "/" : "/become-an-artist"}
           className="mt-7 inline-flex items-center justify-center rounded-full
                      px-7 min-h-[52px] bg-primaire hover:bg-primaire-fonce
                      text-white font-semibold transition-colors"
@@ -2122,11 +2122,11 @@ export function AdminYokofolio() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="font-semibold text-sombre-texte">
                       <Link
-                        href={`/tatoueur/${s.tatoueur_slug}`}
+                        href={`/artist/${s.tatoueur_slug}`}
                         target="_blank"
                         className="hover:text-primaire transition-colors"
                       >
-                        /tatoueur/{s.tatoueur_slug} ↗
+                        /artist/{s.tatoueur_slug} ↗
                       </Link>
                     </p>
                     <p className="text-[12.5px] text-sombre-texte-doux">
@@ -2339,7 +2339,7 @@ export function AdminYokofolio() {
                       {demande.fiche_slug && (
                         <p className="mt-1">
                           <Link
-                            href={`/tatoueur/${demande.fiche_slug}`}
+                            href={`/artist/${demande.fiche_slug}`}
                             target="_blank"
                             className="text-[13px] font-semibold text-sombre-texte
                                        underline underline-offset-2
@@ -2579,7 +2579,7 @@ export function AdminYokofolio() {
                     {demande.fiche_slug && (
                       <p className="mt-1">
                         <Link
-                          href={`/tatoueur/${demande.fiche_slug}`}
+                          href={`/artist/${demande.fiche_slug}`}
                           target="_blank"
                           className="text-[13px] font-semibold text-sombre-texte
                                      underline underline-offset-2

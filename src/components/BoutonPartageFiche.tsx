@@ -219,7 +219,7 @@ export function BoutonPartageFiche({
   const declencheur = useRef<HTMLButtonElement>(null);
 
   /** L'URL PUBLIQUE de la fiche : le chemin résolu sur l'origine du
-      site (https://…/tatoueur/nom), sinon la page courante. */
+      site (https://…/artist/nom), sinon la page courante. */
   function urlFiche() {
     return cheminFiche
       ? new URL(cheminFiche, window.location.origin).href

@@ -14,7 +14,7 @@ import { estCourrielAdmin } from "@/lib/admin-yokofolio";
  *
  * IL N'Y A PLUS QU'UNE RÈGLE DE VISIBILITÉ, celle de la base
  * (`fiche_en_ligne`, migration nº 60), recopiée une seule fois côté
- * site dans `estEnLigne` (lib/tatoueurs) : publiée, pas supprimée, pas
+ * site dans `estEnLigne` (lib/artists) : publiée, pas supprimée, pas
  * hors ligne, pas refusée. Une fiche d'essai se cache comme n'importe
  * quelle autre : en ne la publiant pas.
  *

@@ -18,7 +18,7 @@ import { creerClientSupabaseAdmin } from "@/lib/supabase/admin";
  * le décalque est VOULU, c'est la consigne du propriétaire : deux
  * écrans de traitement qui se ressembleraient sans se copier finiraient
  * par diverger. La route de DÉPÔT l'avait déjà fait pour la demande
- * (api/tatoueur/suggestion-convention, nº 750) ; celle-ci le fait pour
+ * (api/artist/suggestion-convention, nº 750) ; celle-ci le fait pour
  * la décision.
  *
  * GET  : les demandes reçues, les plus récentes d'abord.
@@ -457,7 +457,7 @@ async function envoyerCourriel(
           : "",
       ].filter(Boolean),
       action: accepte
-        ? { libelle: "Open my portfolio", url: `${adresseDuSite()}/devenir-tatoueur/fiche` }
+        ? { libelle: "Open my portfolio", url: `${adresseDuSite()}/become-an-artist/portfolio` }
         : null,
     });
 

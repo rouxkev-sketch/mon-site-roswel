@@ -99,7 +99,7 @@ let muetteJusqua = 0;
  * ⚠️ CE DÉTAIL DÉCIDE DE TOUT, et il a été mesuré. Sans lui, la fenêtre
  * courait depuis la PREMIÈRE expiration : elle se refermait AU MILIEU
  * d'un rendu, et la lecture suivante repayait dix secondes pleines.
- * Relevé : « /recherche » tenait encore 41 s. En la faisant repartir à
+ * Relevé : « /search » tenait encore 41 s. En la faisant repartir à
  * chaque échec instantané, le disjoncteur reste ouvert tant que la page
  * demande — donc jusqu'à la fin du rendu — et la page se rend en une
  * dizaine de secondes.

@@ -61,7 +61,7 @@ const GRIS = "#9AA1AC";
  * ██ §2 (nº 679) — L'ARMEMENT TIENT L'ONGLET, PAS L'ADRESSE ██
  * ==================================================================
  * LA CAUSE, MESURÉE AVANT D'ÊTRE CORRIGÉE. Au banc, partir de
- * `/contact?sonde-vitesse=1` vers `/recherche` charge TROIS documents
+ * `/contact?sonde-vitesse=1` vers `/search` charge TROIS documents
  * (la chaîne de réécriture du proxy) : la nouvelle adresse ne porte plus
  * le drapeau, la sonde ne s'arme pas, la pastille disparaît. Les dix
  * autres sondes s'en accommodent — elles observent un écran. Celle-ci

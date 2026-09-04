@@ -12,7 +12,7 @@
  * LE REMÈDE : DEUX MÉMOIRES, une par surface —
  *  · « recherche »  : l'accueil, la page de recherche et tout le
  *    parcours des fiches ;
- *  · « selection »  : « Ma sélection » (/mes-favoris).
+ *  · « selection »  : « Ma sélection » (/my-favorites).
  * Chacune se souvient de son propre état, et l'une ne touche jamais
  * l'autre. LE MÉCANISME N'EST PAS DOUBLÉ, LA CLÉ L'EST : les magasins
  * (vue-phototheque, disposition-grille) gardent leur écriture, et
@@ -32,7 +32,7 @@ export type SurfaceAffichage =
   | typeof SURFACE_SELECTION;
 
 /** Le chemin de « Ma sélection » — celui de la page serveur. */
-const CHEMIN_SELECTION = "/mes-favoris";
+const CHEMIN_SELECTION = "/my-favorites";
 
 /** La surface d'un chemin d'adresse. PURE : le serveur peut l'appeler. */
 export function surfaceDuChemin(chemin: string): SurfaceAffichage {

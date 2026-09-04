@@ -212,7 +212,7 @@ function adresseDe(
   if (lireDisposition() === "une") parametres.set("disposition", "une");
   if (lirePhototheque()) parametres.set("texte", "sans");
   const requete = parametres.toString();
-  /*  §1 (nº 652) — LA RECHERCHE A SON ADRESSE : « /recherche ». Sans
+  /*  §1 (nº 652) — LA RECHERCHE A SON ADRESSE : « /search ». Sans
       un seul critère, il n'y a pas de recherche — c'est l'accueil, et
       l'adresse reste « / ». Le partage d'un ancien lien « /?style=… »
       continue de marcher : le proxy le réécrit vers cette page. */
@@ -367,7 +367,7 @@ export function IndexTatoueurs({
   /** La page demandée par l'adresse (1 par défaut). */
   page: number;
   /** §2 (nº 425) — le jour du mélange utilisé par CE rendu (voir
-      `jourDuMelange`, lib/tatoueurs). Le lien « Voir plus » le
+      `jourDuMelange`, lib/artists). Le lien « Voir plus » le
       transmet pour que la page suivante prolonge cet ordre-ci. */
   jourMelange: number;
   /** L'AFFICHAGE demandé par l'adresse (nº 203-§1b) : la disposition
@@ -475,7 +475,7 @@ export function IndexTatoueurs({
    * ------------------------------------------------------------------
    * CE QUE LA nº 673 LISAIT ICI : l'adresse BRUTE (`lireRequeteCourante`),
    * quelle qu'elle soit. Or une adresse peut appartenir à une SURFACE :
-   * la fenêtre de fiche pousse /tatoueur/nom par un pushState brut SANS
+   * la fenêtre de fiche pousse /artist/nom par un pushState brut SANS
    * quitter la mosaïque (GrilleTatoueurs, PileFiches). Lire là, c'était
    * prendre l'adresse d'une fenêtre pour un désaccord de page — chaque
    * ouverture re-rendait cette page, et le garde-fou de la nº 631 (plus
@@ -485,7 +485,7 @@ export function IndexTatoueurs({
    * la nº 673 casse ; la même lecture débranchée, tout revit).
    * LA RÈGLE, DÉSORMAIS — celle de la nº 360, qui existait déjà pour la
    * page de fiche : tant que l'adresse est celle de la mosaïque
-   * (« / » ou « /recherche »), on lit ; dès qu'une surface la possède,
+   * (« / » ou « /search »), on lit ; dès qu'une surface la possède,
    * on rend la valeur GELÉE — même chaîne, aucun rendu, donc aucun
    * réveil. Le filet garde tout son métier sur SES adresses (un retour
    * entre deux recherches, une page servie fausse) : seule l'adresse
@@ -537,7 +537,7 @@ export function IndexTatoueurs({
    * squelette, pas de page vide, pas même l'adresse qui change. RIEN.
    * LA CAUSE TIENT EN TROIS PHRASES, et aucune n'est un bug :
    *  · `loading.tsx` ne joue qu'au MONTAGE d'un segment — or
-   *    `/recherche?a` → `/recherche?b` reste dans le MÊME segment :
+   *    `/search?a` → `/search?b` reste dans le MÊME segment :
    *    il n'y a aucun montage, donc jamais de squelette de segment ;
    *  · `router.push` (App Router) ne touche à RIEN tout de suite : la
    *    page est demandée au serveur DANS la transition React
@@ -570,7 +570,7 @@ export function IndexTatoueurs({
    * légales » et « nouveau mot de passe » : ~255 ms pour des écrans qui
    * n'affichent aucune création.
    * CE COMPOSANT EST LE BON ENDROIT parce qu'il est monté par
-   * `RenduAccueil`, et par lui seul : « / » et « /recherche », les deux
+   * `RenduAccueil`, et par lui seul : « / » et « /search », les deux
    * pages bâties autour du menu des styles. Les nombres y sont donc
    * prêts avant qu'on ouvre le menu — RIEN N'Y CHANGE. Partout
    * ailleurs, c'est le menu lui-même qui les demande en s'ouvrant
@@ -620,7 +620,7 @@ export function IndexTatoueurs({
    * CLIENTE qui ne change que la REQUÊTE reste sur le même chemin « / » :
    * le routeur retrouve son entrée, la juge fraîche, et ressort l'arbre
    * de l'accueil sans rien demander au serveur — donc sans jamais
-   * atteindre le jumeau `/recherche` que le proxy réserve aux
+   * atteindre le jumeau `/search` que le proxy réserve aux
    * adresses à requête. C'est le défaut relevé à la nº 595 (il y démontait
    * déjà tout l'arbre, voir la note de PageFavoris) ; il n'y produisait
    * qu'un CLIGNOTEMENT, parce que l'accueil prérendu était alors une
@@ -630,7 +630,7 @@ export function IndexTatoueurs({
    *
    * POURQUOI CETTE VOIE-CI, ET PAS LES TROIS DE LA nº 595 :
    *  1. DONNER À LA RECHERCHE UNE ADRESSE À ELLE — c'est la voie sûre,
-   *     mais elle rendrait `/recherche` visible dans la barre du
+   *     mais elle rendrait `/search` visible dans la barre du
    *     navigateur. C'EST UNE DÉCISION DU PROPRIÉTAIRE, pas la mienne :
    *     elle n'est pas prise ici ;
    *  2. RETIRER LE PRÉCHARGEMENT DU LIEN — écartée depuis : la mesure a
@@ -687,7 +687,7 @@ export function IndexTatoueurs({
    * ------------------------------------------------------------------
    * LA BORNE QUI MANQUAIT, et l'enquête nº 731 a montré ce qu'elle
    * coûtait : quand la fenêtre de fiche possède l'adresse
-   * (/tatoueur/nom, pushState brut — la grille reste montée dessous),
+   * (/artist/nom, pushState brut — la grille reste montée dessous),
    * ce garde-fou comparait CETTE adresse-là à ses critères, la croyait
    * fausse, et `router.refresh()` redemandait alors LA FICHE — qui
    * remplaçait la mosaïque. La nº 630 l'avait mesuré inoffensif
@@ -696,7 +696,7 @@ export function IndexTatoueurs({
    * la nº 673 (le filet, plus haut) a changé ça, et la lecture gelée de
    * la nº 732 le re-change — cette borne est la seconde moitié de la
    * même réparation : une adresse qui n'est pas celle de la mosaïque
-   * (« / » ou « /recherche ») n'est pas une page en retard, c'est une
+   * (« / » ou « /search ») n'est pas une page en retard, c'est une
    * SURFACE ; on ne compare pas, on ne redemande rien, on ne consomme
    * pas l'épisode (`adresseReprise` reste tel quel : au retour sur la
    * mosaïque, le garde-fou rejoue à plein droit).
@@ -915,10 +915,10 @@ export function IndexTatoueurs({
    * ------------------------------------------------------------------
    * CE QU'IL FAISAIT D'AUTRE, ET QUE LA nº 422 N'AVAIT PAS VU : il ne
    * préparait pas « la page suivante », il remplissait LA CASE DU
-   * CHEMIN « /recherche ». Next range la page préparée d'une route
+   * CHEMIN « /search ». Next range la page préparée d'une route
    * dynamique sous le CHEMIN, pas sous les critères — et sur l'accueil,
    * l'adresse de ce lien-ci se réduit à la nature
-   * (« /recherche?nature=tatouage&page=2&melange=… »), soit très
+   * (« /search?nature=tatouage&page=2&melange=… »), soit très
    * exactement « Toutes les réalisations ». Cliquer ensuite une carte
    * de style, qui mène au même chemin avec d'autres critères, servait
    * cette copie-là. C'est le défaut aléatoire du propriétaire, relevé à
@@ -1237,7 +1237,7 @@ export function IndexTatoueurs({
                      D'AIR EN MOINS ██
                      La signature « Le portfolio des tatouages et des
                      tatoueurs » est supprimée (voir la note laissée à
-                     sa place dans config/tatouage.ts). Sans rien
+                     sa place dans config/tattoo.ts). Sans rien
                      d'autre, le bloc de tête aurait maigri de la
                      hauteur de cette ligne et la mosaïque serait
                      montée d'autant. `degagementConstant` — le
@@ -1443,7 +1443,7 @@ export function IndexTatoueurs({
               replace
               scroll={false}
               //  §1 (nº 656) — PLUS DE PRÉPARATION À L'AVANCE : ce
-              //  lien-ci remplissait la case du chemin « /recherche »
+              //  lien-ci remplissait la case du chemin « /search »
               //  avec « Toutes les réalisations », et la servait aux
               //  cartes de style. La cause, le relevé et le prix sont
               //  écrits en tête de ce bloc et dans lib/chemin-recherche.
@@ -1565,8 +1565,8 @@ export function IndexTatoueurs({
                 window.scrollTo({ top: 0, left: 0, behavior: "instant" });
               }
             }
-            href={`/devenir-tatoueur?suite=${encodeURIComponent(
-              "/devenir-tatoueur/fiche?fiche=nouvelle"
+            href={`/become-an-artist?suite=${encodeURIComponent(
+              "/become-an-artist/portfolio?fiche=nouvelle"
             )}`}
             className="mt-4 inline-flex min-h-9 items-center justify-center
                        rounded-full bg-primaire px-5 text-[14px] font-semibold

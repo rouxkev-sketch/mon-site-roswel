@@ -106,7 +106,7 @@ function texteDuLieu(lieu: LieuTrouve, pourLeMoteur: boolean): string {
  *  2. `surChoix(lieu)` remonte au moteur, qui lance la recherche.
  *  3. La recherche écrit l'adresse : « / » prend une requête.
  *  4. ET LÀ, L'ARCHITECTURE nº 357 ENTRE EN JEU. L'accueil NU (« / »,
- *     prérendu) et son JUMEAU dynamique (« /recherche », servi
+ *     prérendu) et son JUMEAU dynamique (« /search », servi
  *     par réécriture du proxy dès que l'adresse porte une requête)
  *     sont DEUX PAGES, donc deux segments de route. La barre — et donc
  *     le moteur, et donc CE CHAMP — est montée PAR LA PAGE
@@ -120,7 +120,7 @@ function texteDuLieu(lieu: LieuTrouve, pourLeMoteur: boolean): string {
  * état LOCAL dans un composant qui ne survit pas à la navigation. Il
  * n'était pas en cause, il n'était simplement plus là.
  * ⚠️ ET POURQUOI LE DÉFAUT NE SE VOIT QU'UNE FOIS : le second choix de
- * ville part de « /recherche » et y reste — même segment,
+ * ville part de « /search » et y reste — même segment,
  * aucun démontage, le panneau tenait déjà.
  *
  * LE REMÈDE, ET IL TIENT EN UNE PHRASE : le champ note qu'il DEVAIT

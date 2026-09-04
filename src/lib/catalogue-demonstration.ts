@@ -3,7 +3,7 @@
  * ==================================================================
  * (passe nº 278-§4)
  *
- * CE QU'IL EST. `lib/tatoueurs-demo` porte une vingtaine de fiches
+ * CE QU'IL EST. `lib/artists-demo` porte une vingtaine de fiches
  * ÉCRITES DANS LE CODE — noms inventés, adresses inventées, photos
  * dessinées à la volée. Elles servaient de filet : base injoignable,
  * migration pas encore passée, le site montrait quelque chose au lieu

@@ -5,7 +5,7 @@ import { typeDeLaFiche, type EtatLigne, type TypeFiche } from "@/lib/demarchage"
 /**
  * LIRE UN DÉMARCHAGE PAR SON JETON
  * ==================================
- * Le seul chemin d'entrée de la page /rejoindre. Il sert au rendu de
+ * Le seul chemin d'entrée de la page /join. Il sert au rendu de
  * la page ET aux gestes qu'elle permet (rattacher, supprimer,
  * réactiver) : une seule lecture, une seule vérité.
  *

@@ -15,7 +15,7 @@ import {
  *
  * Dessiné à la volée en SVG plutôt que stocké en fichiers : rien à
  * ranger, rien à livrer dans le zip, et la couleur suit celle du
- * style dans src/config/tatouage.ts.
+ * style dans src/config/tattoo.ts.
  *
  * Adresse : /images-demo/tatouage/realisme-1.svg
  *           (le numéro ne sert qu'à varier légèrement le rendu)

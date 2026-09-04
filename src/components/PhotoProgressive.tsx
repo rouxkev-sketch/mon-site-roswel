@@ -83,7 +83,7 @@ export function PhotoProgressive({
       fetchPriority={tout_de_suite ? "high" : undefined}
       decoding="async"
       //  LA RÉSERVATION : les dimensions intrinsèques du format du site
-      //  (voir config/tatouage). Elles ne bougent pas.
+      //  (voir config/tattoo). Elles ne bougent pas.
       width={PHOTO_PORTFOLIO.largeur}
       height={PHOTO_PORTFOLIO.hauteur}
       /*  §1 (nº 709) — L'ALT NE SE PEINT PLUS DANS LE CADRE. Pendant

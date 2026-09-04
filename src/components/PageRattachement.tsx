@@ -18,7 +18,7 @@ import { useUtilisateur } from "@/lib/use-utilisateur";
  * Trois écrans, un seul lien :
  *
  *  1. IL N'A PAS DE COMPTE (le cas normal) : ses fiches, puis L'ÉCRAN
- *     DE CRÉATION DE COMPTE — le vrai, celui de /devenir-tatoueur,
+ *     DE CRÉATION DE COMPTE — le vrai, celui de /become-an-artist,
  *     réutilisé tel quel. Une seule différence : le sélecteur
  *     « Créer mon compte / Me connecter » disparaît.
  *
@@ -344,7 +344,7 @@ function ListeDesFiches({
           </span>
           {fiche.slug && (
             <Link
-              href={`/tatoueur/${fiche.slug}`}
+              href={`/artist/${fiche.slug}`}
               target="_blank"
               className="shrink-0 inline-flex items-center gap-1.5 rounded-full
                          bg-sombre-eleve px-4 min-h-[38px] text-[13px] font-semibold

@@ -28,7 +28,7 @@ l'accueil** au lieu de l'écran de nouveau mot de passe.
 Le clic part donc **chez Supabase**, qui vérifie le jeton puis renvoie
 vers `redirect_to` — **mais seulement si cette adresse figure dans sa
 liste blanche** (*Authentication → URL Configuration → Redirect URLs*).
-Or le site demande `…/auth/callback?next=/devenir-tatoueur/nouveau-mot-
+Or le site demande `…/auth/callback?next=/become-an-artist/new-pass
 de-passe`, **avec un paramètre**, et la liste ne contenait que
 `…/auth/callback`, sans. Une entrée sans joker ne couvre pas une
 adresse à paramètres : **Supabase écarte la demande en silence et
@@ -59,9 +59,9 @@ Chaque gabarit a **sa** destination :
 
 | gabarit | `type` | `next` |
 | --- | --- | --- |
-| Confirm signup | `signup` | `/apres-connexion` |
-| Reset password | `recovery` | `/devenir-tatoueur/nouveau-mot-de-passe` |
-| Change email | `email_change` | `/devenir-tatoueur/securite` |
+| Confirm signup | `signup` | `/after-login` |
+| Reset password | `recovery` | `/become-an-artist/new-password` |
+| Change email | `email_change` | `/become-an-artist/security` |
 
 > ⚠️ **Il reste une chose à faire dans Supabase**, mais pour Google, pas
 > pour les e-mails : dans *Authentication → URL Configuration →
@@ -176,7 +176,7 @@ Confirm your YokoFolio account
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Welcome to YokoFolio!</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">One last step: confirm your email address to activate your account.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">This link expires in 24 hours. If you didn't create an account, just ignore this email.</p>
-              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup&next=%2Fapres-connexion" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Confirm my email</a></p>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup&next=%2Fafter-login" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Confirm my email</a></p>
             </td>
           </tr>
           <tr>
@@ -235,7 +235,7 @@ Reset your YokoFolio password
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Forgot your password?</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">No problem. Click the button below to choose a new one.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">This link expires in 1 hour. If you didn't ask for it, ignore this email — your password stays the same.</p>
-              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=%2Fdevenir-tatoueur%2Fnouveau-mot-de-passe" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Choose a new password</a></p>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery&next=%2Fbecome-an-artist%2Fnew-password" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Choose a new password</a></p>
             </td>
           </tr>
           <tr>
@@ -294,7 +294,7 @@ Confirm your new email address
               <h1 style="margin:0 0 18px 0;font-family:Arial, Helvetica, sans-serif;font-size:22px;line-height:28px;font-weight:bold;color:#0B0F14;">Confirm your new email</h1>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">You asked to change the email address on your YokoFolio account, from {{ .Email }} to {{ .NewEmail }}.</p>
               <p style="margin:0 0 14px 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;color:#0B0F14;">Confirm the change below. Until then, your current address stays valid.</p>
-              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change&next=%2Fdevenir-tatoueur%2Fsecurite" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Confirm this change</a></p>
+              <p style="margin:24px 0 0 0;font-family:Arial, Helvetica, sans-serif;font-size:15px;line-height:23px;"><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change&next=%2Fbecome-an-artist%2Fsecurity" style="color:#1A5CC8;text-decoration:none;font-weight:bold;">Confirm this change</a></p>
             </td>
           </tr>
           <tr>

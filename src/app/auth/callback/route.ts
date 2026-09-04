@@ -72,7 +72,7 @@ function origineReelle(request: Request): string {
  * Le clic part donc CHEZ SUPABASE, qui vérifie le jeton puis renvoie
  * vers `redirect_to` — MAIS SEULEMENT SI CETTE ADRESSE FIGURE DANS SA
  * LISTE BLANCHE (Authentication → URL Configuration → Redirect URLs).
- * Or le site demande `…/auth/callback?next=/devenir-tatoueur/nouveau-
+ * Or le site demande `…/auth/callback?next=/become-an-artist/nouveau-
  * mot-de-passe`, AVEC UN PARAMÈTRE, et la liste ne contient que
  * `…/auth/callback`, sans. Une entrée sans joker ne couvre pas une
  * adresse à paramètres : Supabase écarte la demande EN SILENCE et
@@ -101,7 +101,7 @@ function origineReelle(request: Request): string {
  */
 
 /** La page qui dit qu'un lien d'e-mail a fait son temps (nº 828). */
-const PAGE_LIEN_EXPIRE = "/lien-expire";
+const PAGE_LIEN_EXPIRE = "/link-expired";
 
 /** Les types de lien qu'un courriel de Supabase peut porter. */
 const TYPES_DE_LIEN = [
@@ -123,7 +123,7 @@ type TypeDeLien = (typeof TYPES_DE_LIEN)[number];
 function destinationSure(brut: string | null): string {
   if (!brut || !brut.startsWith("/") || brut.startsWith("//")) {
     //  LE DÉFAUT EST L'AIGUILLAGE (passe nº 137, il remplace la règle
-    //  de la nº 131) : la page /apres-connexion demande à la base si ce
+    //  de la nº 131) : la page /after-login demande à la base si ce
     //  compte a un portfolio, puis mène à sa fiche ou à ses favoris.
     //  L'accueil était un défaut hérité, jamais choisi.
     return ARRIVEE_APRES_CONNEXION;

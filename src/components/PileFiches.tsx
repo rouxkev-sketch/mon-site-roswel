@@ -35,7 +35,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *        pile : on n'empile rien par-dessus son propre formulaire) ;
  *     2. une fiche ouverte depuis un LIEN DE PARTAGE, c'est-à-dire
  *        par quelqu'un qui arrive de l'extérieur (l'adresse directe
- *        /tatoueur/nom, rendue en page complète par le serveur — le
+ *        /artist/nom, rendue en page complète par le serveur — le
  *        référencement ne voit qu'elle).
  *   TOUT LE RESTE S'OUVRE EN FENÊTRE CENTRÉE SUPERPOSÉE : les cartes
  *   de la mosaïque, celles de « Ma sélection », et TOUT lien interne
@@ -59,7 +59,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *
  * L'ADRESSE DÉCIDE TOUT, comme pour la fenêtre de la mosaïque :
  *  · OUVRIR pousse UNE entrée d'historique (`pushState` vers
- *    /tatoueur/nom — Next sait lire ces pushState natifs) et empile
+ *    /artist/nom — Next sait lire ces pushState natifs) et empile
  *    une fenêtre ; l'historique ne grossit jamais de plus d'une
  *    entrée par ouverture ;
  *  · FERMER (croix, voile, Échap), c'est `history.back()` : le
@@ -272,7 +272,7 @@ export function PileFiches({
   let visibles = pile;
   while (
     visibles.length > 0 &&
-    cheminReel !== `/tatoueur/${visibles[visibles.length - 1].fiche.slug}`
+    cheminReel !== `/artist/${visibles[visibles.length - 1].fiche.slug}`
   ) {
     visibles = visibles.slice(0, -1);
   }
@@ -406,7 +406,7 @@ export function PileFiches({
       window.history.pushState(
         { fenetreFiche: true },
         "",
-        `/tatoueur/${slug}${
+        `/artist/${slug}${
           selection
             ? `?${new URLSearchParams({ [PARAM_SELECTION]: selection })}`
             : ""

@@ -37,7 +37,7 @@ for (const { nom: appareil, ...options } of APPAREILS) {
   page.on("pageerror", (e) => erreurs.push(String(e).slice(0, 160)));
 
   console.log(`\n══ ${appareil} ══`);
-  await page.goto(BASE + "/devenir-tatoueur", { waitUntil: "load", timeout: 30000 });
+  await page.goto(BASE + "/become-an-artist", { waitUntil: "load", timeout: 30000 });
   await page.waitForTimeout(2000);
 
   const avant = await page.locator('header button[aria-label^="Mon espace"]')

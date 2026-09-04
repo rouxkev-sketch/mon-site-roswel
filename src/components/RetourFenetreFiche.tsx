@@ -6,7 +6,7 @@ import { useEffect } from "react";
  * LE RECHARGEMENT D'UNE FENÊTRE DE FICHE (web)
  * =============================================
  * Quand la fenêtre superposée est ouverte, l'adresse est déjà
- * /tatoueur/nom — un RECHARGEMENT sert donc la page de fiche complète,
+ * /artist/nom — un RECHARGEMENT sert donc la page de fiche complète,
  * et la recherche restée derrière serait perdue (retour arrière
  * compris : il renvoyait à l'accueil nu).
  *

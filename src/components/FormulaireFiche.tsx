@@ -1253,7 +1253,7 @@ export function FormulaireFiche() {
   /**
    * §1 (nº 733) — LES PARAMÈTRES DE LA PAGE, GELÉS SOUS UNE FENÊTRE.
    * ------------------------------------------------------------------
-   * La fenêtre superposée (pile nº 506) pousse `/tatoueur/<slug>`, une
+   * La fenêtre superposée (pile nº 506) pousse `/artist/<slug>`, une
    * adresse SANS `?fiche=` ni `?vue=apercu` : lue BRUTE, elle faisait
    * croire à un changement de fiche (l'effet de chargement rechargeait
    * tout) et retombait la vue sur « modification ». La lecture GELÉE —
@@ -2376,8 +2376,8 @@ export function FormulaireFiche() {
         //  MODIFICATION, plus bas).
         window.location.replace(
           creee
-            ? `/devenir-tatoueur/fiche?fiche=${creee}&enregistre=1`
-            : "/devenir-tatoueur/fiche?enregistre=1"
+            ? `/become-an-artist/portfolio?fiche=${creee}&enregistre=1`
+            : "/become-an-artist/portfolio?enregistre=1"
         );
         return;
       }
@@ -2411,7 +2411,7 @@ export function FormulaireFiche() {
           TOUT part dans `brouillon` et la colonne `tatoueurs.nom` ne
           bouge pas tant que l'administration n'a pas validé. Or la
           recherche de rattachement lit cette colonne
-          (api/tatoueur/recherche-fiches : `.ilike("nom", …)` sur
+          (api/artist/search-fiches : `.ilike("nom", …)` sur
           `tatoueurs`), pendant que l'espace du propriétaire, lui,
           affiche la ligne RECOUVERTE de son brouillon (le chargement
           plus haut : `{ ...ligne, ...brouillon }`). Deux vérités pour
@@ -2472,7 +2472,7 @@ export function FormulaireFiche() {
        *    touché (il ne l'était déjà pas), et `statut` NON PLUS
        *    désormais — la fiche entière ne retourne JAMAIS dans la
        *    file. Seules les photos neuves attendent, invisibles au
-       *    public (voir `enregistrerPhotos` et lib/tatoueurs).
+       *    public (voir `enregistrerPhotos` et lib/artists).
        */
       const photosQuiArrivent = triees.filter((photo) => !photo.id).length;
 
@@ -2736,7 +2736,7 @@ export function FormulaireFiche() {
           annonce les 24 h. Sans lui : tout est déjà en ligne, et
           l'annoncer sous 24 h serait un mensonge. */
       window.location.replace(
-        `/devenir-tatoueur/fiche?fiche=${ficheChargee.id}&enregistre=1` +
+        `/become-an-artist/portfolio?fiche=${ficheChargee.id}&enregistre=1` +
           (ficheChargee.publie && photosQuiArrivent > 0 ? "&photos=1" : "")
       );
       return;
@@ -3051,7 +3051,7 @@ export function FormulaireFiche() {
    * OUVERTE PAR-DESSUS ██
    * ------------------------------------------------------------------
    * SANS CELA, LE DÉFAUT SE REJOUERAIT SOUS UNE AUTRE FORME : ouvrir la
-   * fiche d'un membre d'équipe pousse `/tatoueur/<slug>`, une adresse
+   * fiche d'un membre d'équipe pousse `/artist/<slug>`, une adresse
    * SANS `?vue=apercu`. La vue rebasculerait donc sur « modification »,
    * et l'on verrait le FORMULAIRE apparaître sous la fenêtre — au lieu
    * de l'aperçu qu'on vient de quitter des yeux.
@@ -3074,7 +3074,7 @@ export function FormulaireFiche() {
         LA nº 505 l'avait activée DANS `FicheTatoueur`, c'est-à-dire à
         l'intérieur du bloc `{vue === "apercu" && …}`. La pile changeait
         alors l'adresse qui la faisait vivre : le pushState vers
-        `/tatoueur/<slug>` faisait retomber `vue` sur « modification »,
+        `/artist/<slug>` faisait retomber `vue` sur « modification »,
         démontant le composant et la pile avec lui. La fenêtre
         n'apparaissait jamais et il ne restait que la page de
         modification — le défaut relevé par le propriétaire.
@@ -4058,7 +4058,7 @@ export function FormulaireFiche() {
           remplir, c'est offrir un geste destructeur à qui cherchait
           simplement la fin de la page.
           ⚠️ L'ACTION N'EST PAS SUPPRIMÉE, ELLE EST AILLEURS : elle vit
-          dans /devenir-tatoueur/securite (voir
+          dans /become-an-artist/security (voir
           BlocSuppressions), où l'on peut retirer UNE fiche ou le compte
           entier. Le composant qui portait ce pied de page a été
           SUPPRIMÉ du dépôt à la nº 601 — il n'était plus rendu nulle

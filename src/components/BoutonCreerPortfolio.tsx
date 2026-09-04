@@ -64,7 +64,7 @@ export function BoutonCreerPortfolio({
 
   return (
     <Link
-      href="/devenir-tatoueur"
+      href="/become-an-artist"
       //  Le banc lit ces marqueurs : `data-session` dit qui décide
       //  (le CSS tant que « muette », le composant ensuite).
       data-bouton-creer-portfolio=""

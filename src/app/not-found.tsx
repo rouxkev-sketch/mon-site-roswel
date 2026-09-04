@@ -16,7 +16,7 @@ import { PageMessageSombre } from "@/components/PageMessageSombre";
  *
  * ⚠️ LE 404 RESTE RÉSERVÉ AUX ADRESSES QUI N'EXISTENT PAS. Une fiche
  * qui existe mais n'est pas encore publiée a sa propre page (voir
- * src/app/(tatouage)/tatoueur/[slug]/page.tsx) : ce n'est pas une
+ * src/app/(tatouage)/artist/[slug]/page.tsx) : ce n'est pas une
  * erreur d'adresse.
  */
 export const metadata: Metadata = {

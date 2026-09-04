@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 //  nº 811 — les adresses des pages éditoriales, écrites une seule
 //  fois. Chemin RELATIF : ce fichier est chargé par Node avant toute
 //  compilation, hors des alias `@/`. Le module n'importe rien.
+import { ADRESSES_TRADUITES } from "./src/lib/chemins-anglais";
 import {
   ANCIENS_CHEMINS_EDITORIAUX,
   CHEMIN_ABOUT,
@@ -114,8 +115,12 @@ const nextConfig: NextConfig = {
       //  PUBLIQUE (/confidentialite) : les deux ne se croisent pas.
       {
         source: "/devenir-tatoueur/confidentialite",
-        destination: "/devenir-tatoueur/securite",
-        permanent: true,
+        destination: "/become-an-artist/security",
+        //  nº 836 — 301 COMME TOUTES LES AUTRES. Elle répondait 308
+        //  (`permanent: true`), seule de son espèce : le propriétaire a
+        //  demandé le 301 en toutes lettres pour les pages servies en
+        //  GET, et les deux sont également définitives.
+        statusCode: 301,
       },
       //  ---- LES PAGES DE CRITÈRE DONT LE STYLE A CHANGÉ D'ADRESSE ----
       //  (passe nº 230-§2) La règle du projet est qu'un slug PUBLIÉ ne
@@ -135,12 +140,12 @@ const nextConfig: NextConfig = {
       //  exactement équivalent.
       {
         source: "/tatouage/neo-reaalisme",
-        destination: "/tatouage/neo-realisme",
+        destination: "/tattoo/neo-realisme",
         statusCode: 301,
       },
       {
         source: "/tatouage/neo-reaalisme/:ville",
-        destination: "/tatouage/neo-realisme/:ville",
+        destination: "/tattoo/neo-realisme/:ville",
         statusCode: 301,
       },
       //  ---- nº 811 — LES PAGES ÉDITORIALES PARLENT ANGLAIS ----
@@ -160,6 +165,19 @@ const nextConfig: NextConfig = {
         source: ancien,
         destination: nouveau,
         statusCode: 301,
+      })),
+      //  ---- nº 836 — LES ADRESSES DU SITE PASSENT EN ANGLAIS ----
+      //  Le dernier morceau de la traduction : `/devenir-tatoueur`,
+      //  `/mes-favoris`, `/tatouage/…`, `/tatoueur/…` et les autres.
+      //  ⚠️ ELLES SONT PARTAGÉES ET INDEXÉES — une fiche dans un
+      //  message, une page de style en favori, un lien de courriel déjà
+      //  parti : rien ne doit casser. 301, comme les précédentes.
+      //  ⚠️ LA LISTE ET SON ORDRE VIVENT DANS `lib/chemins-anglais` :
+      //  une seule écriture, lue ici et par le banc qui la vérifie.
+      ...ADRESSES_TRADUITES.map(({ ancien, nouveau }) => ({
+        source: ancien,
+        destination: nouveau,
+        statusCode: 301 as const,
       })),
     ];
   },
@@ -270,10 +288,10 @@ const nextConfig: NextConfig = {
         pages n'ont plus qu'un en-tête, celui du site. */
     const chemins = [
       "/",
-      "/recherche",
-      "/tatoueur/:slug",
-      "/tatouage/:style/:ville",
-      "/devenir-tatoueur/:chemin*",
+      "/search",
+      "/artist/:slug",
+      "/tattoo/:style/:ville",
+      "/become-an-artist/:chemin*",
       //  nº 811/814 — les quatre pages éditoriales, par leurs constantes.
       CHEMIN_ABOUT,
       CHEMIN_CONTACT,

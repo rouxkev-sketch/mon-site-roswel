@@ -14,7 +14,7 @@
  *
  * CE QUE CE CHANGEMENT D'UNITÉ TOUCHE, et qui est traité ici ou dans
  * les fichiers nommés :
- *  · LA PAGINATION compte des carrousels (lib/tatoueurs,
+ *  · LA PAGINATION compte des carrousels (lib/artists,
  *    `pageDeResultats`) — la règle « colonnes × 6 » de la nº 226
  *    s'applique telle quelle au nouveau compte, elle ne parle que de
  *    taille de page ;

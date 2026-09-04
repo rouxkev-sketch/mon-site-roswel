@@ -6,7 +6,7 @@ import { natureConnue } from "@/lib/photos-tatoueur";
 //  sortent désormais de la même fonction.
 import { cleDuCarrousel } from "@/lib/carrousels";
 //  §1 (nº 694) — la règle « en ligne » du site entier, posée sur une
-//  lecture. Une seule écriture (voir sa note dans lib/tatoueurs).
+//  lecture. Une seule écriture (voir sa note dans lib/artists).
 import { listeEnLigne } from "@/lib/tatoueurs";
 
 /**

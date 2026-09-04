@@ -333,7 +333,7 @@ export function EnTeteTatouage({
       parametres.set("disposition", "une");
     if (lirePhototheque(SURFACE_RECHERCHE)) parametres.set("texte", "sans");
     const requete = parametres.toString();
-    /*  §1 (nº 652) — CHERCHER MÈNE À « /recherche ». Sans un seul
+    /*  §1 (nº 652) — CHERCHER MÈNE À « /search ». Sans un seul
         critère, il n'y a rien à chercher : on retourne à l'accueil.
         L'adresse visible change pendant la recherche — la décision du
         propriétaire — et les liens déjà partagés « /?style=… » restent
@@ -1150,7 +1150,7 @@ export function EnTeteTatouage({
               dans le menu. */}
           {connecte && utilisateur ? (
             <Link
-              href="/mes-favoris"
+              href="/my-favorites"
               aria-label="My favorites"
               title="My favorites"
               //  §6 (nº 247) — L'ICÔNE DE LA PAGE COURANTE RAFRAÎCHIT.
@@ -1161,7 +1161,7 @@ export function EnTeteTatouage({
               //  donc : retour en haut, et le serveur redonne ses
               //  données (`router.refresh()` — les favoris d'à
               //  l'instant, sans recharger l'application entière).
-              onClick={rafraichirSiDejaLa("/mes-favoris")}
+              onClick={rafraichirSiDejaLa("/my-favorites")}
               //  §6 (nº 821) — même cible que la loupe et le globe.
               className={`${CIBLE_GESTE_BARRE} shrink-0 flex items-center justify-center rounded-full
                          transition-colors ${ETATS_ROND_BARRE}
@@ -1204,7 +1204,7 @@ export function EnTeteTatouage({
                    LienAuGeste dit la cause). La règle nº 793 tient : rien
                    n'est préchargé à la vue ; au survol (web), une fois. */}
               <LienAuGeste
-                href="/devenir-tatoueur"
+                href="/become-an-artist"
                 aria-label={libelleDeconnecte}
                 title={libelleDeconnecte}
                 /*  §2 (nº 793) — PAS DE PRÉCHARGEMENT. Les DEUX accès
@@ -1337,7 +1337,7 @@ export function EnTeteTatouage({
                    la silhouette ronde ci-dessus qui mène à la connexion,
                    et elle ne change pas. */}
               <LienAuGeste
-                href="/devenir-tatoueur"
+                href="/become-an-artist"
                 aria-label={libelleDeconnecte}
                 data-bouton-connexion=""
                 /*  §2 (nº 793) — PAS DE PRÉCHARGEMENT : voir la note du

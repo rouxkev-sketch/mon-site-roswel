@@ -165,7 +165,7 @@ function remonterALAdresseCommise(
  * charge. On ne force donc le haut que sur les navigations par lien.
  *
  * AUTRE EXCEPTION : la FENÊTRE DE FICHE (FenetreFiche). Elle change
- * l'adresse (pushState vers /tatoueur/…) SANS quitter la grille — la
+ * l'adresse (pushState vers /artist/…) SANS quitter la grille — la
  * grille doit rester exactement où elle est derrière le voile. La
  * fenêtre pose `data-fenetre-fiche` sur <html> tant qu'elle vit.
  *
@@ -239,7 +239,7 @@ export function DefilementEnHaut() {
      * ICI, AVANT LA PEINTURE.
      * ==================================================================
      * CE QUI ÉTAIT ÉCRIT, ET LE DÉFAUT QU'IL CAUSAIT. Cette branche
-     * remontait la page en haut sur TOUTE adresse `/tatoueur/`, SANS
+     * remontait la page en haut sur TOUTE adresse `/artist/`, SANS
      * CONDITION — « une page de détail est toujours en haut » (nº 193-
      * §2). Depuis la nº 230-§3, ce n'est plus vrai : une fiche ouverte
      * DEPUIS UNE FICHE écrit sa position, et le retour doit la rendre.
@@ -275,7 +275,7 @@ export function DefilementEnHaut() {
      * mosaïque : là, il ne faut toucher à rien).
      */
     if (
-      chemin.startsWith("/tatoueur/") &&
+      chemin.startsWith("/artist/") &&
       !document.documentElement.dataset.fenetreFiche
     ) {
       const url = chemin + window.location.search;

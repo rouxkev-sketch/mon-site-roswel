@@ -96,7 +96,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *    coup (chaque fenêtre écoutant pour elle-même).
  *
  * L'ADRESSE DU NAVIGATEUR se met à jour à l'ouverture (pushState vers
- * /tatoueur/nom — partage possible) : c'est la grille (GrilleTatoueurs)
+ * /artist/nom — partage possible) : c'est la grille (GrilleTatoueurs)
  * qui pousse l'adresse, et la fenêtre ne s'affiche que tant que
  * l'adresse correspond — le bouton « précédent » du navigateur la
  * referme donc naturellement. La PAGE complète, elle, reste servie aux
@@ -645,7 +645,7 @@ export function FenetreFiche({
                   <li aria-hidden="true">›</li>
                   <li>
                     <Link
-                      href={`/tatouage/${stylePrincipal.slug}/${tatoueur.ville_slug}`}
+                      href={`/tattoo/${stylePrincipal.slug}/${tatoueur.ville_slug}`}
                       className="hover:text-white transition-colors"
                     >
                       {stylePrincipal.label}

@@ -9,8 +9,8 @@
  * réunit pas. Chaque affichage envoie donc DEUX FOIS les mêmes requêtes
  * à la base — relevé au journal de la doublure, page par page :
  *
- *     /tatouage/[style]/[ville]   16 requêtes pour 7 distinctes (nº 724)
- *     /recherche                  18 requêtes, plusieurs en double (nº 725)
+ *     /tattoo/[style]/[ville]   16 requêtes pour 7 distinctes (nº 724)
+ *     /search                  18 requêtes, plusieurs en double (nº 725)
  *
  * Pas une milliseconde de plus pour le visiteur — les deux partent
  * ensemble et attendent la même latence — mais deux fois la facture de
@@ -32,7 +32,7 @@
  *
  * ⚠️ POURQUOI CE FICHIER EXISTE (piège nº 378). La nº 724 a écrit ce
  * mécanisme dans `lib/style-ville`. La nº 725 en avait besoin pour
- * `/recherche` : une seconde copie, et la première passe qui corrigerait
+ * `/search` : une seconde copie, et la première passe qui corrigerait
  * l'une laisserait l'autre derrière. Le motif lui-même n'est pas neuf —
  * c'est celui de `lib/fiches-admin` (identifiants administrateurs),
  * éprouvé depuis longtemps dans le projet.

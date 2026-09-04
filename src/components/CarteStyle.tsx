@@ -187,7 +187,7 @@ export function CarteStyle({
         href={adresse}
         //  ██ §1 (nº 656) — CETTE CARTE NE PRÉPARE PLUS SA PAGE ██
         //  Toutes les cartes de l'accueil mènent au MÊME chemin
-        //  (« /recherche ») avec des critères différents, et Next range
+        //  (« /search ») avec des critères différents, et Next range
         //  la page préparée d'une route dynamique SOUS LE CHEMIN : la
         //  première carte entrée à l'écran remplissait la case pour
         //  toutes les autres. La règle et son relevé sont écrits une
@@ -236,7 +236,7 @@ export function CarteStyle({
         >
           {/*  §2 (nº 648) — la même plaque d'attente que les cartes de
                portfolio, à la même valeur : une seule écriture pour les
-               trois surfaces (config/tatouage). */}
+               trois surfaces (config/tattoo). */}
           <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
           {/*  ██ LE TEXTE DE REMPLACEMENT (lecteurs d'écran) ██
                La carte ne montre PAS un portfolio : elle montre un

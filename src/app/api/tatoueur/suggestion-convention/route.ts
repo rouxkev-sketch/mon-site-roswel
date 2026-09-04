@@ -14,7 +14,7 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 /**
  * PROPOSER UNE CONVENTION — “Convention missing? Let us know” (nº 750)
  * ====================================================================
- * LE DÉCALQUE EXACT DE « UN STYLE MANQUE ? » (api/tatoueur/
+ * LE DÉCALQUE EXACT DE « UN STYLE MANQUE ? » (api/artist/
  * suggestion-style, nº 122), pièce par pièce — c'est la conception
  * nº 748-E, et le décalque est volontaire : deux mécanismes de demande
  * qui se ressembleraient sans se copier finiraient par diverger.

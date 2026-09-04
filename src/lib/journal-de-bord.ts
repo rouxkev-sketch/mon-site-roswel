@@ -24,7 +24,7 @@
  *    `redirectionDeGarde`, qui refuse de rejouer un ping-pong.
  *
  * ⚠️ LA BOUCLE QU'IL COUPE EST CELLE DU RELEVÉ. Deux gardes se font
- * face : l'espace renvoie « pas de session » vers /devenir-tatoueur
+ * face : l'espace renvoie « pas de session » vers /become-an-artist
  * (FormulaireFiche), qui renvoie « session présente » vers l'espace
  * (EcranAuthentification). Or la session a DEUX juges qui peuvent se
  * contredire (use-utilisateur) : le COOKIE, lu en synchrone — il dit

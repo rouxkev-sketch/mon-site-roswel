@@ -39,7 +39,7 @@ import { photoDuBord } from "@/lib/photos-du-bord";
  * ⚠️ CE QUI NE CHANGE PAS : le chargement paresseux et la priorité des
  * premières images sont passés tels quels par l'appelant ; le cadre,
  * le format 4:5 et la réservation de hauteur sont ceux du site
- * (config/tatouage) ; aucun recadrage, aucune proportion touchée.
+ * (config/tattoo) ; aucun recadrage, aucune proportion touchée.
  * ⚠️ LA FICHE N'EST PAS CONCERNÉE : elle sert la pleine résolution
  * telle quelle, et la règle nº 280 (une photo arrive en une seule
  * fois, jamais un aperçu puis une nette) reste entière.

@@ -350,8 +350,8 @@ export function paysAfficheSaDivision(
  * la ville, et il alourdit chaque carte.
  *
  * ⚠️⚠️ CETTE FONCTION NE TOUCHE QUE L'AFFICHAGE, JAMAIS LES DONNÉES.
- * Les adresses publiées — /tatoueur/atelier-corvus-lyon-1er,
- * /tatouage/realisme/lyon-1er — sont indexées et partagées : les
+ * Les adresses publiées — /artist/atelier-corvus-lyon-1er,
+ * /tattoo/realisme/lyon-1er — sont indexées et partagées : les
  * changer casserait tout le référencement acquis. C'est pourquoi la
  * base garde « Lyon 1er », que `nomVilleCourt` (lib/villes) reste la
  * normalisation des DONNÉES, et que les slugs continuent d'être

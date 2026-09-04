@@ -197,7 +197,7 @@ export function RechercheFicheInscrite({
       setCherche(true);
       try {
         const reponse = await fetch(
-          `/api/tatoueur/recherche-fiches?type=${type}` +
+          `/api/tatoueur/search-fiches?type=${type}` +
             //  LA NATURE DU LIEU, quand elle est demandée (nº 121).
             (etablissement ? `&etablissement=${etablissement}` : "") +
             `&q=${encodeURIComponent(saisie)}`

@@ -383,7 +383,7 @@ export async function GET() {
         ⚠️ LES DEUX DÉLAIS SONT DANS LA MÊME LISTE, distingués par
         l'ÉCART entre les deux dates — sept jours ou trente. C'est ce
         qui a permis de ne pas ajouter de colonne (voir
-        DELAI_SUPPRESSION_ADMIN_JOURS, config/tatouage) : l'écart EST
+        DELAI_SUPPRESSION_ADMIN_JOURS, config/tattoo) : l'écart EST
         l'information, et il est déjà en base.
         ⚠️ SANS LES COLONNES, PAS D'ÉCRAN, PAS DE PANNE : une base
         d'avant la migration nº 24 fait échouer cette lecture ; on rend
@@ -574,7 +574,7 @@ export async function POST(requete: NextRequest) {
           QU'ON NE LE CROYAIT ██
           ==========================================================
           CE QUE LE BANC A MONTRÉ, ET JE NE L'ATTENDAIS PAS : après la
-          suppression, `/tatoueur/<slug>` répondait encore 200 avec le
+          suppression, `/artist/<slug>` répondait encore 200 avec le
           portfolio entier. La règle de visibilité était pourtant juste
           (`estEnLigne` regarde `supprime_le`, nº 694) — c'est LE CACHE
           qui parlait : cette page est PRÉRENDUE, avec une remise à
