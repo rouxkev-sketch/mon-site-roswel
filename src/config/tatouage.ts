@@ -2035,6 +2035,23 @@ export const TEXTES_TATOUAGE = {
       titre DESCRIPTIF du bloc de référencement : celui-ci parle au
       visiteur, celui-là aux moteurs de recherche. */
   titreMosaique: "Find your tattoo style…",
+  /**
+   * ██ §1 (nº 846) — LE TEXTE D'INVITE DU CHAMP, AU DOIGT ██
+   * ------------------------------------------------------------------
+   * LA PILULE DE LA BARRE (la porte de la recherche sur un vrai mobile)
+   * écrivait « Find your tattoo style… » depuis la nº 443 — c'est-à-dire
+   * EXACTEMENT le titre ci-dessus. Or la nº 846 pose ce titre au-dessus
+   * des cartes SUR LES DEUX APPAREILS (§3) : les deux se seraient lus à
+   * dix pixels l'un de l'autre, mot pour mot. Le propriétaire tranche :
+   * la pilule dit ce qu'on peut y CHERCHER, le titre dit ce que la page
+   * PROPOSE.
+   * ⚠️ ET C'EST BIEN CE QUE LE CHAMP ACCEPTE : un style ou une ville —
+   * les deux entrées du moteur (MoteurTatouage), ni plus ni moins. Le
+   * texte ne promet rien que la recherche ne sache faire.
+   * ⚠️ SORTI DU JSX ET POSÉ ICI, avec les autres textes du visiteur : il
+   * y vivait à la main, seul de son espèce (nº 443).
+   */
+  invitePilule: "Search a style or a city",
   /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
       « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
       sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de
@@ -2047,24 +2064,20 @@ export const TEXTES_TATOUAGE = {
       au pixel, sans qu'aucun nombre ne soit recopié.
       ⚠️ LE TITRE DE RÉFÉRENCEMENT (`titreAccueil`, plus haut) N'EST PAS
       TOUCHÉ : il parle aux moteurs, celui-ci au visiteur. */
-  /**
-   * ██ §2 (nº 508) — LE TITRE D'UNE RECHERCHE SANS CATÉGORIE ██
-   * LE DÉFAUT que cette clé corrige : quand on cherchait une VILLE
-   * SEULE, la ville PRENAIT LA PLACE DU TITRE (« Lyon ») et
-   * disparaissait du sous-titre. Le propriétaire tranche : une ville
-   * n'est jamais un titre. Sans catégorie choisie, le titre est
-   * générique et la ville redescend dans le sous-titre, exactement
-   * comme lorsqu'une catégorie l'accompagne.
-   * ⚠️ CE N'EST PAS `CATEGORIES_EXPLORER` : quand aucune catégorie
-   * n'est choisie, la mosaïque ne filtre RIEN par nature — elle montre
-   * les réalisations ET les flashs (lib/artists : `!natureVoulue`
-   * laisse tout passer). Emprunter le mot « Toutes les réalisations »
-   * à la catégorie « tatouage » ferait croire à un filtre qui n'existe
-   * pas. C'est donc un texte À PART, et le propriétaire l'a nommé
-   * lui-même à la nº 508.
-   * ⚠️ SANS POINT FINAL, comme tous les titres du site.
-   */
-  titreRechercheSansCategorie: "All tattoos",
+  /*  ██ §4 (nº 846) — `titreRechercheSansCategorie` EST SUPPRIMÉE ██
+      « All tattoos » était le titre d'une recherche sans catégorie
+      (nº 508). Depuis la nº 846, LE TITRE D'UNE RECHERCHE EST SON
+      COMPTE (« 15 portfolios ») et les critères descendent en badges
+      (`FiltresActifs`) : plus aucun titre générique n'est écrit, et
+      cette clé n'avait plus un seul lecteur. Elle est retirée plutôt
+      que laissée inutilisée (règle nº 386 : rien d'orphelin).
+      ⚠️ LA CATÉGORIE ELLE-MÊME N'EST PAS SUPPRIMÉE : elle filtre
+      toujours, et se lit dans le moteur. C'est son TITRE qui s'en va —
+      le propriétaire n'a demandé de badge que pour le style et le lieu
+      (nº 846-§4), et c'est dit dans le compte rendu.
+      ⚠️ `CATEGORIES_EXPLORER` n'est pas touchée : le menu « Explorer »
+      garde ses mots, ils n'ont jamais été ceux-ci (voir la note de la
+      nº 508, dans l'historique). */
   /** L'APPEL AUX TATOUEURS — en bas de l'accueil, après la mosaïque.
       Pas dans la barre fixe : elle n'a pas la place, et quatre
       visiteurs sur cinq arrivent par le téléphone. */

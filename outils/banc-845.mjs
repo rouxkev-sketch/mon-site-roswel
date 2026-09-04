@@ -85,8 +85,16 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         on interroge le document toutes les cinq millisecondes. Next
         envoie le repli de `loading.tsx` dans le premier flux, avant la
         page résolue : il est donc là, et il porte `aria-busy`. */
-    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "commit" });
+    /*  ⚠️ ON RÉESSAIE LA NAVIGATION, ET C'EST NÉCESSAIRE : le repli de
+        `loading.tsx` ne vit qu'entre le premier flux et la page résolue.
+        Sur une doublure qui répond en dix millisecondes, cette fenêtre
+        se ferme parfois avant la première interrogation — le squelette
+        EXISTE, on l'a simplement manqué. Trois tentatives suffisent (une
+        seule a échoué sur une dizaine de relevés) ; sans elles, le banc
+        rendrait un faux RATÉ. */
     let gris = null;
+    for (let essai = 0; essai < 3 && !gris; essai += 1) {
+    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "commit" });
     for (let i = 0; i < 400 && !gris; i += 1) {
       gris = await page.evaluate((R) => {
         const b = document.querySelector('[aria-busy="true"]');
@@ -118,6 +126,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         };
       }, RELEVE).catch(() => null);
       if (!gris) await page.waitForTimeout(5);
+    }
     }
     verif("le squelette du fil est bien là, et il est UNE colonne",
       gris !== null && gris.colonnes === 1, gris ? `${gris.colonnes} colonne(s)` : "jamais vu");
@@ -335,8 +344,10 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
   const { nav, page } = await ouvrir("web");
   try {
     titre("845 · le web : ni fil, ni squelette de fil");
-    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "commit" });
+    //  ⚠️ MÊME RÉESSAI QU'AU DOIGT : voir la note du premier bloc.
     let gris = null;
+    for (let essai = 0; essai < 3 && !gris; essai += 1) {
+    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "commit" });
     for (let i = 0; i < 400 && !gris; i += 1) {
       gris = await page.evaluate(() => {
         const b = document.querySelector('[aria-busy="true"]');
@@ -356,6 +367,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         };
       }).catch(() => null);
       if (!gris) await page.waitForTimeout(5);
+    }
     }
     verif("le squelette du web garde ses colonnes (quatre à 1440 px) et ses douze cases",
       gris !== null && gris.colonnes === 4 && gris.montrees === 12,

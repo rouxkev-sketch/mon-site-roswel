@@ -56,6 +56,13 @@ import {
 //  navigation, jamais doublée » (lib/etape-refermable).
 import { laNavigationRemplaceLEtape } from "@/lib/etape-refermable";
 import { LigneResultats } from "@/components/LigneResultats";
+//  §3-§4 (nº 846) — la puce du site (« 15 portfolios • 9 styles »,
+//  « Austin, TX • 25 mi »), et les badges de filtre sous le compte.
+import { SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
+import {
+  FiltresActifs,
+  type FiltreAffiche,
+} from "@/components/FiltresActifs";
 import {
   criteresComplets,
   libelleExplorer,
@@ -1054,12 +1061,21 @@ export function IndexTatoueurs({
       (`exclure`) sont une recherche eux aussi — c'est la définition
       qu'a posée `estLAccueilNu` à la nº 619, et les deux disent la
       même chose de la même page. */
-  const surLeCatalogue =
-    catalogue.length > 0 &&
+  /*  ██ §1-§2 (nº 846) — « AUCUNE RECHERCHE » EST SORTI DE LA CONDITION
+      DU CATALOGUE ██
+      Les deux questions se confondaient dans une seule expression :
+      « montre-t-on le catalogue ? » et « cette page est-elle l'accueil
+      nu ? ». Elles ne sont pas la même — le catalogue demande EN PLUS
+      que le serveur en ait fourni un, ce qui peut manquer (base muette).
+      La BARRE, elle, doit savoir si l'on est sur l'accueil quoi qu'il
+      arrive : sans catalogue, l'accueil reste l'accueil, et son champ de
+      recherche doit y rester (nº 846-§1). D'où deux noms. */
+  const sansRecherche =
     !affiches.style &&
     !affiches.nature &&
     !affiches.lieu &&
     affiches.exclure.length === 0;
+  const surLeCatalogue = catalogue.length > 0 && sansRecherche;
 
   /*  §1 (nº 480) — `aucuneRecherche` A ÉTÉ RETIRÉE, avec le gros
       relevé qui la documentait (nº 395). Elle ne servait qu'à une
@@ -1088,6 +1104,11 @@ export function IndexTatoueurs({
       <EnTeteTatouage
         criteres={criteres}
         surRecherche={(suivants) => chercher(suivants)}
+        //  §1-§2 (nº 846) — LA BARRE A BESOIN DE SAVOIR sur laquelle de
+        //  ses deux pages elle se trouve : sur l'accueil son champ est
+        //  FIXE, sur les résultats il cède la place à la loupe. Le
+        //  pourquoi complet vit chez elle.
+        accueilNu={sansRecherche}
       />
 
       {/*  §1 (nº 673, élargi nº 710) — `invisible` TANT QUE LE CHANTIER
@@ -1216,7 +1237,47 @@ export function IndexTatoueurs({
             ? catalogue.reduce((somme, style) => somme + style.portfolios, 0)
             : total;
           const compte = `${totalAffiche} portfolio${totalAffiche > 1 ? "s" : ""}`;
-          if (!quoi && !lieu) {
+          /*  ██ §3 (nº 846) — ET LE COMPTE DES STYLES, À CÔTÉ ██
+              LE PROPRIÉTAIRE VEUT « 15 portfolios • 9 styles » au-dessus
+              des cartes. Le second nombre est NEUF, et il ne se calcule
+              pas : c'est LA LONGUEUR DE CE QUI EST À L'ÉCRAN —
+              `catalogue` est la liste même des cartes de style que la
+              page pose juste en dessous (`GrilleStyles`). « Compte des
+              styles présents sur la page », à la lettre : aucune
+              requête, aucune somme, rien à tenir d'accord.
+              ⚠️ LE SÉPARATEUR EST CELUI DU SITE (`SEPARATEUR_GALERIE`,
+              lib/photos-tatoueur — la puce entourée d'espaces, celle qui
+              sépare déjà « Realism • Black and grey » sur les fiches).
+              L'écrire à la main ici en ferait un second, à diverger
+              (piège nº 378).
+              ⚠️ L'ACCORD TIENT AU SINGULIER, comme pour les portfolios :
+              « 1 style ». */
+          const comptes = [
+            totalAffiche > 0 ? compte : "",
+            catalogue.length > 0
+              ? `${catalogue.length} style${catalogue.length > 1 ? "s" : ""}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(SEPARATEUR_GALERIE);
+          /*  ██ §3 (nº 846) — LA BRANCHE DE L'ACCUEIL SE LIT SUR LE MÊME
+               DRAPEAU QUE LA BARRE ██
+               ELLE TESTAIT `!quoi && !lieu` — c'est-à-dire « ni
+               catégorie ni lieu ». Or une recherche peut n'avoir QUE des
+               interrupteurs éteints (`exclure`) : la page montrait alors
+               le titre d'INVITATION de l'accueil au-dessus d'une liste
+               FILTRÉE. C'était déjà bancal ; depuis que la BARRE lit
+               `sansRecherche` (§1-§2), les deux se contrediraient — le
+               champ céderait la place à la loupe pendant que le corps
+               dirait « Find your tattoo style… ». Les deux lisent
+               désormais LE MÊME drapeau, celui qui compte les QUATRE
+               critères (la définition de `estLAccueilNu`, nº 619).
+               ⚠️ CE QUE CELA CHANGE, ET C'EST TOUT : une recherche par
+               interrupteurs seuls reçoit maintenant l'en-tête des
+               résultats — son compte, et aucun badge (ni style ni lieu à
+               retirer). Les deux autres cas ne bougent pas d'un
+               caractère. */
+          if (sansRecherche) {
             //  SANS RECHERCHE : l'invitation, et ce que le site est.
             //  §2 (nº 445) — ET L'AIR SOUS LA BARRE, AU DOIGT : la
             //  phrase d'introduction ayant quitté le mobile (nº 444),
@@ -1265,74 +1326,124 @@ export function IndexTatoueurs({
                      muette, un catalogue vide — on n'écrit pas
                      « 0 portfolio », on rend la ligne muette et l'air
                      tient tout seul, comme depuis la nº 507.
-                     ⚠️ RIEN AU DOIGT, et ce n'est pas un choix de plus :
-                     `masqueAuDoigt` (nº 444) retire le bloc ENTIER —
-                     titre et sous-titre — du vrai appareil tactile. Ce
-                     compte ne s'affiche donc qu'au web, sans qu'aucune
-                     classe ait eu à le dire. */
-                sousTitre={totalAffiche > 0 ? compte : null}
+                     ⚠️ §3 (nº 846) — ET IL S'AFFICHE MAINTENANT AUX DEUX
+                     APPAREILS : `masqueAuDoigt` (nº 444) retirait ce bloc
+                     du vrai appareil tactile, il est supprimé (voir plus
+                     bas, et LigneResultats). */
+                /*  ██ §3 (nº 846) — LE SOUS-TITRE PORTE LES DEUX
+                     COMPTES : « 15 portfolios • 9 styles ». Vide quand
+                     la page n'a ni l'un ni l'autre (base muette) — la
+                     ligne muette de `degagementConstant` tient alors
+                     l'air, comme depuis la nº 507. */
+                sousTitre={comptes || null}
                 degagementConstant
-                //  §1 (nº 444) — AU DOIGT, CETTE PHRASE NE S'AFFICHE
-                //  PLUS : les cartes commencent tout de suite. Sur
-                //  ordinateur, rien ne change. Le drapeau n'est passé
-                //  QUE par cet appel-ci (l'accueil SANS recherche) :
-                //  le titre d'une recherche, juste en dessous, garde
-                //  ses deux affichages intacts.
-                masqueAuDoigt
+                /*  ██ §3 (nº 846) — `masqueAuDoigt` EST RETIRÉ ██
+                     LA nº 444 avait retiré ce bloc du vrai mobile : « les
+                     cartes commencent tout de suite ». LE PROPRIÉTAIRE
+                     REVIENT DESSUS à la nº 846 — il veut le titre et le
+                     sous-titre au-dessus des cartes, et le compte des
+                     styles « sur les deux appareils ». Or ce compte vit
+                     dans le sous-titre : le garder masqué au doigt
+                     reviendrait à ne pas le poser du tout.
+                     ⚠️ CE QUE LE DOIGT RETROUVE : le bloc entier, à ses
+                     valeurs de la nº 539 (12 px d'air, titre de 17 px,
+                     sous-titre de 15,5) — elles étaient écrites et
+                     jamais servies sur l'accueil. Rien de neuf n'est
+                     inventé pour lui.
+                     ⚠️ ET L'AIR DE 14 px SOUS LA BARRE (nº 445) RESTE :
+                     il vit au-dessus de ce bloc, il ne dépendait pas de
+                     lui, et le retirer ferait remonter le titre contre
+                     la barre. */
               />
               </>
             );
           }
-          //  AVEC UNE RECHERCHE : le titre dit CE QU'ON CHERCHE, le
-          //  sous-titre RÉSUME la recherche — compte · lieu · rayon,
-          //  séparés par le point médian entouré d'espaces.
-          /*  ██ §2 (nº 508) — UNE VILLE NE PREND PLUS LA PLACE DU
-               TITRE ██
-               CE QUI SE LISAIT AVANT, et que le propriétaire refuse :
-               une ville cherchée SANS catégorie devenait le titre
-               (« Lyon »), et le sous-titre n'en disait plus rien —
-               « 4 créations · 50 km », un rayon autour de nulle part.
-               Le lieu ne titrait que dans ce cas-là : dès qu'une
-               catégorie l'accompagnait, il était déjà dans le
-               sous-titre. C'était donc DEUX écritures pour une même
-               donnée, et le défaut vivait dans l'écart entre les deux.
-               DÉSORMAIS, UNE SEULE : le lieu est TOUJOURS dans le
-               sous-titre, et le titre dit la catégorie — générique
-               quand aucune n'est choisie. Les deux autres cas ne
-               bougent pas d'un caractère : `quoi` gagne toujours, et
-               le lieu occupait déjà la même place quand `quoi`
-               existait.
-               ⚠️ LES SÉPARATEURS SE FONT TOUJOURS PAR `filter(Boolean)`
-               (nº 386) : une donnée absente emporte sa puce — une
-               région rend « 4 portfolios: Occitanie » sans rayon,
-               jamais de point médian orphelin.
-               ⚠️ `affiches.lieu!.intitule` DISPARAÎT AVEC LA BRANCHE :
-               il n'était atteint que par ce chemin, et son assertion
-               non-nulle avec lui. */
-          /*  ██ §1 (nº 635) — DEUX POINTS COLLÉS APRÈS LE COMPTE ██
-              ------------------------------------------------------------
-              « 1 portfolio · Paris · 50 km » devient « 1 portfolio:
-              Paris · 50 km ». Le compte et le lieu ne sont pas de même
-              nature — l'un dit COMBIEN, l'autre dit OÙ : une puce les
-              mettait sur le même rang, les deux points annoncent. Entre
-              LA VILLE ET LE RAYON, qui disent tous deux le même OÙ, la
-              puce reste.
-              ⚠️ PAS D'ESPACE AVANT, UN APRÈS : c'est l'usage anglais, et
-              le site parlera anglais au lancement (acquis nº 614). En
-              français on aurait mis une espace fine avant ; ce n'est pas
-              la langue de ce texte.
-              ⚠️ AUCUNE PONCTUATION ORPHELINE, ET C'EST GARDÉ PAR
-              CONSTRUCTION (règle nº 386) : les deux points ne s'écrivent
-              QUE si le morceau de droite existe. Sans lieu, la ligne
-              n'est que le compte — et le compte, lui, ne peut jamais
-              être vide (« 0 portfolio » reste une phrase). Le rayon sans
-              lieu n'existe pas : il est gardé par `affiches.lieu` juste
-              au-dessus. */
-          const ou = [lieu, rayon].filter(Boolean).join(" · ");
+          /*  ██ §4 (nº 846) — LE TITRE D'UNE RECHERCHE EST LE COMPTE, ET
+               CE QU'ON CHERCHE DESCEND EN BADGES ██
+               ==================================================
+               CE QUI SE LISAIT, ET QUI CHANGE : le titre disait le QUOI
+               (« Realism », « All tattoos ») et le sous-titre portait le
+               compte puis le lieu (« 15 portfolios: Austin, TX • 25 mi »).
+               LE PROPRIÉTAIRE TRANCHE AUTREMENT (nº 846-§4) : le TITRE
+               est le COMPTE — c'est le seul chiffre qu'on vient lire —,
+               et les critères deviennent des BADGES qu'on peut RETIRER.
+               Un filtre qu'on ne peut qu'ANNONCER n'est qu'un titre ; un
+               filtre qu'on peut retirer est une commande.
+               ⚠️ LES DEUX BADGES SONT CEUX QU'IL A NOMMÉS : le STYLE et
+               la LOCALITÉ (celle-ci avec son rayon, d'un seul tenant —
+               le rayon n'existe pas sans le lieu, il part avec lui).
+               LA CATÉGORIE (« Tattoos », « Flashes ») N'EN A PAS, et je
+               le dis : elle n'était pas dans la consigne. Elle continue
+               de filtrer, elle se lit et se change dans le moteur ; elle
+               ne s'affiche plus au-dessus des cartes. Le titre générique
+               « All tattoos » disparaît avec elle — il n'était que le
+               nom de cette catégorie.
+               ⚠️ LE DERNIER BADGE RETIRÉ RAMÈNE À L'ACCUEIL, et c'est la
+               consigne à la lettre : quand il ne reste ni style ni
+               localité, on ne rend pas une liste « tout sauf rien » — on
+               repart de critères VIDES (`criteresComplets()`), et
+               `adresseDe` rend alors « / », l'accueil. La catégorie
+               éventuelle s'en va avec, puisqu'elle n'a plus de badge
+               pour se montrer ni se retirer.
+               ⚠️ CHAQUE CROIX PASSE PAR `chercher`, LE CHEMIN DE TOUTES
+               LES RECHERCHES DE CETTE PAGE : la liste se rafraîchit, la
+               page remonte en haut, l'adresse dit ce qu'on voit
+               (règles 328/329). Rien de neuf n'est inventé pour eux. */
+          const filtres: FiltreAffiche[] = [];
+          if (affiches.style) {
+            filtres.push({
+              cle: "style",
+              libelle: quoi,
+              etiquetteRetrait: `Remove the ${quoi} filter`,
+              surRetrait: () =>
+                chercher(
+                  affiches.lieu
+                    ? { ...affiches, style: "" }
+                    : criteresComplets()
+                ),
+            });
+          }
+          if (affiches.lieu) {
+            /*  ██ LE LIEU ET SON RAYON, D'UN SEUL TENANT ██
+                « Austin, TX • 25 mi » — exactement l'exemple du
+                propriétaire, et sans qu'une écriture ait été ajoutée. Le
+                séparateur est la puce du site (nº 846-§3).
+                ⚠️ LE LIEU EST CELUI QUE LE SOUS-TITRE ÉCRIVAIT DÉJÀ
+                (`lieu`, calculé plus haut par `ligneCarte`) : on ne le
+                recalcule pas, on le déplace. Le site possède CINQ
+                écritures du monde et sa note de la nº 486 met en garde
+                contre une sixième — il n'y en a pas de sixième ici.
+                ⚠️ POURQUOI IL N'Y A PAS DE PAYS, ET C'EST MESURÉ, PAS
+                SUPPOSÉ : une recherche restitue son lieu DEPUIS
+                L'ADRESSE, et l'adresse ne porte pas le NOM du pays —
+                `lieuVersParametres` (lib/geocodage) écrit l'intitulé, la
+                zone, les coordonnées, le niveau, le CODE du pays, la
+                région et la ville, jamais son nom. `ligneCarte` rend
+                donc « Austin, TX » sur une recherche, et « Austin, TX,
+                United States » sur une fiche, où le pays est en base.
+                C'est la même écriture, avec ce qu'elle a. */
+            const libelleLieu = [lieu, rayon]
+              .filter(Boolean)
+              .join(SEPARATEUR_GALERIE);
+            filtres.push({
+              cle: "lieu",
+              libelle: libelleLieu,
+              etiquetteRetrait: `Remove the ${lieu} filter`,
+              surRetrait: () =>
+                chercher(
+                  affiches.style
+                    ? { ...affiches, lieu: null }
+                    : criteresComplets()
+                ),
+            });
+          }
           return (
             <LigneResultats
-              titre={quoi || TEXTES_TATOUAGE.titreRechercheSansCategorie}
-              sousTitre={ou ? `${compte}: ${ou}` : compte}
+              titre={compte}
+              sousTitre={null}
+              dessous={
+                filtres.length > 0 ? <FiltresActifs filtres={filtres} /> : null
+              }
             />
           );
         })()}

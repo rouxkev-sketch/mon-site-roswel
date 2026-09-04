@@ -38,10 +38,10 @@ export const RYTHME_TITRE_RESULTATS = "pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3";
 export function LigneResultats({
   titre,
   sousTitre,
+  dessous,
   balise = "h1",
   degagementConstant = false,
   airEnBas = false,
-  masqueAuDoigt = false,
 }: {
   /** « Explorer toutes les créations », ou ce qui a été cherché.
       ⚠️ UN NŒUD depuis la nº 249-§3 : sur « Ma sélection », le titre
@@ -50,6 +50,21 @@ export function LigneResultats({
   titre: React.ReactNode;
   /** « 20 créations · Lyon 5 km » — null sans recherche active. */
   sousTitre: string | null;
+  /**
+   * ██ §4 (nº 846) — CE QUI PREND LA PLACE DU SOUS-TITRE ██
+   * ------------------------------------------------------------------
+   * Sur une page de RÉSULTATS, la ligne sous le titre n'est plus une
+   * phrase mais les BADGES DES FILTRES (`FiltresActifs`) : le style
+   * choisi, la localité, chacun avec sa croix. Ce n'est pas du texte,
+   * donc ce n'est pas `sousTitre` — d'où cette seconde entrée.
+   * ⚠️ ELLE REMPLACE, ELLE NE S'AJOUTE PAS : les deux ne s'écrivent
+   * jamais ensemble (une page a UNE ligne sous son titre, pas deux).
+   * `dessous` gagne quand il est là ; l'air au-dessus est le même,
+   * écrit chez `FiltresActifs`, aux mêmes valeurs que le sous-titre.
+   * ⚠️ ET LA LIGNE RÉSERVÉE (nº 301) NE LE CONCERNE PAS : elle tient la
+   * hauteur d'un sous-titre ABSENT ; ici, quelque chose est écrit.
+   */
+  dessous?: React.ReactNode;
   /** La balise du titre — `h1` partout, sauf le SECOND titre de « Ma
       sélection » (nº 249-§3) : le titre inactif est un contrôle de
       même écriture, pas le titre de la page — une page n'a qu'un h1.
@@ -114,33 +129,18 @@ export function LigneResultats({
    * l'onglet, ce qui est une ligne de plus, pas une refonte.
    */
   airEnBas?: boolean;
-  /**
-   * §1 (nº 444) — LA PHRASE D'INTRODUCTION NE VIT PLUS AU DOIGT.
-   * ------------------------------------------------------------------
-   * DEMANDE DU PROPRIÉTAIRE : sur MOBILE, l'accueil sans recherche
-   * n'affiche plus « Découvre ton prochain tatouage » ni son
-   * sous-titre — les cartes commencent tout de suite. Sur ORDINATEUR,
-   * la phrase reste telle quelle.
-   * ⚠️ UN DRAPEAU, ET UN SEUL APPELANT : l'accueil SANS recherche
-   * (IndexTatoueurs). Les titres de recherche, ceux de « Ma
-   * sélection » et le reste du site ne le passent pas — rien ne bouge
-   * chez eux, pas même d'un pixel. C'est le procédé de
-   * `degagementConstant` (nº 301) et `airEnBas` (nº 325), et pour la
-   * même raison : ce composant sert plusieurs surfaces.
-   * ⚠️ `mobile:hidden` — LE VRAI APPAREIL, pas une largeur de fenêtre
-   * (la variante de globals.css, `[data-appareil="mobile"]`) : une
-   * fenêtre d'ordinateur rétrécie garde donc sa phrase, comme partout
-   * ailleurs dans le site.
-   * ⚠️ ET C'EST BIEN `display` : la garantie nº 171 (globals.css) force
-   * l'opacité et la visibilité de ce bloc pour qu'aucune bascule ne
-   * puisse l'effacer — elle ne dit rien de `display`, que cette
-   * variante seule gouverne. Le bloc entier part : titre, sous-titre
-   * et son rembourrage — aucun blanc résiduel au-dessus des cartes.
-   * (Depuis la nº 711, la garantie connaît UNE exception : le CHANTIER
-   * — sous `main[aria-busy]`, le titre cède au squelette ; voir la
-   * règle et sa note dans globals.css.)
-   */
-  masqueAuDoigt?: boolean;
+  /*  ██ §3 (nº 846) — `masqueAuDoigt` EST SUPPRIMÉE ██
+      La nº 444 retirait le bloc de tête de l'accueil sur un VRAI mobile
+      (« les cartes commencent tout de suite »). Le propriétaire revient
+      dessus à la nº 846 : il veut le titre et le sous-titre au-dessus
+      des cartes, sur les deux appareils — et le compte des styles, qui
+      vit dans ce sous-titre. Son seul appelant ne la passe donc plus, et
+      elle est retirée plutôt que laissée inutilisée (règle nº 386 : rien
+      d'orphelin). Le grand relevé qui la documentait reste lisible dans
+      l'historique.
+      ⚠️ CE QUI RESTE DE LA nº 444, ET QUI N'EST PAS TOUCHÉ : l'air de
+      14 px sous la barre au doigt (nº 445, IndexTatoueurs) — il vit
+      AU-DESSUS de ce bloc et n'a jamais dépendu de lui. */
 }) {
   const Titre = balise;
   return (
@@ -172,16 +172,17 @@ export function LigneResultats({
            variante d'appareil y est écrite APRÈS. Vérifié dans la
            feuille, pas supposé.
            ⚠️ CE COMPOSANT N'A QUE DEUX APPELANTS, tous deux dans
-           IndexTatoueurs : l'accueil SANS recherche — qui ne se rend pas
-           du tout au doigt (`masqueAuDoigt`) — et le titre de recherche,
-           celui que le propriétaire vise. Au doigt, ces réglages ne
-           touchent donc QUE lui.
+           IndexTatoueurs : l'accueil SANS recherche et le titre de
+           recherche. §3 (nº 846) — LES DEUX SE RENDENT DÉSORMAIS AU
+           DOIGT (l'accueil y était masqué depuis la nº 444) : ces
+           réglages, écrits et jamais servis sur l'accueil, valent donc
+           pour lui aussi — aux mêmes valeurs, rien de neuf.
            ⚠️ LE SOUS-TITRE NE CHANGE PAS, sur consigne : il reste à
            15,5 px. L'écart de corps se resserre, mais la hiérarchie
            tient par la GRAISSE et par la COULEUR. */
       className={`${RYTHME_TITRE_RESULTATS} ${
         airEnBas ? "lg:pb-10" : ""
-      }${masqueAuDoigt ? " mobile:hidden" : ""}`}
+      }`}
     >
       <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] mobile:text-[17px] font-bold leading-tight text-sombre-texte">
         {titre}
@@ -226,7 +227,11 @@ export function LigneResultats({
            changerait selon qu'il y a un sous-titre ou non, et la page
            sauterait — c'est très exactement ce que ce mécanisme
            empêche. */}
-      {sousTitre ? (
+      {dessous ? (
+        //  §4 (nº 846) — LES BADGES DE FILTRE prennent la place de la
+        //  phrase : voir la note de la propriété, plus haut.
+        dessous
+      ) : sousTitre ? (
         <p className="mobile:mt-1 not-mobile:mt-1.5 mobile:text-[15.5px] not-mobile:text-[20px] text-sombre-texte-doux">
           {sousTitre}
         </p>

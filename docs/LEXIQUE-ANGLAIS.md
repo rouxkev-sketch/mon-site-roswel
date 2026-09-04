@@ -371,6 +371,22 @@ des chiffres.
 > vraies au mot près** : elle est de nouveau à l'écran, dans la vue
 > photo du doigt.
 
+### Ajouts de la 846 (les en-têtes de recherche)
+
+| Français | Anglais | Note |
+|---|---|---|
+| le texte d'invite du champ de recherche (barre du doigt, accueil) | **Search a style or a city** | `TEXTES_TATOUAGE.invitePilule` — il disait « Find your tattoo style… », mot pour mot le titre posé au-dessus des cartes. Il dit désormais ce qu'on peut y CHERCHER : les deux entrées du moteur, ni plus ni moins |
+| le sous-titre de l'accueil | **15 portfolios • 9 styles** | deux comptes séparés par la puce du site (`SEPARATEUR_GALERIE`) ; le second est neuf, et c'est le nombre de cartes de style posées sous le titre. L'accord tient au singulier : « 1 style » |
+| le titre d'une page de résultats | **15 portfolios** | c'est le compte, et rien d'autre ; ce qu'on cherche descend en badges |
+| retirer un filtre (la croix d'un badge) | **Remove the Realism filter** · **Remove the Austin, TX filter** | `FiltresActifs` — le nom accessible de la croix nomme le filtre qu'elle retire, parce qu'un lecteur d'écran ne voit pas le texte à sa gauche comme une étiquette |
+| ~~le titre d'une recherche sans catégorie~~ | ~~**All tattoos**~~ | ⚠️ RETIRÉ À LA nº 846 : le titre d'une recherche est son compte, il n'y a plus de titre générique. `titreRechercheSansCategorie` est supprimée de `TEXTES_TATOUAGE` |
+
+> **Le titre de l'accueil ne change pas d'un caractère** (« Find your
+> tattoo style… ») : il est simplement MONTRÉ au doigt désormais, là où
+> la nº 444 l'avait retiré. Et la CATÉGORIE (« Tattoos », « Flashes »)
+> n'a pas de badge : elle filtre toujours et se lit dans le moteur,
+> mais elle ne s'écrit plus au-dessus des cartes.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

@@ -15,7 +15,11 @@ import {
   RANGEE_PIED_DE_FIL,
 } from "@/components/CarteFil";
 import { RYTHME_TITRE_RESULTATS } from "@/components/LigneResultats";
-import { CIBLE_GESTE_BARRE, RESERVE_RANGEE } from "@/lib/reserve-barre";
+import {
+  CIBLE_GESTE_BARRE,
+  RESERVE_LOGO,
+  RESERVE_RANGEE,
+} from "@/lib/reserve-barre";
 //  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
 //  du squelette de segment : voir le grand bloc de lib/liste-neuve.
 import { leSqueletteDeLaListeEstLa } from "@/lib/liste-neuve";
@@ -141,14 +145,27 @@ function RondGris({ classe = "", geste = false }: { classe?: string; geste?: boo
  * « Rejoindre » — un rond au doigt, un bloc large 133 × 40 à angles
  * arrondis au web.
  */
-function ZoneDroite({ avecLoupe }: { avecLoupe: boolean }) {
+function ZoneDroite({
+  avecLoupe,
+  loupeAuDoigtSeulement = false,
+}: {
+  avecLoupe: boolean;
+  /** §2 (nº 846) — sur les RÉSULTATS, la loupe de la vraie barre est
+      `lg:hidden` (elle ne remplace la rangée que dans le monde étroit) ;
+      sur « Ma sélection », elle vit aux deux largeurs (rangée libre,
+      nº 245-§4). Le squelette suit, sans quoi la zone droite du web
+      promettrait un rond de trop et la barre sauterait à l'arrivée. */
+  loupeAuDoigtSeulement?: boolean;
+}) {
   return (
     <div
       className="order-2 lg:order-3 ml-auto lg:ml-0 lg:flex-none shrink-0
                  flex items-center justify-end gap-3"
     >
       <span data-squelette-connecte="" className="contents">
-        {avecLoupe && <RondGris geste />}
+        {avecLoupe && (
+          <RondGris geste classe={loupeAuDoigtSeulement ? "lg:hidden" : ""} />
+        )}
         <RondGris geste />
         {/*  Le dernier est l'AVATAR : il garde ses 40 (nº 821). */}
         <RondGris />
@@ -193,11 +210,32 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
               />
             </div>
           </div>
-          <ZoneDroite avecLoupe={centre === "selection"} />
+          {/*  ██ §2 (nº 846) — LES RÉSULTATS ONT LEUR LOUPE, EUX AUSSI ██
+               Depuis la nº 846, une page de RÉSULTATS n'a plus de champ
+               de recherche dans le monde étroit : la loupe de la barre le
+               remplace (comme sur « Ma sélection »). Le squelette de
+               cette page — et il ne sert QU'À ELLE, l'accueil n'a pas de
+               `loading.tsx` — doit donc la promettre, sans quoi la zone
+               droite sauterait d'un rond à l'arrivée.
+               ⚠️ MAIS AU DOIGT SEULEMENT : au web, la vraie loupe reste
+               masquée (`lg:hidden`) et le moteur occupe le centre. */}
+          <ZoneDroite avecLoupe loupeAuDoigtSeulement={centre === "recherche"} />
+          {/*  ██ §2 (nº 846) — LE CENTRE DES RÉSULTATS N'EXISTE PLUS AU
+               DOIGT ██
+               La vraie rangée y est `hidden lg:flex` sur une page de
+               résultats (EnTeteTatouage) : le squelette prend la même
+               écriture, exactement, et son `max-lg:pt-3` part avec elle
+               — c'était l'air AU-DESSUS de la rangée, il n'a plus rien à
+               espacer. « Ma sélection » garde tout : sa rangée libre vit
+               aux deux largeurs. */}
           <div
-            className="order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink
-                       lg:grow-0 lg:mx-auto min-w-0 max-lg:pt-3
-                       flex items-center lg:min-h-[52px]"
+            className={`order-3 lg:order-2 basis-full lg:basis-[680px] lg:shrink
+                       lg:grow-0 lg:mx-auto min-w-0
+                       items-center lg:min-h-[52px] ${
+                         centre === "recherche"
+                           ? "hidden lg:flex"
+                           : "flex max-lg:pt-3"
+                       }`}
           >
             {/*  `lg:min-h-[52px]` : la vraie enveloppe du moteur fait
                  52 de haut au web (champ de 46 + son air) — c'est elle
@@ -226,10 +264,18 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
         </div>
       </header>
       {/*  LA RÉSERVE DE LA BARRE FIXE (au doigt) : la hauteur vient de
-           l'écriture unique, comme dans la vraie barre (nº 258/335). */}
+           l'écriture unique, comme dans la vraie barre (nº 258/335).
+           ██ §2 (nº 846) — ET ELLE SUIT LA RANGÉE ██
+           Une page de RÉSULTATS n'a plus de rangée au doigt : sa barre
+           ne fait plus que le logo, et sa réserve tombe à `RESERVE_LOGO`.
+           La promettre à 122 aurait posé tout le corps 58 px trop bas,
+           puis l'aurait fait remonter d'un coup à l'arrivée — très
+           exactement le saut que les nº 707/708 ont supprimé. */}
       <div
         aria-hidden="true"
-        style={{ height: RESERVE_RANGEE }}
+        style={{
+          height: centre === "recherche" ? RESERVE_LOGO : RESERVE_RANGEE,
+        }}
         className="hidden mobile:block shrink-0"
       />
     </>
@@ -393,11 +439,22 @@ export function CorpsSquelette({
       {avecTitre ? (
         <div className={RYTHME_TITRE_RESULTATS}>
           <div className="h-[21px] sm:h-[33px] w-44 bg-sombre-eleve" />
-          {/*  Le SOUS-TITRE (« N portfolios ») : la vraie ligne fait
-               23 px au doigt, 30 au web, 4-6 px sous le titre — sans
-               elle, la grille grise montait de 28-36 px et sautait à
-               l'arrivée (mesuré, nº 707). */}
-          <div className="mt-[4px] h-[23px] sm:mt-[6px] sm:h-[30px] w-28 bg-sombre-eleve" />
+          {/*  Le SOUS-TITRE : la vraie ligne fait 30 px, 4-6 px sous le
+               titre — sans elle, la grille grise montait de 28-36 px et
+               sautait à l'arrivée (mesuré, nº 707).
+               ██ §4 (nº 846) — TRENTE PIXELS AU DOIGT AUSSI ██
+               Ce bloc de titre ne sert QU'AUX PAGES DE RÉSULTATS (la
+               recherche et sa superposition ; « Ma sélection » n'a pas
+               de titre du tout). Or, depuis la nº 846, ce qui vit sous
+               leur titre n'est plus une phrase mais LES BADGES DE FILTRE
+               — trente pixels de haut, la boîte d'un badge du site. Le
+               doigt promettait encore 23, la hauteur d'une ligne de
+               texte : SEPT PIXELS de saut à chaque arrivée, mesurés au
+               banc nº 845. Le web, lui, disait déjà 30 et ne bouge pas.
+               ⚠️ LA MARGE AU-DESSUS NE CHANGE PAS (4 px au doigt, 6 au
+               web) : c'est celle des badges comme c'était celle du
+               sous-titre — l'écriture partagée de la nº 628. */}
+          <div className="mt-[4px] h-[30px] sm:mt-[6px] w-28 bg-sombre-eleve" />
         </div>
       ) : (
         /*  « Ma sélection » n'a ni titre ni sous-titre (nº 708) : la

@@ -130,6 +130,7 @@ export function EnTeteTatouage({
   criteresInitiaux,
   surRecherche,
   rangee,
+  accueilNu = false,
 }: {
   /** Critères PILOTÉS PAR LA PAGE (accueil). Absent = état interne. */
   criteres?: CritèresTatouage;
@@ -152,6 +153,24 @@ export function EnTeteTatouage({
    * plus rien.
    */
   rangee?: () => React.ReactNode;
+  /**
+   * ██ §1-§2 (nº 846) — LA PAGE EST-ELLE L'ACCUEIL NU ? ██
+   * ------------------------------------------------------------------
+   * Le moteur vit sur DEUX pages qui passent toutes deux
+   * `surRecherche` : l'ACCUEIL (aucun critère) et les RÉSULTATS (un
+   * style, une ville). Jusqu'ici la barre ne les distinguait pas — même
+   * rangée, même repli. Le propriétaire les sépare (nº 846) :
+   *  · SUR L'ACCUEIL, la rangée du champ NE SE REPLIE PLUS : elle est
+   *    fixe, quel que soit le défilement (§1) ;
+   *  · SUR LES RÉSULTATS, elle n'existe pas dans le monde étroit : la
+   *    LOUPE de la barre la remplace, comme sur « Ma sélection » (§2).
+   * ⚠️ C'EST LA PAGE QUI SAIT, PAS LA BARRE : `IndexTatoueurs` lit ses
+   * critères servis et répond. La barre ne devine rien d'une adresse.
+   * ⚠️ CE DRAPEAU NE TOUCHE PAS « MA SÉLECTION » : elle ne passe pas
+   * `surRecherche` du tout, elle passe `rangee` — sa rangée libre garde
+   * son repli et sa loupe, au pixel et à la milliseconde.
+   */
+  accueilNu?: boolean;
 }) {
   const router = useRouter();
   const { utilisateur, nom, pret } = useUtilisateur();
@@ -455,6 +474,16 @@ export function EnTeteTatouage({
    * ne bougent pas d'un chiffre.
    */
   const cumulDuGeste = useRef(0);
+  /*  §1 (nº 846) — L'ÉCOUTEUR DE DÉFILEMENT DOIT SAVOIR SI LA RANGÉE
+      EST FIXE, et il naît une seule fois (dépendances vides) : la
+      réponse voyage donc par une RÉFÉRENCE, tenue à jour par un effet.
+      C'est le motif du site (`indiceVoulu`, CarrouselPortfolio) — jamais
+      une écriture de référence pendant le rendu, que le linteur refuse.
+      ⚠️ POURQUOI ELLE PEUT CHANGER SANS REMONTAGE : une recherche lancée
+      DEPUIS la page de résultats ne démonte pas la barre ; l'accueil, en
+      revanche, croise le jumeau et remonte (nº 430). Les deux chemins
+      passent donc par cette référence. */
+  const rangeeFixeRef = useRef(false);
   //  LE CUMUL REPART À CHAQUE CHANGEMENT D'ÉTAT, D'OÙ QU'IL VIENNE —
   //  du défilement comme du doigt. C'est ce que faisait `poserReplie`
   //  pour lui seul ; branché sur l'état, il n'a plus rien à savoir de
@@ -462,12 +491,14 @@ export function EnTeteTatouage({
   useEffect(() => {
     cumulDuGeste.current = 0;
   }, [moteurReplie]);
-  /** SUR L'ACCUEIL, ET LÀ SEULEMENT, la barre porte la rangée du
-      moteur sur smartphone (nº 150-§3) : l'accueil est la page qui
-      PILOTE la recherche — elle fournit `surRecherche`. Partout
-      ailleurs, la rangée n'existe pas : c'est LA LOUPE de la barre qui
-      mène à la recherche. */
-  const surAccueil = Boolean(surRecherche);
+  /*  §2 (nº 846) — `surAccueil` A DISPARU, ET SON NOM DISAIT DÉJÀ LE
+      DÉFAUT : il valait `Boolean(surRecherche)`, c'est-à-dire « cette
+      page pilote la recherche » — l'accueil ET les résultats, alors
+      qu'il servait à décider de choses qui n'appartiennent qu'à
+      L'ACCUEIL (la rangée du doigt, la loupe). La page le dit désormais
+      elle-même, en un mot juste : `accueilNu`. Ses trois lecteurs
+      (`rangeePresente`, `loupeVisible`, la pilule du moteur) lisent ce
+      drapeau-là. */
   /** §1 (nº 245) — LA RANGÉE PORTE UN AUTRE CONTENU (« Ma
       sélection »). Elle existe alors comme sur l'accueil, mais elle
       n'EST PAS le moteur : la loupe reste donc à sa place (§4), et la
@@ -478,11 +509,48 @@ export function EnTeteTatouage({
       `rangeeWeb` de la nº 251 est défait, et la réserve du smartphone
       retrouve ses hauteurs (deux depuis la nº 258-§3 : dépliée, 64 sans
       rangée). */
-  const rangeePresente = surAccueil || rangeeLibre;
+  /*  ██ §2 (nº 846) — LA RANGÉE N'EXISTE PLUS SUR LES RÉSULTATS ██
+      `surAccueil` disait « cette page pilote la recherche » — l'accueil
+      ET les résultats. La rangée, elle, n'appartient qu'à l'ACCUEIL
+      depuis la nº 846 : sur les résultats, `rangeePresente` est faux, et
+      l'enveloppe du moteur retrouve alors son écriture d'ailleurs
+      (`hidden lg:flex`, plus bas) — rien dans le monde étroit, le moteur
+      entier au web. La RÉSERVE de la barre suit par construction : elle
+      lit ce même drapeau et retombe à la hauteur du logo seul.
+      ⚠️ CE QUE CELA VEUT DIRE EXACTEMENT, ET C'EST DIT : la bascule se
+      joue sous 1024 px — LE MONDE DE CETTE RANGÉE, celui qu'elle habite
+      depuis toujours (`max-lg:`). Un vrai téléphone y est toujours ;
+      une fenêtre d'ordinateur rétrécie aussi, et elle voit donc la même
+      chose. Choisir ici l'appareil plutôt que la largeur aurait demandé
+      DEUX structures pour une rangée qui n'en a qu'une. */
+  const rangeePresente = accueilNu || rangeeLibre;
+  /**
+   * ██ §1 (nº 846) — SUR L'ACCUEIL, LA RANGÉE NE SE REPLIE PLUS ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : « le champ de recherche ne se rétracte
+   * plus au défilement — il est FIXE ». Le repli reste écrit, entier :
+   * c'est celui de la rangée LIBRE de « Ma sélection », qui n'est pas
+   * touchée. Seul l'accueil s'en exempte.
+   * ⚠️ UN ÉTAT DÉRIVÉ, PAS UN ÉTAT DE PLUS : `moteurReplie` continue de
+   * vivre sa vie (mémoire de module, marque d'avant peinture) ; c'est
+   * la LECTURE qui est bornée. Sans cela, un repli hérité de « Ma
+   * sélection » ferait naître l'accueil rangée fermée.
+   * ⚠️ ET L'ÉCOUTEUR DE DÉFILEMENT SE TAIT (voir sa garde, plus bas) :
+   * on ne calcule pas un état qu'on n'affiche pas, et l'on n'écrit pas
+   * dans la mémoire de module ce que l'accueil n'a pas vécu.
+   */
+  const rangeeFixe = accueilNu;
+  const replie = rangeeFixe ? false : moteurReplie;
+  useEffect(() => {
+    rangeeFixeRef.current = rangeeFixe;
+  }, [rangeeFixe]);
   /** LA LOUPE EST VISIBLE quand la rangée ne l'est pas : partout hors
       accueil, et sur l'accueil dès que la rangée est repliée. Avec une
-      rangée libre, la loupe ne bouge pas (nº 245-§4). */
-  const loupeVisible = !surAccueil || moteurReplie;
+      rangée libre, la loupe ne bouge pas (nº 245-§4).
+      §1-§2 (nº 846) — SUR L'ACCUEIL ELLE NE PARAÎT PLUS JAMAIS (la
+      rangée y est fixe, le champ est toujours là) ; sur les RÉSULTATS
+      elle paraît toujours, puisque la rangée n'y est plus. */
+  const loupeVisible = !accueilNu || replie;
   /**
    * L'ÉCRAN EST-IL ÉTROIT ? — c'est-à-dire : la rangée du moteur est-
    * elle réellement repliable ici ?
@@ -511,7 +579,7 @@ export function EnTeteTatouage({
   /** La rangée est-elle VRAIMENT hors de portée ? */
   //  §2 (nº 259) — LES DEUX RANGÉES SE REPLIENT : celle du moteur ET
   //  la rangée libre. L'inertie suit la même condition que le repli.
-  const rangeeEscamotee = rangeePresente && moteurReplie && etroit;
+  const rangeeEscamotee = rangeePresente && replie && etroit;
 
   //  ⚠️ AVANT LA PEINTURE (nº 156-§2) : la toute première lecture doit
   //  décider de l'état de la rangée AVANT que la barre ne s'affiche —
@@ -600,6 +668,12 @@ export function EnTeteTatouage({
       const y = window.scrollY;
       const delta = y - yPrecedent;
       yPrecedent = y;
+      /*  §1 (nº 846) — RANGÉE FIXE (l'accueil) : rien à décider. On
+          prend acte de la position — `yPrecedent` vient d'être posé —
+          et l'on s'arrête là. Aucun cumul, aucune bascule, aucune
+          écriture dans la mémoire de module : l'accueil ne laisse pas
+          derrière lui un état que « Ma sélection » hériterait. */
+      if (rangeeFixeRef.current) return;
       //  ⚠️ UN DÉFILEMENT POSÉ PAR LE SITE N'EST PAS UN GESTE
       //  (nº 154-§6A). Changer de disposition, montrer ou masquer le
       //  texte des cartes, restituer une position au retour : chacun
@@ -882,7 +956,7 @@ export function EnTeteTatouage({
                           ? `max-lg:grid max-lg:grid-cols-[minmax(0,1fr)]
                              max-lg:transition-[grid-template-rows,opacity]
                              max-lg:duration-300 max-lg:ease-out ${
-                               moteurReplie
+                               replie
                                  ? "max-lg:grid-rows-[0fr] max-lg:opacity-0"
                                  : "max-lg:grid-rows-[1fr] max-lg:opacity-100"
                              } lg:flex`
@@ -956,7 +1030,12 @@ export function EnTeteTatouage({
                 <MoteurTatouage
                   criteres={valeur}
                   surChangement={chercher}
-                  rangeeMobile={surAccueil}
+                  //  §2 (nº 846) — LA PILULE DU DOIGT N'EXISTE QUE SUR
+                  //  L'ACCUEIL : sur les résultats, la rangée entière
+                  //  est retirée du monde étroit, et un bouton que
+                  //  personne ne peut voir n'a rien à faire dans le
+                  //  document.
+                  rangeeMobile={accueilNu}
                 />
               )}
             </div>
@@ -1599,12 +1678,11 @@ export function EnTeteTatouage({
         //  hauteur vient donc du style, pas d'une classe : une classe
         //  Tailwind ne sait pas lire une constante.
         data-reserve-posee={
-          rangeePresente && !moteurReplie ? RESERVE_RANGEE : RESERVE_LOGO
+          rangeePresente && !replie ? RESERVE_RANGEE : RESERVE_LOGO
         }
         data-reserve-depliee={rangeePresente ? RESERVE_RANGEE : RESERVE_LOGO}
         style={{
-          height:
-            rangeePresente && !moteurReplie ? RESERVE_RANGEE : RESERVE_LOGO,
+          height: rangeePresente && !replie ? RESERVE_RANGEE : RESERVE_LOGO,
         }}
         className="hidden mobile:block shrink-0 transition-[height]
                    duration-300 ease-out"

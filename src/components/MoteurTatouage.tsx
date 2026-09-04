@@ -1864,20 +1864,26 @@ export function MoteurTatouage({
                      rounded-full
                      px-5 min-h-[46px] transition-colors"
         >
-          {/*  nº 443 — LE TITRE VISIBLE CHANGE : « Find your tattoo
-               style… » (l'anglais est un choix du propriétaire, mobile
-               uniquement — cette pilule ne vit que dans la rangée du
-               doigt). La pilule reste une PORTE (nº 140), pas un
-               résumé ; l'aria-label garde le détail en français : un
-               lecteur d'écran ne voit pas le titre de la mosaïque à
-               côté. */}
+          {/*  nº 443 — LE TITRE VISIBLE CHANGE (l'anglais est un choix
+               du propriétaire, mobile uniquement — cette pilule ne vit
+               que dans la rangée du doigt). La pilule reste une PORTE
+               (nº 140), pas un résumé ; l'aria-label garde le détail :
+               un lecteur d'écran ne voit pas le titre de la mosaïque à
+               côté.
+               ██ §1 (nº 846) — ET ELLE NE DIT PLUS LE TITRE DE LA PAGE.
+               Elle écrivait « Find your tattoo style… », mot pour mot le
+               titre posé au-dessus des cartes — un doublon que la nº 846
+               rend visible en montrant ce titre AUSSI au doigt (§3).
+               Elle dit désormais ce qu'on peut y chercher : le texte vit
+               avec les autres (`TEXTES_TATOUAGE.invitePilule`), et le
+               pourquoi complet est écrit là-bas. */}
           <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
           <span
             aria-hidden="true"
             className="min-w-0 flex-1 truncate text-[15px] leading-tight
                        font-semibold text-sombre-texte"
           >
-            Find your tattoo style…
+            {TEXTES_TATOUAGE.invitePilule}
           </span>
         </button>
 
