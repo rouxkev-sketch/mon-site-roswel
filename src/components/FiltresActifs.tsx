@@ -1,7 +1,7 @@
 "use client";
 
 import { IconeCroix } from "@/components/Icones";
-import { ROBE_BADGE_CONTOUR } from "@/config/tatouage";
+import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
 
 /**
  * ██ LA RANGÉE DES BADGES — SOUS LE COMPTE, PUIS À SA PLACE (nº 846,
@@ -44,6 +44,11 @@ import { ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * `COULEURS_SOMBRE`, où le calcul est écrit). Aucune valeur n'est
  * fabriquée au point d'usage : l'échelle en compte un de plus, et tout le
  * site peut s'en servir.
+ * ⚠️ ET DEPUIS LA nº 849, CETTE COULEUR EST POSÉE DANS LE MARQUAGE, pas
+ * par une classe utilitaire : une classe neuve n'existe que dans une
+ * feuille neuve, et le propriétaire a vu ces badges SANS AUCUN FOND en
+ * ligne, peints par une feuille plus ancienne. Le pourquoi complet, la
+ * reproduction et la mesure sont écrits au point d'usage, plus bas.
  * ⚠️ POURQUOI LE PLEIN EST AUX ACTIONS ET LE CONTOUR À L'INFORMATION :
  * c'est la règle que le site s'est donnée à la nº 844 en vidant le badge
  * du type (« le contour seul sert à RENSEIGNER, pas à signaler un
@@ -249,9 +254,51 @@ export function FiltresActifs({
               sous lui (le rognage de fond va jusqu'au bord du contour) —
               et il ne change pas l'air intérieur, qui reste le
               rembourrage, égal sur les quatre côtés. */
+          /*  ██ nº 849 — LE FOND EST ÉCRIT DANS LE MARQUAGE, ET C'EST LA
+              CORRECTION DU BOGUE DE LA nº 848 ██
+              --------------------------------------------------------
+              CE QUE LE PROPRIÉTAIRE A VU EN LIGNE : ces badges SANS
+              fond ni contour, le texte flottant sur la page. Le bâti
+              livré, lui, était juste — la classe était bien produite et
+              le pont bien écrit dans le HTML (les deux mesurés, banc
+              849). CE QUI MANQUAIT ÉTAIT AILLEURS : une classe NEUVE
+              n'existe que dans la feuille NEUVE. Quand la page a été
+              peinte avec une feuille plus ancienne — un onglet ouvert
+              avant la mise en ligne, un cache d'étape, une navigation
+              douce dans un document déjà chargé — la classe du barreau
+              n'y figurait pas, et un fond que la feuille ignore ne se
+              peint pas du tout. Le contour, lui, est transparent par
+              construction : d'où « ni fond ni contour ».
+              REPRODUIT AU BANC, PUIS CORRIGÉ : le banc 849 sert le
+              marquage de la nº 848 avec la feuille de la nº 847 et
+              mesure le pixel réellement peint — transparent avant,
+              #20262D après.
+              LE REMÈDE : la couleur VOYAGE AVEC LE MARQUAGE. Un style en
+              ligne ne dépend d'aucune feuille et d'aucune variable posée
+              dans l'en-tête du document : il arrive avec le badge, ou il
+              n'arrive pas du tout — et alors le badge non plus.
+              ⚠️ CE N'EST PAS UNE SECONDE ÉCRITURE DE LA COULEUR : la
+              valeur reste celle de la charte, lue au même endroit que
+              tout le reste (`COULEURS_SOMBRE.carteClair`). Ce qui change
+              est le CHEMIN qu'elle prend pour atteindre l'écran, pas sa
+              source.
+              ⚠️ ET CE N'EST PAS UN PROCÉDÉ INVENTÉ ICI : le site pose
+              déjà ses fonds de cette façon là où une classe ne suffit
+              pas à garantir le résultat (PageMessageSombre, MenuDeroulant
+              — mêmes réglages, même écriture).
+              ⚠️ UNE SEULE DÉCLARATION DE FOND SUR CET ÉLÉMENT (piège
+              nº 389) : la classe utilitaire du barreau est PARTIE, elle
+              n'est pas doublée. Le jeton reste dans la charte et son pont
+              CSS reste posé — un autre porteur pourra s'en servir — mais
+              ce badge-ci ne passe plus par eux.
+              ⚠️ ET SON NOM NE S'ÉCRIT PLUS DANS AUCUNE NOTE (piège
+              nº 472) : Tailwind lit les commentaires, et le nommer
+              suffirait à faire produire une règle que plus personne
+              n'emploie. Mesuré dans la feuille : la règle est bien
+              partie. */
+          style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
           className={`inline-flex shrink-0 items-center gap-1.5
                      whitespace-nowrap rounded-lg border border-transparent
-                     bg-sombre-carte-clair
                      ${AIR_BADGE} ${ECRITURE_BADGE}`}
         >
           {filtre.libelle}

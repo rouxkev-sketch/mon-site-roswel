@@ -1799,11 +1799,32 @@ export const COULEURS_SOMBRE = {
    * invention de vocabulaire.
    * ⚠️ UNE SEULE ÉCRITURE, et c'est la consigne : la valeur vit ICI, le
    * pont vers CSS est posé une fois (lib/theme, `--rw-sombre-carte-clair`)
-   * et Tailwind la sert sous `bg-sombre-carte-clair` (globals.css). Rien
-   * n'est recopié nulle part.
+   * et globals.css en fait un jeton de couleur. Rien n'est recopié nulle
+   * part.
    * ⚠️ IL A UN SEUL PORTEUR AUJOURD'HUI — les badges à croix de la
-   * rangée de recherche (components/FiltresActifs). Un barreau de plus
-   * dans l'échelle n'oblige personne à s'en servir.
+   * rangée de recherche (components/FiltresActifs) — et depuis la nº 849
+   * ce porteur écrit la couleur DANS SON MARQUAGE : aucune classe
+   * utilitaire ne s'en sert plus, et son nom n'est donc écrit nulle part
+   * (piège nº 472 : Tailwind lit les commentaires, et une classe nommée
+   * dans une note est une règle produite pour personne).
+   *
+   * ██ nº 849 — LA LEÇON QUE CE BARREAU A COÛTÉE, ET QUI VAUT POUR LE
+   * PROCHAIN ██
+   * UNE COULEUR NEUVE DE LA CHARTE N'ARRIVE À L'ÉCRAN QUE SI TROIS
+   * MORCEAUX NEUFS SE RETROUVENT : la variable dans l'en-tête du
+   * document (lib/theme), la classe dans la feuille (globals.css +
+   * Tailwind), et le marquage qui la porte. Les trois voyagent
+   * SÉPARÉMENT — et un document déjà chargé, un cache d'étape ou une
+   * navigation douce peuvent parfaitement associer un marquage NEUF à
+   * une feuille ANCIENNE. La classe n'y existe pas ; le fond ne se
+   * peint alors PAS DU TOUT (une classe absente ne laisse rien, pas
+   * même la couleur d'avant). C'est ce que le propriétaire a vu en
+   * ligne à la nº 848, et le banc 849 le reproduit.
+   * LA RÈGLE QUI EN SORT : quand un fond DOIT être là — un badge qui
+   * n'a que lui pour exister —, on l'écrit dans le marquage, depuis
+   * cette palette (`style={{ backgroundColor: … }}`, comme
+   * PageMessageSombre et MenuDeroulant le font déjà). La classe reste
+   * la bonne façon pour tout ce qui peut attendre la feuille suivante.
    */
   carteClair: "#20262D",
   /** Un cran encore au-dessus : champs, éléments survolés.

@@ -45,6 +45,11 @@ export function variablesCssCouleurs(): string {
     "--rw-sombre-carte": COULEURS_SOMBRE.carte,
     //  §1 (nº 848) — le barreau entre `carte` et `eleve` : le pourquoi et
     //  le calcul vivent avec la valeur (config/tatouage).
+    //  ⚠️ nº 849 — SON SEUL PORTEUR NE PASSE PLUS PAR LUI : les badges de
+    //  filtre écrivent la couleur dans leur marquage, parce qu'une classe
+    //  neuve n'existe que dans une feuille neuve (la leçon est écrite
+    //  avec le jeton, config/tatouage). Le pont reste posé pour qui
+    //  voudra la classe — il ne coûte que cette ligne.
     "--rw-sombre-carte-clair": COULEURS_SOMBRE.carteClair,
     "--rw-sombre-eleve": COULEURS_SOMBRE.eleve,
     "--rw-sombre-eleve-clair": COULEURS_SOMBRE.eleveClair,

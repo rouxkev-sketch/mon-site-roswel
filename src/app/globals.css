@@ -123,7 +123,12 @@
   --color-sombre-fond: var(--rw-sombre-fond);
   --color-sombre-carte: var(--rw-sombre-carte);
   /*  §1 (nº 848) — le barreau intermédiaire de l'échelle sombre : sa
-      valeur et son calcul vivent dans config/tatouage. */
+      valeur et son calcul vivent dans config/tatouage.
+      ⚠️ nº 849 — AUCUNE CLASSE NE L'EMPLOIE AUJOURD'HUI : son porteur,
+      les badges de filtre, écrit la couleur dans son marquage (la leçon
+      est écrite avec le jeton). Tailwind ne produit une règle que pour
+      les classes VUES dans le code : cette ligne ne pèse donc rien dans
+      la feuille tant que personne n'écrit la classe. */
   --color-sombre-carte-clair: var(--rw-sombre-carte-clair);
   --color-sombre-eleve: var(--rw-sombre-eleve);
   --color-sombre-eleve-clair: var(--rw-sombre-eleve-clair);
