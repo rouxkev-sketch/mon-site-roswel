@@ -182,35 +182,30 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("843 · la plaque du profil : son écriture, et un constat");
-    await page.goto(`${BASE}/artist/${T}?entree=lien`, { waitUntil: "networkidle" });
+    /*  ██ LE CONSTAT DE LA nº 843 A ÉTÉ SUIVI D'EFFET À LA nº 844 ██
+        CE BANC DISAIT, EN MESURANT : « la plaque ne s'affiche nulle
+        part depuis la nº 841 — la rendre au parcours, ou la retirer,
+        est une décision du propriétaire ». IL A TRANCHÉ (nº 844-§4) :
+        la plaque est SUPPRIMÉE, et la vue photo du doigt revient pour
+        ses deux entrées, avec une CROIX de retour à la place.
+        Le bloc reste donc ici, retourné : il ne mesure plus l'écriture
+        d'une plaque, il vérifie qu'elle a bien disparu — et que ce qui
+        la remplace est là. */
+    titre("843 · la plaque du profil : le constat, et sa suite (nº 844)");
+    await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
     const m = await page.evaluate(() => {
-      const plaque = document.querySelector("[data-habillage-photo]");
-      const bloc = plaque?.querySelector("a > span:nth-child(2)");
-      const parent = plaque?.parentElement;
+      const lecture = document.querySelector("[data-colonne-lecture]");
       return {
-        nom: bloc?.querySelector(":scope > span:first-child")?.textContent.trim(),
-        sous: bloc?.querySelector(":scope > span:nth-child(2)")?.textContent.trim(),
-        badge: plaque?.querySelector("[data-badge-type]") !== null,
-        //  Ce que la feuille de style en fait, ici et maintenant.
-        montree: (plaque?.getBoundingClientRect().height ?? 0) > 0,
-        parentMasque: parent ? getComputedStyle(parent).display === "none" : null,
+        plaque: document.querySelector("[data-habillage-photo]") !== null,
+        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
+        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
+        croix: document.querySelector("[data-retour-vue-photo]") !== null,
       };
     });
-    verif("son écriture dit le NOM SEUL, puis « Type · Ville »", m.nom === "Banc 843" && m.sous === "Private Studio · Lyon, FR", `${m.nom} / ${m.sous}`);
-    verif("elle ne porte pas de badge (elle est déjà un lien, et porte son chevron)", m.badge === false);
-    /*  ██ CONSTAT DE LA nº 843, ET IL EST À DIRE AU PROPRIÉTAIRE ██
-        LA PLAQUE NE S'AFFICHE NULLE PART DEPUIS LA nº 841. Elle vit
-        DANS le bloc de la photo de tête (`data-photo-de-tete`), que la
-        vue profil masque au doigt — et depuis la nº 841, toute fiche
-        du doigt EST la vue profil. Sur le web, elle est masquée par
-        elle-même (`hidden mobile:block`). Son écriture est donc tenue
-        à jour (ci-dessus), mais aucun œil ne la voit : la rendre au
-        parcours, ou la retirer, est une décision du propriétaire.
-        ⚠️ CE BANC LE MESURE PLUTÔT QUE DE LE SUPPOSER : si une passe
-        la remet à l'écran, cette ligne le dira. */
-    verif("CONSTAT : elle n'est montrée nulle part depuis la nº 841 (son bloc parent est masqué)", m.montree === false && m.parentMasque === true, `montrée : ${m.montree} · parent masqué : ${m.parentMasque}`);
+    verif("SUITE DU CONSTAT nº 843 : la plaque a été supprimée (nº 844)", m.plaque === false);
+    verif("la vue photo du doigt est revenue, avec sa croix de retour",
+      m.vuePhoto && m.lectureMasquee === true && m.croix, JSON.stringify(m));
   } catch (e) {
     verif("déroulement du banc 843 (plaque)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

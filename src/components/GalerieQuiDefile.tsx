@@ -146,6 +146,74 @@ export function ChevronDeGalerie({
   );
 }
 
+/**
+ * ██ §2 (nº 844) — LE CHEVRON QUI SE CLIQUE, SORTI À SON TOUR ██
+ * ==================================================================
+ * LE DESSIN était partagé depuis la nº 839 (`ChevronDeGalerie`) ; SA
+ * ZONE CLIQUABLE, non — la carte-galerie l'écrivait à la main
+ * (`CommandesDeCarte`, components/GalerieDeCarte) et la nº 844 en veut
+ * EXACTEMENT la même sur les fiches (consigne du propriétaire : « les
+ * mêmes chevrons que les cartes — même dessin, même comportement au
+ * survol »). Troisième porteur, donc extraction (la règle du site,
+ * nº 276) : aucune valeur n'est choisie ici qui ne fût déjà celle de la
+ * nº 839.
+ *
+ * CE QUE LA ZONE VAUT, ET POURQUOI : une COLONNE de la hauteur de
+ * l'image (`inset-y-0`), collée à son bord, large de ce que dit le
+ * gabarit (40 px pour `CHEVRON_GALERIE`, 28 pour le réduit). C'est la
+ * cible des galeries de profil depuis la nº 301 : on vise le bord, pas
+ * un disque.
+ *
+ * LES ÉTATS, à la lettre :
+ *  · `hidden` — sur un pointeur grossier, RIEN. Le doigt fait glisser,
+ *    il n'a pas de chevron à viser (la règle des galeries depuis la
+ *    nº 264) ;
+ *  · `pointer-fine:flex` — il existe dès qu'une souris existe ;
+ *  · `invisible group-hover:visible` — et il ne se montre que lorsque
+ *    l'ensemble qui le porte est survolé. `invisible` et non une
+ *    transparence : un élément seulement transparent continue de
+ *    recevoir les clics.
+ * ⚠️ LE `group` EST CELUI DU PORTEUR : l'article de la carte
+ * (CarteTatoueur), la racine du carrousel sur une fiche (nº 844). Un
+ * seul `group` par chaîne — deux imbriqués détourneraient le survol.
+ * ⚠️ LES DEUX GARDES DU CLIC SONT INCONDITIONNELLES (nº 368-§4) : sur
+ * une fiche, chaque photo est un lien et le bouton est posé au-dessus ;
+ * sans elles, un clic ouvrirait la photo EN PLUS de faire défiler. Sur
+ * une carte, le bouton est HORS du lien (nº 517) et rien ne remonte —
+ * les garder ne coûte rien et supprime la question.
+ */
+export function BoutonChevron({
+  sens,
+  taille,
+  surClic,
+  attributs,
+}: {
+  sens: 1 | -1;
+  taille: TailleChevron;
+  surClic: () => void;
+  /** Les repères de banc du porteur (`data-fleche-de-carte`, `data-role`). */
+  attributs?: Record<string, string>;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={sens === 1 ? "Next photo" : "Previous photo"}
+      {...attributs}
+      onClick={(evenement) => {
+        evenement.preventDefault();
+        evenement.stopPropagation();
+        surClic();
+      }}
+      className={`pointer-events-auto hidden pointer-fine:flex invisible
+        group-hover:visible absolute inset-y-0 z-[2] ${
+          sens === 1 ? "right-0" : "left-0"
+        } ${taille.zone} items-center justify-center text-white`}
+    >
+      <ChevronDeGalerie sens={sens} taille={taille} />
+    </button>
+  );
+}
+
 /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
     rangée déborde de son cadre (rembourrage interne), et `clientWidth`
     le compte. Une PAGE reste une largeur de CONTENU.

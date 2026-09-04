@@ -13,8 +13,6 @@ import {
 //  chez leurs données pour cette raison précise (nº 359). Le TYPE, lui,
 //  s'efface à la compilation — il peut venir de n'importe où.
 import { renduConnu, styleConnu } from "@/config/tatouage";
-import { useAppareilMobile } from "@/lib/appareil";
-import { avecConsigneDeLienInterne, ENTREE_LIEN } from "@/lib/lien-interne";
 import { natureCherchee } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -119,43 +117,43 @@ export function FicheSelonLAdresse({
     };
   }, [requete]);
   /**
-   * ██ §3 (nº 841) — AU DOIGT, LA VUE PHOTO N'EXISTE PLUS : TOUTE FICHE
-   * EST LE PROFIL ██
+   * ██ §4 (nº 844) — LA VUE PHOTO REVIENT AU DOIGT, ET LA RÈGLE 6
+   * REDEVIENT SEULE MAÎTRESSE ██
    * ------------------------------------------------------------------
-   * DÉCISION DU PROPRIÉTAIRE : la fiche intermédiaire du doigt (carte →
-   * vue photo → plaque du profil) disparaît, ce qu'elle montrait vit
-   * désormais dans la carte du fil (CarteFil). Sur un vrai mobile, une
-   * adresse de fiche SANS `entree=lien` est donc lue COMME SI elle le
-   * portait — la vue profil (règle 6, nº 295) — et l'adresse est mise
-   * au pas (`replaceState`, plus bas) : ce que l'écran montre, l'adresse
-   * le dit (règles 328/329), et l'ancienne adresse REDIRIGE.
-   * ⚠️ L'APPAREIL, PAR LE CROCHET DU SITE (`useAppareilMobile`, un seul
-   * écrivain — règle nº 60) : il vaut « web » au premier rendu, celui
-   * que le serveur a fait, puis le vrai appareil un battement plus tard.
-   * Sur ce battement, la garde d'avant peinture couvre l'écran : le
-   * script pose `data-entree-lien` sur toute fiche au doigt (nº 841),
-   * et la garde n'est levée qu'une fois le PROFIL commis (voir l'effet
-   * de levée) — l'œil ne voit jamais la photo en haut, pas même un
-   * instant.
-   * ⚠️ CE QUE CELA CHANGE AU-DELÀ DES CARTES DU FIL, ET C'EST DIT : toute
-   * arrivée au doigt sur une vue photo mène au profil — les cartes de
-   * « Ma sélection », un lien partagé, une vignette de l'onglet
-   * Portfolio (nº 455), un retour d'historique. Le web n'est pas touché.
+   * CE QUI VIVAIT ICI, ET QUI S'EN VA ENTIER (le §3 de la nº 841) : sur
+   * un vrai mobile, TOUTE adresse de fiche sans `entree=lien` était lue
+   * COMME SI elle le portait — la vue profil —, et l'adresse était mise
+   * au pas par un `replaceState`. Cinq lignes de code, un crochet
+   * d'appareil, un effet de réécriture d'adresse, et une garde de plus
+   * dans la levée d'avant peinture.
+   *
+   * POURQUOI : la nº 841 avait supprimé la fiche intermédiaire du doigt
+   * (carte → vue photo → plaque du profil), et plus rien au doigt ne
+   * devait donc ouvrir une vue photo. LE PROPRIÉTAIRE TRANCHE
+   * AUTREMENT À LA nº 844-§4 : la vue photo RESTE NÉCESSAIRE, mobile
+   * compris, pour deux entrées —
+   *  · UN LIEN PARTAGÉ : l'adresse qu'un artiste envoie porte sa photo
+   *    (`?style=…&photo=…`) et AUCUN `entree` — celui qui l'ouvre doit
+   *    voir LA PHOTO, pas un profil ;
+   *  · UNE VIGNETTE DE L'ONGLET PORTFOLIO : le geste de la nº 455
+   *    navigue vers cette même adresse ; la nº 841 le renvoyait au
+   *    profil, ce qui n'avait aucun sens (on venait d'y toucher une
+   *    photo précise).
+   * ⚠️ ET LES CARTES DU FIL NE CHANGENT PAS D'UN CARACTÈRE : leur lien
+   * est `adresseDeLienInterne(slug)` — donc `entree=lien`, donc le
+   * PROFIL, écrit dans le lien lui-même (CarteFil) et non plus deviné
+   * ici. C'est le bon endroit : la destination appartient à celui qui
+   * pose le lien, pas à la page d'arrivée.
+   * ⚠️ CE QUE CELA REND AUSSI, ET JE LE DIS : les cartes de « Ma
+   * sélection » au doigt retrouvent elles aussi la vue photo — c'était
+   * leur comportement avant la nº 841, et la nº 844 ne demande pas de
+   * les en priver. Elles montrent une PHOTO précise ; l'ouvrir sur
+   * cette photo est ce que le geste promet.
+   * ⚠️ LA PLAQUE DU PROFIL, elle, ne revient pas : elle est SUPPRIMÉE
+   * (nº 844-§4, FicheTatoueur). La vue photo mobile a désormais une
+   * CROIX DE RETOUR à la place — voir `RetourDeVuePhoto`.
    */
-  const mobile = useAppareilMobile();
-  const entree = tags ? tags.entree || (mobile ? ENTREE_LIEN : "") : "";
-  useEffect(() => {
-    if (!mobile || !tags || tags.entree === ENTREE_LIEN) return;
-    if (!/^\/artist\/[^/]+$/.test(window.location.pathname)) return;
-    //  LE MÊME GESTE QUE LES FILTRES DE « MA SÉLECTION » (nº 516) et
-    //  l'étape refermable : remplacer, jamais empiler — revenir d'un
-    //  cran ramène aux résultats, pas à une vue photo qui n'existe plus.
-    window.history.replaceState(
-      window.history.state,
-      "",
-      avecConsigneDeLienInterne(window.location.pathname + window.location.search)
-    );
-  }, [mobile, tags]);
+  const entree = tags ? tags.entree : "";
   const cle = tags
     ? [
         tatoueur.slug,
@@ -178,20 +176,13 @@ export function FicheSelonLAdresse({
     //  contredit, juste avant le resemis. Une adresse nue, elle, n'a
     //  jamais fait poser de garde : ne rien lever n'y retire rien.
     if (!requete) return;
-    //  §3 (nº 841) — AU DOIGT, LA GARDE NE SE LÈVE QUE SUR LE PROFIL :
-    //  tant que le crochet d'appareil n'a pas parlé, la fiche rendue
-    //  est encore la vue photo — la lever ici la montrerait le temps
-    //  d'un battement. L'attribut est lu tel quel : c'est ce que le
-    //  script a écrit, et la seule vérité disponible à cet instant.
-    if (
-      document.documentElement.dataset.appareil === "mobile" &&
-      entree !== ENTREE_LIEN
-    ) {
-      return;
-    }
+    //  §4 (nº 844) — LA GARDE D'APPAREIL DE LA nº 841 EST RETIRÉE avec
+    //  la redirection qui la justifiait : la fiche montée est celle que
+    //  l'adresse demande, sur les deux appareils, dès le premier rendu
+    //  tagué. Il n'y a plus de battement à couvrir.
     delete document.documentElement.dataset.ficheParametree;
     delete document.documentElement.dataset.entreeLien;
-  }, [cle, requete, entree]);
+  }, [cle, requete]);
 
   /*  L'ARRIVÉE N'EST PAS COMMISE (premier rendu d'une navigation
       douce) : on ne rend RIEN plutôt qu'une fiche aux tags de la page

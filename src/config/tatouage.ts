@@ -2326,8 +2326,15 @@ export const FOND_RESERVE_PHOTO =
  * légitimement : l'ANCRE (la fiche pose sa pastille à 12 px des bords,
  * une carte à 8), le REMBOURRAGE et la TAILLE DU TEXTE (trois gabarits
  * — fiche, carte pleine largeur, carte côte à côte : la note de la
- * nº 367 les détaille), et l'APPARITION (permanente sur une fiche, au
- * survol seulement sur une carte).
+ * nº 367 les détaille).
+ * ⚠️ L'APPARITION, ELLE, N'EST PLUS AU PORTEUR (nº 844) : elle
+ * différait — permanente sur une fiche (nº 483), au survol sur une
+ * carte du web (nº 369), permanente au doigt (nº 841) — et le
+ * propriétaire l'a unifiée. Elle vit désormais dans UNE écriture,
+ * `components/PastilleCompteur` : invisible au repos, allumée par le
+ * défilement, éteinte en fondu trois secondes après le dernier geste.
+ * C'est ce composant, et lui seul, qui consomme les deux constantes
+ * ci-dessous.
  * ⚠️ NI COULEUR NI RAYON NE SE REDÉCLARENT AILLEURS : une seule classe
  * par propriété, jamais deux empilées (piège nº 389).
  */

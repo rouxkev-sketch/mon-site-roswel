@@ -4,12 +4,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
-import { ZoomPincement } from "@/components/ZoomPincement";
 import {
-  CADRE_PHOTO_PORTFOLIO,
-  ECRITURE_COMPTEUR,
-  PASTILLE_COMPTEUR,
-} from "@/config/tatouage";
+  PastilleCompteur,
+  usePastilleDeDefilement,
+} from "@/components/PastilleCompteur";
+//  §2 (nº 844) — les chevrons des galeries de profil, ceux-là mêmes que
+//  les cartes portent depuis la nº 839.
+import { BoutonChevron, CHEVRON_GALERIE } from "@/components/GalerieQuiDefile";
+import { ZoomPincement } from "@/components/ZoomPincement";
+import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 
 /**
@@ -316,77 +319,72 @@ export function CarrouselPortfolio({
       compter encore aurait faussé le relevé. */
 
   /**
-   * ██ §2 (nº 394) — LES FLÈCHES DORMENT, ET SE RÉVEILLENT À LA SOURIS ██
+   * ██ §2 (nº 844) — LES FLÈCHES NE DORMENT PLUS : ELLES SUIVENT LE
+   * SURVOL, COMME CELLES DES CARTES ██
    * ==================================================================
-   * LE COMPORTEMENT DEMANDÉ, sur une FICHE et à la SOURIS seulement :
-   * au repos les deux flèches sont invisibles ; le moindre mouvement de
-   * souris SUR LA PHOTO les rallume ; trois secondes après le dernier
-   * mouvement, elles s'éteignent. C'est exactement le cycle de la
-   * capsule (nº 198 et nº 367) transposé au geste de la souris — même
-   * délai, même « le compte repart à chaque réveil ».
-   *
-   * ⚠️ SORTIE DE LA PHOTO : ON ÉTEINT TOUT DE SUITE, sans attendre les
-   * trois secondes, et c'est un choix. Une flèche ne sert qu'à être
-   * cliquée : le curseur parti, plus personne ne peut l'atteindre sans
-   * revenir sur la photo — et revenir déclenche un mouvement, donc les
-   * rallume. Attendre laisserait donc trois secondes de flèches
-   * allumées sur une image que personne ne pointe : précisément ce
-   * qu'on veut supprimer. C'est aussi le moins cher — la sortie ANNULE
-   * la minuterie au lieu d'en armer une de plus.
-   *
-   * ⚠️ CE QUE ÇA COÛTE, ET C'EST LA QUESTION DU PROPRIÉTAIRE :
-   *  · AUCUN écouteur de `document`, AUCUN `addEventListener` : ce sont
-   *    deux PROPRIÉTÉS React (`onPointerMove`, `onPointerLeave`) sur
-   *    la racine du carrousel. React n'attache qu'un seul écouteur
-   *    délégué à la racine de l'application, pour tout l'arbre : ce
-   *    dispositif n'en ajoute donc pas un seul de plus, ni par
-   *    carrousel, ni par photo ;
-   *  · ELLES NE SONT MÊME PAS POSÉES quand elles n'ont rien à faire —
-   *    `flechesQuiDorment` est faux sur une carte de mosaïque (nº 369
-   *    garde son survol, intact) et faux avec une seule photo (il n'y a
-   *    alors aucune flèche) : le carrousel reçoit `undefined`, donc
-   *    aucune fonction ;
-   *  · LA MINUTERIE N'EXISTE QUE PENDANT L'ÉVEIL. Au repos il n'y en a
-   *    aucune. Chaque mouvement remplace la précédente (`clearTimeout`
-   *    puis `setTimeout`) : il n'y en a jamais deux ;
-   *  · FERMETURE DE LA FENÊTRE OU CHANGEMENT DE FICHE : le composant
-   *    est démonté, l'effet de nettoyage ci-dessous efface la minuterie
-   *    en cours, et les deux propriétés partent avec l'arbre. Rien ne
-   *    survit, rien ne réveille un carrousel qu'on ne regarde plus.
-   *
-   * ⚠️ ET PAS UN RENDU DE PLUS QU'IL N'EN FAUT : `mousemove` part
-   * soixante fois par seconde, mais `setFlechesEveillees(true)` sur un
-   * état DÉJÀ vrai est un non-événement pour React (il abandonne le
-   * rendu quand la valeur ne change pas). Le réarmement, lui, ne passe
-   * pas par React du tout : c'est une référence, pas un état. Deux
-   * rendus par cycle — l'allumage, l'extinction —, jamais davantage.
+   * CE QUI VIVAIT ICI, ET QUI S'EN VA ENTIER (le dispositif de la
+   * nº 394) : un état d'éveil, une minuterie de trois secondes, un
+   * réveil au `pointermove` filtré sur le type de pointeur, une
+   * extinction au `pointerleave`, et un effet de nettoyage. Cinq pièces
+   * pour une question — « la flèche se voit-elle ? » — à laquelle la
+   * réponse est désormais celle des cartes de la nº 839 : OUI TANT QUE
+   * LA SOURIS EST SUR LA PHOTO, en CSS pur, sans un seul rendu de
+   * React.
+   * C'est la consigne du propriétaire (nº 844-§2) : « les fiches
+   * reçoivent LES MÊMES chevrons que les cartes — même dessin, même
+   * comportement au survol ». Le comportement des cartes n'a pas de
+   * minuterie ; celle-ci part donc avec le reste, et je le dis
+   * franchement : ON PERD LES TROIS SECONDES DE LA nº 394 (une flèche
+   * qui s'effaçait sous un curseur immobile). En échange, les deux
+   * surfaces ne peuvent plus diverger, et le survol est la seule
+   * mécanique qui reste.
+   * ⚠️ CE QUI N'A PAS BOUGÉ : la pastille, elle, garde bien une
+   * minuterie de trois secondes — mais c'est CELLE DU GESTE, la règle
+   * du §1, partagée avec les cartes et le fil (`PastilleCompteur`).
+   * Les deux objets obéissaient déjà à deux règles distinctes ; ils y
+   * obéissent toujours, simplement écrites une fois chacune.
    */
-  const [flechesEveillees, setFlechesEveillees] = useState(false);
-  const minuteurFleches = useRef(0);
-  const flechesQuiDorment = !surCarte && n > 1;
-  /*  ⚠️ UN DOIGT NE RÉVEILLE RIEN, et c'est une garde de COÛT autant
-       que de sens. Au doigt les flèches n'existent pas (`hidden` sans
-       `pointer-fine`) — mais un navigateur tactile émet quand même un
-       `mousemove` de synthèse juste avant chaque appui. Sans ce test,
-       taper la photo armerait une minuterie et provoquerait deux
-       rendus de ce composant, pour des boutons que personne ne peut
-       voir. On lit le TYPE du pointeur au moment de l'événement (jamais
-       au rendu : ce serait un écart d'hydratation) et on écarte le seul
-       cas qui n'a rien à y gagner. La souris et le stylet passent. */
-  const reveillerLesFleches = (evenement: React.PointerEvent) => {
-    if (evenement.pointerType === "touch") return;
-    setFlechesEveillees(true);
-    window.clearTimeout(minuteurFleches.current);
-    minuteurFleches.current = window.setTimeout(
-      () => setFlechesEveillees(false),
-      3000
-    );
+
+  /**
+   * ██ §1 (nº 844) — LA PASTILLE SUIT LE DÉFILEMENT ██
+   * ------------------------------------------------------------------
+   * La règle et sa minuterie vivent chez `usePastilleDeDefilement`
+   * (components/PastilleCompteur), écrites une seule fois pour le site
+   * entier. Ici, seule la question locale : QU'EST-CE QU'UN GESTE ?
+   *
+   * LE CADRE EST UN CONTENEUR DE DÉFILEMENT NATIF : tout mouvement de
+   * photo y passe, quelle qu'en soit la cause — le doigt qui glisse, la
+   * molette, un chevron (`aller` → `allerA` en douceur), un rond de la
+   * frise (l'indice change, l'effet repose la colonne). Écouter le
+   * `scroll` du cadre attrape donc TOUS les gestes d'un coup, et sans
+   * en inventer aucun.
+   *
+   * ⚠️ MAIS TOUS LES DÉFILEMENTS NE SONT PAS DES GESTES, et c'est la
+   * seule subtilité : le carrousel se POSE lui-même sur la bonne photo
+   * à l'ouverture (l'effet de série, et la pose d'avant peinture de la
+   * nº 372/604 qui restitue la photo mémorisée). Sans garde, une fiche
+   * ouverte sur sa photo nº 5 montrerait la pastille trois secondes
+   * alors que personne n'a rien fait — « invisible au repos » serait
+   * faux dès l'arrivée. Ces poses-là s'annoncent donc : elles écrivent
+   * l'instant, et le `scroll` qui suit dans la foulée est ignoré.
+   * ⚠️ UNE FENÊTRE, PAS UN DRAPEAU : une pose qui ne DÉPLACE rien (la
+   * colonne demandée est déjà sous les yeux) n'émet aucun `scroll` — un
+   * drapeau resterait armé et avalerait le prochain vrai geste. Une
+   * fenêtre de temps, elle, expire toute seule. Deux dixièmes de
+   * seconde : une pose instantanée émet son événement dans la foulée
+   * (avant la peinture suivante), et personne ne fait glisser une photo
+   * à l'instant précis où elle s'ouvre.
+   */
+  const pastille = usePastilleDeDefilement();
+  const poseSilencieuse = useRef(0);
+  const DELAI_POSE_SILENCIEUSE = 200;
+  const annoncerPoseSilencieuse = () => {
+    poseSilencieuse.current = Date.now();
   };
-  const endormirLesFleches = () => {
-    window.clearTimeout(minuteurFleches.current);
-    setFlechesEveillees(false);
+  const surDefilement = () => {
+    if (Date.now() - poseSilencieuse.current < DELAI_POSE_SILENCIEUSE) return;
+    pastille.reveiller();
   };
-  useEffect(() => () => window.clearTimeout(minuteurFleches.current), []);
 
   /** LE CADRE QUI DÉFILE, et les colonnes qu'il contient. */
   const cadre = useRef<HTMLDivElement>(null);
@@ -681,6 +679,10 @@ export function CarrouselPortfolio({
         encore (indice hors bornes après un changement de série) :
         c'est exactement l'ancien comportement. */
     const colonneVoulue = colonnes.current[indiceVoulu.current];
+    //  §1 (nº 844) — CETTE POSE N'EST PAS UN GESTE : la pastille doit
+    //  rester éteinte à l'ouverture d'une série (voir la note du
+    //  crochet, plus haut).
+    annoncerPoseSilencieuse();
     zone.scrollLeft = colonneVoulue ? colonneVoulue.offsetLeft : 0;
     dernierPose.current = colonneVoulue ? indiceVoulu.current : 0;
     const observateur = new IntersectionObserver(
@@ -817,6 +819,9 @@ export function CarrouselPortfolio({
     const zone = cadre.current;
     const colonne = colonnes.current[indice];
     if (!zone || !colonne) return;
+    //  §1 (nº 844) — NI CELLE-CI : restituer la photo mémorisée n'est
+    //  pas défiler. La pastille reste éteinte à l'arrivée.
+    annoncerPoseSilencieuse();
     zone.scrollLeft = colonne.offsetLeft;
     //  L'observateur ne doit pas croire à un geste, et l'effet
     //  d'au-dessus n'a plus rien à rattraper.
@@ -1020,158 +1025,87 @@ export function CarrouselPortfolio({
    *   chaque photo, au-dessus (`z-[2]`), et ne laisse pas passer le
    *   toucher (surtout pas de `pointer-events-none` ici).
    */
+  /**
+   * ██ §1 (nº 844) — L'ÉCRITURE PARTAGÉE, ET LA RÈGLE DU GESTE ██
+   * ------------------------------------------------------------------
+   * CE QUI ÉTAIT ÉCRIT ICI, ET QUI S'EN VA : le `<span>` à la main, ses
+   * deux branches d'apparition (permanente sur une fiche depuis la
+   * nº 483 ; `pointer-fine:invisible` + `group-hover:visible` sur une
+   * carte, la nº 369) et le nombre. Tout cela vit désormais chez
+   * `PastilleCompteur` — UNE écriture pour les quatre surfaces du site
+   * (carte du web, carte du fil, fiche, vue photo du Portfolio), et une
+   * seule règle : invisible au repos, allumée par le défilement,
+   * éteinte en fondu trois secondes après le dernier geste.
+   * ⚠️ LE GABARIT NE BOUGE PAS D'UN PIXEL : les trois jeux d'ancres, de
+   * rembourrages et de tailles de la nº 367 / nº 375 sont recopiés ici
+   * TELS QUELS, simplement passés en paramètres — la fiche à 12 px des
+   * bords en 12 px de texte, la carte pleine largeur de même, la carte
+   * côte à côte réduite.
+   * ⚠️ CE QUI CHANGE POUR DE BON, ET JE LE DIS : sur une FICHE, la
+   * pastille était PERMANENTE depuis la nº 483 (« le nombre est-il
+   * visible ? OUI, toujours ») ; sur une carte du FIL au doigt, elle
+   * l'était aussi (nº 841). Les deux obéissent maintenant au geste.
+   * C'est exactement ce que le propriétaire demande à la nº 844-§1, et
+   * cela annule la décision de la nº 483 sur ce point précis.
+   */
   const compteur = n > 1 && (
-    <span
+    <PastilleCompteur
+      indice={indice}
+      nombre={n}
+      eveillee={pastille.eveillee}
+      place={
+        surCarte
+          ? `top-2 right-2 ${badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"}`
+          : //  §1 (nº 375, repris nº 452) — SUR UNE FICHE, EN HAUT À
+            //  DROITE, SUR LES DEUX APPAREILS.
+            "right-3 top-3 px-2.5 py-1.5"
+      }
+      ecriture={badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"}
       /*  ⚠️ TEMPORAIRE (nº 218-§1) : la sonde nomme ce qui apparaît ou
           disparaît dans le cadre. Sans ce nom, son relevé dirait
           « SPAN » — inexploitable. */
-      data-role="compteur"
-      //  §1 (nº 839) — LE PATRON VIENT DE `config/tatouage`
-      //  (`PASTILLE_COMPTEUR`) : la carte-galerie de la nº 839 porte la
-      //  MÊME pastille, et deux écritures auraient divergé. Rien ne
-      //  change ici d'un pixel — ancre, rembourrage et taille du texte
-      //  restent ci-dessous, ce sont eux qui font les trois gabarits.
-      className={`${PASTILLE_COMPTEUR} ${
-                   surCarte
-                     ? //  §2 (nº 369) — L'ÉCRITURE DU FANION, LA SEULE
-                       //  ÉPROUVÉE, ET ELLE EST LA MÊME POUR LES TROIS :
-                       //  l'élément est RENDU, puis rendu INVISIBLE sur
-                       //  un pointeur fin, et redevenu visible au survol
-                       //  de la carte (le `group` est l'article de
-                       //  CarteTatoueur). Au doigt, `pointer-fine` ne
-                       //  s'applique pas : la capsule est là en
-                       //  permanence, comme à la nº 367.
-                       //  ⚠️ `invisible`, PAS `hidden` : la visibilité
-                       //  ne retire pas la place — rien ne bouge quand
-                       //  la souris arrive — et un élément invisible ne
-                       //  reçoit aucun clic.
-                       `inline-flex pointer-fine:invisible
-                        pointer-fine:group-hover:visible top-2 right-2 ${
-                          badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"
-                        }`
-                     : //  §1 (nº 375) — SUR UNE FICHE, LA CAPSULE EST EN
-                       //  HAUT, SUR LES DEUX APPAREILS.
-                       //  ------------------------------------------
-                       //  Elle était en bas sur le web et en haut au
-                       //  doigt (`mobile:bottom-auto mobile:top-3`) —
-                       //  c'est ce couple qui disparaît, le web
-                       //  rejoignant la place du doigt. Au doigt,
-                       //  RIEN NE CHANGE : `top-3` y était déjà la
-                       //  valeur retenue, elle est simplement écrite
-                       //  une fois au lieu de deux. Le fanion fait le
-                       //  chemin inverse (FicheTatoueur, FenetreFiche).
-                       //  ⚠️ Ni gabarit, ni rembourrage, ni couleur, ni
-                       //  angle : seule l'ancre verticale bouge.
-                       //  §1 (nº 452) — LA DESCENTE DE LA nº 451 EST
-                       //  ANNULÉE : l'habillage mobile de la fiche vit
-                       //  désormais AU-DESSUS de la photo (FicheTatoueur),
-                       //  le haut droit de l'image est redevenu libre — la
-                       //  capsule y REMONTE, sa place d'origine (nº 375),
-                       //  page et fenêtre confondues.
-                       "inline-flex right-3 top-3 px-2.5 py-1.5"
-                 }`}
-    >
-      {/*  §2 (nº 483, complété nº 487) — LE NOMBRE, ET RIEN QUE LUI.
-           Il ne porte plus ni largeur maximale, ni opacité, ni
-           transition (elles servaient le repli, retiré à la nº 483),
-           ni écart à droite — celui-ci ne séparait le compte que de LA
-           FLÈCHE, supprimée à cette passe. Ne restent que sa taille, sa
-           graisse et ses chiffres de largeur fixe (`tabular-nums` : le
-           compte ne tremble pas d'une photo à l'autre).
-           ⚠️ CE QUI EST PARTI AVEC LA FLÈCHE, et non pas seulement
-           masqué : le dessin lui-même, ses deux tailles (8 px sur une
-           carte côte à côte, 10 ailleurs — la nº 367), sa rotation de
-           fin de galerie et son animation, plus le drapeau qui la
-           pilotait (voir plus haut). Rien d'autre n'en dépendait : les
-           flèches de la SOURIS, à mi-hauteur de l'image, sont un autre
-           mécanisme, avec leurs propres gardes.
-           ⚠️ LE BADGE NE CHANGE PAS AUTOUR : même place, même fond,
-           même rayon, mêmes rembourrages, et toujours ouvert. */}
-      <span
-        className={`${ECRITURE_COMPTEUR} ${
-          badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"
-        }`}
-      >
-        {indice + 1}/{n}
-      </span>
-    </span>
+      attributs={{ "data-role": "compteur" }}
+    />
   );
 
-  /* POINTEUR SOURIS (toute largeur) : les deux flèches, discrètes,
-     mi-hauteur — la gauche seulement après le premier défilement, la
-     droite jamais à la dernière photo. */
+  /**
+   * ██ §2 (nº 844) — LES CHEVRONS DES GALERIES, SUR LES FICHES ██
+   * ==================================================================
+   * CE QUI ÉTAIT ÉCRIT ICI, ET QUI S'EN VA : un DISQUE de verre — fond
+   * `bg-sombre-fond/55`, flou, 36 px sur une fiche et 28 sur une carte,
+   * un chevron de 18 px dessiné à la main, et l'opacité pilotée par le
+   * réveil de la nº 394. Le propriétaire (nº 844-§2) veut sur les
+   * fiches EXACTEMENT le chevron des cartes de la nº 839 — c'est-à-dire
+   * celui des galeries de profil (nº 264/301) : un chevron NU, blanc,
+   * avec son ombre portée, dans une colonne cliquable qui prend toute la
+   * hauteur de l'image et se colle à son bord.
+   * L'ÉCRITURE EST PARTAGÉE (`BoutonChevron`, components/
+   * GalerieQuiDefile) : la carte-galerie la lit au même endroit, il ne
+   * peut donc plus y avoir deux dessins ni deux comportements.
+   *
+   * « À L'ÉCHELLE DE LA FICHE » : le gabarit PLEIN (`CHEVRON_GALERIE` —
+   * zone de 40 px, dessin 20 × 40, trait 3), celui que « Ma sélection »
+   * et les cartes pleine largeur portent déjà. Le réduit (28 px) reste
+   * pour les galeries étroites de la colonne Portfolio, il n'a rien à
+   * faire sur une photo de fiche.
+   *
+   * ⚠️ ET LA CARTE DU FIL PREND LE MÊME, sans que cela se voie : sa
+   * variante « carte » n'affiche ses chevrons que sur un pointeur FIN
+   * (`pointer-fine`), or elle n'existe qu'au doigt (`hidden
+   * mobile:block`, CarteTatoueur) — ils n'ont jamais été peints et ne le
+   * seront pas davantage. Leur donner une seconde écriture pour cela
+   * seul aurait été un dessin de plus à maintenir pour personne.
+   */
   const fleche = (sens: 1 | -1) => (
-    <button
-      type="button"
-      aria-label={sens === 1 ? "Next photo" : "Previous photo"}
-      data-role={sens === 1 ? "right arrow" : "left arrow"}
-      //  §4 (nº 368) — ⚠️ LES DEUX GARDES : sur une carte, le bouton
-      //  est posé au-dessus du lien étiré ; sans elles, un clic
-      //  ouvrirait la fiche EN PLUS de faire défiler.
-      onClick={(evenement) => {
-        evenement.preventDefault();
-        evenement.stopPropagation();
-        aller(sens);
-      }}
-      className={`hidden pointer-fine:flex absolute z-[2] ${
-        //  §2 (nº 369) — LA MÊME ÉCRITURE QUE LE FANION : sur une
-        //  carte, la flèche EXISTE dès que la souris existe
-        //  (`pointer-fine:flex`, comme la fiche), puis elle est rendue
-        //  INVISIBLE tant que la carte n'est pas survolée. Au doigt,
-        //  rien de tout cela ne s'applique : `hidden` seul, aucune
-        //  flèche, comme avant.
-        /*  §2 (nº 394) — SUR UNE FICHE, ELLE S'ÉTEINT AU REPOS.
-             ------------------------------------------------------
-             L'OPACITÉ, ET PAS LA VISIBILITÉ : le propriétaire veut une
-             disparition DOUCE, or `visibility` ne se dégrade pas — elle
-             saute. `opacity` s'anime, et elle ne retire RIEN de la mise
-             en page : la flèche garde sa boîte, sa position, sa taille,
-             rien ne se décale à l'allumage comme à l'extinction.
-             ⚠️ ELLE RESTE CLIQUABLE MÊME ÉTEINTE, et c'est voulu : si
-             le curseur s'est arrêté juste dessus, les trois secondes
-             passent et un clic doit quand même faire défiler. On ne
-             pose donc pas `pointer-events-none` — l'éteindre ne la
-             désarme pas.
-             ⚠️ LA TRANSITION EST DÉPLACÉE DANS CE TERNAIRE, et c'est
-             une nécessité, pas un goût : `transition-property` est UNE
-             déclaration — deux classes de transition sur le même
-             élément se disputeraient l'ordre de la feuille (le piège de
-             la nº 389). Chaque branche écrit donc la sienne, une seule
-             fois. LA CARTE GARDE EXACTEMENT `transition-colors` : son
-             survol de la nº 368-369 n'est pas touché d'un pixel ni
-             d'une milliseconde. */
-        surCarte
-          ? "pointer-fine:invisible pointer-fine:group-hover:visible transition-colors"
-          : `${
-              flechesEveillees ? "opacity-100" : "opacity-0"
-            } transition-[opacity,background-color] duration-200`
-      } ${sens === 1 ? "right-2.5" : "left-2.5"}
-      top-1/2 -translate-y-1/2 rounded-full
-      ${
-        //  §5 (nº 368) — LE GABARIT SUIT LA CARTE : 28 px sur une carte
-        //  de mosaïque (l'image n'y fait que 300 à 340 px de large),
-        //  36 px sur une fiche — inchangé.
-        surCarte ? "w-7 h-7" : "w-9 h-9"
-      }
-      bg-sombre-fond/55 backdrop-blur items-center justify-center
-      text-sombre-texte hover:bg-sombre-eleve/75`}
-    >
-      <svg
-        width={surCarte ? "14" : "18"}
-        height={surCarte ? "14" : "18"}
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d={sens === 1 ? "M9.5 5.5 16 12l-6.5 6.5" : "M14.5 5.5 8 12l6.5 6.5"}
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </button>
+    <BoutonChevron
+      key={sens}
+      sens={sens}
+      taille={CHEVRON_GALERIE}
+      surClic={() => aller(sens)}
+      /*  ⚠️ TEMPORAIRE (nº 218-§1) : les repères que la sonde et les
+          bancs nomment. */
+      attributs={{ "data-role": sens === 1 ? "right arrow" : "left arrow" }}
+    />
   );
 
   /**
@@ -1228,19 +1162,29 @@ export function CarrouselPortfolio({
       //  §1 (nº 247) — CE QUE CE CARROUSEL DÉCLARE MONTRER. Vide : un
       //  style entier, il ne promet aucune catégorie.
       data-serie-nature={natureDeLaSerie || undefined}
-      /*  §2 (nº 394) — LE GESTE QUI RÉVEILLE LES FLÈCHES SE LIT ICI, ET
-           NULLE PART AILLEURS. Cette racine est EXACTEMENT la surface de
-           la photo : c'est elle qui porte le cadre, les colonnes et les
-           flèches (elle est leur `relative`). Un mouvement ailleurs sur
-           la page ne la traverse donc pas — le déclencheur est bien « la
-           souris SUR LA PHOTO », comme demandé, sans qu'aucune
-           géométrie n'ait à être calculée.
-           ⚠️ `undefined` QUAND IL N'Y A RIEN À RÉVEILLER : une carte de
-           mosaïque (son survol de la nº 369 est intact) et un carrousel
-           d'une seule photo (aucune flèche n'existe) ne reçoivent aucune
-           fonction. Voir la note complète du réveil, plus haut. */
-      onPointerMove={flechesQuiDorment ? reveillerLesFleches : undefined}
-      onPointerLeave={flechesQuiDorment ? endormirLesFleches : undefined}
+      /*  ██ §2 (nº 844) — LE SURVOL SE LIT ICI, EN CSS, ET PLUS EN
+           JAVASCRIPT ██
+           ------------------------------------------------------------
+           CE QUI ÉTAIT POSÉ ICI : `onPointerMove` et `onPointerLeave`,
+           les deux propriétés du réveil de la nº 394. Elles s'en vont
+           avec lui ; à leur place, UNE CLASSE — cette racine devient
+           l'ensemble (`group`) dont le survol montre les chevrons.
+           C'est EXACTEMENT ce que fait la carte-galerie depuis la
+           nº 839, et c'est ce que le propriétaire demande : même
+           comportement au survol.
+           POURQUOI CETTE BOÎTE-CI, ET PAS UNE AUTRE : elle est
+           exactement la surface de la photo — c'est elle qui porte le
+           cadre, les colonnes et les chevrons (elle est leur
+           `relative`). Le survol commence donc au bord de l'image, sans
+           qu'aucune géométrie n'ait à être calculée, comme le
+           `pointermove` d'hier.
+           ⚠️ PAS DE `group` SUR UNE CARTE DU FIL, et ce n'est pas une
+           économie : l'ensemble d'une carte est son ARTICLE
+           (CarteTatoueur), et c'est lui que les chevrons de la carte
+           écoutent. Un second `group` posé ici, à l'intérieur, leur
+           volerait le survol — deux ensembles imbriqués, le plus proche
+           gagne. */
+      data-survol-chevrons={surCarte ? undefined : ""}
       /*  §1 (nº 294) — LA RACINE NE PEINT PLUS RIEN. C'ÉTAIT ELLE, LE
            LISERÉ : `bg-sombre-carte` (#28282D) est UN CRAN PLUS CLAIR
            que la page, et il occupait toute la boîte du carrousel —
@@ -1288,7 +1232,9 @@ export function CarrouselPortfolio({
            l'écart, seulement ce qui le rendait visible.
            ⚠️ AUCUN DÉBORD DE 1 % N'EST AJOUTÉ : on ne rogne pas les
            tatouages pour cacher un demi-pixel. */
-      className="relative select-none"
+      //  §2 (nº 844) — L'ENSEMBLE DU SURVOL : voir la note de
+      //  `data-survol-chevrons`, plus haut.
+      className={`relative select-none ${surCarte ? "" : "group"}`}
     >
       {/* LE CADRE QUI DÉFILE — le navigateur fait tout : l'inertie du
           doigt, l'accrochage d'une photo à la fois (`snap-always`), et
@@ -1384,6 +1330,16 @@ export function CarrouselPortfolio({
         //  pixel, jamais une largeur. Zéro tant que le bord tombe déjà
         //  juste (au doigt, toujours).
         style={{ touchAction: "pan-x pan-y", marginLeft: calage || undefined }}
+        /*  §1 (nº 844) — LE DÉFILEMENT RÉVEILLE LA PASTILLE, et c'est le
+            SEUL déclencheur : tout mouvement de photo passe par ce
+            cadre, quelle qu'en soit la cause (le doigt, la molette, un
+            chevron, un rond de la frise). Les poses que le carrousel
+            fait lui-même à l'ouverture sont écartées — voir la note du
+            crochet, plus haut.
+            ⚠️ UNE PROPRIÉTÉ REACT, PAS UN `addEventListener` : React
+            n'attache qu'un seul écouteur délégué pour tout l'arbre, ce
+            cadre n'en ajoute donc aucun. */
+        onScroll={surDefilement}
       >
         {photos.map((photo, rang) => {
           //  SUR UNE CARTE : la première photo, et les autres seulement

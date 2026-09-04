@@ -140,14 +140,22 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     await page.locator(`${CARTE} [data-lien-profil-de-fil] > span:nth-child(2) > span:first-child`).tap(); await page.waitForTimeout(2500);
     verif("le titre aussi mène au profil", (await page.evaluate(() => location.pathname + location.search)) === `/artist/${T}?entree=lien`);
 
-    titre("841 · l'ancienne route (la vue photo du doigt) redirige vers le profil");
-    const avantDirect = await page.evaluate(() => history.length);
+    /*  ██ CE BLOC A CHANGÉ DE SUJET À LA nº 844 ██
+        CE QU'IL MESURAIT : la redirection de la nº 841 — au doigt,
+        TOUTE adresse de fiche sans `entree=lien` était réécrite vers le
+        profil. LE PROPRIÉTAIRE L'A RETIRÉE (nº 844-§4) : la vue photo
+        du doigt est nécessaire pour un lien partagé et pour une vignette
+        du Portfolio. L'adresse n'est donc plus touchée, et c'est bien la
+        VUE PHOTO qui s'affiche.
+        CE QUI NE CHANGE PAS, ET QUE CE BLOC CONTINUE DE TENIR : les
+        cartes du fil, elles, mènent au PROFIL — c'est leur lien qui le
+        dit (`entree=lien`), mesuré juste au-dessus. */
+    titre("841 · l'ancienne route rend la VUE PHOTO depuis la nº 844 (la redirection est retirée)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&photo=${T}-p2`, { waitUntil: "networkidle" }); await page.waitForTimeout(1500);
-    const direct = await page.evaluate(() => ({ url: location.pathname + location.search, vuePhoto: document.querySelector("[data-vue-photo]") !== null, colonne: getComputedStyle(document.querySelector("[data-colonne-lecture]")).display, photo: (() => { const n = document.querySelector("[data-photo-de-tete]"); return n ? getComputedStyle(n).display : "absente"; })(), garde: document.documentElement.dataset.entreeLien ?? null, longueur: history.length }));
-    verif("l'adresse est réécrite avec entree=lien, les autres tags gardés", direct.url === `/artist/${T}?style=blackwork&photo=${T}-p2&entree=lien`, direct.url);
-    verif("c'est le profil qui s'affiche, pas la vue photo", !direct.vuePhoto && direct.colonne !== "none" && direct.photo === "none");
-    verif("la garde d'avant peinture est levée une fois le profil commis", direct.garde === null);
-    verif("la réécriture n'ajoute aucune entrée d'historique", direct.longueur === avantDirect + 1, `${avantDirect} → ${direct.longueur}`);
+    const direct = await page.evaluate(() => ({ url: location.pathname + location.search, vuePhoto: document.querySelector("[data-vue-photo]") !== null, colonne: getComputedStyle(document.querySelector("[data-colonne-lecture]")).display, photo: (() => { const n = document.querySelector("[data-photo-de-tete]"); return n ? getComputedStyle(n).display : "absente"; })(), garde: document.documentElement.dataset.entreeLien ?? null, croix: document.querySelector("[data-retour-vue-photo]") !== null }));
+    verif("l'adresse n'est PLUS réécrite : elle reste celle du lien partagé", direct.url === `/artist/${T}?style=blackwork&photo=${T}-p2`, direct.url);
+    verif("c'est la vue photo qui s'affiche : photo montrée, colonne de lecture retirée", direct.vuePhoto && direct.photo !== "none" && direct.colonne === "none", `vue-photo ${direct.vuePhoto} · photo ${direct.photo} · colonne ${direct.colonne}`);
+    verif("la garde d'avant peinture est levée, et la croix de retour est là", direct.garde === null && direct.croix, `garde ${direct.garde} · croix ${direct.croix}`);
   } catch (e) {
     verif("déroulement du banc 841 (doigt)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -177,7 +185,17 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
         filMasque: cartes.every((c) => vis(c.querySelector("[data-en-tete-de-fil]")) === "masqué" && vis(c.querySelector("[data-cadre-de-fil]")) === "masqué" && vis(c.querySelector("[data-pied-de-fil]")) === "masqué"),
         lienWeb: cartes.every((c) => vis(c.querySelector("[data-lien-carte]")) === "visible"),
         piste: cartes.every((c) => c.querySelectorAll("[data-piste-de-carte] img").length === 1),
-        pastilles: cartes.every((c) => vis(c.querySelector("[data-compteur-de-carte]")) === "masqué"),
+        /*  §1 (nº 844) — LA PASTILLE NE SE MASQUE PLUS, ELLE S'ÉTEINT :
+            au repos elle est TRANSPARENTE (opacité 0) et ne prend aucun
+            pointeur — c'est le fondu de la règle unique. « Aucune
+            pastille au repos » se lit donc là, et non plus dans
+            `display` / `visibility`. */
+        pastilles: cartes.every((c) => {
+          const p = c.querySelector("[data-compteur-de-carte]");
+          if (!p) return false;
+          const s = getComputedStyle(p);
+          return Number(s.opacity) === 0 && s.pointerEvents === "none";
+        }),
         n: cartes.length,
       };
     }, vis);

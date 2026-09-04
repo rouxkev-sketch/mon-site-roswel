@@ -268,22 +268,26 @@ const mesureTitre = `(bloc) => {
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("842 · la plaque du profil suit la même règle");
-    await page.goto(`${BASE}/artist/${T}?entree=lien`, { waitUntil: "networkidle" });
+    /*  ██ LA PLAQUE DU PROFIL A ÉTÉ SUPPRIMÉE À LA nº 844 ██
+        CE QUE CE BLOC MESURAIT : que la plaque du profil (l'encadré
+        nom + avatar de la vue photo au doigt) portait bien, elle aussi,
+        le titre de la nº 842 puis celui de la nº 843. LE BANC 843 avait
+        déjà constaté qu'elle ne s'affichait NULLE PART depuis la nº 841 ;
+        le propriétaire l'a fait supprimer à la nº 844. La règle du titre
+        n'a donc plus de sujet ici — elle reste mesurée là où elle vit
+        encore : la carte du web et l'en-tête du fil, ci-dessus.
+        ⚠️ ON NE RETIRE PAS LA VÉRIFICATION, ON LA RETOURNE : ce banc
+        dira si une passe la ressuscitait sans le dire. */
+    titre("842 · la plaque du profil : supprimée à la nº 844");
+    await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
-    const m = await page.evaluate((M) => {
-      const f = new Function("return " + M)();
-      const plaque = document.querySelector("[data-habillage-photo] a");
-      const bloc = plaque.querySelector("span:nth-child(2)");
-      const t = f(bloc.querySelector(":scope > span:first-child"));
-      t.sousTitre = bloc.querySelector(":scope > span:nth-child(2)").textContent.trim();
-      return t;
-    }, mesureTitre);
-    //  §1 (nº 843) — nom seul en titre, « Type · Ville » dessous.
-    //  (Le banc 843 constate par ailleurs que cette plaque ne s'affiche
-    //  plus nulle part depuis la nº 841 : son écriture reste tenue.)
-    verif("la plaque dit le nom seul, demi-gras", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
-    verif("sa ligne du dessous porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
+    const m = await page.evaluate(() => ({
+      plaque: document.querySelector("[data-habillage-photo]") !== null,
+      vuePhoto: document.querySelector("[data-vue-photo]") !== null,
+      croix: document.querySelector("[data-retour-vue-photo]") !== null,
+    }));
+    verif("la vue photo du doigt existe de nouveau (nº 844)", m.vuePhoto && m.croix, JSON.stringify(m));
+    verif("et elle n'a plus de plaque : le bloc n'est plus dans le document", m.plaque === false);
   } catch (e) {
     verif("déroulement du banc 842 (plaque)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

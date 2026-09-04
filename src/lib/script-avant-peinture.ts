@@ -217,16 +217,15 @@ r.style.backgroundColor=${fond};
    page de carrousel partagé et sur le jumeau complet — où PERSONNE ne
    la lève (FicheSelonLAdresse n'y est pas montée) : photo masquée
    pour toujours. */
-/* nº 841 — AU DOIGT, TOUTE FICHE EST LE PROFIL : la vue photo du
-   mobile n'existe plus (FicheSelonLAdresse la redirige vers
-   « entree=lien »). Pour que l'œil ne voie jamais la photo en haut —
-   pas même le battement d'avant l'hydratation —, la garde
-   « entree=lien » est posée sur TOUTE fiche dès que l'appareil est un
-   mobile, adresse nue comprise. Le web ne change pas. */
+/* nº 844 — LA POSE DE LA nº 841 EST RETIRÉE. Elle écrivait
+   « entree=lien » sur TOUTE fiche au doigt, parce que la vue photo du
+   mobile n'existait plus. Elle existe de nouveau (le lien partagé et la
+   vignette du Portfolio y mènent, décision du propriétaire nº 844-§4) :
+   la garde redevient CE QUE L'ADRESSE DIT, sur les deux appareils, et
+   l'écriture retrouve exactement celle d'avant la nº 841. */
 try{if(/^\\/artist\\/[^\\/]+$/.test(location.pathname)){var qf=location.search;
 if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
-if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}
-if(r.dataset.appareil==="mobile")r.dataset.entreeLien="1";}}catch(e){}
+if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
 try{var ck=document.cookie;
 r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf(${JSON.stringify(`${COOKIE_DEJA_CONNECTE}=1`)})>=0?"revenant":"nouveau");
 }catch(e){}

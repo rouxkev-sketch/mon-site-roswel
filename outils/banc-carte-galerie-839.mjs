@@ -76,7 +76,14 @@ try {
       pistes: document.querySelectorAll("[data-piste-de-carte]").length,
       imagesParCarte: [...document.querySelectorAll("[data-piste-de-carte]")].map((p) => p.querySelectorAll("img").length),
       flecheVisible: vis(carte.querySelector("[data-fleche-de-carte]")),
-      pastilleVisible: vis(carte.querySelector("[data-compteur-de-carte]")),
+      /*  §1 (nº 844) — LA PASTILLE NE SE MASQUE PLUS, ELLE S'ÉTEINT :
+          au repos elle est transparente (opacité 0) et transparente aux
+          pointeurs. « Pas de pastille au repos » se lit donc dans
+          l'opacité, plus dans `visibility`. */
+      pastilleVisible: (() => {
+        const p = carte.querySelector("[data-compteur-de-carte]");
+        return Boolean(p) && vis(p) && Number(getComputedStyle(p).opacity) > 0;
+      })(),
       compteur: carte.querySelector("[data-compteur-de-carte]")?.textContent,
       gauche: carte.querySelector('[data-fleche-de-carte="gauche"]') !== null,
     };
@@ -101,7 +108,7 @@ try {
     const sf = getComputedStyle(fl), sp = getComputedStyle(past);
     return {
       flecheVisible: sf.visibility === "visible" && sf.display !== "none",
-      pastilleVisible: sp.visibility === "visible" && sp.display !== "none",
+      pastilleVisible: sp.visibility === "visible" && sp.display !== "none" && Number(sp.opacity) > 0,
       zone: Math.round(fl.getBoundingClientRect().width),
       hauteurFleche: Math.round(fl.getBoundingClientRect().height),
       hauteurCadre: Math.round(c.querySelector("[data-piste-de-carte]").getBoundingClientRect().height),
@@ -112,7 +119,13 @@ try {
       images: c.querySelectorAll("[data-piste-de-carte] img").length,
     };
   }, DESSIN.toString());
-  verif("la flèche et la pastille apparaissent au survol", survol.flecheVisible && survol.pastilleVisible);
+  /*  §1 (nº 844) — LE SURVOL NE MONTRE PLUS QUE LA FLÈCHE : la
+      pastille, elle, attend un GESTE (un pas de chevron), et s'éteint
+      trois secondes après — la même règle que sur les fiches et le fil.
+      Le banc 844 mesure ce cycle entier ; ici, on constate seulement
+      que le survol ne l'allume pas, et que sa ROBE n'a pas changé (le
+      patron des fiches, vérifié juste en dessous). */
+  verif("la flèche apparaît au survol — la pastille, non : elle attend le geste (nº 844)", survol.flecheVisible && survol.pastilleVisible === false, `flèche ${survol.flecheVisible} · pastille ${survol.pastilleVisible}`);
   verif("LE DESSIN DU CHEVRON EST CELUI DES GALERIES DE PROFIL", survol.chevron.viewBox === patron.chevron.viewBox && survol.chevron.d === patron.chevron.d && survol.chevron.filtre === patron.chevron.filtre && survol.chevron.bouts === patron.chevron.bouts, `d=${survol.chevron.d} · filtre identique`);
   verif("il est PROPORTIONNÉ à la carte (gabarit réduit, la zone tient la hauteur)", survol.zone === 28 && survol.chevron.largeur === "14" && survol.chevron.hauteur === "28" && survol.chevron.trait === "2.5" && survol.hauteurFleche === survol.hauteurCadre, `zone ${survol.zone} px sur une carte de ${survol.largeurCarte} px, dessin ${survol.chevron.largeur}×${survol.chevron.hauteur}`);
   verif("la pastille porte LE PATRON DES FICHES", survol.pastille.fond === patron.pastille.fond && survol.pastille.rayon === patron.pastille.rayon && survol.pastille.couleur === patron.pastille.couleur && survol.pastille.flou === patron.pastille.flou && survol.pastille.chiffres === patron.pastille.chiffres, `${survol.pastille.fond} · ${survol.pastille.rayon}`);
@@ -195,7 +208,12 @@ try {
     const vis = (n) => { const s = n && getComputedStyle(n); return Boolean(s) && s.visibility === "visible" && s.display !== "none"; };
     return {
       fleche: vis(c.querySelector("[data-fleche-de-carte]")),
-      pastille: vis(c.querySelector("[data-compteur-de-carte]")),
+      //  §1 (nº 844) — même lecture qu'au repos : l'opacité, pas la
+      //  visibilité.
+      pastille: (() => {
+        const p = c.querySelector("[data-compteur-de-carte]");
+        return Boolean(p) && vis(p) && Number(getComputedStyle(p).opacity) > 0;
+      })(),
       images: [...document.querySelectorAll("[data-piste-de-carte]")].map((p) => p.querySelectorAll("img").length),
       appareil: document.documentElement.dataset.appareil,
     };

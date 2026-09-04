@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import {
+  BoutonChevron,
   CHEVRON_GALERIE,
   CHEVRON_GALERIE_PETIT,
-  ChevronDeGalerie,
   type TailleChevron,
 } from "@/components/GalerieQuiDefile";
+import {
+  PastilleCompteur,
+  usePastilleDeDefilement,
+} from "@/components/PastilleCompteur";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
-import { ECRITURE_COMPTEUR, PASTILLE_COMPTEUR } from "@/config/tatouage";
 
 /**
  * ██ LA CARTE-GALERIE DU WEB — nº 839 ██
@@ -83,6 +86,13 @@ export type PhotoDeLaPiste = {
 export function useGalerieDeCarte(nombre: number) {
   const [indiceBrut, setIndice] = useState(0);
   const [chargees, setChargees] = useState(1);
+  /*  §1 (nº 844) — LA PASTILLE SUIT LE GESTE, ICI COMME AILLEURS : le
+      seul défilement possible sur une carte du web est un pas de
+      chevron (`aller`, plus bas), et c'est lui qui la réveille. La
+      règle et sa minuterie vivent chez `usePastilleDeDefilement`
+      (components/PastilleCompteur), écrites une seule fois pour toutes
+      les surfaces du site. */
+  const pastille = usePastilleDeDefilement();
   /*  LE RANG EST BORNÉ À CHAQUE RENDU, jamais rattrapé par un effet :
       changer de style ou de rendu recompose l'ensemble de la carte
       SANS la remonter (même fiche, mêmes clés) — une carte arrêtée sur
@@ -94,6 +104,8 @@ export function useGalerieDeCarte(nombre: number) {
   return {
     indice,
     chargees: Math.min(chargees, nombre),
+    /** La pastille est-elle éveillée ? (nº 844 — voir ci-dessus.) */
+    pastilleEveillee: pastille.eveillee,
     /** Y a-t-il une photo avant / après celle qu'on regarde ? Ce sont
         les deux gardes des galeries de profil, qui ne montrent leur
         chevron que du côté où il reste du chemin. */
@@ -108,6 +120,11 @@ export function useGalerieDeCarte(nombre: number) {
     aller: (sens: 1 | -1) => {
       const cible = indice + sens;
       if (cible < 0 || cible > nombre - 1) return;
+      //  §1 (nº 844) — LE GESTE, ET DONC LA PASTILLE. Elle est réveillée
+      //  AVANT la borne d'en dessous ? Non : un pas refusé (on est au
+      //  bout) n'est pas un défilement, et le chevron n'existe même pas
+      //  de ce côté-là. L'appel est donc APRÈS la garde.
+      pastille.reveiller();
       setIndice(cible);
       //  La cible, et celle d'après : le pas suivant sera prêt.
       setChargees((eues) => Math.max(eues, Math.min(nombre, cible + 2)));
@@ -251,14 +268,20 @@ export function PisteDeCarte({
  * les deux chevrons et la pastille sont donc posés à côté du lien, sur
  * une enveloppe qui porte le format de la photo et ne prend aucun
  * clic. Seuls les trois éléments en reçoivent.
- * ⚠️ LA PASTILLE NON PLUS NE LAISSE PAS PASSER LE CLIC, et c'est la
- * décision de la nº 367 : elle est posée au-dessus du lien et ne doit
- * pas ouvrir la fiche.
- * ⚠️ LES ÉTATS SONT CEUX DES GALERIES DE PROFIL, à la lettre
- * (`GalerieQuiDefile`) : absent, puis présent sur un pointeur fin,
- * puis visible au survol de la carte — et le chevron n'existe que du
- * côté où il reste du chemin. `invisible` et non une transparence : un
- * élément seulement transparent continue de recevoir les clics.
+ * ⚠️ LA PASTILLE NON PLUS NE LAISSE PAS PASSER LE CLIC quand elle se
+ * voit, et c'est la décision de la nº 367 : elle est posée au-dessus du
+ * lien et ne doit pas ouvrir la fiche. Éteinte, elle est en revanche
+ * TRANSPARENTE AUX POINTEURS (nº 844) — le pourquoi vit chez
+ * `PastilleCompteur`.
+ * ⚠️ LES ÉTATS DES CHEVRONS SONT CEUX DES GALERIES DE PROFIL, à la
+ * lettre (`GalerieQuiDefile`) : absent, puis présent sur un pointeur
+ * fin, puis visible au survol de la carte — et le chevron n'existe que
+ * du côté où il reste du chemin. `invisible` et non une transparence :
+ * un élément seulement transparent continue de recevoir les clics.
+ * ⚠️ LA PASTILLE, ELLE, A QUITTÉ CE JEU À LA nº 844 : elle ne dépend
+ * plus du survol mais du GESTE (voir `usePastilleDeDefilement`) — la
+ * même règle que sur les fiches et sur le fil du doigt, écrite une
+ * seule fois.
  */
 export function CommandesDeCarte({
   indice,
@@ -266,6 +289,7 @@ export function CommandesDeCarte({
   peutReculer,
   peutAvancer,
   aller,
+  pastilleEveillee,
   pleineLargeur,
 }: {
   indice: number;
@@ -273,6 +297,8 @@ export function CommandesDeCarte({
   peutReculer: boolean;
   peutAvancer: boolean;
   aller: (sens: 1 | -1) => void;
+  /** L'état de la pastille, tenu par `useGalerieDeCarte` chez la carte. */
+  pastilleEveillee: boolean;
   /** Une carte pleine largeur porte le grand chevron des galeries et
       la pastille des fiches ; une carte côte à côte, les réduits — le
       dessin est le même, c'est le gabarit qui suit la carte. */
@@ -282,42 +308,43 @@ export function CommandesDeCarte({
     ? CHEVRON_GALERIE
     : CHEVRON_GALERIE_PETIT;
 
+  /*  §2 (nº 844) — LE BOUTON EST L'ÉCRITURE PARTAGÉE (`BoutonChevron`,
+      components/GalerieQuiDefile) : les fiches en veulent le même, il a
+      donc été extrait tel quel — mêmes classes, mêmes états, même
+      dessin. Rien ne change ici d'un pixel ; seules les deux gardes du
+      clic s'ajoutent, sans effet sur une carte (le bouton est hors du
+      lien depuis la nº 517). */
   const fleche = (sens: 1 | -1) => (
-    <button
-      type="button"
-      aria-label={sens === 1 ? "Next photo" : "Previous photo"}
-      data-fleche-de-carte={sens === 1 ? "droite" : "gauche"}
-      onClick={() => aller(sens)}
-      className={`pointer-events-auto hidden pointer-fine:flex invisible
-        group-hover:visible absolute inset-y-0 z-[2] ${
-          sens === 1 ? "right-0" : "left-0"
-        } ${chevron.zone} items-center justify-center text-white`}
-    >
-      <ChevronDeGalerie sens={sens} taille={chevron} />
-    </button>
+    <BoutonChevron
+      key={sens}
+      sens={sens}
+      taille={chevron}
+      surClic={() => aller(sens)}
+      attributs={{
+        "data-fleche-de-carte": sens === 1 ? "droite" : "gauche",
+      }}
+    />
   );
 
   return (
     <>
-      <span
-        data-compteur-de-carte=""
-        /*  ⚠️ LES MÊMES ÉTATS QUE LES CHEVRONS, ET NON CEUX DE LA
-            nº 367 : celle-là laissait la pastille PERMANENTE au doigt.
-            La nº 839 est une passe du WEB — au doigt, rien ne doit
-            apparaître. `hidden` d'abord : sur un pointeur grossier,
-            aucune des deux règles suivantes ne s'applique. */
-        className={`pointer-events-auto ${PASTILLE_COMPTEUR} hidden
-          pointer-fine:inline-flex invisible group-hover:visible top-2
-          right-2 ${pleineLargeur ? "px-2.5 py-1.5" : "px-2 py-1"}`}
-      >
-        <span
-          className={`${ECRITURE_COMPTEUR} ${
-            pleineLargeur ? "text-[12px]" : "text-[10px]"
-          }`}
-        >
-          {indice + 1}/{nombre}
-        </span>
-      </span>
+      {/*  ██ §1 (nº 844) — L'ÉCRITURE PARTAGÉE, ET LA RÈGLE DU GESTE ██
+           CE QUI ÉTAIT ÉCRIT ICI (nº 839) : `hidden`, puis
+           `pointer-fine:inline-flex`, puis `invisible
+           group-hover:visible` — les états des chevrons, en CSS pur.
+           Ils s'en vont ENTIERS : la pastille ne se règle plus sur le
+           survol mais sur le défilement, et cette règle-là est la même
+           partout (`PastilleCompteur`). Le gabarit, lui, ne bouge pas
+           d'un pixel — mêmes ancres, mêmes rembourrages, mêmes tailles
+           qu'à la nº 839, simplement passés en paramètres. */}
+      <PastilleCompteur
+        indice={indice}
+        nombre={nombre}
+        eveillee={pastilleEveillee}
+        place={`top-2 right-2 ${pleineLargeur ? "px-2.5 py-1.5" : "px-2 py-1"}`}
+        ecriture={pleineLargeur ? "text-[12px]" : "text-[10px]"}
+        attributs={{ "data-compteur-de-carte": "" }}
+      />
       {peutReculer && fleche(-1)}
       {peutAvancer && fleche(1)}
     </>

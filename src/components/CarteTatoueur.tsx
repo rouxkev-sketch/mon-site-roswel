@@ -1456,6 +1456,7 @@ function CarteTatoueurNue({
             peutReculer={galerie.peutReculer}
             peutAvancer={galerie.peutAvancer}
             aller={galerie.aller}
+            pastilleEveillee={galerie.pastilleEveillee}
             pleineLargeur={uneColonne}
           />
         </div>

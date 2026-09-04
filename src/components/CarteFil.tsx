@@ -42,8 +42,11 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *     fixe ; les photos de l'ensemble GLISSENT au doigt — défilement
  *     natif avec accrochage par photo, `CarrouselPortfolio` en variante
  *     « carte », le même carrousel que la fiche ; la pastille « 7/20 »
- *     en haut à droite (le patron partagé de la nº 839). Un toucher sur
- *     l'image NE FAIT RIEN : aucune photo n'est un lien ;
+ *     en haut à droite (le patron partagé de la nº 839 — et, depuis la
+ *     nº 844, la RÈGLE partagée : invisible au repos, allumée par le
+ *     glissement, éteinte trois secondes après le dernier geste, voir
+ *     `PastilleCompteur`). Un toucher sur l'image NE FAIT RIEN : aucune
+ *     photo n'est un lien ;
  *  c. LE PIED (ici, `PiedDeFil`), à trois places depuis la nº 842 :
  *     SIGNALER à gauche, les POINTS de position au centre (la frise des
  *     fiches, `PointsDuCarrousel` — une seule écriture), le PARTAGE puis

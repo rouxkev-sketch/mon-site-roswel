@@ -7,8 +7,12 @@
  * UNE PLAQUE, C'EST QUOI : un fond uni PERMANENT, quatre coins à
  * 12 px, aucun contour, un air intérieur ÉGAL sur les quatre côtés, et
  * un arrêt net aux marges de l'interface. C'est le dessin des membres
- * d'équipe d'un salon, des lieux d'une fiche d'artiste, et — depuis la
- * nº 502 — de la rangée du profil dans la vue photo au doigt.
+ * d'équipe d'un salon et des lieux d'une fiche d'artiste.
+ * ⚠️ nº 844 — ELLE AVAIT UN TROISIÈME PORTEUR, LA RANGÉE DU PROFIL DE
+ * LA VUE PHOTO AU DOIGT (nº 502) : ce bloc a été SUPPRIMÉ (décision du
+ * propriétaire, il n'était plus affiché nulle part depuis la nº 841).
+ * Ce fichier ne perd rien pour autant — il existe pour que deux
+ * porteurs ne divergent pas, et il en reste deux.
  *
  * ⚠️ POURQUOI CE FICHIER EXISTE, ET C'EST LA RAISON DE
  * `lignes-profil.ts` À LA LETTRE : ces deux constantes vivaient dans
@@ -63,20 +67,19 @@
  * ==================================================================
  * ██ LE NOM SUR UNE PLAQUE (nº 555) — SEIZE PIXELS, DEMI-GRAS ██
  * ------------------------------------------------------------------
- * CE FICHIER NE PORTE QUE LA BOÎTE, jamais le texte : les trois
- * plaques n'ont ni le même interligne (`leading-snug` pour les lieux
- * et l'équipe, `leading-tight` pour la vue photo) ni la même façon de
- * couper un nom long (repli pour les deux premières, points de
- * suspension pour la troisième). Il n'y a donc pas de constante à
- * lire — mais il y a une RÈGLE, et elle s'écrit ici parce que c'est
- * ici qu'on vient quand on touche une plaque :
+ * CE FICHIER NE PORTE QUE LA BOÎTE, jamais le texte : les plaques
+ * n'ont ni le même interligne ni la même façon de couper un nom long.
+ * Il n'y a donc pas de constante à lire — mais il y a une RÈGLE, et
+ * elle s'écrit ici parce que c'est ici qu'on vient quand on touche une
+ * plaque :
  *
  *   LE NOM D'UNE PLAQUE VAUT 16 px ET `font-semibold`.
  *
- * SES TROIS PORTEURS, ET IL N'Y EN A PAS UN QUATRIÈME :
+ * SES PORTEURS, ET IL N'Y EN A PAS UN TROISIÈME :
  *  · `BlocLieux` — le nom d'un membre d'équipe ;
- *  · `BlocLieux` — le nom d'un lieu (`TroisLignesDuLieu`) ;
- *  · `FicheTatoueur` — le nom dans la rangée du profil, vue photo.
+ *  · `BlocLieux` — le nom d'un lieu (`TroisLignesDuLieu`).
+ * (Le troisième, la rangée du profil de la vue photo, est parti avec
+ *  elle à la nº 844.)
  *
  * D'OÙ ELLE VIENT : le relevé de la nº 554 a trouvé DEUX graisses
  * pour deux plaques identiques (`font-medium` sur l'équipe,

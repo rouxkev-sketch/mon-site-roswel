@@ -345,6 +345,23 @@ Aucune phrase neuve : la carte du fil réemploie mot pour mot les
 > l'on décide de suivre quelqu'un qu'on est venu voir. Ses libellés ne
 > changent pas.
 
+### Ajouts de la 844 (la pastille, les chevrons, le badge, la plaque)
+
+Un seul mot neuf dans toute la passe — l'étiquette de la croix de
+retour ; tout le reste réemploie des étiquettes existantes.
+
+| Français | Anglais | Note |
+|---|---|---|
+| retour (la croix de la vue photo au doigt) | **Back** | `RetourDeVuePhoto` (FicheTatoueur) — une étiquette accessible, le glyphe seul est visible. Le mot le plus court et le plus lu de l'anglais d'interface : ni « Go back » (une phrase pour un bouton), ni « Close » (on ne ferme rien, on remonte) |
+| photo suivante / précédente (les chevrons d'une FICHE, web) | **Next photo** / **Previous photo** (inchangés) | les fiches prennent le chevron des cartes (nº 844-§2) ; les étiquettes, elles, étaient déjà celles-là |
+| le compteur (« 7/20 »), partout | **7/20** | des chiffres, rien à traduire — mais désormais UNE seule écriture (`PastilleCompteur`) pour les cartes, le fil et les fiches |
+
+> **La plaque du profil a été supprimée** (nº 844-§4) : les deux lignes
+> qu'elle affichait — le nom, puis « Private Studio · Lyon, FR » — ne
+> s'écrivent plus nulle part. Les entrées des nº 842 et 843 qui la
+> nomment restent vraies pour LA CARTE DU WEB, seule porteuse
+> aujourd'hui.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

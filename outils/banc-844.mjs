@@ -1,0 +1,467 @@
+//  ██ BANC 844 — LA PASTILLE, LES CHEVRONS, LE BADGE, LA PLAQUE ██
+//  Les quatre points de la passe, mesurés là où ils vivent :
+//   1. la pastille « 7/20 » : invisible au repos, allumée par le
+//      défilement, éteinte en fondu trois secondes après — sur les
+//      QUATRE surfaces (carte du web, carte du fil, fiche du web, vue
+//      photo du doigt ouverte depuis l'onglet Portfolio) ;
+//   2. les chevrons des fiches du web : le chevron NU des galeries de
+//      profil (nº 264/301), pas le disque de verre de la nº 368, et
+//      l'apparition au survol des cartes (nº 839) ;
+//   3. le badge du type : fond transparent, contour fin seul ;
+//   4. la plaque du profil : absente du document, et la vue photo
+//      rendue à ses deux entrées (lien partagé, vignette du Portfolio),
+//      avec sa croix de retour ; les cartes du fil menant au profil.
+import { BASE, ouvrir, verif, titre, bilan, lire, ranger } from "./banc-socle.mjs";
+
+const T = `banc844-${Date.now()}`;
+const ID = `20000000-0000-4000-8000-${Date.now().toString(16).padStart(12, "0")}`;
+const TEINTES = ["blackwork", "old-school", "geometrique"];
+const PHOTOS = [];
+{
+  const gabarit = (await lire("tatoueurs", "slug=eq.demo-blackwork-12"))[0];
+  await ranger("tatoueurs", {
+    ...gabarit, id: ID, slug: T, nom: "Banc 844",
+    styles: ["blackwork"], ville_slug: `lyon-${T}`,
+    type_fiche: "salon", etablissement: "prive",
+  });
+  //  SIX PHOTOS DANS UNE SEULE SÉRIE : il faut plus d'une photo pour
+  //  qu'il y ait une pastille et des chevrons, et assez pour avancer
+  //  plusieurs fois sans buter sur la fin.
+  for (let i = 0; i < 6; i += 1) {
+    const cle = `44000000-0000-4000-8000-${(i + 1).toString().padStart(12, "0")}`;
+    PHOTOS.push(cle);
+    const teinte = TEINTES[i % TEINTES.length];
+    await ranger("photos_tatoueur", [{
+      id: cle, tatoueur_id: ID, style: "blackwork", rendu: "black",
+      nature: "tatouage", url: `/images-demo/tatouage/${teinte}-1.svg`,
+      miniature: `/images-demo/tatouage/${teinte}-1.svg`,
+      ordre: i + 1, cree_le: "2026-01-01T00:00:00Z",
+    }]);
+  }
+  //  UNE SECONDE SÉRIE, pour que l'onglet Portfolio ait deux galeries
+  //  et que la vignette touchée ne soit pas celle du cadre du haut.
+  for (let i = 0; i < 4; i += 1) {
+    await ranger("photos_tatoueur", [{
+      id: `44000001-0000-4000-8000-${(i + 1).toString().padStart(12, "0")}`,
+      tatoueur_id: ID, style: "blackwork", rendu: "color",
+      nature: "tatouage", url: `/images-demo/tatouage/${TEINTES[i % 3]}-2.svg`,
+      miniature: `/images-demo/tatouage/${TEINTES[i % 3]}-2.svg`,
+      ordre: 10 + i, cree_le: "2026-01-01T00:00:00Z",
+    }]);
+  }
+}
+
+/*  ██ COMMENT ON LIT LA PASTILLE ██
+    L'OPACITÉ CALCULÉE, et rien d'autre : c'est ce que le fondu de la
+    nº 844 pilote. On note aussi la propriété de transition (elle doit
+    être `opacity`, une seule — piège nº 389) et si elle laisse passer
+    les pointeurs (une pastille éteinte ne doit avaler aucun clic).
+    ⚠️ ON LUI DONNE LA PASTILLE, JAMAIS UNE RACINE À FOUILLER : une
+    carte de la mosaïque en contient DEUX — celle du fil (rendue, mais
+    masquée par la feuille de style au web) et la sienne. Chercher « la
+    première » lisait celle du fil, qui ne bouge jamais au web. */
+const PASTILLE = `(p) => {
+  if (!p) return null;
+  const s = getComputedStyle(p);
+  return {
+    texte: p.textContent.trim(),
+    opacite: Number(s.opacity),
+    transition: s.transitionProperty,
+    duree: s.transitionDuration,
+    pointeurs: s.pointerEvents,
+    eveillee: p.hasAttribute("data-compteur-eveille"),
+  };
+}`;
+const REPOS = 3400;
+
+//  ══ 1 · LE WEB — LA CARTE DE LA MOSAÏQUE ═════════════════════════════
+{
+  const { nav, page } = await ouvrir("web");
+  try {
+    titre("844 · la carte du web : la pastille suit le geste, pas le survol");
+    const CARTE = `[data-carte]:has([data-lien-carte][href*="${T}"])`;
+    await page.goto(`${BASE}/search?style=blackwork&nature=tatouage`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    //  DEUX SÉRIES = DEUX CARTES pour cette fiche (black et color) : on
+    //  travaille sur la PREMIÈRE, et sur elle seule.
+    await page.locator(CARTE).first().scrollIntoViewIfNeeded();
+    const auRepos = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL + " [data-compteur-de-carte]"));
+    }, [CARTE, PASTILLE]);
+    verif("au repos, elle est transparente et ne prend aucun clic",
+      auRepos && auRepos.opacite === 0 && auRepos.pointeurs === "none", JSON.stringify(auRepos));
+    verif("le fondu porte sur l'opacité seule",
+      auRepos && auRepos.transition === "opacity" && auRepos.duree === "0.3s",
+      `${auRepos?.transition} / ${auRepos?.duree}`);
+
+    //  LE SURVOL SEUL NE L'ALLUME PLUS (c'était la règle de la nº 369).
+    await page.locator(CARTE).first().hover();
+    await page.waitForTimeout(400);
+    const surSurvol = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL + " [data-compteur-de-carte]"));
+    }, [CARTE, PASTILLE]);
+    verif("le survol seul ne l'allume pas", surSurvol.opacite === 0, `opacité ${surSurvol.opacite}`);
+
+    //  … MAIS LE CHEVRON, OUI.
+    await page.locator(`${CARTE} [data-fleche-de-carte="droite"]`).first().click();
+    await page.waitForTimeout(500);
+    const apresLePas = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL + " [data-compteur-de-carte]"));
+    }, [CARTE, PASTILLE]);
+    verif("un pas de chevron l'allume, et elle dit le rang",
+      apresLePas.opacite === 1 && apresLePas.texte === "2/6" && apresLePas.eveillee,
+      `${apresLePas.texte} · opacité ${apresLePas.opacite}`);
+    verif("allumée, elle reprend les pointeurs (nº 367 : elle n'ouvre pas la fiche)",
+      apresLePas.pointeurs === "auto", apresLePas.pointeurs);
+
+    await page.waitForTimeout(REPOS);
+    const apresLeRepos = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL + " [data-compteur-de-carte]"));
+    }, [CARTE, PASTILLE]);
+    verif("trois secondes après le dernier geste, elle s'efface",
+      apresLeRepos.opacite === 0 && !apresLeRepos.eveillee && apresLeRepos.texte === "2/6",
+      `opacité ${apresLeRepos.opacite} · ${apresLeRepos.texte}`);
+  } catch (e) {
+    verif("déroulement du banc 844 (carte du web)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+//  ══ 2 · LE WEB — LA FICHE : CHEVRONS ET PASTILLE ═════════════════════
+{
+  const { nav, page } = await ouvrir("web");
+  try {
+    titre("844 · la fiche du web : les chevrons des galeries, et la pastille");
+    await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    const CADRE = "[data-carrousel] ";
+    const auRepos = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      const racine = document.querySelector("[data-carrousel]");
+      const droite = racine.querySelector('[data-role="right arrow"]');
+      const s = droite && getComputedStyle(droite);
+      const svg = droite?.querySelector("svg");
+      return {
+        pastille: f(racine.querySelector('[data-role="compteur"]')),
+        //  LE DESSIN : un chevron NU (le viewBox 12×24 de la nº 264),
+        //  dans une colonne de 40 px collée au bord et haute comme
+        //  l'image — jamais le disque de verre de la nº 368.
+        boite: svg?.getAttribute("viewBox"),
+        largeurGlyphe: svg?.getAttribute("width"),
+        hauteurGlyphe: svg?.getAttribute("height"),
+        zone: droite && Math.round(droite.getBoundingClientRect().width),
+        hauteurZone: droite && Math.round(droite.getBoundingClientRect().height),
+        hauteurCadre: Math.round(racine.getBoundingClientRect().height),
+        fond: s?.backgroundColor,
+        rayon: s?.borderRadius,
+        flou: s?.backdropFilter,
+        visibilite: s?.visibility,
+        ensemble: racine.className.split(/\s+/).includes("group"),
+      };
+    }, [PASTILLE]);
+    verif("la pastille de la fiche est éteinte à l'arrivée (elle était permanente depuis la nº 483)",
+      auRepos.pastille.opacite === 0 && auRepos.pastille.texte === "1/6",
+      `${auRepos.pastille.texte} · opacité ${auRepos.pastille.opacite}`);
+    verif("le chevron est NU : le dessin des galeries, aucun disque, aucun flou",
+      auRepos.boite === "0 0 12 24" && auRepos.largeurGlyphe === "20" && auRepos.hauteurGlyphe === "40" &&
+      auRepos.fond === "rgba(0, 0, 0, 0)" && auRepos.rayon === "0px" && auRepos.flou === "none",
+      `${auRepos.boite} ${auRepos.largeurGlyphe}×${auRepos.hauteurGlyphe} · fond ${auRepos.fond} · rayon ${auRepos.rayon} · flou ${auRepos.flou}`);
+    verif("sa zone prend toute la hauteur de l'image, sur 40 px de large",
+      auRepos.zone === 40 && auRepos.hauteurZone === auRepos.hauteurCadre,
+      `${auRepos.zone} × ${auRepos.hauteurZone} pour un cadre de ${auRepos.hauteurCadre}`);
+    verif("hors survol, il est invisible (l'écriture des cartes, nº 839)",
+      auRepos.visibilite === "hidden" && auRepos.ensemble, `${auRepos.visibilite} · group ${auRepos.ensemble}`);
+
+    //  LE SURVOL DE LA PHOTO LES MONTRE.
+    await page.locator("[data-carrousel]").hover();
+    await page.waitForTimeout(300);
+    const surSurvol = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      const racine = document.querySelector("[data-carrousel]");
+      return {
+        droite: getComputedStyle(racine.querySelector('[data-role="right arrow"]')).visibility,
+        gauche: racine.querySelector('[data-role="left arrow"]') ? "présent" : "absent",
+        pastille: f(racine.querySelector('[data-role="compteur"]')).opacite,
+      };
+    }, [PASTILLE]);
+    verif("au survol de la photo, le chevron paraît — et la pastille, non (elle attend le geste)",
+      surSurvol.droite === "visible" && surSurvol.pastille === 0,
+      `chevron ${surSurvol.droite} · pastille ${surSurvol.pastille}`);
+    verif("à la première photo, il n'y a pas de chevron gauche", surSurvol.gauche === "absent");
+
+    await page.locator(`${CADRE}[data-role="right arrow"]`).click();
+    await page.waitForTimeout(900);
+    const apres = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector('[data-carrousel] [data-role="compteur"]'));
+    }, [PASTILLE]);
+    verif("le chevron fait défiler, et le défilement allume la pastille",
+      apres.opacite === 1 && apres.texte === "2/6", `${apres.texte} · opacité ${apres.opacite}`);
+
+    await page.waitForTimeout(REPOS);
+    const eteinte = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector('[data-carrousel] [data-role="compteur"]'));
+    }, [PASTILLE]);
+    verif("trois secondes plus tard, elle s'efface sur la fiche aussi", eteinte.opacite === 0, `opacité ${eteinte.opacite}`);
+
+    //  LA SOURIS QUITTE LA PHOTO : LES CHEVRONS S'EN VONT.
+    await page.mouse.move(5, 5);
+    await page.waitForTimeout(300);
+    const sorti = await page.evaluate(() =>
+      getComputedStyle(document.querySelector('[data-carrousel] [data-role="right arrow"]')).visibility);
+    verif("la souris partie, le chevron redisparaît", sorti === "hidden", sorti);
+  } catch (e) {
+    verif("déroulement du banc 844 (fiche du web)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+//  ══ 3 · LE DOIGT — LE FIL : PASTILLE, BADGE, DESTINATION ═════════════
+{
+  const { nav, page } = await ouvrir("doigt");
+  try {
+    titre("844 · la carte du fil : la pastille au geste, le badge transparent");
+    const CARTE = `[data-carte]:has([data-lien-profil-de-fil][href*="${T}"])`;
+    await page.goto(`${BASE}/search?style=blackwork&nature=tatouage`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1800);
+    //  DEUX SÉRIES = DEUX CARTES : la première, et elle seule.
+    await page.locator(CARTE).first().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    const auRepos = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      const c = document.querySelector(SEL);
+      const badge = c.querySelector("[data-badge-type]");
+      const s = getComputedStyle(badge);
+      const carte = getComputedStyle(c);
+      return {
+        pastille: f(c.querySelector('[data-cadre-de-fil] [data-role="compteur"]')),
+        badgeFond: s.backgroundColor,
+        fondDeLaCarte: carte.backgroundColor,
+        contour: `${s.borderTopWidth} ${s.borderTopStyle}`,
+        contourCouleur: s.borderTopColor,
+        badgeTexte: badge.textContent.trim(),
+        lienProfil: c.querySelector("[data-lien-profil-de-fil]").getAttribute("href"),
+      };
+    }, [CARTE, PASTILLE]);
+    verif("au repos, la pastille du fil est éteinte (elle était permanente depuis la nº 841)",
+      auRepos.pastille.opacite === 0 && auRepos.pastille.texte === "1/6",
+      `${auRepos.pastille.texte} · opacité ${auRepos.pastille.opacite}`);
+    /*  §3 — LE FOND DU BADGE. « Transparent » se lit d'une seule façon
+        dans le style calculé : `rgba(0, 0, 0, 0)`. On vérifie aussi que
+        le contour, lui, reste — et qu'il se distingue du fond. */
+    verif("le badge du type a un fond TRANSPARENT (la carte transparaît)",
+      auRepos.badgeFond === "rgba(0, 0, 0, 0)", auRepos.badgeFond);
+    verif("il ne lui reste que son contour d'un pixel, d'une autre couleur que le fond",
+      auRepos.contour === "1px solid" && auRepos.contourCouleur !== auRepos.fondDeLaCarte,
+      `${auRepos.contour} ${auRepos.contourCouleur} sur ${auRepos.fondDeLaCarte}`);
+    verif("la carte du fil mène toujours au PROFIL",
+      auRepos.lienProfil === `/artist/${T}?entree=lien`, auRepos.lienProfil);
+
+    //  UN DÉFILEMENT DE L'IMAGE (le glissement du doigt, joué par le
+    //  défilement natif du cadre) ALLUME LA PASTILLE.
+    await page.evaluate((SEL) => {
+      const z = document.querySelector(SEL + ' [data-cadre-de-fil] [data-role="cadre"]');
+      z.scrollBy({ left: z.clientWidth, behavior: "smooth" });
+    }, CARTE);
+    await page.waitForTimeout(900);
+    const enGlissant = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL).querySelector('[data-cadre-de-fil] [data-role="compteur"]'));
+    }, [CARTE, PASTILLE]);
+    verif("le glissement l'allume, et elle dit le rang",
+      enGlissant.opacite === 1 && enGlissant.texte === "2/6",
+      `${enGlissant.texte} · opacité ${enGlissant.opacite}`);
+    await page.waitForTimeout(REPOS);
+    const eteinte = await page.evaluate(([SEL, M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector(SEL).querySelector('[data-cadre-de-fil] [data-role="compteur"]'));
+    }, [CARTE, PASTILLE]);
+    verif("trois secondes après le glissement, elle s'efface", eteinte.opacite === 0, `opacité ${eteinte.opacite}`);
+  } catch (e) {
+    verif("déroulement du banc 844 (fil du doigt)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+//  ══ 4 · LE DOIGT — LE LIEN PARTAGÉ REND LA VUE PHOTO ═════════════════
+{
+  const { nav, page } = await ouvrir("doigt");
+  try {
+    titre("844 · un lien partagé ouvre la VUE PHOTO au doigt, sans plaque, avec sa croix");
+    const PARTAGE = `/artist/${T}?style=blackwork&rendu=black&nature=tatouage&photo=${PHOTOS[2]}`;
+    await page.goto(`${BASE}${PARTAGE}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1800);
+    const vue = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      const lecture = document.querySelector("[data-colonne-lecture]");
+      const croix = document.querySelector("[data-retour-vue-photo]");
+      return {
+        url: location.pathname + location.search,
+        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
+        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
+        photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
+        plaque: document.querySelector("[data-habillage-photo]") !== null,
+        croix: croix ? {
+          montree: croix.getBoundingClientRect().height > 0,
+          taille: Math.round(croix.getBoundingClientRect().width),
+          href: croix.getAttribute("href"),
+          etiquette: croix.getAttribute("aria-label"),
+          enHautAGauche: croix.getBoundingClientRect().left < 24 && croix.getBoundingClientRect().top < 200,
+        } : null,
+        pastille: f(document.querySelector('[data-carrousel] [data-role="compteur"]')),
+      };
+    }, [PASTILLE]);
+    verif("l'adresse partagée n'est PLUS réécrite en « entree=lien » (la redirection de la nº 841 est retirée)",
+      vue.url === PARTAGE, vue.url);
+    verif("c'est bien la vue photo : la photo est montrée, la colonne de lecture retirée",
+      vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true,
+      `vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree} · lecture masquée ${vue.lectureMasquee}`);
+    verif("LA PLAQUE DU PROFIL N'EXISTE PLUS dans le document", vue.plaque === false);
+    verif("une croix de retour la remplace, en haut à gauche, cible de 40 px",
+      vue.croix?.montree && vue.croix.taille === 40 && vue.croix.enHautAGauche && vue.croix.etiquette === "Back",
+      JSON.stringify(vue.croix));
+    verif("elle s'ouvre sur la photo partagée, pastille éteinte",
+      vue.pastille.texte === "3/6" && vue.pastille.opacite === 0,
+      `${vue.pastille.texte} · opacité ${vue.pastille.opacite}`);
+
+    //  LA CROIX, SUR UN ONGLET NEUF, MÈNE AU PROFIL.
+    verif("sans page derrière, la croix pointe vers le profil",
+      vue.croix?.href === `/artist/${T}?entree=lien`, vue.croix?.href);
+    await page.locator("[data-retour-vue-photo]").tap();
+    await page.waitForTimeout(2500);
+    const apresLaCroix = await page.evaluate(() => ({
+      url: location.pathname + location.search,
+      photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
+    }));
+    verif("un toucher sur la croix rend le profil",
+      apresLaCroix.url === `/artist/${T}?entree=lien` && !apresLaCroix.photoMontree,
+      `${apresLaCroix.url} · photo ${apresLaCroix.photoMontree}`);
+  } catch (e) {
+    verif("déroulement du banc 844 (lien partagé)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+//  ══ 5 · LE DOIGT — LA VIGNETTE DU PORTFOLIO REND LA VUE PHOTO ════════
+{
+  const { nav, page } = await ouvrir("doigt");
+  try {
+    titre("844 · une vignette de l'onglet Portfolio ouvre la vue photo (la nº 841 menait au profil)");
+    await page.goto(`${BASE}/artist/${T}?entree=lien`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1200);
+    await page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first().tap();
+    await page.waitForFunction(
+      () => document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]').length >= 2,
+      null, { timeout: 15000 });
+    await page.waitForTimeout(800);
+    await page.locator('[data-galeries="doigt"] [data-galerie-serie]').first()
+      .locator('[data-case-galerie="1"] button').tap();
+    await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
+    await page.waitForTimeout(1500);
+    const vue = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      const lecture = document.querySelector("[data-colonne-lecture]");
+      return {
+        url: location.pathname + location.search,
+        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
+        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
+        photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
+        croix: document.querySelector("[data-retour-vue-photo]") !== null,
+        pastille: f(document.querySelector('[data-carrousel] [data-role="compteur"]')),
+      };
+    }, [PASTILLE]);
+    verif("la vignette mène à la VUE PHOTO, pas au profil",
+      vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true && !/entree=lien/.test(vue.url),
+      `${vue.url} · vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree}`);
+    verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte",
+      vue.pastille.texte === "2/6" && vue.pastille.opacite === 0 && vue.croix,
+      `${vue.pastille.texte} · opacité ${vue.pastille.opacite} · croix ${vue.croix}`);
+
+    //  ICI IL Y A UNE PAGE DERRIÈRE : LA CROIX RECULE.
+    await page.locator("[data-retour-vue-photo]").tap();
+    await page.waitForTimeout(2500);
+    const retour = await page.evaluate(() => ({
+      url: location.pathname + location.search,
+      onglet: [...document.querySelectorAll("[role=radio]")]
+        .map((b) => b.textContent.trim() + ":" + b.getAttribute("aria-checked")).join(" "),
+      entrees: history.length,
+    }));
+    /*  ⚠️ LA PREUVE QUE C'EST BIEN UN RETOUR D'HISTORIQUE, et non la
+        destination du lien : l'adresse rendue porte `onglet=portfolio`
+        — l'état que la page avait quand on l'a quittée —, que le `href`
+        de la croix (`?entree=lien` tout court) ne porte pas. */
+    verif("la croix rend le profil sur son onglet Portfolio (retour d'historique, pas une page neuve)",
+      retour.url.startsWith(`/artist/${T}?entree=lien`) && /onglet=portfolio/.test(retour.url) &&
+      /Portfolio:true/.test(retour.onglet),
+      `${retour.url} · ${retour.onglet}`);
+
+    //  ET LA PASTILLE DE LA VUE PHOTO DU PORTFOLIO OBÉIT À LA MÊME RÈGLE.
+    titre("844 · la vue photo du Portfolio : la même pastille, la même règle");
+    await page.goForward();
+    await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
+    await page.waitForTimeout(1500);
+    await page.evaluate(() => {
+      const z = document.querySelector('[data-carrousel] [data-role="cadre"]');
+      z.scrollBy({ left: z.clientWidth, behavior: "smooth" });
+    });
+    await page.waitForTimeout(900);
+    const allumee = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector('[data-carrousel] [data-role="compteur"]'));
+    }, [PASTILLE]);
+    verif("le glissement l'allume", allumee.opacite === 1, `${allumee.texte} · opacité ${allumee.opacite}`);
+    await page.waitForTimeout(REPOS);
+    const eteinte = await page.evaluate(([M]) => {
+      const f = new Function("return " + M)();
+      return f(document.querySelector('[data-carrousel] [data-role="compteur"]'));
+    }, [PASTILLE]);
+    verif("trois secondes plus tard, elle s'efface", eteinte.opacite === 0, `opacité ${eteinte.opacite}`);
+  } catch (e) {
+    verif("déroulement du banc 844 (vignette du Portfolio)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+//  ══ 6 · UNE SEULE ÉCRITURE ═══════════════════════════════════════════
+{
+  const { nav, page } = await ouvrir("web");
+  try {
+    titre("844 · une seule écriture : la même pastille sur toutes les surfaces");
+    const releve = async (url, quoi) => {
+      await page.goto(`${BASE}${url}`, { waitUntil: "networkidle" });
+      await page.waitForTimeout(1500);
+      return page.evaluate((Q) => {
+        const toutes = [...document.querySelectorAll("[data-compteur-photos]")];
+        return {
+          quoi: Q,
+          combien: toutes.length,
+          //  LA MÊME SIGNATURE PARTOUT : le disque du patron partagé, le
+          //  fondu, et jamais deux classes d'opacité empilées.
+          signatures: [...new Set(toutes.map((p) => {
+            const s = getComputedStyle(p);
+            return `${s.borderRadius}|${s.backdropFilter !== "none"}|${s.transitionProperty}|${s.color}`;
+          }))],
+          //  AUCUNE PASTILLE HORS DE L'ÉCRITURE COMMUNE : plus un seul
+          //  ancien repère orphelin.
+          orphelines: [...document.querySelectorAll('[data-role="compteur"],[data-compteur-de-carte]')]
+            .filter((p) => !p.hasAttribute("data-compteur-photos")).length,
+        };
+      }, quoi);
+    };
+    const mosaique = await releve("/search?style=blackwork&nature=tatouage", "mosaïque");
+    const fiche = await releve(`/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, "fiche");
+    verif("la mosaïque et la fiche portent la MÊME pastille (même robe, même fondu)",
+      mosaique.signatures.length === 1 && fiche.signatures.length === 1 &&
+      mosaique.signatures[0] === fiche.signatures[0],
+      `${mosaique.signatures[0]} vs ${fiche.signatures[0]}`);
+    verif("aucune pastille n'échappe à l'écriture commune",
+      mosaique.orphelines === 0 && fiche.orphelines === 0,
+      `${mosaique.orphelines} + ${fiche.orphelines}`);
+    verif("elles sont bien plusieurs à la mesurer", mosaique.combien >= 1 && fiche.combien >= 1,
+      `${mosaique.combien} sur la mosaïque, ${fiche.combien} sur la fiche`);
+  } catch (e) {
+    verif("déroulement du banc 844 (écriture unique)", false, String(e).slice(0, 400));
+  } finally { await nav.close(); }
+}
+
+process.exit(bilan());

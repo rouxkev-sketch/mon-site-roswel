@@ -11,14 +11,31 @@ import { adresseDeLienInterne } from "@/lib/lien-interne";
  * cède sa place, face à l'avatar, à un badge qui DIT CE QU'EST le
  * portfolio : artiste, studio privé ou salon.
  *
- * SA ROBE, ET POURQUOI ELLE N'EST PAS CELLE DE « FOLLOW » : le fond de
- * l'interface et UN CONTOUR FIN — le patron des plaques de profil
+ * SA ROBE, ET POURQUOI ELLE N'EST PAS CELLE DE « FOLLOW » : UN CONTOUR
+ * FIN, ET RIEN DEDANS — le patron des plaques de profil
  * (`ENCADRE_PLAQUE_INFO`, components/plaque, dont il reprend le
  * contour au jeton près). « Follow » est PLEIN, et c'est ce qui le
  * désigne comme le geste de la rangée ; ce badge-ci ne demande rien,
  * il renseigne. Sa BOÎTE, elle, est celle d'un badge du site : trente
  * pixels de haut, le rayon de la charte (nº 449), la même typographie
  * — la rangée garde son rythme, seul le remplissage change.
+ *
+ * ██ §3 (nº 844) — LE FOND S'EN VA : LE BADGE EST TRANSPARENT ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : la nº 843 lui avait donné le cran de
+ * l'interface (`bg-sombre-eleve`), qui le détachait de la carte comme
+ * une pastille. Il prend désormais LA COULEUR DE LA CARTE, c'est-à-dire
+ * AUCUNE — `bg-transparent`, le fond de la carte transparaît — et il ne
+ * reste que son contour d'un pixel. C'est la lecture littérale du
+ * patron des plaques : « contour fin seul ».
+ * ⚠️ LE SURVOL ET L'APPUI GARDENT UN FOND, et ce n'est pas une entorse :
+ * c'est un LIEN, il doit répondre au doigt comme à la souris. Le cran
+ * qui remplissait le badge au repos devient donc celui qui l'éclaire
+ * quand on le touche (`bg-sombre-eleve`) — un seul jeton de moins dans
+ * la feuille, et la même écriture qu'avant pour l'état actif.
+ * ⚠️ UNE SEULE CLASSE DE FOND AU REPOS (piège nº 389) : `bg-transparent`
+ * et rien d'autre ; les deux autres sont des variantes, donc des règles
+ * séparées.
  *
  * ⚠️ C'EST UN LIEN, PAS UN ORNEMENT : il ouvre le profil, comme
  * l'avatar et le titre à sa gauche. Il est donc écrit ici, avec sa
@@ -49,9 +66,9 @@ export function BadgeTypeDeFiche({
       data-badge-type=""
       className="inline-flex shrink-0 min-h-[30px] items-center justify-center
                  whitespace-nowrap rounded-lg border border-sombre-haut
-                 bg-sombre-eleve px-3.5 text-[14px] font-semibold
+                 bg-transparent px-3.5 text-[14px] font-semibold
                  text-sombre-texte transition-colors
-                 hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair
+                 hover:bg-sombre-eleve active:bg-sombre-eleve
                  focus-visible:outline-2 focus-visible:outline-offset-2
                  focus-visible:outline-primaire"
     >
