@@ -2050,8 +2050,18 @@ export const TEXTES_TATOUAGE = {
    * texte ne promet rien que la recherche ne sache faire.
    * ⚠️ SORTI DU JSX ET POSÉ ICI, avec les autres textes du visiteur : il
    * y vivait à la main, seul de son espèce (nº 443).
+   *
+   * ██ §1 (nº 847) — ET IL REDEVIENT « Find your tattoo style… » ██
+   * LE DOUBLON N'EXISTE PLUS : le propriétaire retire le titre de
+   * l'accueil AU DOIGT (nº 847-§1), et la pilule ne vit QUE là. Les deux
+   * textes ne peuvent donc plus se lire ensemble — l'un est un titre de
+   * page au web, l'autre l'invite d'un champ au doigt.
+   * ⚠️ DEUX CLÉS POUR UNE MÊME CHAÎNE, ET C'EST VOULU : ce sont deux
+   * choses. Les fondre en une ferait suivre l'invite du champ à la
+   * prochaine retouche du titre de la page, sans que personne ne l'ait
+   * demandé.
    */
-  invitePilule: "Search a style or a city",
+  invitePilule: "Find your tattoo style…",
   /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
       « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
       sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de
@@ -2353,6 +2363,30 @@ export const FOND_RESERVE_PHOTO =
  */
 export const PASTILLE_COMPTEUR =
   "absolute z-[2] items-center rounded-full bg-black/60 backdrop-blur text-white";
+
+/**
+ * ██ §2 (nº 847) — LA ROBE D'UN BADGE À CONTOUR, ÉCRITE UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * CE QU'ELLE EST : la boîte d'un badge du site — trente pixels de haut,
+ * le rayon de la charte (nº 449), insécable — vêtue d'UN CONTOUR FIN et
+ * de RIEN DEDANS. Le fond de ce qui est derrière transparaît.
+ *
+ * POURQUOI ELLE SORT ICI : elle avait un porteur (le badge du type d'une
+ * carte du fil, nº 843, passé au fond transparent à la nº 844) ; la
+ * nº 847 lui en donne un SECOND — le badge du COMPTE, en tête de la
+ * rangée des filtres, dont le propriétaire demande « la même apparence
+ * que le badge type ». Deuxième consommateur, donc extraction (la règle
+ * du site, nº 276) : les deux la lisent au même endroit, aucune valeur
+ * n'est recopiée, et une retouche de l'un ne peut plus laisser l'autre
+ * derrière.
+ * ⚠️ CE QU'ELLE NE PORTE PAS, ET C'EST VOULU : ni typographie, ni
+ * rembourrage horizontal, ni états de survol. Le badge du type est un
+ * LIEN (il doit répondre au doigt) ; celui du compte ne l'est pas (« ce
+ * n'est pas une action », nº 847-§2). Chacun ajoute ce qui le regarde.
+ */
+export const ROBE_BADGE_CONTOUR =
+  "inline-flex min-h-[30px] shrink-0 items-center justify-center " +
+  "whitespace-nowrap rounded-lg border border-sombre-haut bg-transparent";
 
 /**
  * ██ §3 (nº 845) — L'AIR DE LA PASTILLE SUR UNE CARTE DU DOIGT ██

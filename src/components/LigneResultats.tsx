@@ -33,7 +33,26 @@
  * la première retouche, piège nº 378), elles vivent ici, et les deux
  * écrans les lisent.
  */
-export const RYTHME_TITRE_RESULTATS = "pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3";
+/*  ██ §6 (nº 847) — UN PEU PLUS D'AIR SOUS LA RANGÉE, AU DOIGT ██
+    LE PROPRIÉTAIRE : « un peu plus d'air sous la rangée de badges, avant
+    les cartes (légèrement) ». Le dégagement du bloc valait 20 px au
+    doigt (`pb-5`, le cran de base — un téléphone en portrait n'atteint
+    pas `sm:`) ; il passe à 24, LE CRAN SUIVANT de l'échelle. Quatre
+    pixels : « légèrement », à la lettre, et aucun nombre inventé.
+    ⚠️ POURQUOI ICI ET NON SUR LA RANGÉE : ce rythme est l'écriture
+    UNIQUE partagée avec le squelette d'attente (SquelettesDePage,
+    nº 707). Poser l'air sur la rangée seule aurait fait sauter la page
+    de 4 px à chaque arrivée — le squelette n'en aurait rien su.
+    ⚠️ ET IL NE CONCERNE QUE LES RÉSULTATS : au doigt, le seul bloc de
+    tête qui reste est le leur (celui de l'accueil est masqué depuis la
+    nº 847-§1) ; au web, `sm:pb-6` gouvernait déjà, rien n'y bouge.
+    ⚠️ DEUX CLASSES DE `padding-bottom` SUR LE MÊME ÉLÉMENT (piège
+    nº 389) : c'est le motif que ce rythme emploie déjà pour le haut
+    (`pt-6 … mobile:pt-3`) — la variante d'appareil s'écrit avec
+    `:where`, qui ne pèse rien, et elle est écrite APRÈS dans la feuille.
+    Vérifié dans la feuille produite, pas supposé. */
+export const RYTHME_TITRE_RESULTATS =
+  "pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3 mobile:pb-6";
 
 export function LigneResultats({
   titre,
@@ -42,12 +61,19 @@ export function LigneResultats({
   balise = "h1",
   degagementConstant = false,
   airEnBas = false,
+  masqueAuDoigt = false,
 }: {
   /** « Explorer toutes les créations », ou ce qui a été cherché.
       ⚠️ UN NŒUD depuis la nº 249-§3 : sur « Ma sélection », le titre
       est aussi LE CONTRÔLE (il ouvre le menu). L'écriture — les
-      classes, la disposition — ne change pas d'un pixel. */
-  titre: React.ReactNode;
+      classes, la disposition — ne change pas d'un pixel.
+      ██ §2 (nº 847) — ET IL PEUT ÊTRE ABSENT ██
+      Sur une page de RÉSULTATS, le compte n'est plus écrit ici : il est
+      devenu le PREMIER BADGE de la rangée du dessous, et c'est LUI qui
+      porte le `h1` (voir `FiltresActifs`). Ce bloc n'a donc plus de
+      titre à rendre — `null` le dit, et aucune balise n'est posée. Une
+      page garde ainsi UN SEUL titre de niveau 1, jamais deux ni zéro. */
+  titre: React.ReactNode | null;
   /** « 20 créations · Lyon 5 km » — null sans recherche active. */
   sousTitre: string | null;
   /**
@@ -129,18 +155,32 @@ export function LigneResultats({
    * l'onglet, ce qui est une ligne de plus, pas une refonte.
    */
   airEnBas?: boolean;
-  /*  ██ §3 (nº 846) — `masqueAuDoigt` EST SUPPRIMÉE ██
-      La nº 444 retirait le bloc de tête de l'accueil sur un VRAI mobile
-      (« les cartes commencent tout de suite »). Le propriétaire revient
-      dessus à la nº 846 : il veut le titre et le sous-titre au-dessus
-      des cartes, sur les deux appareils — et le compte des styles, qui
-      vit dans ce sous-titre. Son seul appelant ne la passe donc plus, et
-      elle est retirée plutôt que laissée inutilisée (règle nº 386 : rien
-      d'orphelin). Le grand relevé qui la documentait reste lisible dans
-      l'historique.
-      ⚠️ CE QUI RESTE DE LA nº 444, ET QUI N'EST PAS TOUCHÉ : l'air de
-      14 px sous la barre au doigt (nº 445, IndexTatoueurs) — il vit
-      AU-DESSUS de ce bloc et n'a jamais dépendu de lui. */
+  /**
+   * ██ §1 (nº 847) — `masqueAuDoigt` REVIENT, ET C'EST UN ALLER-RETOUR
+   * QUI SE DIT ██
+   * ------------------------------------------------------------------
+   * LA nº 444 retirait le bloc de tête de l'accueil sur un VRAI mobile
+   * (« les cartes commencent tout de suite »). LA nº 846 l'a rendu aux
+   * deux appareils, parce que le compte des styles vit dans son
+   * sous-titre. LE PROPRIÉTAIRE A VU LE RÉSULTAT et tranche à la
+   * nº 847 : au doigt, le titre et le sous-titre s'en vont de nouveau ;
+   * le WEB les garde, comptes compris.
+   * Le drapeau est donc rétabli à l'identique — même nom, même classe,
+   * même unique appelant (l'accueil SANS recherche, IndexTatoueurs).
+   * ⚠️ `mobile:hidden` — LE VRAI APPAREIL, pas une largeur de fenêtre
+   * (la variante de globals.css, `[data-appareil="mobile"]`) : une
+   * fenêtre d'ordinateur rétrécie garde donc son bloc, comme partout
+   * ailleurs dans le site.
+   * ⚠️ ET C'EST BIEN `display` : la garantie nº 171 (globals.css) force
+   * l'opacité et la visibilité de ce bloc pour qu'aucune bascule ne
+   * puisse l'effacer — elle ne dit rien de `display`, que cette variante
+   * seule gouverne. Le bloc entier part : titre, sous-titre et son
+   * rembourrage — aucun blanc résiduel au-dessus des cartes.
+   * ⚠️ CE QUI RESTE DE LA nº 444, ET QUI N'EST PAS TOUCHÉ : l'air de
+   * 14 px sous la barre au doigt (nº 445, IndexTatoueurs) — il vit
+   * AU-DESSUS de ce bloc et n'a jamais dépendu de lui.
+   */
+  masqueAuDoigt?: boolean;
 }) {
   const Titre = balise;
   return (
@@ -182,11 +222,13 @@ export function LigneResultats({
            tient par la GRAISSE et par la COULEUR. */
       className={`${RYTHME_TITRE_RESULTATS} ${
         airEnBas ? "lg:pb-10" : ""
-      }`}
+      }${masqueAuDoigt ? " mobile:hidden" : ""}`}
     >
-      <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] mobile:text-[17px] font-bold leading-tight text-sombre-texte">
-        {titre}
-      </Titre>
+      {titre !== null && (
+        <Titre className="text-[clamp(1.25rem,2.4vw,1.65rem)] mobile:text-[17px] font-bold leading-tight text-sombre-texte">
+          {titre}
+        </Titre>
+      )}
       {/*  ██ §1 (nº 628) — LE SOUS-TITRE : PLUS SERRÉ AU DOIGT, PLUS
            GRAND AU WEB, ET LES DEUX SANS SE MARCHER DESSUS ██
            ------------------------------------------------------------

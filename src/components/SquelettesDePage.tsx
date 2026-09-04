@@ -438,23 +438,28 @@ export function CorpsSquelette({
     <div className={`animate-pulse${classe ? ` ${classe}` : ""}`}>
       {avecTitre ? (
         <div className={RYTHME_TITRE_RESULTATS}>
-          <div className="h-[21px] sm:h-[33px] w-44 bg-sombre-eleve" />
-          {/*  Le SOUS-TITRE : la vraie ligne fait 30 px, 4-6 px sous le
-               titre — sans elle, la grille grise montait de 28-36 px et
-               sautait à l'arrivée (mesuré, nº 707).
-               ██ §4 (nº 846) — TRENTE PIXELS AU DOIGT AUSSI ██
-               Ce bloc de titre ne sert QU'AUX PAGES DE RÉSULTATS (la
-               recherche et sa superposition ; « Ma sélection » n'a pas
-               de titre du tout). Or, depuis la nº 846, ce qui vit sous
-               leur titre n'est plus une phrase mais LES BADGES DE FILTRE
-               — trente pixels de haut, la boîte d'un badge du site. Le
-               doigt promettait encore 23, la hauteur d'une ligne de
-               texte : SEPT PIXELS de saut à chaque arrivée, mesurés au
-               banc nº 845. Le web, lui, disait déjà 30 et ne bouge pas.
-               ⚠️ LA MARGE AU-DESSUS NE CHANGE PAS (4 px au doigt, 6 au
-               web) : c'est celle des badges comme c'était celle du
-               sous-titre — l'écriture partagée de la nº 628. */}
-          <div className="mt-[4px] h-[30px] sm:mt-[6px] w-28 bg-sombre-eleve" />
+          {/*  ██ §2 (nº 847) — LA BARRE DU TITRE S'EN VA AVEC LE TITRE ██
+               CE BLOC NE SERT QU'AUX PAGES DE RÉSULTATS (la recherche et
+               sa superposition ; « Ma sélection » n'a pas de titre du
+               tout). Or, depuis la nº 847, elles n'ont plus de titre : le
+               compte est devenu LE PREMIER BADGE de la rangée
+               (`FiltresActifs`). Le squelette promettait encore une barre
+               de titre — 21 px au doigt, 33 au web, plus son écart : tout
+               le corps serait arrivé 25 à 39 px trop haut.
+               IL NE RESTE DONC QUE LA RANGÉE DES BADGES : sa marge (4 px
+               au doigt, 6 au web — celle du sous-titre qu'elle a
+               remplacé, nº 628) et ses trente pixels, la hauteur d'un
+               badge du site.
+               ⚠️ DEUX RECTANGLES, ET NON UN : la rangée en porte au moins
+               deux dès qu'un filtre est posé — le compte, puis le style.
+               Leurs largeurs ne décident de rien (la rangée est une ligne
+               de flexion, sa hauteur ne dépend pas d'elles) ; elles sont
+               prises sur les libellés les plus courants, « 15 portfolios »
+               et « Blackwork ». */}
+          <div className="mt-[4px] sm:mt-[6px] flex items-center gap-2">
+            <div className="h-[30px] w-[112px] rounded-lg bg-sombre-eleve" />
+            <div className="h-[30px] w-[104px] rounded-lg bg-sombre-eleve" />
+          </div>
         </div>
       ) : (
         /*  « Ma sélection » n'a ni titre ni sous-titre (nº 708) : la

@@ -1326,10 +1326,10 @@ export function IndexTatoueurs({
                      muette, un catalogue vide — on n'écrit pas
                      « 0 portfolio », on rend la ligne muette et l'air
                      tient tout seul, comme depuis la nº 507.
-                     ⚠️ §3 (nº 846) — ET IL S'AFFICHE MAINTENANT AUX DEUX
-                     APPAREILS : `masqueAuDoigt` (nº 444) retirait ce bloc
-                     du vrai appareil tactile, il est supprimé (voir plus
-                     bas, et LigneResultats). */
+                     ⚠️ §1 (nº 847) — ET IL NE S'AFFICHE QU'AU WEB : la
+                     nº 846 avait rendu ce bloc au doigt, le propriétaire
+                     l'y retire de nouveau (`masqueAuDoigt`, plus bas).
+                     Les deux comptes restent donc une affaire du web. */
                 /*  ██ §3 (nº 846) — LE SOUS-TITRE PORTE LES DEUX
                      COMPTES : « 15 portfolios • 9 styles ». Vide quand
                      la page n'a ni l'un ni l'autre (base muette) — la
@@ -1337,23 +1337,18 @@ export function IndexTatoueurs({
                      l'air, comme depuis la nº 507. */
                 sousTitre={comptes || null}
                 degagementConstant
-                /*  ██ §3 (nº 846) — `masqueAuDoigt` EST RETIRÉ ██
-                     LA nº 444 avait retiré ce bloc du vrai mobile : « les
-                     cartes commencent tout de suite ». LE PROPRIÉTAIRE
-                     REVIENT DESSUS à la nº 846 — il veut le titre et le
-                     sous-titre au-dessus des cartes, et le compte des
-                     styles « sur les deux appareils ». Or ce compte vit
-                     dans le sous-titre : le garder masqué au doigt
-                     reviendrait à ne pas le poser du tout.
-                     ⚠️ CE QUE LE DOIGT RETROUVE : le bloc entier, à ses
-                     valeurs de la nº 539 (12 px d'air, titre de 17 px,
-                     sous-titre de 15,5) — elles étaient écrites et
-                     jamais servies sur l'accueil. Rien de neuf n'est
-                     inventé pour lui.
+                /*  ██ §1 (nº 847) — `masqueAuDoigt` EST RÉTABLI ██
+                     LA nº 444 avait retiré ce bloc du vrai mobile (« les
+                     cartes commencent tout de suite ») ; la nº 846 le lui
+                     avait rendu, pour y poser le compte des styles. LE
+                     PROPRIÉTAIRE A VU, ET TRANCHE : au doigt, il s'en va
+                     de nouveau. Le web garde tout — titre, sous-titre et
+                     les deux comptes.
                      ⚠️ ET L'AIR DE 14 px SOUS LA BARRE (nº 445) RESTE :
-                     il vit au-dessus de ce bloc, il ne dépendait pas de
-                     lui, et le retirer ferait remonter le titre contre
-                     la barre. */
+                     il vit au-dessus de ce bloc, il ne dépend pas de lui,
+                     et c'est lui qui empêche les cartes de toucher la
+                     barre fixe maintenant que le titre n'est plus là. */
+                masqueAuDoigt
               />
               </>
             );
@@ -1437,13 +1432,24 @@ export function IndexTatoueurs({
                 ),
             });
           }
+          /*  ██ §2 (nº 847) — LE COMPTE N'EST PLUS LE TITRE : IL OUVRE LA
+               RANGÉE ██
+               La nº 846 l'écrivait en `h1` au-dessus des badges. Le
+               propriétaire le veut EN BADGE, premier de la rangée, sans
+               croix. Le bloc de tête ne rend donc plus de titre du tout
+               (`titre={null}`) : c'est le badge du compte qui porte le
+               `h1`, chez `FiltresActifs`. Une page garde UN titre de
+               niveau 1 — le même mot, un autre habit.
+               ⚠️ LA RANGÉE EXISTE TOUJOURS, MÊME SANS FILTRE : le compte
+               s'y trouve seul (une recherche par catégorie, par exemple).
+               C'est pour cela que la garde `filtres.length > 0` de la
+               nº 846 disparaît — elle aurait effacé le titre de la
+               page. */
           return (
             <LigneResultats
-              titre={compte}
+              titre={null}
               sousTitre={null}
-              dessous={
-                filtres.length > 0 ? <FiltresActifs filtres={filtres} /> : null
-              }
+              dessous={<FiltresActifs compte={compte} filtres={filtres} />}
             />
           );
         })()}

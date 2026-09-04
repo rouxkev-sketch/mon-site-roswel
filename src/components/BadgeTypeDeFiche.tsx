@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { libelleTypeFiche } from "@/config/tatouage";
+import { libelleTypeFiche, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 
 /**
@@ -64,13 +64,17 @@ export function BadgeTypeDeFiche({
     <Link
       href={adresseDeLienInterne(tatoueur.slug)}
       data-badge-type=""
-      className="inline-flex shrink-0 min-h-[30px] items-center justify-center
-                 whitespace-nowrap rounded-lg border border-sombre-haut
-                 bg-transparent px-3.5 text-[14px] font-semibold
+      /*  §2 (nº 847) — SA BOÎTE ET SON CONTOUR SONT L'ÉCRITURE PARTAGÉE
+          (`ROBE_BADGE_CONTOUR`, config/tatouage) : le badge du COMPTE des
+          résultats en veut exactement la même. Rien n'a changé d'un
+          pixel — les mêmes classes, lues ailleurs. Ce qui reste ici est
+          ce qui n'appartient qu'à CE badge : sa typographie, son air
+          latéral, et ses états de LIEN. */
+      className={`${ROBE_BADGE_CONTOUR} px-3.5 text-[14px] font-semibold
                  text-sombre-texte transition-colors
                  hover:bg-sombre-eleve active:bg-sombre-eleve
                  focus-visible:outline-2 focus-visible:outline-offset-2
-                 focus-visible:outline-primaire"
+                 focus-visible:outline-primaire`}
     >
       {type}
     </Link>

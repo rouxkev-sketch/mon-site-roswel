@@ -387,6 +387,21 @@ des chiffres.
 > n'a pas de badge : elle filtre toujours et se lit dans le moteur,
 > mais elle ne s'écrit plus au-dessus des cartes.
 
+### Ajouts de la 847 (six retouches des en-têtes)
+
+**Aucun texte neuf, et un aller-retour.** La nº 847 ne change pas un
+mot : elle déplace et rhabille ce que la nº 846 avait posé.
+
+| Français | Anglais | Note |
+|---|---|---|
+| le texte d'invite du champ (barre du doigt, accueil) | **Find your tattoo style…** | `TEXTES_TATOUAGE.invitePilule` — il redevient ce qu'il était avant la nº 846. Le doublon n'existe plus : le titre de l'accueil est retiré AU DOIGT (nº 847-§1), et la pilule ne vit que là. Deux clés portent donc la même chaîne, et c'est voulu — ce sont deux choses |
+| le compte des résultats | **15 portfolios** | ce n'était plus un titre écrit en grand : c'est le PREMIER BADGE de la rangée, sans croix. Le mot ne change pas ; il garde sa balise `h1`, parce qu'il reste le titre de la page |
+
+> **Le titre de l'accueil (« Find your tattoo style… ») et son
+> sous-titre (« 15 portfolios • 9 styles ») ne changent pas d'un
+> caractère** : ils ne s'affichent simplement plus qu'au WEB, comme
+> avant la nº 846.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

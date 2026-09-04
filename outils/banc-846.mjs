@@ -83,8 +83,18 @@ for (const mode of ["doigt", "web"]) {
         .filter((n) => Number.isFinite(n));
       return { ...entete, styles: cartes.length, comptes };
     }, ENTETE);
-    verif("le bloc de tête est MONTRÉ (au doigt aussi, depuis la nº 846)",
-      vu.montre === true);
+    /*  §1 (nº 847) — LE BLOC DE TÊTE EST REDEVENU UNE AFFAIRE DU WEB :
+        le propriétaire l'a retiré du doigt (la nº 846 le lui avait
+        rendu). Son CONTENU, lui, ne change pas — c'est ce que les deux
+        lignes suivantes mesurent, et elles se lisent dans le document
+        des deux côtés (le HTML est partagé, seule la feuille de style
+        tranche). Le banc 847 mesure l'affichage lui-même. */
+    verif(
+      mode === "web"
+        ? "le bloc de tête est MONTRÉ au web"
+        : "le bloc de tête est RETIRÉ de l'affichage au doigt (nº 847)",
+      mode === "web" ? vu.montre === true : vu.montre === false,
+      `montré ${vu.montre}`);
     verif("le titre est celui de l'accueil",
       vu.titre === "Find your tattoo style…", vu.titre);
     /*  LA SOMME DES CARTES : chaque carte de style annonce son nombre
@@ -127,8 +137,12 @@ for (const mode of ["doigt", "web"]) {
         };
       });
     const avant = await releve();
-    verif("le texte d'invite ne redit plus le titre de la page",
-      avant.texte === "Search a style or a city", avant.texte);
+    /*  §1 (nº 847) — L'INVITE REDEVIENT « Find your tattoo style… ».
+        La nº 846 l'avait changée parce qu'elle redisait le titre posé
+        au-dessus des cartes ; la nº 847 retire ce titre AU DOIGT, et la
+        pilule ne vit que là — le doublon n'existe plus. */
+    verif("le champ porte l'invite de l'accueil",
+      avant.texte === "Find your tattoo style…", avant.texte);
     verif("le champ est là, à sa hauteur de toujours (46 px)",
       avant.hauteur === 46 && avant.haut !== null, `${avant.hauteur} px @ ${avant.haut}`);
     verif("et la loupe de la barre est éteinte (le champ suffit)",
