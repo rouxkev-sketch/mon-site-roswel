@@ -39,10 +39,17 @@ const RESULTATS = "/search?style=blackwork&nature=tatouage";
     parle de « 4 badges longs » ; on fait ce qui existe — TROIS badges,
     assez longs pour dépasser largement un écran de 390 px, ce que la
     mesure confirme. */
+/*  ⚠️ LES COORDONNÉES S'ÉCRIVENT À CINQ DÉCIMALES (corrigé à la
+    nº 848) : c'est la forme que le site écrit lui-même
+    (`lieuVersParametres`, lib/geocodage). À deux décimales, le serveur
+    décode puis RÉÉCRIT à cinq — les deux signatures diffèrent, la page
+    se croit en retard sur l'adresse et reste EN CHANTIER : le bloc de
+    tête garde ses boîtes (donc ses mesures) mais passe en
+    `visibility: hidden`. Le banc mesurait juste, sans rien voir. */
 const LONGUE = new URLSearchParams({
   style: "blackwork", nature: "tatouage",
   lieu: "Villeneuve-Saint-Georges-sur-Marne", zone: "NSW",
-  lat: "48.73", lon: "2.44", niveau: "ville", paysCode: "AU",
+  lat: "48.73000", lon: "2.44000", niveau: "ville", paysCode: "AU",
   region: "New South Wales", ville: "Villeneuve-Saint-Georges-sur-Marne",
   rayon: "100",
 }).toString();
@@ -80,10 +87,18 @@ const RANGEE = `() => {
         texte: b.textContent.trim(),
         fond: sb.backgroundColor,
         contour: sb.borderTopWidth,
+        contourCouleur: sb.borderTopColor,
         corps: sb.fontSize,
         graisse: sb.fontWeight,
         croixBoite: Math.round(rc.width) + "x" + Math.round(rc.height),
-        croixGlyphe: croix.querySelector("svg")?.getAttribute("width"),
+        //  LE DESSIN TEL QU'IL EST RENDU, et non son attribut : depuis
+        //  la nº 848 c'est une CLASSE qui le grandit au web (l'attribut
+        //  ne connaît pas l'appareil), il vaut donc 16 dans le code et
+        //  18 à l'écran.
+        croixGlyphe: (() => {
+          const g = croix.querySelector("svg");
+          return g ? String(Math.round(g.getBoundingClientRect().width)) : null;
+        })(),
         ...boite(b),
       };
     }),
@@ -108,6 +123,10 @@ const RANGEE = `() => {
         : null;
     })(),
     margeSite: parseFloat(getComputedStyle(document.querySelector("main")).paddingLeft),
+    //  nº 848 — LA GARDE : on ne mesure que ce qui se peint (voir la
+    //  note de LONGUE, en tête de fichier).
+    chantier: document.querySelector("main[aria-busy]") !== null,
+    visible: getComputedStyle(document.querySelector("[data-titre-mosaique]")).visibility,
   };
 }`;
 
@@ -166,6 +185,11 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1800);
     const m = await page.evaluate((R) => new Function("return " + R)()(), RANGEE);
 
+    //  nº 848 — RIEN N'EST MESURÉ SUR UNE PAGE QUI NE SE PEINT PAS.
+    verif("la page est bel et bien RENDUE : aucun chantier, rien de masqué",
+      m.chantier === false && m.visible === "visible",
+      `chantier ${m.chantier} · ${m.visible}`);
+
     //  §2 — LE COMPTE, PREMIER ET SANS CROIX.
     verif("le compte est un BADGE, premier de la rangée, à gauche des autres",
       /^\d+ portfolios?$/.test(m.compte.texte) && m.compte.x < m.badges[0].x,
@@ -181,16 +205,27 @@ for (const mode of ["doigt", "web"]) {
       m.compte.fond === "rgba(0, 0, 0, 0)" && m.compte.contour === "1px solid",
       `${m.compte.contour} ${m.compte.contourCouleur} · fond ${m.compte.fond}`);
 
-    //  §3 — LA TYPOGRAPHIE DE TOUTE LA RANGÉE.
+    /*  §3 — LA TYPOGRAPHIE DE TOUTE LA RANGÉE.
+        ██ RÉÉCRIT À LA nº 848 — CE QUE LE PROPRIÉTAIRE A CHANGÉ DEPUIS ██
+        Ce banc mesurait les valeurs de la nº 847 : corps 15 px partout,
+        demi-gras, croix de 26 px, badge de 30 px de haut. Les trois ont
+        bougé sur SA demande, et le banc dit désormais la nouvelle règle
+        — le détail (l'air égal, la hauteur qui suit) est mesuré par le
+        banc 848 ; ici on garde ce que la nº 847 avait posé et qui
+        SURVIT : la rangée est homogène, et la croix suit le texte. */
     const tous = [m.compte, ...m.badges];
-    verif("TOUS les badges sont en demi-gras, corps 15 px (un cran au-dessus des 14 de la nº 846)",
-      tous.every((b) => b.corps === "15px" && b.graisse === "600"),
+    const CORPS = mode === "doigt" ? "15px" : "16px";
+    verif(`TOUS les badges portent la même écriture : corps ${CORPS}, graisse moyenne (nº 848-§3c/§5)`,
+      tous.every((b) => b.corps === CORPS && b.graisse === "500"),
       tous.map((b) => `${b.corps}/${b.graisse}`).join(" | "));
-    verif("la croix a grandi en proportion : glyphe 16 px dans une boîte de 26",
-      m.badges.every((b) => b.croixGlyphe === "16" && b.croixBoite === "26x26"),
+    verif("la croix suit le texte : elle prend la boîte de la ligne, son dessin monte au web (nº 848)",
+      m.badges.every((b) =>
+        b.croixGlyphe === (mode === "doigt" ? "16" : "18") &&
+        b.croixBoite === (mode === "doigt" ? "22x22" : "24x24")),
       m.badges.map((b) => `${b.croixBoite} glyphe ${b.croixGlyphe}`).join(" | "));
-    verif("et la hauteur du badge ne bouge pas (30 px, celle du squelette d'attente)",
-      tous.every((b) => b.h === 30), tous.map((b) => b.h).join(" | "));
+    verif("et TOUS les badges ont la même hauteur, celle que le squelette promet (nº 848-§2)",
+      tous.every((b) => b.h === (mode === "doigt" ? 44 : 46)),
+      tous.map((b) => b.h).join(" | "));
 
     /*  §5 — LE FOND DES BADGES À CROIX, MESURÉ PLUS SOMBRE.
         On ne récite pas la valeur : on compare la LUMINOSITÉ des deux
@@ -204,9 +239,16 @@ for (const mode of ["doigt", "web"]) {
     verif("les badges à croix sont sur un fond PLUS SOMBRE que l'ancien",
       m.badges.every((b) => clarte(b.fond) < clarte(ELEVE)),
       `${m.badges[0].fond} (${clarte(m.badges[0].fond).toFixed(1)}) contre ${ELEVE} (${clarte(ELEVE).toFixed(1)})`);
-    verif("… et ils restent PLEINS, sans contour : le contour distingue le compte",
-      m.badges.every((b) => b.contour === "0px" && b.fond !== "rgba(0, 0, 0, 0)"),
-      m.badges.map((b) => `contour ${b.contour}`).join(" | "));
+    /*  … ET ILS RESTENT PLEINS, LÀ OÙ LE COMPTE EST VIDE : c'est ce qui
+        les distingue, et c'est le point de la nº 847.
+        ⚠️ LE TRAIT, LUI, N'EST PLUS UN CRITÈRE DEPUIS LA nº 848 : les
+        badges pleins portent un contour TRANSPARENT, pour faire
+        exactement la hauteur du compte (qui, lui, a un vrai trait). Ce
+        qui se voit, c'est donc la COULEUR du trait, pas sa présence. */
+    verif("… et ils restent PLEINS, sans trait visible : le trait distingue le compte",
+      m.badges.every((b) =>
+        b.fond !== "rgba(0, 0, 0, 0)" && b.contourCouleur === "rgba(0, 0, 0, 0)"),
+      m.badges.map((b) => `trait ${b.contour} ${b.contourCouleur}`).join(" | "));
   } catch (e) {
     verif(`déroulement du banc 847 (rangée ${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }

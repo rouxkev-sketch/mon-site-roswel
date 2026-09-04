@@ -43,6 +43,9 @@ export function variablesCssCouleurs(): string {
     // blanches, à l'identique.
     "--rw-sombre-fond": COULEURS_SOMBRE.fond,
     "--rw-sombre-carte": COULEURS_SOMBRE.carte,
+    //  §1 (nº 848) — le barreau entre `carte` et `eleve` : le pourquoi et
+    //  le calcul vivent avec la valeur (config/tatouage).
+    "--rw-sombre-carte-clair": COULEURS_SOMBRE.carteClair,
     "--rw-sombre-eleve": COULEURS_SOMBRE.eleve,
     "--rw-sombre-eleve-clair": COULEURS_SOMBRE.eleveClair,
     "--rw-sombre-bordure": COULEURS_SOMBRE.bordure,

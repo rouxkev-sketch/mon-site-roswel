@@ -234,10 +234,15 @@ for (const mode of ["doigt", "web"]) {
     /*  ⚠️ ON NE FIGE PAS LE JETON DE COULEUR (la charte a déjà été
         retintée, nº 466) : ce qui compte est la RÈGLE — un rectangle à
         coins LÉGÈREMENT arrondis, jamais la capsule pleine. Une capsule
-        aurait un rayon égal à la moitié de sa hauteur (15 px) ; le
-        badge en a 8, le rayon des badges du site (nº 449). */
+        aurait un rayon égal à la MOITIÉ de sa hauteur ; le badge en a 8,
+        le rayon des badges du site (nº 449), quelle que soit sa hauteur.
+        ⚠️ LA HAUTEUR N'EST PLUS ÉCRITE ICI (nº 848) : elle valait 30 px,
+        elle en vaut 44 au doigt et 46 au web depuis que l'air intérieur
+        est égal sur les quatre côtés — et c'est le banc 848 qui la
+        mesure. Ce banc-ci vérifie ce qu'il a toujours vérifié : la
+        FORME, c'est-à-dire un rayon très inférieur à la moitié. */
     verif("c'est un RECTANGLE à coins arrondis, pas une capsule",
-      vu.badges[0].rayon === "8px" && vu.badges[0].hauteur === 30,
+      vu.badges[0].rayon === "8px" && vu.badges[0].hauteur > 2 * 8,
       `rayon ${vu.badges[0].rayon} pour ${vu.badges[0].hauteur} px de haut`);
     verif("sa croix porte un nom accessible explicite",
       vu.badges[0].etiquette === "Remove the Blackwork filter", vu.badges[0].etiquette);
@@ -277,13 +282,17 @@ for (const mode of ["doigt", "web"]) {
       deux.badges.length === 2 && deux.badges[0].cle === "style" &&
       deux.badges[1].cle === "lieu",
       deux.badges.map((b) => `${b.cle}:${b.texte}`).join(" | "));
-    /*  LA LOCALITÉ PORTE SON RAYON, d'un seul tenant et séparé par la
-        même puce que le sous-titre de l'accueil. PAS DE PAYS : l'adresse
-        d'une recherche n'en porte pas le nom (voir la note
+    /*  LA LOCALITÉ PORTE SON RAYON, d'un seul tenant. PAS DE PAYS :
+        l'adresse d'une recherche n'en porte pas le nom (voir la note
         d'IndexTatoueurs) — c'est l'exemple du propriétaire, au
-        caractère près. */
+        caractère près.
+        ⚠️ LE SÉPARATEUR A CHANGÉ À LA nº 848 : la grosse puce du site
+        (« • ») cède au POINT MÉDIAN FIN (« · »), sur demande du
+        propriétaire — « le gros point est trop grand ». Ailleurs, la
+        puce reste (le sous-titre de l'accueil la garde, et le banc 848
+        le vérifie). */
     verif("la localité dit la ville, sa division et le rayon",
-      deux.badges[1].texte === "Austin, TX • 25 mi", deux.badges[1].texte);
+      deux.badges[1].texte === "Austin, TX · 25 mi", deux.badges[1].texte);
     verif("le titre reste le compte", /^\d+ portfolios?$/.test(deux.titre ?? ""), deux.titre);
 
     //  ON RETIRE LA LOCALITÉ : le style reste, la liste se rafraîchit.

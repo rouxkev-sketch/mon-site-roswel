@@ -14,7 +14,7 @@ import {
   RANGEE_EN_TETE_DE_FIL,
   RANGEE_PIED_DE_FIL,
 } from "@/components/CarteFil";
-import { RYTHME_TITRE_RESULTATS } from "@/components/LigneResultats";
+import { RYTHME_TITRE_BADGES } from "@/components/LigneResultats";
 import {
   CIBLE_GESTE_BARRE,
   RESERVE_LOGO,
@@ -437,7 +437,13 @@ export function CorpsSquelette({
   return (
     <div className={`animate-pulse${classe ? ` ${classe}` : ""}`}>
       {avecTitre ? (
-        <div className={RYTHME_TITRE_RESULTATS}>
+        //  §3a (nº 848) — LE RYTHME DE LA RANGÉE, ET PLUS CELUI DU
+        //  TITRE : ce bloc ne sert que les pages de résultats, qui
+        //  rendent des badges. Il lit donc la constante que le vrai
+        //  bloc lit dans ce cas-là (LigneResultats) — 24 px au-dessus
+        //  au web, au lieu de 32, sans quoi la page descendrait de huit
+        //  pixels à l'arrivée.
+        <div className={RYTHME_TITRE_BADGES}>
           {/*  ██ §2 (nº 847) — LA BARRE DU TITRE S'EN VA AVEC LE TITRE ██
                CE BLOC NE SERT QU'AUX PAGES DE RÉSULTATS (la recherche et
                sa superposition ; « Ma sélection » n'a pas de titre du
@@ -446,19 +452,32 @@ export function CorpsSquelette({
                (`FiltresActifs`). Le squelette promettait encore une barre
                de titre — 21 px au doigt, 33 au web, plus son écart : tout
                le corps serait arrivé 25 à 39 px trop haut.
-               IL NE RESTE DONC QUE LA RANGÉE DES BADGES : sa marge (4 px
-               au doigt, 6 au web — celle du sous-titre qu'elle a
-               remplacé, nº 628) et ses trente pixels, la hauteur d'un
-               badge du site.
+               IL NE RESTE DONC QUE LA RANGÉE DES BADGES, et depuis la
+               nº 848 elle n'a plus de marge du tout : tout l'air
+               au-dessus est au bloc (§3a, LigneResultats).
+               ██ §2 (nº 848) — LA HAUTEUR SUIT CELLE DES VRAIS BADGES ██
+               Elle valait TRENTE pixels, sur les deux appareils. Depuis
+               que l'air intérieur est égal sur les quatre côtés
+               (`FiltresActifs`, §2), un badge fait 44 px au doigt et 46
+               au web — le squelette qui en promet 30 ferait remonter
+               toute la page de 14 à 16 px à l'arrivée. Ce sont les DEUX
+               MÊMES nombres, et ils sont mesurés au banc, pas déduits.
+               ⚠️ ET LA MARGE COPIÉE S'EN VA AVEC ELLE : elle était posée
+               ici par largeur de fenêtre (640 px) là où la rangée la
+               posait par APPAREIL (règle nº 60) — deux pixels de saut sur
+               une fenêtre d'ordinateur étroite. Plus de marge des deux
+               côtés, donc plus rien à faire concorder.
                ⚠️ DEUX RECTANGLES, ET NON UN : la rangée en porte au moins
                deux dès qu'un filtre est posé — le compte, puis le style.
                Leurs largeurs ne décident de rien (la rangée est une ligne
                de flexion, sa hauteur ne dépend pas d'elles) ; elles sont
-               prises sur les libellés les plus courants, « 15 portfolios »
-               et « Blackwork ». */}
-          <div className="mt-[4px] sm:mt-[6px] flex items-center gap-2">
-            <div className="h-[30px] w-[112px] rounded-lg bg-sombre-eleve" />
-            <div className="h-[30px] w-[104px] rounded-lg bg-sombre-eleve" />
+               prises sur les libellés les plus courants et MESURÉES à
+               l'écran, au milieu des deux appareils : « 14 portfolios »
+               fait 110 px au doigt et 118 au web, « Blackwork » 126 et
+               133. D'où 114 et 130. */}
+          <div data-squelette-badges="" className="flex items-center gap-2">
+            <div className="mobile:h-[44px] not-mobile:h-[46px] w-[114px] rounded-lg bg-sombre-eleve" />
+            <div className="mobile:h-[44px] not-mobile:h-[46px] w-[130px] rounded-lg bg-sombre-eleve" />
           </div>
         </div>
       ) : (

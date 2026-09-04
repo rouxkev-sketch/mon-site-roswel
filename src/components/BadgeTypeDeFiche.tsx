@@ -70,7 +70,10 @@ export function BadgeTypeDeFiche({
           pixel — les mêmes classes, lues ailleurs. Ce qui reste ici est
           ce qui n'appartient qu'à CE badge : sa typographie, son air
           latéral, et ses états de LIEN. */
-      className={`${ROBE_BADGE_CONTOUR} px-3.5 text-[14px] font-semibold
+      //  §2 (nº 848) — LA HAUTEUR EST REVENUE ICI : la robe partagée ne
+      //  la porte plus (voir sa note, config/tatouage). Trente pixels,
+      //  comme depuis la nº 843.
+      className={`${ROBE_BADGE_CONTOUR} min-h-[30px] px-3.5 text-[14px] font-semibold
                  text-sombre-texte transition-colors
                  hover:bg-sombre-eleve active:bg-sombre-eleve
                  focus-visible:outline-2 focus-visible:outline-offset-2

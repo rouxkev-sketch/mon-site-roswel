@@ -122,6 +122,9 @@
      src/config/tatouage.ts). Aucune page artisan ne les emploie. */
   --color-sombre-fond: var(--rw-sombre-fond);
   --color-sombre-carte: var(--rw-sombre-carte);
+  /*  §1 (nº 848) — le barreau intermédiaire de l'échelle sombre : sa
+      valeur et son calcul vivent dans config/tatouage. */
+  --color-sombre-carte-clair: var(--rw-sombre-carte-clair);
   --color-sombre-eleve: var(--rw-sombre-eleve);
   --color-sombre-eleve-clair: var(--rw-sombre-eleve-clair);
   --color-sombre-bordure: var(--rw-sombre-bordure);

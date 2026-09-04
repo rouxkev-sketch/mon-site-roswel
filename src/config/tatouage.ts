@@ -1777,6 +1777,35 @@ export const COULEURS_SOMBRE = {
   //  §2 (nº 466) — recalculé sur le bleu nuit : #28282D → #1A1F26
   //  (26, 31, 38). C'est aussi le fond du pied de page (nº 138).
   carte: "#1A1F26",
+  /**
+   * ██ §1 (nº 848) — LE BARREAU QUI MANQUAIT ENTRE `carte` ET `eleve` ██
+   * ------------------------------------------------------------------
+   * LE PROPRIÉTAIRE, sur les badges de filtre de la rangée de recherche :
+   * « le fond #1A1F26 est trop sombre, le #262C34 d'avant était trop
+   * clair — poser un cran INTERMÉDIAIRE ; si aucun barreau n'existe, en
+   * déclarer un dans la palette, une seule écriture ».
+   * IL N'EN EXISTAIT AUCUN, ET C'EST MESURÉ. Les luminosités de l'échelle
+   * sombre, calculées (0,2126 R + 0,7152 V + 0,0722 B) :
+   *   fond 14,51 · carte 30,44 · **eleve 43,30** · bordure 49,37 ·
+   *   trait 52,37 · eleveClair 56,16 · haut 69,02
+   * Entre 30,44 et 43,30, la palette ne posait rien : les trois jetons
+   * qui suivent `eleve` sont tous PLUS CLAIRS que lui.
+   * LA VALEUR EST LE MILIEU EXACT DES DEUX, canal par canal :
+   *   (26+38)/2 = 32 · (31+44)/2 = 38 (37,5 arrondi) · (38+52)/2 = 45
+   *   → #20262D, luminosité 37,23 — juste entre les deux, comme demandé.
+   * ⚠️ SON NOM SUIT LA CONVENTION DE L'ÉCHELLE : `eleveClair` est « un
+   * cran au-dessus de `eleve` », `hautClair` « un cran au-dessus de
+   * `haut` » ; celui-ci est un cran au-dessus de `carte`. Aucune
+   * invention de vocabulaire.
+   * ⚠️ UNE SEULE ÉCRITURE, et c'est la consigne : la valeur vit ICI, le
+   * pont vers CSS est posé une fois (lib/theme, `--rw-sombre-carte-clair`)
+   * et Tailwind la sert sous `bg-sombre-carte-clair` (globals.css). Rien
+   * n'est recopié nulle part.
+   * ⚠️ IL A UN SEUL PORTEUR AUJOURD'HUI — les badges à croix de la
+   * rangée de recherche (components/FiltresActifs). Un barreau de plus
+   * dans l'échelle n'oblige personne à s'en servir.
+   */
+  carteClair: "#20262D",
   /** Un cran encore au-dessus : champs, éléments survolés.
       §2 (nº 466) : #33333A → #262C34 (38, 44, 52). */
   eleve: "#262C34",
@@ -2384,8 +2413,17 @@ export const PASTILLE_COMPTEUR =
  * LIEN (il doit répondre au doigt) ; celui du compte ne l'est pas (« ce
  * n'est pas une action », nº 847-§2). Chacun ajoute ce qui le regarde.
  */
+/*  ⚠️ §2 (nº 848) — LA HAUTEUR N'EN FAIT PLUS PARTIE. Elle valait
+    `min-h-[30px]`, et c'était juste tant que les deux porteurs
+    partageaient la même boîte. Depuis que la rangée de recherche prend
+    un air intérieur ÉGAL sur ses quatre côtés (nº 848-§2), sa hauteur se
+    DÉDUIT de cet air, de sa ligne de texte et de son trait — 44 au
+    doigt, 46 au web — tandis que le badge du type garde ses 30. C'est donc au PORTEUR de
+    dire sa boîte ; la robe ne dit plus que la couleur et la forme.
+    ⚠️ LE BADGE DU TYPE NE BOUGE PAS D'UN PIXEL : il écrit désormais son
+    `min-h-[30px]` lui-même, à la lettre. */
 export const ROBE_BADGE_CONTOUR =
-  "inline-flex min-h-[30px] shrink-0 items-center justify-center " +
+  "inline-flex shrink-0 items-center justify-center " +
   "whitespace-nowrap rounded-lg border border-sombre-haut bg-transparent";
 
 /**

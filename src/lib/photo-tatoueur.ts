@@ -7,6 +7,7 @@ import {
   natureConnue,
   photosDuStyle,
   RENDU_PAR_DEFAUT,
+  SEPARATEUR_FIN,
   stylesDuPortfolio,
   vignetteDe,
   type PhotoTatoueur,
@@ -183,7 +184,12 @@ export function sousTitreDeCarte(
     lieu,
   ]
     .filter(Boolean)
-    .join(" · ");
+    //  §4 (nº 848) — LE POINT MÉDIAN EST NOMMÉ (`SEPARATEUR_FIN`,
+    //  lib/photos-tatoueur) : le badge de localité de la rangée de
+    //  recherche écrit les mêmes trois caractères, et deux copies d'une
+    //  même chaîne finissent toujours par diverger (piège nº 378). PAS
+    //  UN CARACTÈRE NE CHANGE ICI — c'est la même valeur, lue ailleurs.
+    .join(SEPARATEUR_FIN);
 }
 
 export function legendeDeCarte(

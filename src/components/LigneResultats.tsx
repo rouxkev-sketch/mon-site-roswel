@@ -51,8 +51,35 @@
     (`pt-6 … mobile:pt-3`) — la variante d'appareil s'écrit avec
     `:where`, qui ne pèse rien, et elle est écrite APRÈS dans la feuille.
     Vérifié dans la feuille produite, pas supposé. */
-export const RYTHME_TITRE_RESULTATS =
-  "pt-6 pb-5 sm:pt-8 sm:pb-6 mobile:pt-3 mobile:pb-6";
+/*  ██ §3a (nº 848) — AU WEB, L'AIR AU-DESSUS DE LA RANGÉE DE BADGES ██
+    LE PROPRIÉTAIRE : « l'air au-dessus de la rangée est trop grand
+    (déséquilibré) — le réduire pour l'équilibrer avec l'air dessous ».
+    CE QU'IL VOIT, MESURÉ AU WEB : 38 px au-dessus de la rangée — les
+    32 du bloc (`sm:pt-8`) PLUS les 6 que la rangée porte elle-même —
+    contre 24 en dessous. Quatorze pixels d'écart, sur un bloc qui n'a
+    plus de titre depuis la nº 847 et où la rangée est donc seule.
+    LES DEUX AIRS TOMBENT À 24, LE MÊME NOMBRE, et il existait déjà : le
+    cran de base du haut (`pt-6`) et le dégagement du bas (`sm:pb-6`).
+    ⚠️ LES SIX PIXELS DE LA RANGÉE S'EN VONT AVEC, et c'est la vraie
+    cause : cette marge était celle du SOUS-TITRE, l'écart qui le
+    séparait du titre au-dessus (nº 628). Le titre parti, elle n'écarte
+    plus de rien — elle s'ajoutait au rembourrage du bloc. C'est
+    désormais le bloc qui porte tout l'air, en une seule déclaration.
+    ⚠️ AU DOIGT, RIEN NE BOUGE D'UN PIXEL, et c'est voulu (personne n'a
+    parlé du doigt) : 12 + 4 valaient 16 au-dessus, le rembourrage vaut
+    16 à lui seul (`mobile:pt-4`). Le dessous garde ses 24 (nº 847-§6).
+    ⚠️ ET SEULE LA PAGE DE RÉSULTATS BOUGE. Le même bloc sert l'ACCUEIL,
+    dont le titre et son sous-titre gardent leurs 32 px au web et leurs
+    12 au doigt — personne n'a demandé de les toucher. D'où DEUX rythmes
+    du HAUT, chacun écrit une fois ; le dégagement du BAS, lui, est le
+    même pour les deux et n'est écrit qu'une fois (piège nº 378).
+    ⚠️ QUI PREND LEQUEL SE DÉCIDE TOUT SEUL, plus bas : le bloc qui rend
+    une rangée (`dessous`) prend le rythme de la rangée. Aucun drapeau à
+    passer, donc aucun appelant à ne pas oublier — et le squelette
+    d'attente lit la même constante que lui (SquelettesDePage, nº 707). */
+const DEGAGEMENT_TITRE = "pb-5 sm:pb-6 mobile:pb-6";
+export const RYTHME_TITRE_RESULTATS = `pt-6 sm:pt-8 mobile:pt-3 ${DEGAGEMENT_TITRE}`;
+export const RYTHME_TITRE_BADGES = `pt-6 mobile:pt-4 ${DEGAGEMENT_TITRE}`;
 
 export function LigneResultats({
   titre,
@@ -220,7 +247,11 @@ export function LigneResultats({
            ⚠️ LE SOUS-TITRE NE CHANGE PAS, sur consigne : il reste à
            15,5 px. L'écart de corps se resserre, mais la hiérarchie
            tient par la GRAISSE et par la COULEUR. */
-      className={`${RYTHME_TITRE_RESULTATS} ${
+      //  §3a (nº 848) — LE RYTHME SE DÉCIDE SUR CE QUI EST RENDU :
+      //  une rangée de badges (`dessous`) prend 24 px au-dessus, un
+      //  titre en garde 32 au web. Le pourquoi est écrit avec les deux
+      //  constantes, en tête de fichier.
+      className={`${dessous ? RYTHME_TITRE_BADGES : RYTHME_TITRE_RESULTATS} ${
         airEnBas ? "lg:pb-10" : ""
       }${masqueAuDoigt ? " mobile:hidden" : ""}`}
     >

@@ -5,7 +5,7 @@ import { ROBE_BADGE_CONTOUR } from "@/config/tatouage";
 
 /**
  * ██ LA RANGÉE DES BADGES — SOUS LE COMPTE, PUIS À SA PLACE (nº 846,
- * REFAITE nº 847) ██
+ * REFAITE nº 847, RÉGLÉE nº 848) ██
  * ==================================================================
  * CE QUE LA nº 846 A POSÉ : sur une page de résultats, le titre devenait
  * LE COMPTE (« 15 portfolios ») et, sous lui, des badges disaient ce qui
@@ -21,19 +21,29 @@ import { ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  *    déjà là (nº 846) et ne bouge pas ;
  *  · §4 — AU DOIGT, LA RANGÉE GLISSE au lieu de se replier ;
  *  · §5 — LES BADGES À CROIX PRENNENT UN FOND PLUS SOMBRE.
+ * CE QUE LA nº 848 CHANGE, APRÈS QU'IL A REVU CETTE RANGÉE-LÀ :
+ *  · §1 — LE FOND DES BADGES À CROIX PREND LE BARREAU DU MILIEU, celui
+ *    qui manquait à la charte et qu'elle déclare désormais ;
+ *  · §2 / §3b — L'AIR INTÉRIEUR EST ÉGAL SUR LES QUATRE CÔTÉS, aux deux
+ *    appareils, et la hauteur des badges grandit avec lui ;
+ *  · §3c — AU WEB, LE TEXTE ET LA CROIX MONTENT ENCORE D'UN CRAN ;
+ *  · §5 — LA GRAISSE DU TEXTE DESCEND, de demi-gras à moyenne.
+ * (L'air AU-DESSUS de la rangée, §3a, ne vit pas ici mais dans le bloc
+ * de tête qui la porte — `LigneResultats`.)
  *
  * ██ LES DEUX ROBES, ET CE QU'ELLES DISENT ██
  * ------------------------------------------------------------------
  * LE COMPTE : un contour, rien dedans — il RENSEIGNE. Le fond de la page
  * transparaît, c'est le badge le plus discret de la rangée, et c'est
  * juste : personne ne peut agir sur lui.
- * LES FILTRES : un aplat PLEIN, et depuis la nº 847 un cran PLUS SOMBRE
- * que le cran de l'interface — `bg-sombre-carte` (#1A1F26) au lieu de
- * `bg-sombre-eleve` (#262C34). C'est LE cran de la charte juste en
- * dessous (config/tatouage, `COULEURS_SOMBRE`), celui des cartes et des
- * blocs : on ne descend pas au fond de page (#0B0F14), où le badge se
- * dissoudrait, et l'on ne fabrique aucune valeur — on prend le barreau
- * suivant de l'échelle, comme la charte le demande.
+ * LES FILTRES : un aplat PLEIN. La nº 846 le posait sur le cran de
+ * l'interface (#262C34), la nº 847 sur celui des cartes (#1A1F26) ; le
+ * propriétaire a vu les deux et tranche à la nº 848 : le premier est trop
+ * clair, le second trop sombre. C'est donc LE BARREAU DU MILIEU, déclaré
+ * dans la charte pour ce besoin (`carteClair`, #20262D — config/tatouage,
+ * `COULEURS_SOMBRE`, où le calcul est écrit). Aucune valeur n'est
+ * fabriquée au point d'usage : l'échelle en compte un de plus, et tout le
+ * site peut s'en servir.
  * ⚠️ POURQUOI LE PLEIN EST AUX ACTIONS ET LE CONTOUR À L'INFORMATION :
  * c'est la règle que le site s'est donnée à la nº 844 en vidant le badge
  * du type (« le contour seul sert à RENSEIGNER, pas à signaler un
@@ -56,11 +66,86 @@ import { ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * gauche comme une étiquette.
  */
 
-/** §3 (nº 847) — LA TYPOGRAPHIE DE LA RANGÉE, la même pour les deux
-    robes : demi-gras (inchangé depuis la nº 846), corps monté d'un cran
-    — 14 → 15 px. Écrite une fois, lue par le compte et par les
-    filtres. */
-const ECRITURE_BADGE = "text-[15px] font-semibold text-sombre-texte";
+/**
+ * ██ §3c-§5 (nº 848) — LA TYPOGRAPHIE DE LA RANGÉE ██
+ * ------------------------------------------------------------------
+ * Écrite une fois, lue par le compte comme par les filtres. Ce qui
+ * change à la nº 848 :
+ *  · LE CORPS MONTE ENCORE, AU WEB SEULEMENT (§3c) : 15 → 16 px — « ils
+ *    sont trop petits à l'échelle du web ». Le doigt garde ses 15,
+ *    posés à la nº 847 ; sa rangée n'a pas la même largeur d'écran ;
+ *  · LA GRAISSE DESCEND (§5) : 600 → 500 — « le demi-gras paraît trop
+ *    lourd ». `font-medium`, sur les deux appareils.
+ *
+ * ██ ET L'INTERLIGNE EST POSÉ, CE QUI N'ÉTAIT PAS LE CAS ██
+ * C'est la pièce qui rend l'air ÉGAL mesurable (§2) : sans elle, la
+ * boîte de ligne vaut « normal » — 1,5 fois le corps, soit 22,5 px au
+ * doigt : un demi-pixel que rien ne rattrape, et une hauteur de badge
+ * qui ne tombe jamais juste. Avec 22 (doigt) et 24 (web), la boîte du
+ * texte est un NOMBRE ENTIER, la croix prend exactement la même, et les
+ * quatre airs du badge valent le même nombre.
+ * ⚠️ DEUX VARIANTES QUI S'EXCLUENT, AUCUNE CLASSE DE BASE (piège
+ * nº 389) : `mobile:` est le vrai appareil (règle nº 60), `not-mobile:`
+ * son exact complément — rien à départager par l'ordre de la feuille.
+ */
+const ECRITURE_BADGE =
+  "mobile:text-[15px] not-mobile:text-[16px] " +
+  "mobile:leading-[22px] not-mobile:leading-[24px] " +
+  "font-medium text-sombre-texte";
+
+/**
+ * ██ §2-§3b (nº 848) — L'AIR INTÉRIEUR, ÉGAL SUR LES QUATRE CÔTÉS ██
+ * ------------------------------------------------------------------
+ * LE PROPRIÉTAIRE : « l'air doit être ÉGAL sur tout le contour : à
+ * gauche du texte = à droite de la croix = au-dessus = au-dessous du
+ * texte (une seule valeur) », au doigt (§2) comme au web (§3b).
+ * C'EST LA RÈGLE nº 497 DU SITE, MOT POUR MOT, et elle est déjà écrite
+ * — pour les plaques : « DANS UNE PLAQUE, L'AIR INTÉRIEUR EST LE MÊME
+ * EN HAUT, EN BAS, À GAUCHE ET À DROITE. Un seul nombre, sur les quatre
+ * côtés » (components/plaque). Les badges de cette rangée la prennent à
+ * leur tour.
+ *
+ * LA VALEUR : DIX PIXELS, un cran de l'échelle. Elle se choisit entre
+ * deux bornes, et les deux sont mesurées :
+ *  · l'air HORIZONTAL valait 12 à gauche (nº 846) — descendre plus bas
+ *    que 10 le rendrait plus serré qu'avant, alors qu'on nous demande
+ *    d'aérer ;
+ *  · l'air VERTICAL valait (30 − 22,5) / 2 = 3,75 px : c'est LUI le
+ *    « trop compact », et c'est lui qui monte à 10.
+ * LA HAUTEUR SUIT, et le propriétaire l'a prévu : 10 + 22 + 10, plus le
+ * contour d'un pixel en haut et en bas, fait 44 au doigt ; 10 + 24 + 10
+ * + 2 fait 46 au web (contre 30 partout à la nº 847).
+ * ⚠️ LE CONTOUR COMPTE DANS LA HAUTEUR DES DEUX ROBES, et c'est pourquoi
+ * les badges PLEINS en portent un TRANSPARENT (voir leur note) : sans
+ * lui, ils seraient de deux pixels plus courts que le badge du compte, et
+ * la rangée cesserait d'être une rangée.
+ * ⚠️ LE SQUELETTE D'ATTENTE SUIT AUSSI (SquelettesDePage) : il promet
+ * ces deux hauteurs-là, sans quoi la page sauterait à chaque arrivée —
+ * le banc nº 845 le mesure.
+ * ⚠️ `p-2.5` ET RIEN D'AUTRE : une seule déclaration de rembourrage,
+ * jamais quatre à tenir d'accord (piège nº 389).
+ */
+const AIR_BADGE = "p-2.5";
+
+/**
+ * ██ §2-§3b (nº 848) — LA CROIX PREND LA BOÎTE DE LA LIGNE DE TEXTE ██
+ * ------------------------------------------------------------------
+ * POURQUOI ELLE NE PEUT PAS ÊTRE PLUS GRANDE : si sa boîte dépassait
+ * celle du texte, la rangée intérieure serait plus haute que le texte,
+ * et l'air AU-DESSUS DU TEXTE ne vaudrait plus l'air à sa gauche — la
+ * consigne serait fausse d'exactement la moitié de l'écart. Elle vaut
+ * donc 22 px au doigt et 24 au web, la boîte de ligne posée juste
+ * au-dessus.
+ * ⚠️ LE DESSIN, LUI, GRANDIT (§3c) : 16 px au doigt (inchangé), 18 au
+ * web — un cran de plus que la nº 847. La boîte se resserre autour de
+ * lui (trois pixels de vide de chaque côté) ; ce n'est pas elle qu'on
+ * vise, c'est LE BADGE ENTIER, large de 90 px au moins.
+ * ⚠️ LA TAILLE DU GLYPHE EST UNE CLASSE, PAS UN ATTRIBUT, pour le web :
+ * `taille` est un nombre, il ne connaît pas l'appareil. C'est l'écriture
+ * du site pour ce cas précis (`DESSIN_GESTE_BARRE`, lib/reserve-barre).
+ */
+const CROIX_BADGE =
+  "mobile:h-[22px] mobile:w-[22px] not-mobile:h-[24px] not-mobile:w-[24px]";
 
 /** UN FILTRE AFFICHÉ : ce qu'il dit, et ce que sa croix retire. */
 export type FiltreAffiche = {
@@ -84,10 +169,17 @@ export function FiltresActifs({
   return (
     <div
       data-filtres-actifs=""
-      /*  §4 (nº 846-847) — L'AIR AU-DESSUS EST CELUI DU SOUS-TITRE que
-          cette rangée remplace (`mt-1` au doigt, `mt-1.5` au web —
-          LigneResultats, nº 628) : elle se pose exactement là où la ligne
-          de texte se posait, et le bloc de tête ne change pas de rythme.
+      /*  §3a (nº 848) — L'AIR AU-DESSUS N'EST PLUS ÉCRIT ICI ██
+          La nº 846 lui donnait la marge du SOUS-TITRE qu'elle remplaçait
+          (4 px au doigt, 6 au web — LigneResultats, nº 628) : l'écart
+          qui séparait ce sous-titre du TITRE au-dessus de lui. Depuis la
+          nº 847, il n'y a plus de titre — cette rangée est seule dans le
+          bloc, et sa marge ne faisait plus qu'ALLONGER le rembourrage du
+          bloc, à l'insu de qui lisait le rythme. C'est ce que le
+          propriétaire voit au web (« trop grand, déséquilibré »).
+          TOUT L'AIR AU-DESSUS EST DONC AU BLOC, en une seule
+          déclaration : `RYTHME_TITRE_BADGES` (LigneResultats), qui pose
+          24 px au web et 16 au doigt — le doigt ne bouge pas d'un pixel.
 
           ██ §4 (nº 847) — AU DOIGT, ELLE GLISSE ; AU WEB, ELLE SE REPLIE ██
           LE PROPRIÉTAIRE : « si la rangée dépasse la largeur, elle GLISSE
@@ -113,7 +205,7 @@ export function FiltresActifs({
           ⚠️ ET LE GLISSEMENT NE PEUT PAS DÉBORDER LA PAGE : le rognage
           s'arrête au bord de l'écran, jamais au-delà — aucun défilement
           horizontal du document. */
-      className="mobile:mt-1 not-mobile:mt-1.5 flex items-center gap-2
+      className="flex items-center gap-2
                  mobile:flex-nowrap mobile:overflow-x-auto mobile:-mx-4
                  mobile:px-4 mobile:[scrollbar-width:none]
                  mobile:[&::-webkit-scrollbar]:hidden
@@ -129,7 +221,7 @@ export function FiltresActifs({
            rien qui laisse croire qu'on peut le toucher. */}
       <h1
         data-badge-compte=""
-        className={`${ROBE_BADGE_CONTOUR} px-3.5 ${ECRITURE_BADGE}`}
+        className={`${ROBE_BADGE_CONTOUR} ${AIR_BADGE} ${ECRITURE_BADGE}`}
       >
         {compte}
       </h1>
@@ -137,35 +229,51 @@ export function FiltresActifs({
         <span
           key={filtre.cle}
           data-filtre-actif={filtre.cle}
-          /*  §5 (nº 847) — `bg-sombre-carte` : UN CRAN PLUS SOMBRE que
-              l'ancien `bg-sombre-eleve`, et c'est un barreau de l'échelle,
-              pas une teinte inventée (voir la note en tête de fichier).
-              §3 (nº 847) — le rembourrage de droite suit la croix, qui a
-              grandi : (30 − 26) / 2 = 2 px de part et d'autre. */
-          className={`inline-flex min-h-[30px] shrink-0 items-center gap-1.5
-                     whitespace-nowrap rounded-lg bg-sombre-carte pl-3 pr-0.5
-                     ${ECRITURE_BADGE}`}
+          /*  ██ §1 (nº 848) — LE FOND PREND LE BARREAU DU MILIEU ██
+              La nº 846 les posait sur `bg-sombre-eleve` (#262C34,
+              luminosité 43,3), la nº 847 sur `bg-sombre-carte` (#1A1F26,
+              30,4) ; le propriétaire trouve l'un trop clair et l'autre
+              trop sombre. Le barreau intermédiaire est DÉCLARÉ dans la
+              palette (`carteClair`, #20262D, luminosité 37,23 — le milieu
+              exact des deux, canal par canal) : le calcul et le pourquoi
+              vivent avec la valeur, dans config/tatouage.
+              §2 (nº 848) — L'AIR EST ÉGAL SUR LES QUATRE CÔTÉS
+              (`AIR_BADGE`), et l'écart entre le texte et la croix est le
+              cran d'en dessous (6 px) : c'est un écart INTÉRIEUR, il n'a
+              pas à valoir l'air du contour.
+              ⚠️ LE CONTOUR TRANSPARENT N'EST PAS UN ORNEMENT : le badge
+              du compte porte un trait d'un pixel (sa robe partagée), qui
+              entre dans sa hauteur. Sans le même anneau ici, ces
+              badges-ci seraient de deux pixels plus courts que lui et la
+              rangée serait bancale. Il ne se voit pas — l'aplat est peint
+              sous lui (le rognage de fond va jusqu'au bord du contour) —
+              et il ne change pas l'air intérieur, qui reste le
+              rembourrage, égal sur les quatre côtés. */
+          className={`inline-flex shrink-0 items-center gap-1.5
+                     whitespace-nowrap rounded-lg border border-transparent
+                     bg-sombre-carte-clair
+                     ${AIR_BADGE} ${ECRITURE_BADGE}`}
         >
           {filtre.libelle}
-          {/*  §3 (nº 847) — LA CROIX GRANDIT AVEC LE TEXTE : le glyphe
-               passe de 14 à 16 px, sa boîte de 24 à 26 — chacun d'un cran
-               sur sa propre échelle, comme le corps du texte. La boîte
-               reste sous les 30 px du badge : sa hauteur ne bouge pas,
-               et le squelette d'attente qui la promet non plus
-               (SquelettesDePage, nº 846). */}
+          {/*  §2-§3c (nº 848) — LA CROIX : sa boîte vaut celle de la
+               ligne de texte, son dessin monte d'un cran au web. Le
+               pourquoi complet est écrit avec `CROIX_BADGE`, plus haut. */}
           <button
             type="button"
             data-retrait-filtre={filtre.cle}
             aria-label={filtre.etiquetteRetrait}
             onClick={filtre.surRetrait}
-            className="flex h-[26px] w-[26px] shrink-0 items-center
+            className={`flex ${CROIX_BADGE} shrink-0 items-center
                        justify-center rounded-md text-sombre-texte-doux
                        transition-colors hover:text-sombre-texte
                        hover:bg-sombre-eleve active:bg-sombre-eleve
                        focus-visible:outline-2 focus-visible:outline-offset-2
-                       focus-visible:outline-primaire"
+                       focus-visible:outline-primaire`}
           >
-            <IconeCroix taille={16} />
+            <IconeCroix
+              taille={16}
+              classe="not-mobile:h-[18px] not-mobile:w-[18px]"
+            />
           </button>
         </span>
       ))}

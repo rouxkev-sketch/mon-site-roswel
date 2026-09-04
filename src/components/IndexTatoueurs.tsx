@@ -58,7 +58,7 @@ import { laNavigationRemplaceLEtape } from "@/lib/etape-refermable";
 import { LigneResultats } from "@/components/LigneResultats";
 //  §3-§4 (nº 846) — la puce du site (« 15 portfolios • 9 styles »,
 //  « Austin, TX • 25 mi »), et les badges de filtre sous le compte.
-import { SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
+import { SEPARATEUR_FIN, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
 import {
   FiltresActifs,
   type FiltreAffiche,
@@ -1400,9 +1400,20 @@ export function IndexTatoueurs({
           }
           if (affiches.lieu) {
             /*  ██ LE LIEU ET SON RAYON, D'UN SEUL TENANT ██
-                « Austin, TX • 25 mi » — exactement l'exemple du
-                propriétaire, et sans qu'une écriture ait été ajoutée. Le
-                séparateur est la puce du site (nº 846-§3).
+                « Austin, TX · 25 mi » — l'exemple du propriétaire, au
+                séparateur près.
+                ██ §4 (nº 848) — LA PUCE CÈDE AU POINT MÉDIAN ██
+                LE PROPRIÉTAIRE : « le gros point est trop grand ; utiliser
+                le point médian fin, avec un espace de chaque côté ». La
+                nº 846 avait pris la puce du site (`SEPARATEUR_GALERIE`),
+                celle des fiches ; à l'intérieur d'un badge, entre deux
+                bouts d'une même adresse, elle pèse trop. C'est
+                `SEPARATEUR_FIN` (lib/photos-tatoueur), le point médian
+                déjà employé par les sous-titres de carte — pas un
+                caractère écrit à la main ici (piège nº 378).
+                ⚠️ LA PUCE N'EST PAS TOUCHÉE AILLEURS : elle sépare
+                toujours « Realism • Black and grey » sur les fiches et
+                les deux comptes sous le titre de l'accueil.
                 ⚠️ LE LIEU EST CELUI QUE LE SOUS-TITRE ÉCRIVAIT DÉJÀ
                 (`lieu`, calculé plus haut par `ligneCarte`) : on ne le
                 recalcule pas, on le déplace. Le site possède CINQ
@@ -1419,7 +1430,7 @@ export function IndexTatoueurs({
                 C'est la même écriture, avec ce qu'elle a. */
             const libelleLieu = [lieu, rayon]
               .filter(Boolean)
-              .join(SEPARATEUR_GALERIE);
+              .join(SEPARATEUR_FIN);
             filtres.push({
               cle: "lieu",
               libelle: libelleLieu,

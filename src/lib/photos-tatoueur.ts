@@ -323,6 +323,24 @@ export function partiesDeGalerie(
     seule fois pour les deux lectures (la chaîne et les morceaux). */
 export const SEPARATEUR_GALERIE = " • ";
 
+/**
+ * ██ §4 (nº 848) — LE SÉPARATEUR FIN : LE POINT MÉDIAN ██
+ * ------------------------------------------------------------------
+ * LE PROPRIÉTAIRE, sur le badge de localité (« Paris • 25 mi ») : « le
+ * gros point est trop grand ; utiliser le point médian fin “ · ”, avec
+ * un espace de chaque côté ».
+ * LE SITE ÉCRIVAIT DÉJÀ CES TROIS CARACTÈRES, à la main, dans le
+ * sous-titre des cartes (`sousTitreDeCarte`, juste en dessous) : ils
+ * sont posés ici, à côté de la puce, et les deux porteurs les lisent au
+ * même endroit. Aucun caractère ne change nulle part — c'est la même
+ * chaîne, écrite une fois au lieu de deux (piège nº 378).
+ * ⚠️ LA PUCE (`SEPARATEUR_GALERIE`) N'EST PAS TOUCHÉE, et c'est le
+ * point : elle sépare toujours « Realism • Black and grey » sur les
+ * fiches et « 15 portfolios • 9 styles » sous le titre de l'accueil.
+ * Le propriétaire ne parle que du badge de localité.
+ */
+export const SEPARATEUR_FIN = " · ";
+
 export function titreDeGalerie(
   label: string | null | undefined,
   rendu: string | null | undefined
