@@ -2,12 +2,13 @@
 //  Les quatre corrections du fil mobile :
 //   1. le badge « Follow » suit et ne suit plus, l'état vérifié EN BASE
 //      (le défaut était une route morte depuis la nº 836 — ce banc la
-//      rattrape : il regarde aussi les réponses d'erreur) ;
+//      rattrape : il regarde aussi les réponses d'erreur). ⚠️ Mesuré SUR
+//      LE PROFIL depuis la nº 843, qui a retiré « Follow » du fil ;
 //   2. la carte défilée jusqu'à sa quatrième photo la retrouve au retour
 //      d'un profil, et un rechargement de document repart de zéro ;
-//   3. « Nom · Type » en titre (nom demi-gras blanc, type normal gris,
-//      insécable, qui passe à la ligne sur un nom long) et la ville
-//      seule en sous-titre — au doigt, au web et sur la plaque du profil ;
+//   3. le titre et le sous-titre, au doigt, au web et sur la plaque —
+//      ⚠️ à la règle de la nº 843 : le NOM SEUL en titre, sur une ligne,
+//      et le type dans le badge (fil) ou devant la ville (web, plaque) ;
 //   4. le pied à trois places, et le fanion qui enregistre LA PHOTO
 //      AFFICHÉE (vérifié en base).
 //  L'atelier attendu est décrit dans `banc-socle.mjs`.
@@ -45,16 +46,21 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
   const echecs = [];
   page.on("response", (r) => { if (/\/api\/yokofolio\/favoris\//.test(r.url()) && r.status() >= 400) echecs.push(`${r.status()} ${r.url().replace(BASE, "")}`); });
   try {
-    titre("842 · le badge « Follow » du fil : suivre, puis ne plus suivre");
-    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
+    /*  ██ §1 (nº 843) — « FOLLOW » A QUITTÉ LE FIL ██
+        Le badge du type a pris sa place (banc 843) ; le suivi se décide
+        désormais sur le profil. C'est donc LÀ qu'on mesure ce que la
+        nº 842 a réparé — la route morte depuis la nº 836 : le parcours
+        est le même, l'écriture aussi (`ecrireFavori`), seule la page
+        change. */
+    titre("842 · le badge « Follow » du profil : suivre, puis ne plus suivre");
+    await page.goto(`${BASE}/artist/${T}?entree=lien`, { waitUntil: "networkidle" });
     await page.waitForTimeout(2000);
-    await page.locator(CARTE).scrollIntoViewIfNeeded();
-    const badge = page.locator(`${CARTE} [data-en-tete-de-fil] button`);
-    const etat = () => page.evaluate((SEL) => {
-      const b = document.querySelector(SEL + " [data-en-tete-de-fil] button");
+    const badge = page.locator('button[aria-label*="ollow Banc 842"]').first();
+    const etat = () => page.evaluate(() => {
+      const b = [...document.querySelectorAll("button")].find((x) => /ollow Banc 842/.test(x.getAttribute("aria-label") ?? ""));
       const s = getComputedStyle(b);
       return { libelle: b.getAttribute("aria-label"), presse: b.getAttribute("aria-pressed"), fond: s.backgroundColor };
-    }, CARTE);
+    });
     const avant = await etat();
     verif("au départ : « Follow », non pressé", avant.libelle === "Follow Banc 842" && avant.presse === "false", JSON.stringify(avant));
     await badge.tap();
@@ -69,6 +75,10 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     const repris = await etat();
     verif("un second toucher NE SUIT PLUS : le badge revient à « Follow »", repris.libelle === "Follow Banc 842" && repris.presse === "false", JSON.stringify(repris));
     verif("EN BASE : le suivi est retiré", (await lire("tatoueurs_suivis", `utilisateur_id=eq.${U.id}`)).length === 0);
+    verif("et le fil n'a plus aucun « Follow » (nº 843)", await page.evaluate(() => { const c = document.querySelector("[data-en-tete-de-fil]"); return !c || [...c.querySelectorAll("button")].every((b) => !/follow/i.test(b.getAttribute("aria-label") ?? "")); }));
+    await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1800);
+    await page.locator(CARTE).scrollIntoViewIfNeeded();
     //  ── le fanion du pied enregistre LA PHOTO AFFICHÉE ──────────────
     titre("842 · le fanion du pied enregistre la photo affichée");
     const glisser = async (pas) => {
@@ -152,17 +162,20 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
 }
 
 //  ══ 3 · LE TITRE, LE SOUS-TITRE, LE PIED ═════════════════════════════
+/*  §1 (nº 843) — LE TITRE EST REDEVENU LE NOM SEUL : la graisse et la
+    couleur se lisent donc sur LE BLOC LUI-MÊME, et non plus sur un
+    `<span>` intérieur (le type, qui les portait, est parti dans le
+    badge). Les lignes se comptent par la hauteur rendue, avec le repli
+    1,2 × le corps quand la feuille dit « normal ». */
 const mesureTitre = `(bloc) => {
-  const spans = [...bloc.querySelectorAll("span")];
-  const nom = spans.find((s) => getComputedStyle(s).fontWeight >= 600 && !s.querySelector("span"));
-  const type = spans.find((s) => /·/.test(s.textContent) && !s.querySelector("span"));
-  const st = type && getComputedStyle(type);
-  const sn = nom && getComputedStyle(nom);
+  const s = getComputedStyle(bloc);
+  const hauteurLigne = parseFloat(s.lineHeight) || parseFloat(s.fontSize) * 1.2;
+  const h = bloc.getBoundingClientRect().height;
   return {
-    texte: bloc.textContent.trim().replace(/\\s+/g, " "),
-    nom: nom?.textContent, nomGraisse: sn?.fontWeight, nomCouleur: sn?.color,
-    type: type?.textContent.trim(), typeGraisse: st?.fontWeight, typeCouleur: st?.color, typeInsecable: st?.whiteSpace,
-    lignes: Math.round(bloc.getBoundingClientRect().height / parseFloat(getComputedStyle(bloc).lineHeight)),
+    texte: bloc.textContent.trim(),
+    nomGraisse: s.fontWeight,
+    nomCouleur: s.color,
+    lignes: h ? Math.round(h / hauteurLigne) : 0,
   };
 }`;
 {
@@ -181,18 +194,17 @@ const mesureTitre = `(bloc) => {
       t.sousTitreCouleur = getComputedStyle(sous).color;
       return t;
     }, { SEL: CARTE, M: mesureTitre });
-    verif("le titre dit « Nom · Type »", m.texte === "Banc 842 · Private Studio", m.texte);
-    verif("le nom est demi-gras, au blanc du site", Number(m.nomGraisse) >= 600 && m.nomCouleur === "rgb(242, 242, 244)", `${m.nomGraisse} · ${m.nomCouleur}`);
-    verif("le type est en graisse NORMALE et en gris", Number(m.typeGraisse) === 400 && m.typeCouleur !== m.nomCouleur, `${m.typeGraisse} · ${m.typeCouleur}`);
-    verif("le type est insécable (il ne se coupe jamais)", m.typeInsecable === "nowrap", m.typeInsecable);
-    verif("le sous-titre ne porte QUE la ville", m.sousTitre === "Lyon, FR" && m.sousTitreCouleur === m.typeCouleur, `${m.sousTitre} · ${m.sousTitreCouleur}`);
+    //  §1 (nº 843) — le TYPE est parti dans le badge : ici, le nom seul.
+    verif("le titre est le nom seul, demi-gras, au blanc du site", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600 && m.nomCouleur === "rgb(242, 242, 244)", `${m.texte} · ${m.nomGraisse} · ${m.nomCouleur}`);
+    verif("le sous-titre ne porte QUE la ville", m.sousTitre === "Lyon, FR", m.sousTitre);
     verif("sur un nom court, le titre tient sur une ligne", m.lignes === 1, `${m.lignes} ligne(s)`);
     await page.locator(CARTELONG).scrollIntoViewIfNeeded();
     const ml = await page.evaluate(({ SEL, M }) => {
       const f = new Function("return " + M)();
       return f(document.querySelector(SEL + " [data-lien-profil-de-fil] > span:nth-child(2) > span:first-child"));
     }, { SEL: CARTELONG, M: mesureTitre });
-    verif("SUR UN NOM LONG, le type passe à la ligne — entier, jamais coupé", ml.lignes === 2 && ml.type === "· Private Studio", `${ml.lignes} ligne(s) · « ${ml.type} »`);
+    //  §2 (nº 843) — un nom long ne passe plus à la ligne : il est COUPÉ.
+    verif("SUR UN NOM LONG, le titre reste sur UNE ligne (nº 843)", ml.lignes === 1, `${ml.lignes} ligne(s)`);
 
     titre("842 · le pied : signaler à gauche, les points au centre, partage puis fanion à droite");
     const pied = await page.evaluate((SEL) => {
@@ -240,15 +252,15 @@ const mesureTitre = `(bloc) => {
       t.sousTitreCouleur = getComputedStyle(p).color;
       return t;
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${T}"])`, M: mesureTitre });
-    verif("le titre dit « Nom · Type »", m.texte === "Banc 842 · Private Studio", m.texte);
-    verif("le nom demi-gras et blanc, le type normal et gris", Number(m.nomGraisse) >= 600 && Number(m.typeGraisse) === 400 && m.typeCouleur !== m.nomCouleur, `${m.nomGraisse}/${m.typeGraisse}`);
-    verif("le type est insécable", m.typeInsecable === "nowrap");
-    verif("le sous-titre ne porte QUE la ville", m.sousTitre === "Lyon, FR" && m.sousTitreCouleur === m.typeCouleur, m.sousTitre);
+    //  §1 (nº 843) — le titre redevient le nom seul, et le type redescend
+    //  devant la ville (la carte du web ne prend pas le badge).
+    verif("le titre est le nom seul, demi-gras et blanc", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
+    verif("le sous-titre porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
     const ml = await page.evaluate(({ SEL, M }) => {
       const f = new Function("return " + M)();
       return f(document.querySelector(SEL + " h3"));
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${LONG}"])`, M: mesureTitre });
-    verif("un nom long fait descendre le type, entier", ml.lignes === 2 && ml.type === "· Private Studio", `${ml.lignes} ligne(s) · « ${ml.type} »`);
+    verif("un nom long tient sur une ligne", ml.lignes === 1, `${ml.lignes} ligne(s)`);
   } catch (e) {
     verif("déroulement du banc 842 (web)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -267,9 +279,11 @@ const mesureTitre = `(bloc) => {
       t.sousTitre = bloc.querySelector(":scope > span:nth-child(2)").textContent.trim();
       return t;
     }, mesureTitre);
-    verif("la plaque dit « Nom · Type »", m.texte === "Banc 842 · Private Studio", m.texte);
-    verif("le nom demi-gras, le type normal et gris", Number(m.nomGraisse) >= 600 && Number(m.typeGraisse) === 400 && m.typeCouleur !== m.nomCouleur, `${m.nomGraisse}/${m.typeGraisse}`);
-    verif("sa ligne du dessous ne porte QUE la ville", m.sousTitre === "Lyon, FR", m.sousTitre);
+    //  §1 (nº 843) — nom seul en titre, « Type · Ville » dessous.
+    //  (Le banc 843 constate par ailleurs que cette plaque ne s'affiche
+    //  plus nulle part depuis la nº 841 : son écriture reste tenue.)
+    verif("la plaque dit le nom seul, demi-gras", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
+    verif("sa ligne du dessous porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
   } catch (e) {
     verif("déroulement du banc 842 (plaque)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

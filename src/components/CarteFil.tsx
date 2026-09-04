@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { AvatarRond } from "@/components/AvatarRond";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
-import { BoutonSuivre } from "@/components/BoutonSuivre";
 import { PointsDuCarrousel } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { villeAffichee, type LieuAffichable } from "@/lib/adresse";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import { TitreDeCarte } from "@/components/TitreDeCarte";
+import { BadgeTypeDeFiche } from "@/components/BadgeTypeDeFiche";
 import { ligneDeLieuDeCarte } from "@/lib/photo-tatoueur";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
@@ -28,15 +27,17 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *
  * LA CARTE, DE HAUT EN BAS :
  *  a. L'EN-TÊTE (ici, `EnTeteDeFil`) : l'avatar à gauche ; à sa droite
- *     le TITRE — « Mara Voss · Private Studio », le nom en gras blanc et
- *     le type en gris (nº 842, components/TitreDeCarte) — et le
- *     SOUS-TITRE, la ville seule (`ligneDeLieuDeCarte`) ; les deux
- *     écritures sont partagées avec la carte du web et la plaque du
- *     profil ; à droite, face à l'avatar, le badge « Follow »
- *     (`BoutonSuivre`, le badge existant, mêmes états). Avatar, titre et
- *     sous-titre sont UN SEUL lien, vers LE PROFIL (`adresseDeLienInterne`
- *     — l'adresse que la plaque du profil et les liens internes écrivent
- *     déjà) ;
+ *     le TITRE — LE NOM SEUL, en gras blanc (nº 843) — et le SOUS-TITRE,
+ *     la ville seule (`ligneDeLieuDeCarte`) ; à droite, face à l'avatar,
+ *     LE BADGE DU TYPE (nº 843, `BadgeTypeDeFiche` : « Private Studio »,
+ *     contour fin, un lien vers le profil). Avatar, titre et sous-titre
+ *     sont UN SEUL lien, vers LE PROFIL (`adresseDeLienInterne` —
+ *     l'adresse que la plaque du profil et les liens internes écrivent
+ *     déjà) ; le badge en est un second, voisin, vers la même
+ *     destination.
+ *     ⚠️ « FOLLOW » A QUITTÉ LE FIL À LA nº 843 (décision du
+ *     propriétaire) : on décide de suivre quelqu'un qu'on est venu voir,
+ *     donc sur son profil — où le badge est resté, intact ;
  *  b. L'IMAGE (chez la carte, CarteTatoueur) : pleine largeur, encadré
  *     fixe ; les photos de l'ensemble GLISSENT au doigt — défilement
  *     natif avec accrochage par photo, `CarrouselPortfolio` en variante
@@ -63,7 +64,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * l'hydratation. Ce que cela coûte est dit chez la carte.
  */
 
-/** L'EN-TÊTE DU FIL — avatar · nom · sous-titre, puis « Follow ». */
+/** L'EN-TÊTE DU FIL — avatar, nom, ville, puis le badge du type. */
 export function EnTeteDeFil({
   tatoueur,
   lieu,
@@ -101,33 +102,33 @@ export function EnTeteDeFil({
         <span className="min-w-0 flex-1">
           {/*  LE NOM ET SA LIGNE : la typographie de la plaque du profil
                (nº 555 pour le nom à 16 px, nº 455 pour la ligne à
-               14,5) — le même texte, lu au même endroit du parcours. */}
-          {/*  ██ §3 (nº 842) — « Mara Voss · Private Studio », puis la
-               ville seule ██
-               Le type monte du sous-titre à la ligne du titre (la règle
-               entière : components/TitreDeCarte). LE ROGNAGE D'UNE
-               LIGNE PART D'ICI : `truncate` aurait fait disparaître le
-               type au lieu de le faire descendre. Deux lignes au plus,
-               et le type ne se coupe jamais. */}
-          {/*  ⚠️ PAS DE `block` AVEC `line-clamp-2` (piège nº 389) : le
-               rognage POSE DÉJÀ un `display` à lui, et deux
-               déclarations de la même propriété se départagent à
-               l'ordre de la feuille — mesuré, `block` gagnait et le
-               titre filait sur trois lignes. */}
-          <span className="line-clamp-2 text-[16px] leading-tight text-sombre-texte">
-            <TitreDeCarte tatoueur={tatoueur} />
+               14,5) — le même texte, lu au même endroit du parcours.
+               ██ §2 (nº 843) — CHACUNE TIENT SUR UNE SEULE LIGNE ██
+               Décision du propriétaire : le nom et la ville ne passent
+               JAMAIS à la ligne. Trop longs, ils sont COUPÉS par des
+               points de suspension (`truncate`), et le badge du type
+               reste entier à droite — c'est lui qui ne cède pas
+               (`shrink-0`, chez lui).
+               ⚠️ LES DEUX BOÎTES QUI RENDENT LA COUPE POSSIBLE : le
+               `min-w-0` de cette colonne (sans lui, une boîte de
+               flexion refuse de descendre sous la largeur de son
+               texte, et déborde au lieu de couper) et le `truncate` de
+               chaque ligne. Le badge, lui, garde sa largeur : la
+               colonne cède la première. */}
+          <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
+            {tatoueur.nom}
           </span>
           <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
             {ligneDeLieuDeCarte(lieu)}
           </span>
         </span>
       </Link>
-      {/*  LE BADGE « FOLLOW » — le composant des fiches, tel quel : ses
-           états (attente muette, Follow, Following), son invitation à
-           créer un compte, son écriture de favori. Il est HORS du lien
-           (un bouton dans un lien est interdit, nº 517) et ne rend rien
-           pour une fiche de démonstration (`estIdentifiantDeBase`). */}
-      <BoutonSuivre tatoueurId={tatoueur.id} nomTatoueur={tatoueur.nom} />
+      {/*  ██ §1 (nº 843) — LE BADGE DU TYPE, À LA PLACE DE « FOLLOW » ██
+           Sa robe, sa boîte et sa destination sont écrites chez lui
+           (components/BadgeTypeDeFiche). Il est HORS du lien de
+           l'en-tête — deux liens voisins vers le profil, jamais l'un
+           dans l'autre (nº 517). */}
+      <BadgeTypeDeFiche tatoueur={tatoueur} />
     </div>
   );
 }

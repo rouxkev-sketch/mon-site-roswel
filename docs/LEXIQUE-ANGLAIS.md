@@ -333,6 +333,18 @@ Aucune phrase neuve : la carte du fil réemploie mot pour mot les
 > (« Artist: Lyon, FR », `APRES_LE_TYPE`) : la nº 842 ne parle que des
 > cartes et de la plaque du profil.
 
+### Ajouts de la 843 (le badge du type)
+
+| Français | Anglais | Note |
+|---|---|---|
+| le badge du type, dans le fil du doigt | **Artist** · **Private Studio** · **Tattoo Shop** | `components/BadgeTypeDeFiche` — les trois libellés de la table 1, inchangés ; contour fin, fond de l'interface, et c'est un LIEN vers le profil |
+| le titre d'une carte | **Mara Voss** — le nom seul | le type l'a quitté (nº 843) : il est dans le badge au doigt, devant la ville au web |
+| le sous-titre d'une carte du web et de la plaque | **Private Studio · Lyon, FR** | `sousTitreDeCarte` (lib/photo-tatoueur), l'écriture partagée des deux porteurs qui n'ont pas la place d'un badge |
+
+> **« Follow » a quitté le fil** (nº 843) et reste sur le profil, où
+> l'on décide de suivre quelqu'un qu'on est venu voir. Ses libellés ne
+> changent pas.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

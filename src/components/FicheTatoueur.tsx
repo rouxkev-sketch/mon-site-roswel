@@ -69,6 +69,7 @@ import {
   ouvertureSurUnePhoto,
   serieDeLOuverture,
   serieMontree,
+  sousTitreDeCarte,
 } from "@/lib/photo-tatoueur";
 //  §3 (nº 304) — TROIS IMPORTS SONT PARTIS AVEC `surToucherDeLaPhoto`
 //  (`RENDU_PAR_DEFAUT`, `ensembleDeLaPhoto`, `natureConnue`), et
@@ -83,7 +84,6 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AvatarRond } from "@/components/AvatarRond";
-import { TitreDeCarte } from "@/components/TitreDeCarte";
 //  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
 //  unique du site : la vue photo attend que l'adresse soit commise
 //  avant de poser la page en haut (voir `surSerieChoisie`).
@@ -1411,32 +1411,31 @@ export function FicheTatoueur({
                        garde le nom sur UNE ligne avec ses points de
                        suspension — deux ou trois caractères de moins y
                        tiennent, rien d'autre ne bouge. */}
-                  {/*  ██ §3 (nº 842) — « Mara Voss · Private Studio » ██
-                       Le TYPE monte de la ligne du dessous à celle du
-                       titre, comme sur les cartes : la même règle, la
-                       même écriture (components/TitreDeCarte). LE
-                       ROGNAGE D'UNE LIGNE PART D'ICI (`truncate`), et
-                       il le faut : il aurait coupé le type au lieu de
-                       le laisser descendre. Deux lignes au plus.
-                       ⚠️ LA PLAQUE N'A PAS DE PLANCHER (voir la note de
-                       la nº 555) : sa hauteur suit son contenu, un nom
-                       long la fait grandir d'une ligne — c'est déjà ce
-                       qu'elle faisait d'un pixel et quart à la nº 555. */}
-                  {/*  ⚠️ PAS DE `block` AVEC `line-clamp-2` (piège nº 389) : le
-                       rognage pose déjà son `display`. */}
-                  <span className="line-clamp-2 text-[16px] leading-tight text-sombre-texte">
-                    <TitreDeCarte tatoueur={tatoueur} />
+                  {/*  ██ §1 (nº 843) — LE NOM SEUL, SUR UNE LIGNE ██
+                       Le TYPE était monté ici à la nº 842 ; il redescend
+                       à la ligne du dessous. Cette plaque ne prend pas
+                       le badge du fil : elle EST DÉJÀ un lien vers le
+                       profil, tout entière, et elle porte son chevron —
+                       le pourquoi complet vit chez `sousTitreDeCarte`
+                       (lib/photo-tatoueur). Le rognage d'une ligne
+                       revient donc, et la plaque retrouve la hauteur
+                       qu'elle avait avant la nº 842. */}
+                  <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
+                    {tatoueur.nom}
                   </span>
                   {/*  §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE :
                        « Artiste: Lyon, France ». C'était la règle du
                        propriétaire, celle des cartes (CarteTatoueur) et
                        des portfolios suivis (lib/selection-suivis).
-                       ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE, comme
-                       sur les cartes : le type est monté sur la ligne du
-                       titre. Les PORTFOLIOS SUIVIS de « Ma sélection »
-                       gardent leurs deux-points (`APRES_LE_TYPE`) — la
-                       nº 842 ne parle que des cartes et de cette plaque,
-                       et le dit.
+                       ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE : le
+                       type était monté sur la ligne du titre.
+                       ██ §1 (nº 843) — ET IL REDESCEND ICI, devant la
+                       ville et séparé par le point médian — l'écriture
+                       partagée avec la carte du web
+                       (`sousTitreDeCarte`). Les PORTFOLIOS SUIVIS de
+                       « Ma sélection » gardent leurs deux-points
+                       (`APRES_LE_TYPE`) : ni la nº 842 ni la nº 843 ne
+                       les touchent, et elles le disent.
                        ⚠️ LE LIEU GARDE SON ÉCRITURE À ELLE
                        (`ligneCarteMobile`, nº 486) : elle abrège le pays
                        quand une division s'écrit, ce que la ligne des
@@ -1446,12 +1445,15 @@ export function FicheTatoueur({
                        §1 (nº 455) : 14,5 px (13 à la nº 453), les 4 px
                        d'air sous le nom restent. */}
                   <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
-                    {ligneCarteMobile({
-                      ville: tatoueur.ville_nom,
-                      region: tatoueur.region,
-                      pays: tatoueur.pays,
-                      code_pays: tatoueur.code_pays,
-                    })}
+                    {sousTitreDeCarte(
+                      tatoueur,
+                      ligneCarteMobile({
+                        ville: tatoueur.ville_nom,
+                        region: tatoueur.region,
+                        pays: tatoueur.pays,
+                        code_pays: tatoueur.code_pays,
+                      })
+                    )}
                   </span>
                 </span>
                 {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE

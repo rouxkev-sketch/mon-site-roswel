@@ -49,7 +49,7 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       const enTete = c.querySelector("[data-en-tete-de-fil]"), cadre = c.querySelector("[data-cadre-de-fil]"), pied = c.querySelector("[data-pied-de-fil]");
       const y = (n) => Math.round(n.getBoundingClientRect().top);
       const avatar = enTete.querySelector("[data-lien-profil-de-fil] > span:first-child");
-      const suivre = enTete.querySelector("button");
+      const suivre = enTete.querySelector("[data-badge-type]");
       return {
         appareil: document.documentElement.dataset.appareil,
         colonnes: getComputedStyle(grille).gridTemplateColumns.split(" ").length,
@@ -62,10 +62,12 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
         //  §3 (nº 842) — le TYPE a rejoint le nom sur la ligne du titre,
         //  et le sous-titre ne garde que la ville. La graisse se lit
         //  donc sur le NOM lui-même, pas sur la ligne entière.
-        titre: c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child")?.textContent.replace(/\s+/g, " ").trim(),
+        titre: c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child")?.textContent.trim(),
         sousTitre: c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:nth-child(2)")?.textContent,
-        titreGras: getComputedStyle(c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child > span:first-child")).fontWeight,
-        suivre: suivre?.getAttribute("aria-label"), suivreADroite: suivre ? Math.round(innerWidth - suivre.getBoundingClientRect().right) : null,
+        titreGras: getComputedStyle(c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child")).fontWeight,
+        //  §1 (nº 843) — le badge du TYPE a pris la place de « Follow »,
+        //  qui est resté sur le profil. C'est lui qu'on mesure ici.
+        suivre: suivre?.textContent.trim(), suivreADroite: suivre ? Math.round(innerWidth - suivre.getBoundingClientRect().right) : null,
         suivreFace: suivre ? Math.abs((suivre.getBoundingClientRect().top + suivre.getBoundingClientRect().height / 2) - (avatar.getBoundingClientRect().top + avatar.getBoundingClientRect().height / 2)) < 2 : false,
         compteur: cadre.querySelector('[data-role="compteur"]')?.textContent, compteurVisible: vis(cadre.querySelector('[data-role="compteur"]')),
         compteurEnHautADroite: (() => { const p = cadre.querySelector('[data-role="compteur"]'); if (!p) return false; const r = p.getBoundingClientRect(), k = cadre.getBoundingClientRect(); return r.top - k.top < 20 && k.right - r.right < 20; })(),
@@ -83,8 +85,10 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     verif("de haut en bas : en-tête, image, pied", structure.ordre);
     verif("l'image est pleine largeur (carte et cadre = écran)", structure.largeurs.carte === structure.largeurs.ecran && structure.largeurs.cadre === structure.largeurs.ecran, JSON.stringify(structure.largeurs));
     verif("l'avatar à gauche (40 px, sur la marge de 16)", structure.avatarAGauche === 16 && structure.avatarTaille === 40, `x ${structure.avatarAGauche}, ${structure.avatarTaille} px`);
-    verif("le titre « Nom · Type » (nom demi-gras) puis la ville seule", structure.titre === "Banc 841 · Artist" && structure.sousTitre === "Lyon, FR" && Number(structure.titreGras) >= 600, `${structure.titre} / ${structure.sousTitre} / ${structure.titreGras}`);
-    verif("« Follow » à droite, face à l'avatar", structure.suivre === "Follow Banc 841" && structure.suivreADroite === 16 && structure.suivreFace, `${structure.suivre} · ${structure.suivreADroite} px du bord`);
+    //  §1 (nº 843) — le TYPE est parti dans le badge : le titre redevient
+    //  le nom seul, et la ville reste seule dessous.
+    verif("le titre est le NOM SEUL (demi-gras), puis la ville seule", structure.titre === "Banc 841" && structure.sousTitre === "Lyon, FR" && Number(structure.titreGras) >= 600, `${structure.titre} / ${structure.sousTitre} / ${structure.titreGras}`);
+    verif("LE BADGE DU TYPE à droite, face à l'avatar (nº 843)", structure.suivre === "Artist" && structure.suivreADroite === 16 && structure.suivreFace, `${structure.suivre} · ${structure.suivreADroite} px du bord`);
     verif("la pastille « 1/5 » en haut à droite de l'image", structure.compteur === "1/5" && structure.compteurVisible === "visible" && structure.compteurEnHautADroite);
     verif("le glissement est natif, avec accrochage par photo", structure.accrochage === "x mandatory", structure.accrochage);
     //  §4 (nº 842) — le pied s'écarte en trois places : signaler à
@@ -164,7 +168,9 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       //  §3 (nº 842) — le point médian a quitté le sous-titre pour la
       //  ligne du TITRE (« Nom · Type ») ; le sous-titre, lui, ne porte
       //  plus que la ville, et donc plus aucun signe.
-      const sousTitres = cartes.map((c) => (c.querySelector("[data-lien-carte] h3")?.textContent ?? "").replace(/\s+/g, " ").trim());
+      //  §1 (nº 843) — le point médian est redescendu du titre au
+      //  sous-titre, devant la ville : c'est là qu'on le lit.
+      const sousTitres = cartes.map((c) => ([...c.querySelectorAll("[data-lien-carte] p")].pop()?.textContent ?? "").trim());
       return {
         colonnes: getComputedStyle(document.querySelector("[data-grille-tatoueurs]")).gridTemplateColumns.split(" ").length,
         sousTitres,
@@ -176,7 +182,7 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       };
     }, vis);
     verif("quatre colonnes, comme avant", web.colonnes === 4, `${web.colonnes}`);
-    verif("LE POINT MÉDIAN sur chaque titre, et plus un seul deux-points", web.sousTitres.every((t) => t.includes(" · ") && !t.includes(": ")), web.sousTitres.slice(0, 3).join(" | "));
+    verif("LE POINT MÉDIAN sur chaque sous-titre, et plus un seul deux-points", web.sousTitres.every((t) => t.includes(" · ") && !t.includes(": ")), web.sousTitres.slice(0, 3).join(" | "));
     verif("l'en-tête, le cadre et le pied du fil sont masqués sur le web", web.filMasque);
     verif("le lien de la carte du web est là, sa piste n'a qu'une image, aucune pastille au repos", web.lienWeb && web.piste && web.pastilles);
     verif("le réseau : au plus une image par carte (la structure masquée n'en demande aucune de plus)", images.length <= web.n, `${images.length} image(s) pour ${web.n} cartes`);

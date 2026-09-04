@@ -1,6 +1,4 @@
-//  §3 (nº 842) — `libelleTypeFiche` est parti d'ici avec le type :
-//  il vit désormais chez `components/TitreDeCarte`, qui l'écrit.
-import { libelleStyle } from "@/config/tatouage";
+import { libelleStyle, libelleTypeFiche } from "@/config/tatouage";
 import { ligneLieuDeCarte, type LieuAffichable } from "@/lib/adresse";
 import {
   galerieOrdonnee,
@@ -146,6 +144,43 @@ export function photoChoisie(
  */
 export function ligneDeLieuDeCarte(lieu: LieuAffichable): string {
   return ligneLieuDeCarte(lieu);
+}
+
+/**
+ * ██ §1 (nº 843) — LE SOUS-TITRE D'UNE CARTE DU WEB : « Type · Ville » ██
+ * ------------------------------------------------------------------
+ * LA DÉCISION, ET ELLE EST À MOI — le propriétaire l'a laissée ouverte
+ * (« le type via le badge s'il y a la place, sinon comme avant la
+ * nº 842 — à trancher proprement et le dire ») :
+ *  · LE FIL DU DOIGT prend le BADGE (components/BadgeTypeDeFiche) :
+ *    la carte y fait toute la largeur de l'écran, la place existe ;
+ *  · LA CARTE DU WEB ET LA PLAQUE DU PROFIL n'en prennent pas, et le
+ *    type REVIENT DANS LEUR SOUS-TITRE, comme avant la nº 842. Deux
+ *    raisons, une par porteur :
+ *     — une carte de mosaïque fait ~333 px de large, dont 40 pour le
+ *       rond de profil : un badge de « Private Studio » en mange 110
+ *       de plus, et il ne resterait pas 180 px pour le nom. Le badge y
+ *       gagnerait sa lisibilité contre celle du nom, qui est le sujet ;
+ *     — la plaque du profil EST DÉJÀ un lien vers le profil, tout
+ *       entière (nº 502), et elle porte son chevron à droite : un badge
+ *       qui mène au même endroit y serait un lien dans un lien (interdit,
+ *       nº 517), et sans lien il ferait doublon avec le chevron.
+ * L'ÉCRITURE RESTE UNIQUE POUR LES DEUX QUI LE GARDENT — celle-ci. Le
+ * LIEU, lui, reste au porteur : la carte écrit `ligneDeLieuDeCarte`, la
+ * plaque `ligneCarteMobile` (qui abrège le pays quand une division
+ * s'écrit, nº 486) — elles ne disent pas la même chose partout, et les
+ * confondre serait un choix graphique, pas un ménage.
+ */
+export function sousTitreDeCarte(
+  tatoueur: { type_fiche?: string | null; etablissement?: string | null },
+  lieu: string
+): string {
+  return [
+    libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+    lieu,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function legendeDeCarte(

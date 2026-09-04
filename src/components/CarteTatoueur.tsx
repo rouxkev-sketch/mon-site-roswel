@@ -17,8 +17,8 @@ import {
   photoChoisie,
   photoPourStyle,
   ligneDeLieuDeCarte,
+  sousTitreDeCarte,
 } from "@/lib/photo-tatoueur";
-import { TitreDeCarte } from "@/components/TitreDeCarte";
 import {
   photoRetenueDeCarte,
   retenirPhotoDeCarte,
@@ -1243,21 +1243,17 @@ function CarteTatoueurNue({
               elles est le même qu'avant, d'un cran, mais il pèse
               désormais moins lourd à l'œil. Le blanc vient du jeton,
               comme avant. */
-          /*  ██ §3 (nº 842) — « Mara Voss · Private Studio » ██
-              Le TYPE monte du sous-titre à la ligne du titre (le
-              pourquoi et la règle : components/TitreDeCarte). Deux
-              conséquences ici, et deux seulement :
-               · LA GRAISSE QUITTE CETTE LIGNE pour le seul nom — le
-                 type la veut normale, et une graisse posée sur toute
-                 la ligne l'aurait imposée aux deux ;
-               · LE ROGNAGE PASSE À DEUX LIGNES : sans quoi le type,
-                 poussé à la ligne par un nom long, disparaîtrait au
-                 lieu de descendre.
-              ⚠️ NI LA TAILLE NI LA HAUTEUR DE LIGNE NE BOUGENT :
-              l'équation du rond de profil (18 + 4 + 18 = 40, nº 485)
-              tient tant qu'une seule ligne s'écrit — un nom long
-              descend le bloc d'un cran, et le rond se recentre. */
-          className={`leading-[18px] line-clamp-2 mobile:hidden text-[15px] text-sombre-texte ${
+          /*  ██ §1 (nº 843) — LE NOM SEUL, SUR UNE SEULE LIGNE ██
+              Le TYPE était monté ici à la nº 842 ; il en redescend, et
+              rejoint la ville dans le sous-titre — le pourquoi de ce
+              choix (et celui du badge, que le fil du doigt prend et
+              que cette carte ne prend pas) est écrit une fois, chez
+              `sousTitreDeCarte` (lib/photo-tatoueur).
+              LE ROGNAGE REVIENT DONC À UNE LIGNE, et l'équation du
+              rond de profil avec lui (18 + 4 + 18 = 40, nº 485) : la
+              carte retrouve exactement la géométrie d'avant la
+              nº 842. */
+          className={`font-semibold leading-[18px] line-clamp-1 mobile:hidden text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[20px]"
               : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1273,7 +1269,7 @@ function CarteTatoueurNue({
                lit plus dans ce texte mais dans l'étiquette explicite du
                lien unique — sans quoi une carte s'annoncerait en
                récitant son style, son nom et sa ville d'un trait. */}
-          <TitreDeCarte tatoueur={tatoueur} />
+          {tatoueur.nom}
         </h3>
         <p
           className={`text-sombre-texte-doux leading-[18px] line-clamp-1 ${
@@ -1318,16 +1314,17 @@ function CarteTatoueurNue({
                ██ §2 (nº 841) — LE POINT MÉDIAN, SUR LES CARTES :
                « Artist · Lyon, FR », une seule écriture pour la carte
                du web et l'en-tête du fil.
-               ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE. Le
-               propriétaire a trouvé cette ligne trop longue : le TYPE
-               est monté sur la ligne du titre, à côté du nom
-               (components/TitreDeCarte), et ce sous-titre redevient ce
-               qu'il était avant la nº 613 — le lieu, et lui seul.
-               L'écriture reste unique (`ligneDeLieuDeCarte`).
+               ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE : le type
+               était monté sur la ligne du titre.
+               ██ §1 (nº 843) — ET IL REDESCEND ICI. Le fil du doigt
+               prend un BADGE pour le dire ; cette carte-ci n'a pas la
+               place d'en porter un (le pourquoi, chiffré, vit chez
+               `sousTitreDeCarte`) — le type revient donc devant la
+               ville, comme avant la nº 842, et l'écriture reste unique.
                ⚠️ CETTE CARTE EST RENDUE PARTOUT — moteur, vitrines,
                « Ma sélection » : ce qui change ici se voit sur les
                trois d'un seul geste. */}
-          {ligneDeLieuDeCarte(lieuDeLaCarte)}
+          {sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
         </p>
         </div>
         </div>
