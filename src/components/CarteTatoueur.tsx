@@ -15,6 +15,11 @@ import {
 import { useDispositionGrille } from "@/components/AffichageMosaique";
 import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
 import {
+  CommandesDeCarte,
+  PisteDeCarte,
+  useGalerieDeCarte,
+} from "@/components/GalerieDeCarte";
+import {
   ensembleDeLaPhoto,
   natureConnue,
   partiesDeGalerie,
@@ -194,6 +199,26 @@ function CarteTatoueurNue({
         legende: "",
       }))
     : [];
+  /**
+   * ██ §1 (nº 839) — LA CARTE EST UNE GALERIE, SUR LE WEB ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE (passe nº 839), qui revient sur celle de
+   * la nº 445 : les photos de l'ensemble défilent de nouveau DANS la
+   * carte — au survol seulement, par deux chevrons, avec la pastille
+   * qui compte. Le mécanisme entier vit dans `GalerieDeCarte` ; ce qui
+   * reste ici, c'est ce que la carte est SEULE à savoir : la photo
+   * regardée, qui part avec le lien.
+   * ⚠️ CE N'EST PAS LE CARROUSEL DE LA nº 367 QU'ON RALLUME — il ne
+   * tient plus depuis que la carte est un seul lien (nº 517). Le
+   * pourquoi complet est écrit une fois, chez le composant neuf.
+   * ⚠️ RIEN AU DOIGT : les commandes n'existent que sur un pointeur
+   * fin, et sans elles la piste ne bouge ni ne charge jamais rien de
+   * plus que sa première photo. Le fil pleine largeur du doigt attend
+   * sa propre passe.
+   */
+  const galerieDansLaCarte = photosDeLaCarte.length > 1;
+  const galerie = useGalerieDeCarte(photosDeLaCarte.length);
+
   /** ⚠️ LE TEXTE ET LE DÉFILEMENT SONT INDÉPENDANTS (nº 213-§1) : la
       photothèque masque les TEXTES, elle n'a jamais eu à décider si
       les photos défilent. La condition `!phototheque` les liait, et
@@ -331,8 +356,12 @@ function CarteTatoueurNue({
   //  ⚠️ `||` ET NON `??` : `photoRecherche` vaut la CHAÎNE VIDE quand
   //  personne ne l'a passée — `??` ne la sauterait pas, et la carte
   //  perdrait sa photo. Ici, « vide » veut dire « rien à dire ».
+  //  §1 (nº 839) — LE RANG DE LA GALERIE, ET NON PLUS LE RANG 0 FIXE :
+  //  c'est ce qui fait qu'un clic sur la septième photo ouvre la fiche
+  //  SUR la septième. Sans galerie (une seule photo), le rang vaut zéro
+  //  et la valeur est exactement celle d'avant.
   const photoRegardee =
-    photosDeLaCarte[0]?.cle ||
+    photosDeLaCarte[galerie.indice]?.cle ||
     photoRecherche ||
     photoEnregistrable?.id ||
     "";
@@ -500,7 +529,28 @@ function CarteTatoueurNue({
       // Le doigt garde le défilement ; le pincement, non — il zoome
       // la photo (jamais la page).
       style={{ touchAction: "pan-x pan-y" }}
-      onPointerEnter={surApproche ? () => surApproche(tatoueur) : undefined}
+      /*  §1 (nº 839) — LE SURVOL FAIT DEUX CHOSES, ET C'EST LE MÊME
+          instant : la grille demande d'avance la fiche complète (comme
+          avant), et la galerie prépare la photo SUIVANTE — au premier
+          chevron, elle est déjà là.
+          ⚠️ LE DOIGT N'EST PAS CONCERNÉ, et il faut le dire ici : ce
+          gestionnaire se déclenche AUSSI à la première touche d'un
+          écran tactile. Sans cette garde, un doigt qui effleure une
+          carte téléchargerait une image que rien ne lui montrera
+          jamais. L'appareil tranche, jamais la largeur (règle nº 60). */
+      onPointerEnter={
+        surApproche || galerieDansLaCarte
+          ? () => {
+              if (surApproche) surApproche(tatoueur);
+              if (
+                galerieDansLaCarte &&
+                document.documentElement.dataset.appareil !== "mobile"
+              ) {
+                galerie.precharger();
+              }
+            }
+          : undefined
+      }
       {...gestesPincement}
     >
       {/**
@@ -673,28 +723,63 @@ function CarteTatoueurNue({
               n'ont pas d'original : elles sont servies telles quelles,
               exactement comme avant. La réserve de hauteur, le
               chargement paresseux et la priorité ne bougent pas. */}
-          <PhotoDeCarte
-            url={photo}
-            urlPleine={photoEnregistrable?.url}
-            tailles={TAILLES_CARTE}
-            // CE QUE MONTRE VRAIMENT LA CARTE : le nom, la ville, et le
-            // style (avec le rendu quand la photo est taguée) — voir
-            // `legendeDeCarte`.
-            alt={legendeDeCarte(
-              tatoueur,
-              styleRecherche,
-              renduRecherche,
-              natureRecherche
-            )}
-            // LES PREMIÈRES CARTES NE SONT PAS DIFFÉRÉES : l'image
-            // mesurée par Google ne doit pas attendre le défilement.
-            chargement={prioritaire ? "eager" : "lazy"}
-            priorite={prioritaire ? "high" : undefined}
-            //  §2 (nº 648) — `relative` : l'image passe AU-DESSUS de la
-            //  plaque d'attente (un élément en flux passerait sous un
-            //  frère positionné). Sa géométrie ne change pas d'un pixel.
-            classe="relative w-full h-full object-cover"
-          />
+          {/*  ██ §1 (nº 839) — LA PISTE REMPLACE L'IMAGE SEULE, ET NE
+               CHANGE RIEN AU REPOS ██
+               ------------------------------------------------------
+               LA DÉCISION DE LA nº 445, CI-DESSUS, EST LEVÉE PAR LE
+               PROPRIÉTAIRE : les photos défilent de nouveau dans la
+               carte — sur le WEB seulement, au survol, par deux
+               chevrons. Ce qu'elle disait reste vrai pour le doigt, et
+               le reste de sa note (les carrousels des fiches, le
+               pincement) n'est pas touché.
+               LE RANG 0 DE LA PISTE EST L'IMAGE CI-DESSOUS, au
+               caractère près : `photosDeLaCarte[0]` porte la miniature
+               que rend `photoPourStyle` et l'original de
+               `photoChoisie` — les deux sources de l'image simple. La
+               règle 175-§5 tient donc toujours : rien ne se
+               retélécharge, rien ne clignote.
+               ⚠️ ET RIEN D'AUTRE N'EST MONTÉ TANT QU'ON NE SURVOLE
+               PAS : la piste ne rend que les photos DÉJÀ demandées —
+               une seule à l'affichage. Une carte à photo unique garde
+               l'image simple, sans une boîte de plus. */}
+          {galerieDansLaCarte ? (
+            <PisteDeCarte
+              photos={photosDeLaCarte}
+              indice={galerie.indice}
+              chargees={galerie.chargees}
+              alt={legendeDeCarte(
+                tatoueur,
+                styleRecherche,
+                renduRecherche,
+                natureRecherche
+              )}
+              prioritaire={prioritaire}
+            />
+          ) : (
+            <PhotoDeCarte
+              url={photo}
+              urlPleine={photoEnregistrable?.url}
+              tailles={TAILLES_CARTE}
+              // CE QUE MONTRE VRAIMENT LA CARTE : le nom, la ville, et
+              // le style (avec le rendu quand la photo est taguée) —
+              // voir `legendeDeCarte`.
+              alt={legendeDeCarte(
+                tatoueur,
+                styleRecherche,
+                renduRecherche,
+                natureRecherche
+              )}
+              // LES PREMIÈRES CARTES NE SONT PAS DIFFÉRÉES : l'image
+              // mesurée par Google ne doit pas attendre le défilement.
+              chargement={prioritaire ? "eager" : "lazy"}
+              priorite={prioritaire ? "high" : undefined}
+              //  §2 (nº 648) — `relative` : l'image passe AU-DESSUS de
+              //  la plaque d'attente (un élément en flux passerait sous
+              //  un frère positionné). Sa géométrie ne change pas d'un
+              //  pixel.
+              classe="relative w-full h-full object-cover"
+            />
+          )}
         </div>
 
         {/* LE BADGE « Artiste » / « Salon » — DANS l'image, angle bas
@@ -1178,6 +1263,39 @@ function CarteTatoueurNue({
         * drapeau vient de PageFavoris et de personne d'autre. La
         * mosaïque du moteur reste nue.
         */}
+      {/**
+        * ██ §1 (nº 839) — LES COMMANDES DE LA GALERIE, VOISINES DU LIEN ██
+        * ================================================================
+        * MÊME RAISON QUE LE FANION, ci-dessous, et même écriture : un
+        * bouton DANS un lien est du contenu interactif imbriqué, que le
+        * langage interdit (nº 517). Les deux chevrons et la pastille
+        * sont donc posés à côté du lien, sur une enveloppe qui part du
+        * haut de la carte et porte LE FORMAT DE LA PHOTO — la constante
+        * que la photo elle-même lit, jamais une valeur recopiée.
+        * ⚠️ L'ENVELOPPE NE PREND AUCUN CLIC : sans cela, elle
+        * recouvrirait la photo et la carte ne s'ouvrirait plus. Seuls
+        * les trois éléments en reçoivent (`pointer-events-auto`, chez
+        * eux).
+        * ⚠️ ELLE N'EXISTE QUE S'IL Y A PLUS D'UNE PHOTO — et elle ne
+        * montre rien au doigt : ses états sont ceux des galeries de
+        * profil (absente, puis présente sur un pointeur fin, puis
+        * visible au survol).
+        */}
+      {galerieDansLaCarte && (
+        <div
+          className={`pointer-events-none absolute inset-x-0 top-0 ${CADRE_PHOTO_PORTFOLIO}`}
+        >
+          <CommandesDeCarte
+            indice={galerie.indice}
+            nombre={photosDeLaCarte.length}
+            peutReculer={galerie.peutReculer}
+            peutAvancer={galerie.peutAvancer}
+            aller={galerie.aller}
+            pleineLargeur={uneColonne}
+          />
+        </div>
+      )}
+
       {fanion && photoRegardee && (
         <div
           className={`pointer-events-none absolute inset-x-0 top-0 ${CADRE_PHOTO_PORTFOLIO}`}

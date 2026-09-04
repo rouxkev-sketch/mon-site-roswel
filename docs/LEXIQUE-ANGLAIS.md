@@ -281,7 +281,7 @@ des mots restés en français, des fautes d'anglais, deux graphies) :
 | « yokofolio — Your next tattoo… » et « … — yokofolio » (les images de partage, texte de repli et titre) | **YokoFolio — Your next tattoo starts with a style** · **`<titre>` — YokoFolio** | trois fichiers : les deux `opengraph-image` et `lib/image-partage-fiche` — la marque porte ses majuscules |
 | « yokofolio shows the tattoo artists… » (paragraphe d'accueil) | **YokoFolio shows…** | `paragrapheAccueil` (config/tatouage) |
 | « Search a name » (texte indicatif, autre adresse) | **Search by name** | `BlocAutreAdresse` |
-| « one small and one capital letter » (règle du mot de passe) | **one lower-case letter and one capital letter** | `lib/mot-de-passe` — « lower-case » AVEC trait d'union : sans lui, Tailwind lit `lowercase` comme une classe et la feuille CSS gagne une règle (piège 472) |
+| « one small and one capital letter » (règle du mot de passe) | **one lower-case letter and one capital letter** | `lib/mot-de-passe` — « lower-case » AVEC trait d'union : sans lui, le mot s'écrit d'un seul tenant, Tailwind le prend pour l'utilitaire des minuscules et la feuille CSS gagne une règle (piège 472). ⚠️ ET CE DOCUMENT EST LU LUI AUSSI (constaté à la nº 839) : la note d'origine citait le mot nu, et fabriquait à elle seule la règle qu'elle décrit |
 | « This image is too heavy » (photo trop lourde) | **This image is too large** | `lib/photo` |
 | « already has this spot in this country » (collision de convention, admin) | **is already on the list for this country** | `demandes-convention/route` |
 
@@ -298,6 +298,16 @@ des mots restés en français, des fautes d'anglais, deux graphies) :
 > e-mails de suppression « the deletion goes ahead », le bouton d'admin
 > « Reopen the first block », l'état vide du démarchage, la question de
 > la mise hors ligne « Why is this portfolio leaving the site? ».
+
+### Ajouts de la 839 (les cartes deviennent des galeries, sur le web)
+
+Aucun texte neuf : les deux étiquettes de la carte-galerie sont
+CELLES DU CARROUSEL DES FICHES, reprises à l'identique.
+
+| Français | Anglais | Note |
+|---|---|---|
+| photo suivante / précédente (les chevrons d'une carte de la mosaïque) | **Next photo** / **Previous photo** | `GalerieDeCarte` — les mêmes étiquettes que le carrousel d'une fiche (`CarrouselPortfolio`), et non celles des galeries de profil (« Next thumbnails ») : sur une carte, ce qui change est bien LA PHOTO, pas une rangée de vignettes |
+| le compteur d'une carte (« 7/20 ») | **7/20** | des chiffres, rien à traduire ; la pastille est celle des fiches (`PASTILLE_COMPTEUR`, config/tatouage) |
 
 ## 3 · Le ton
 

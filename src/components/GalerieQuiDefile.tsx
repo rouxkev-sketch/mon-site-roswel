@@ -103,6 +103,49 @@ export const CHEVRON_GALERIE_PETIT: TailleChevron = {
   trait: "2.5",
 };
 
+/**
+ * ██ §1 (nº 839) — LE DESSIN DU CHEVRON, SORTI POUR ÊTRE PARTAGÉ ██
+ * ------------------------------------------------------------------
+ * Il vivait à l'intérieur du bandeau ci-dessous, et il n'avait qu'un
+ * porteur. La CARTE-GALERIE de la nº 839 en veut EXACTEMENT le même —
+ * consigne du propriétaire : « celles des galeries de profil, même
+ * dessin, mêmes états ». Le recopier, c'était le condamner à diverger
+ * à la prochaine retouche (piège nº 378) ; il est donc extrait tel
+ * quel, sans une valeur changée.
+ * ⚠️ L'OMBRE FAIT PARTIE DU DESSIN, et à toutes les tailles : c'est
+ * elle, et elle seule, qui rend un chevron blanc lisible sur une photo
+ * claire (nº 301, §4-c). Elle ne se règle pas.
+ * ⚠️ AUCUN FOND, AUCUN DISQUE, AUCUN CONTOUR (nº 264, §6) : un chevron
+ * NU. La couleur vient du porteur (`currentColor`), la taille du
+ * gabarit qu'il passe.
+ */
+export function ChevronDeGalerie({
+  sens,
+  taille,
+}: {
+  sens: 1 | -1;
+  taille: TailleChevron;
+}) {
+  return (
+    <svg
+      width={taille.largeur}
+      height={taille.hauteur}
+      viewBox="0 0 12 24"
+      fill="none"
+      aria-hidden="true"
+      className="[filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.65))]"
+    >
+      <path
+        d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
+        stroke="currentColor"
+        strokeWidth={taille.trait}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /*  §3 (nº 264) — LA LARGEUR DE CONTENU, PAS LE `clientWidth` : la
     rangée déborde de son cadre (rembourrage interne), et `clientWidth`
     le compte. Une PAGE reste une largeur de CONTENU.
@@ -479,22 +522,9 @@ export function GalerieQuiDefile({
           sens === 1 ? decalageDroite : decalageGauche
         } ${chevron.zone} items-center justify-center text-white`}
     >
-      <svg
-        width={chevron.largeur}
-        height={chevron.hauteur}
-        viewBox="0 0 12 24"
-        fill="none"
-        aria-hidden="true"
-        className="[filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.65))]"
-      >
-        <path
-          d={sens === 1 ? "M3 4l6 8-6 8" : "M9 4l-6 8 6 8"}
-          stroke="currentColor"
-          strokeWidth={chevron.trait}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      {/*  §1 (nº 839) — le dessin est monté au-dessus, partagé avec la
+           carte-galerie ; le bandeau n'en garde que la ZONE. */}
+      <ChevronDeGalerie sens={sens} taille={chevron} />
     </button>
   );
 

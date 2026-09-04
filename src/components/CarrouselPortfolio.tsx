@@ -5,7 +5,11 @@ import Link from "next/link";
 import { PhotoProgressive } from "@/components/PhotoProgressive";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import { ZoomPincement } from "@/components/ZoomPincement";
-import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+import {
+  CADRE_PHOTO_PORTFOLIO,
+  ECRITURE_COMPTEUR,
+  PASTILLE_COMPTEUR,
+} from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 
 /**
@@ -999,8 +1003,12 @@ export function CarrouselPortfolio({
           disparaît dans le cadre. Sans ce nom, son relevé dirait
           « SPAN » — inexploitable. */
       data-role="compteur"
-      className={`absolute z-[2] items-center rounded-full bg-black/60
-                 backdrop-blur text-white ${
+      //  §1 (nº 839) — LE PATRON VIENT DE `config/tatouage`
+      //  (`PASTILLE_COMPTEUR`) : la carte-galerie de la nº 839 porte la
+      //  MÊME pastille, et deux écritures auraient divergé. Rien ne
+      //  change ici d'un pixel — ancre, rembourrage et taille du texte
+      //  restent ci-dessous, ce sont eux qui font les trois gabarits.
+      className={`${PASTILLE_COMPTEUR} ${
                    surCarte
                      ? //  §2 (nº 369) — L'ÉCRITURE DU FANION, LA SEULE
                        //  ÉPROUVÉE, ET ELLE EST LA MÊME POUR LES TROIS :
@@ -1057,9 +1065,9 @@ export function CarrouselPortfolio({
            ⚠️ LE BADGE NE CHANGE PAS AUTOUR : même place, même fond,
            même rayon, mêmes rembourrages, et toujours ouvert. */}
       <span
-        className={`whitespace-nowrap
-                   ${badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"}
-                   font-semibold tabular-nums`}
+        className={`${ECRITURE_COMPTEUR} ${
+          badgeReduit && surCarte ? "text-[10px]" : "text-[12px]"
+        }`}
       >
         {indice + 1}/{n}
       </span>

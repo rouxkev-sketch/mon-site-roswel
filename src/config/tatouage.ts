@@ -2314,6 +2314,32 @@ export const FOND_RESERVE_PHOTO =
   "pointer-events-none absolute inset-[2px] bg-sombre-eleve";
 
 /**
+ * ██ §1 (nº 839) — LA PASTILLE DE COMPTEUR, ÉCRITE UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * C'est le patron des fiches : le « 1/6 » posé dans l'angle haut droit
+ * de la photo — un disque noir à 60 %, flouté par-dessous, texte blanc.
+ * Il vivait à la main dans `CarrouselPortfolio` ; la carte-galerie de
+ * la nº 839 en veut EXACTEMENT le même, à sa taille. Deux écritures,
+ * c'était deux occasions de diverger (piège nº 378) : les deux
+ * porteurs consomment désormais celle-ci.
+ * ⚠️ CE QUI RESTE CHEZ CHAQUE PORTEUR, parce que cela diffère
+ * légitimement : l'ANCRE (la fiche pose sa pastille à 12 px des bords,
+ * une carte à 8), le REMBOURRAGE et la TAILLE DU TEXTE (trois gabarits
+ * — fiche, carte pleine largeur, carte côte à côte : la note de la
+ * nº 367 les détaille), et l'APPARITION (permanente sur une fiche, au
+ * survol seulement sur une carte).
+ * ⚠️ NI COULEUR NI RAYON NE SE REDÉCLARENT AILLEURS : une seule classe
+ * par propriété, jamais deux empilées (piège nº 389).
+ */
+export const PASTILLE_COMPTEUR =
+  "absolute z-[2] items-center rounded-full bg-black/60 backdrop-blur text-white";
+
+/** LE NOMBRE DE LA PASTILLE — chiffres de largeur fixe (`tabular-nums`
+    : le compte ne tremble pas d'une photo à l'autre), sans retour à la
+    ligne. Sa TAILLE reste au porteur (voir ci-dessus). */
+export const ECRITURE_COMPTEUR = "whitespace-nowrap font-semibold tabular-nums";
+
+/**
  * §3 (nº 276) — L'ÉCRITURE DES TITRES DE SECTION, UNE SEULE FOIS
  * ------------------------------------------------------------------
  * Les capitales grises espacées de 13 px de la nº 223 : « STYLES »,
