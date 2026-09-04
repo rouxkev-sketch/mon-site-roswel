@@ -268,26 +268,31 @@ const mesureTitre = `(bloc) => {
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    /*  ██ LA PLAQUE DU PROFIL A ÉTÉ SUPPRIMÉE À LA nº 844 ██
-        CE QUE CE BLOC MESURAIT : que la plaque du profil (l'encadré
-        nom + avatar de la vue photo au doigt) portait bien, elle aussi,
-        le titre de la nº 842 puis celui de la nº 843. LE BANC 843 avait
-        déjà constaté qu'elle ne s'affichait NULLE PART depuis la nº 841 ;
-        le propriétaire l'a fait supprimer à la nº 844. La règle du titre
-        n'a donc plus de sujet ici — elle reste mesurée là où elle vit
-        encore : la carte du web et l'en-tête du fil, ci-dessus.
-        ⚠️ ON NE RETIRE PAS LA VÉRIFICATION, ON LA RETOURNE : ce banc
-        dira si une passe la ressuscitait sans le dire. */
-    titre("842 · la plaque du profil : supprimée à la nº 844");
+    /*  ██ CE BLOC A CHANGÉ D'ADRESSE À LA nº 845, PAS DE SUJET ██
+        LA PLAQUE, SUPPRIMÉE À LA nº 844, EST RÉTABLIE À LA nº 845 (le
+        propriétaire corrige sa consigne) : la règle de titre de la
+        nº 842, puis celle de la nº 843, valent donc de nouveau pour
+        elle, mot pour mot. Ce qui change ici, et rien d'autre : on
+        l'ouvre là où elle SE VOIT — la VUE PHOTO (une adresse sans
+        `entree=lien`, celle d'un lien partagé) et non plus le profil,
+        où la colonne entière est masquée. La mesure est donc plus forte
+        qu'avant : elle porte sur une plaque à l'écran. */
+    titre("842 · la plaque du profil suit la même règle (vue photo, nº 845)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
-    const m = await page.evaluate(() => ({
-      plaque: document.querySelector("[data-habillage-photo]") !== null,
-      vuePhoto: document.querySelector("[data-vue-photo]") !== null,
-      croix: document.querySelector("[data-retour-vue-photo]") !== null,
-    }));
-    verif("la vue photo du doigt existe de nouveau (nº 844)", m.vuePhoto && m.croix, JSON.stringify(m));
-    verif("et elle n'a plus de plaque : le bloc n'est plus dans le document", m.plaque === false);
+    const m = await page.evaluate((M) => {
+      const f = new Function("return " + M)();
+      const plaque = document.querySelector("[data-habillage-photo] a");
+      const bloc = plaque.querySelector(":scope > span:nth-child(2)");
+      const t = f(bloc.querySelector(":scope > span:first-child"));
+      t.sousTitre = bloc.querySelector(":scope > span:nth-child(2)").textContent.trim();
+      t.montree = plaque.getBoundingClientRect().height > 0;
+      return t;
+    }, mesureTitre);
+    //  §1 (nº 843) — nom seul en titre, « Type · Ville » dessous.
+    verif("la plaque dit le nom seul, demi-gras", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
+    verif("sa ligne du dessous porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
+    verif("et elle est BIEN À L'ÉCRAN depuis la nº 845", m.montree === true);
   } catch (e) {
     verif("déroulement du banc 842 (plaque)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

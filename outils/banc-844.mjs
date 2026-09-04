@@ -8,9 +8,12 @@
 //      profil (nº 264/301), pas le disque de verre de la nº 368, et
 //      l'apparition au survol des cartes (nº 839) ;
 //   3. le badge du type : fond transparent, contour fin seul ;
-//   4. la plaque du profil : absente du document, et la vue photo
-//      rendue à ses deux entrées (lien partagé, vignette du Portfolio),
-//      avec sa croix de retour ; les cartes du fil menant au profil.
+//   4. la vue photo rendue à ses deux entrées (lien partagé, vignette
+//      du Portfolio), les cartes du fil menant au profil.
+//  ⚠️ MIS AU PAS DE LA nº 845 : la plaque du profil, que la nº 844 avait
+//  supprimée, est RÉTABLIE (correction de consigne du propriétaire) et
+//  la croix de retour retirée. Ce banc constate les deux ; le banc 845
+//  mesure la plaque elle-même.
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger } from "./banc-socle.mjs";
 
 const T = `banc844-${Date.now()}`;
@@ -289,7 +292,13 @@ const REPOS = 3400;
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("844 · un lien partagé ouvre la VUE PHOTO au doigt, sans plaque, avec sa croix");
+    //  ⚠️ MIS AU PAS DE LA nº 845 : la plaque du profil est RÉTABLIE et
+    //  la croix de retour RETIRÉE (le propriétaire corrige la consigne
+    //  de la nº 844). Ce que ce banc tient toujours, et qui est bien de
+    //  la nº 844 : la vue photo revient au doigt pour ses deux entrées,
+    //  et la pastille y est éteinte à l'arrivée. Le banc 845 mesure la
+    //  plaque elle-même.
+    titre("844 · un lien partagé ouvre la VUE PHOTO au doigt (la plaque est mesurée par le banc 845)");
     const PARTAGE = `/artist/${T}?style=blackwork&rendu=black&nature=tatouage&photo=${PHOTOS[2]}`;
     await page.goto(`${BASE}${PARTAGE}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
@@ -303,13 +312,7 @@ const REPOS = 3400;
         lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
         photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
         plaque: document.querySelector("[data-habillage-photo]") !== null,
-        croix: croix ? {
-          montree: croix.getBoundingClientRect().height > 0,
-          taille: Math.round(croix.getBoundingClientRect().width),
-          href: croix.getAttribute("href"),
-          etiquette: croix.getAttribute("aria-label"),
-          enHautAGauche: croix.getBoundingClientRect().left < 24 && croix.getBoundingClientRect().top < 200,
-        } : null,
+        croix: croix !== null,
         pastille: f(document.querySelector('[data-carrousel] [data-role="compteur"]')),
       };
     }, [PASTILLE]);
@@ -318,26 +321,22 @@ const REPOS = 3400;
     verif("c'est bien la vue photo : la photo est montrée, la colonne de lecture retirée",
       vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true,
       `vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree} · lecture masquée ${vue.lectureMasquee}`);
-    verif("LA PLAQUE DU PROFIL N'EXISTE PLUS dans le document", vue.plaque === false);
-    verif("une croix de retour la remplace, en haut à gauche, cible de 40 px",
-      vue.croix?.montree && vue.croix.taille === 40 && vue.croix.enHautAGauche && vue.croix.etiquette === "Back",
-      JSON.stringify(vue.croix));
+    verif("LA PLAQUE DU PROFIL EST LÀ (rétablie nº 845)", vue.plaque === true);
+    verif("et la croix de la nº 844 n'y est plus (nº 845 : doublon avec la plaque)", vue.croix === false);
     verif("elle s'ouvre sur la photo partagée, pastille éteinte",
       vue.pastille.texte === "3/6" && vue.pastille.opacite === 0,
       `${vue.pastille.texte} · opacité ${vue.pastille.opacite}`);
 
-    //  LA CROIX, SUR UN ONGLET NEUF, MÈNE AU PROFIL.
-    verif("sans page derrière, la croix pointe vers le profil",
-      vue.croix?.href === `/artist/${T}?entree=lien`, vue.croix?.href);
-    await page.locator("[data-retour-vue-photo]").tap();
+    //  LE CHEMIN DU RETOUR EST LA PLAQUE (nº 845).
+    await page.locator("[data-habillage-photo] a").tap();
     await page.waitForTimeout(2500);
-    const apresLaCroix = await page.evaluate(() => ({
+    const apresLaPlaque = await page.evaluate(() => ({
       url: location.pathname + location.search,
       photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
     }));
-    verif("un toucher sur la croix rend le profil",
-      apresLaCroix.url === `/artist/${T}?entree=lien` && !apresLaCroix.photoMontree,
-      `${apresLaCroix.url} · photo ${apresLaCroix.photoMontree}`);
+    verif("un toucher sur la plaque rend le profil",
+      apresLaPlaque.url === `/artist/${T}?entree=lien` && !apresLaPlaque.photoMontree,
+      `${apresLaPlaque.url} · photo ${apresLaPlaque.photoMontree}`);
   } catch (e) {
     verif("déroulement du banc 844 (lien partagé)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -367,40 +366,19 @@ const REPOS = 3400;
         vuePhoto: document.querySelector("[data-vue-photo]") !== null,
         lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
         photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
-        croix: document.querySelector("[data-retour-vue-photo]") !== null,
+        plaque: document.querySelector("[data-habillage-photo]") !== null,
         pastille: f(document.querySelector('[data-carrousel] [data-role="compteur"]')),
       };
     }, [PASTILLE]);
     verif("la vignette mène à la VUE PHOTO, pas au profil",
       vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true && !/entree=lien/.test(vue.url),
       `${vue.url} · vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree}`);
-    verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte",
-      vue.pastille.texte === "2/6" && vue.pastille.opacite === 0 && vue.croix,
-      `${vue.pastille.texte} · opacité ${vue.pastille.opacite} · croix ${vue.croix}`);
-
-    //  ICI IL Y A UNE PAGE DERRIÈRE : LA CROIX RECULE.
-    await page.locator("[data-retour-vue-photo]").tap();
-    await page.waitForTimeout(2500);
-    const retour = await page.evaluate(() => ({
-      url: location.pathname + location.search,
-      onglet: [...document.querySelectorAll("[role=radio]")]
-        .map((b) => b.textContent.trim() + ":" + b.getAttribute("aria-checked")).join(" "),
-      entrees: history.length,
-    }));
-    /*  ⚠️ LA PREUVE QUE C'EST BIEN UN RETOUR D'HISTORIQUE, et non la
-        destination du lien : l'adresse rendue porte `onglet=portfolio`
-        — l'état que la page avait quand on l'a quittée —, que le `href`
-        de la croix (`?entree=lien` tout court) ne porte pas. */
-    verif("la croix rend le profil sur son onglet Portfolio (retour d'historique, pas une page neuve)",
-      retour.url.startsWith(`/artist/${T}?entree=lien`) && /onglet=portfolio/.test(retour.url) &&
-      /Portfolio:true/.test(retour.onglet),
-      `${retour.url} · ${retour.onglet}`);
+    verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte, plaque présente",
+      vue.pastille.texte === "2/6" && vue.pastille.opacite === 0 && vue.plaque,
+      `${vue.pastille.texte} · opacité ${vue.pastille.opacite} · plaque ${vue.plaque}`);
 
     //  ET LA PASTILLE DE LA VUE PHOTO DU PORTFOLIO OBÉIT À LA MÊME RÈGLE.
     titre("844 · la vue photo du Portfolio : la même pastille, la même règle");
-    await page.goForward();
-    await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
-    await page.waitForTimeout(1500);
     await page.evaluate(() => {
       const z = document.querySelector('[data-carrousel] [data-role="cadre"]');
       z.scrollBy({ left: z.clientWidth, behavior: "smooth" });

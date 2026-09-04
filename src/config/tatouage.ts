@@ -2341,6 +2341,34 @@ export const FOND_RESERVE_PHOTO =
 export const PASTILLE_COMPTEUR =
   "absolute z-[2] items-center rounded-full bg-black/60 backdrop-blur text-white";
 
+/**
+ * ██ §3 (nº 845) — L'AIR DE LA PASTILLE SUR UNE CARTE DU DOIGT ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET MESURÉ : sur une carte du
+ * fil, la pastille n'était pas alignée sur la marge du site. La cause
+ * est géométrique, et elle n'existe qu'au doigt : la grille des
+ * résultats SAIGNE jusqu'aux bords de l'écran (`mobile:-mx-4`,
+ * SOCLE_GRILLE_CARTES) — l'image touche donc le bord, et les huit
+ * pixels de la nº 367 (`right-2`) se comptaient depuis CE bord, pas
+ * depuis la colonne de texte. La pastille tombait à 8 px du verre
+ * quand tout le reste de la page — l'en-tête et le pied de la carte
+ * compris (`px-4`) — s'arrête à 16.
+ *
+ * LA RÈGLE DU PROPRIÉTAIRE, ET C'EST UNE SEULE VALEUR POUR LES DEUX
+ * CÔTÉS : l'air à DROITE égale l'air en HAUT, et il vaut LA MARGE DE
+ * DROITE DU SITE — `px-4` au doigt, soit SEIZE pixels (la marge que
+ * toutes les pages posent : `px-4 sm:px-6`). La pastille s'aligne donc
+ * exactement sur la colonne de texte de la carte, et sur le bord droit
+ * de tout ce que la page écrit.
+ * ⚠️ UNE SEULE VALEUR, ÉCRITE UNE SEULE FOIS : les deux classes lisent
+ * le même cran de l'échelle (4 = 16 px). Les séparer, c'est se donner
+ * deux nombres à tenir d'accord.
+ * ⚠️ CELA NE CONCERNE QUE LA CARTE DU DOIGT : la carte du web n'est
+ * pas pleine largeur (sa photo s'arrête à la gouttière de la grille) et
+ * garde ses 8 px de la nº 367 ; la fiche garde ses 12 (nº 375).
+ */
+export const AIR_PASTILLE_CARTE_DOIGT = "top-4 right-4";
+
 /** LE NOMBRE DE LA PASTILLE — chiffres de largeur fixe (`tabular-nums`
     : le compte ne tremble pas d'une photo à l'autre), sans retour à la
     ligne. Sa TAILLE reste au porteur (voir ci-dessus). */

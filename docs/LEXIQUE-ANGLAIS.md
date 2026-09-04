@@ -352,15 +352,24 @@ retour ; tout le reste réemploie des étiquettes existantes.
 
 | Français | Anglais | Note |
 |---|---|---|
-| retour (la croix de la vue photo au doigt) | **Back** | `RetourDeVuePhoto` (FicheTatoueur) — une étiquette accessible, le glyphe seul est visible. Le mot le plus court et le plus lu de l'anglais d'interface : ni « Go back » (une phrase pour un bouton), ni « Close » (on ne ferme rien, on remonte) |
+| ~~retour (la croix de la vue photo au doigt)~~ | ~~**Back**~~ | ⚠️ RETIRÉ À LA nº 845 : la croix a été supprimée avec le rétablissement de la plaque (doublon). Ce libellé n'existe plus dans le site |
 | photo suivante / précédente (les chevrons d'une FICHE, web) | **Next photo** / **Previous photo** (inchangés) | les fiches prennent le chevron des cartes (nº 844-§2) ; les étiquettes, elles, étaient déjà celles-là |
 | le compteur (« 7/20 »), partout | **7/20** | des chiffres, rien à traduire — mais désormais UNE seule écriture (`PastilleCompteur`) pour les cartes, le fil et les fiches |
 
-> **La plaque du profil a été supprimée** (nº 844-§4) : les deux lignes
-> qu'elle affichait — le nom, puis « Private Studio · Lyon, FR » — ne
-> s'écrivent plus nulle part. Les entrées des nº 842 et 843 qui la
-> nomment restent vraies pour LA CARTE DU WEB, seule porteuse
-> aujourd'hui.
+### Ajouts de la 845 (la plaque rétablie, le squelette du fil)
+
+**Aucun texte neuf, et un texte RETIRÉ.** La nº 845 rétablit la plaque
+du profil que la nº 844 avait supprimée : les deux lignes qu'elle
+affiche — le nom, puis « Private Studio · Lyon, FR » — reviennent
+telles quelles, sans un mot de changé (`sousTitreDeCarte`,
+`ligneCarteMobile`). Le seul libellé de la nº 844, « Back », disparaît
+avec la croix qui le portait. Le SQUELETTE du fil et la pastille
+alignée sur la marge ne portent aucun texte : des rectangles gris et
+des chiffres.
+
+> **Les entrées des nº 842 et 843 qui nomment la plaque redeviennent
+> vraies au mot près** : elle est de nouveau à l'écran, dans la vue
+> photo du doigt.
 
 ## 3 · Le ton
 

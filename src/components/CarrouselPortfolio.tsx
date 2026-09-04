@@ -12,7 +12,10 @@ import {
 //  les cartes portent depuis la nº 839.
 import { BoutonChevron, CHEVRON_GALERIE } from "@/components/GalerieQuiDefile";
 import { ZoomPincement } from "@/components/ZoomPincement";
-import { CADRE_PHOTO_PORTFOLIO } from "@/config/tatouage";
+import {
+  AIR_PASTILLE_CARTE_DOIGT,
+  CADRE_PHOTO_PORTFOLIO,
+} from "@/config/tatouage";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 
 /**
@@ -1055,7 +1058,12 @@ export function CarrouselPortfolio({
       eveillee={pastille.eveillee}
       place={
         surCarte
-          ? `top-2 right-2 ${badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"}`
+          ? //  §3 (nº 845) — L'AIR DE LA CARTE DU DOIGT vient de
+            //  `config/tatouage` : une seule valeur pour le haut et la
+            //  droite, celle de la marge du site. Le pourquoi complet y
+            //  est écrit. (La variante « carte » n'existe QUE dans le fil
+            //  du doigt — CarteTatoueur, `hidden mobile:block`.)
+            `${AIR_PASTILLE_CARTE_DOIGT} ${badgeReduit ? "px-2 py-1" : "px-2.5 py-1.5"}`
           : //  §1 (nº 375, repris nº 452) — SUR UNE FICHE, EN HAUT À
             //  DROITE, SUR LES DEUX APPAREILS.
             "right-3 top-3 px-2.5 py-1.5"

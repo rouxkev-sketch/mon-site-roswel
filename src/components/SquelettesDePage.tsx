@@ -3,7 +3,17 @@
 import { useEffect, useLayoutEffect } from "react";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
 import { CADRE_PHOTO_PORTFOLIO, LARGEUR_SITE } from "@/config/tatouage";
-import { CLASSES_GRILLE_CARTES } from "@/components/GrilleTatoueurs";
+import {
+  CLASSES_GRILLE_CARTES,
+  COLONNE_UNIQUE_DU_FIL,
+  GOUTTIERE_DU_FIL,
+} from "@/components/GrilleTatoueurs";
+//  §2 (nº 845) — les deux boîtes de la carte du fil, lues chez elle :
+//  le squelette les épouse au pixel (voir CarteGriseDuFil).
+import {
+  RANGEE_EN_TETE_DE_FIL,
+  RANGEE_PIED_DE_FIL,
+} from "@/components/CarteFil";
 import { RYTHME_TITRE_RESULTATS } from "@/components/LigneResultats";
 import { CIBLE_GESTE_BARRE, RESERVE_RANGEE } from "@/lib/reserve-barre";
 //  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
@@ -226,6 +236,85 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
   );
 }
 
+/**
+ * ██ §2 (nº 845) — LA CARTE GRISE DU FIL (DOIGT) ██
+ * ==================================================================
+ * LE DÉFAUT, ET IL DATE DE LA nº 841 : depuis que les résultats du
+ * doigt sont un FIL pleine largeur (une carte par rangée, en-tête,
+ * image, pied), le squelette leur promettait encore la MOSAÏQUE À DEUX
+ * COLONNES — deux petites cases par rangée, sans en-tête ni pied. Tout
+ * sautait à l'arrivée : le nombre de colonnes, la largeur des photos,
+ * la hauteur de chaque rangée.
+ * CE BLOC EST DONC LA SILHOUETTE DE `CarteFil`, à la lettre :
+ *  · L'EN-TÊTE — le rond de 40, deux traits de texte, le rectangle du
+ *    badge du type. Sa BOÎTE vient de la carte elle-même
+ *    (`RANGEE_EN_TETE_DE_FIL`, components/CarteFil) : ni les écarts ni
+ *    les marges ne sont recopiés ;
+ *  · L'IMAGE — le format 4/5 du site, pleine largeur ;
+ *  · LE PIED — sa boîte vient aussi de la carte
+ *    (`RANGEE_PIED_DE_FIL`) : une cible ronde à gauche (signaler), les
+ *    points au centre, deux cibles rondes à droite (partage, fanion).
+ *    ⚠️ TROIS ICÔNES, ET NON DEUX : la consigne de la nº 845 dit
+ *    « points et deux icônes » ; la carte réelle en porte TROIS depuis
+ *    la nº 842 (signaler à gauche, partage et fanion à droite). C'est
+ *    la carte réelle qui fait foi — un squelette qui promet moins que
+ *    ce qui arrive fait sauter la rangée qu'il annonce.
+ *
+ * ██ LES HAUTEURS DE TEXTE SONT CALCULÉES, PAS DEVINÉES ██
+ * Les deux traits de l'en-tête valent EXACTEMENT les boîtes de ligne
+ * qu'ils remplacent, `leading-tight` étant 1,25 :
+ *   · le nom  : 16 px × 1,25 = 20 px ;
+ *   · la ville : 14,5 px × 1,25 = 18,125 px,
+ * séparés des mêmes 4 px (`mt-1`). La colonne fait donc 42,125 px, et
+ * c'est elle qui décide de la hauteur de l'en-tête (le rond n'en fait
+ * que 40). Le banc nº 845 mesure les deux côte à côte.
+ */
+function CarteGriseDuFil() {
+  return (
+    <>
+      <div className={RANGEE_EN_TETE_DE_FIL}>
+        <span className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
+        <div className="min-w-0 flex-1">
+          {/*  20 px — le nom (16 × 1,25). */}
+          <div className="h-5 w-1/2 bg-sombre-eleve" />
+          {/*  18,125 px — la ville (14,5 × 1,25), 4 px plus bas. */}
+          <div className="mt-1 h-[18.125px] w-1/3 bg-sombre-eleve" />
+        </div>
+        {/*  LE BADGE DU TYPE : 30 px de haut, la hauteur qu'il se donne
+             (`min-h-[30px]`, chez lui — BadgeTypeDeFiche).
+             SA LARGEUR NE PEUT PAS ÊTRE SUE : elle dépend du libellé, et
+             il y en a trois. MESURÉS à l'atelier : « Artist » 69 px,
+             « Tattoo Shop » 115, « Private Studio » 128. On pose donc le
+             MILIEU DE LA FOURCHETTE, 98 px : c'est la valeur qui borne
+             l'écart au plus petit — jamais plus de 30 px de trop ni de
+             trop peu, quel que soit le portfolio qui arrive.
+             ⚠️ ELLE NE DÉCIDE DE RIEN : l'en-tête est une rangée de
+             flexion dont la colonne de texte cède la première (`min-w-0
+             flex-1`) — la hauteur de la rangée, donc celle de la carte,
+             ne dépend pas de cette largeur. C'est mesuré au banc nº 845,
+             où le squelette et la vraie carte tombent au millième. */}
+        <span className="h-[30px] w-[98px] shrink-0 rounded-lg bg-sombre-eleve" />
+      </div>
+      <div className={`hidden mobile:block w-full ${CADRE_PHOTO_PORTFOLIO} bg-sombre-eleve`} />
+      <div className={RANGEE_PIED_DE_FIL}>
+        <span className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve -ml-2" />
+        {/*  LES POINTS, centrés sur la carte entière comme les vrais
+             (nº 842) : sept crans de 6 px, écartés de 4 — la frise que
+             `PointsDuCarrousel` dessine au repos. */}
+        <span className="pointer-events-none absolute inset-x-0 flex justify-center gap-1">
+          {Array.from({ length: 5 }, (_, rang) => (
+            <span key={rang} className="h-1.5 w-1.5 rounded-full bg-sombre-eleve" />
+          ))}
+        </span>
+        <span className="flex shrink-0 items-center -mr-2">
+          <span className="h-10 w-10 rounded-full bg-sombre-eleve" />
+          <span className="h-10 w-10 rounded-full bg-sombre-eleve" />
+        </span>
+      </div>
+    </>
+  );
+}
+
 /** Une carte de mosaïque, grise — LA silhouette de la vraie
     (CarteTatoueur, mesurée au banc nº 707) : le cadre 4/5 de la photo
     SANS arrondi (`rounded-none`), puis le pied aux hauteurs exactes —
@@ -233,26 +322,36 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
     du rond de profil 40). Les enveloppes du pied reprennent les
     classes de la vraie carte (`pt-2 px-0.5 mobile:px-2`, rangée
     `gap-2.5`, rond caché au doigt par `mobile:` — le critère
-    d'appareil de la vraie, jamais une largeur, piège nº 60). */
-function CarteGrise({ classe = "" }: { classe?: string }) {
+    d'appareil de la vraie, jamais une largeur, piège nº 60).
+    ⚠️ §2 (nº 845) — SUR LA LISTE DES RÉSULTATS (`fil`), CE BLOC-CI EST
+    CELUI DU WEB SEUL : au doigt il s'efface (`mobile:hidden`) et
+    `CarteGriseDuFil` prend sa place. C'est le partage EXACT de la vraie
+    carte, qui rend les deux structures et laisse la feuille de style
+    choisir selon l'appareil (CarteTatoueur, règle nº 60). « Ma
+    sélection » n'est pas un fil : elle garde ses deux colonnes, et ce
+    bloc, aux deux appareils. */
+function CarteGrise({ classe = "", fil = false }: { classe?: string; fil?: boolean }) {
   return (
     <li className={`min-w-0 list-none${classe ? ` ${classe}` : ""}`}>
-      <div className={`${CADRE_PHOTO_PORTFOLIO} w-full bg-sombre-eleve`} />
-      <div className="pt-2 px-0.5 mobile:px-2">
-        <div className="h-4 sm:h-[18px] w-2/3 bg-sombre-eleve" />
-        {/*  §3 (nº 709) — DEUX LIGNES à droite du rond, comme la
-             vraie carte (nom + sous-ligne empilés) ; au doigt la
-             vraie n'a qu'une ligne et pas de rond — la seconde barre
-             suit le rond (`mobile:hidden`). La rangée garde ses
-             40 px au web (`sm:h-10`) : le pied ne bouge pas. */}
-        <div className="mt-4 mobile:mt-1 flex items-center gap-2.5 sm:h-10">
-          <span className="mobile:hidden h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="h-4 w-1/2 bg-sombre-eleve" />
-            <div className="mobile:hidden h-3 w-1/3 bg-sombre-eleve" />
+      <div className={fil ? "mobile:hidden" : ""}>
+        <div className={`${CADRE_PHOTO_PORTFOLIO} w-full bg-sombre-eleve`} />
+        <div className="pt-2 px-0.5 mobile:px-2">
+          <div className="h-4 sm:h-[18px] w-2/3 bg-sombre-eleve" />
+          {/*  §3 (nº 709) — DEUX LIGNES à droite du rond, comme la
+               vraie carte (nom + sous-ligne empilés) ; au doigt la
+               vraie n'a qu'une ligne et pas de rond — la seconde barre
+               suit le rond (`mobile:hidden`). La rangée garde ses
+               40 px au web (`sm:h-10`) : le pied ne bouge pas. */}
+          <div className="mt-4 mobile:mt-1 flex items-center gap-2.5 sm:h-10">
+            <span className="mobile:hidden h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="h-4 w-1/2 bg-sombre-eleve" />
+              <div className="mobile:hidden h-3 w-1/3 bg-sombre-eleve" />
+            </div>
           </div>
         </div>
       </div>
+      {fil && <CarteGriseDuFil />}
     </li>
   );
 }
@@ -273,9 +372,15 @@ export function CorpsSquelette({
   avecTitre,
   classe = "",
   selection = false,
+  fil = false,
 }: {
   avecTitre: boolean;
   classe?: string;
+  /** §2 (nº 845) — LA LISTE DES RÉSULTATS : au doigt, ses cartes sont
+      celles du FIL (une par rangée, pleine largeur — nº 841), et le
+      squelette doit les annoncer telles quelles. Le web ne change pas
+      d'un pixel, ni « Ma sélection », qui n'est pas un fil. */
+  fil?: boolean;
   /** nº 819 — « Ma sélection » : la grille grise porte alors le repère
       `data-squelette-cartes`, que la garde CSS n'affiche que si ce
       compte avait des cartes (lib/memoire-selection). Les autres
@@ -317,12 +422,46 @@ export function CorpsSquelette({
            (Les cases ne SURVIVENT jamais à l'arrivée : le film du banc
            nº 709 le prouve, image par image — le remplacement démonte
            le squelette entier.) */}
+      {/*  §2 (nº 845) — LA RÈGLE DE COLONNES DU FIL, LUE CHEZ LA VRAIE
+           GRILLE (`COLONNE_UNIQUE_DU_FIL`, `GOUTTIERE_DU_FIL` —
+           GrilleTatoueurs) : une colonne au doigt, 24 px entre les
+           rangées. Rien n'est recopié, et le web garde exactement
+           `CLASSES_GRILLE_CARTES`. */}
       <ul
         {...(selection ? { "data-squelette-cartes": "" } : {})}
-        className={CLASSES_GRILLE_CARTES}
+        className={`${CLASSES_GRILLE_CARTES}${
+          fil ? ` ${COLONNE_UNIQUE_DU_FIL} ${GOUTTIERE_DU_FIL}` : ""
+        }`}
       >
         {Array.from({ length: 15 }, (_, rang) => (
-          <CarteGrise key={rang} classe={rang >= 12 ? "hidden grille5:block" : ""} />
+          <CarteGrise
+            key={rang}
+            fil={fil}
+            /*  §2 (nº 845) — AU DOIGT, LE FIL N'EN MONTRE QUE TROIS, et
+                ce n'est pas une économie de traits : une carte de fil
+                fait ~586 px de haut sur un écran de 390 — quinze en
+                feraient 8 800, quatre fois la hauteur que le squelette
+                à deux colonnes posait hier. Or la libération de la
+                réserve compare la hauteur du document à celle du
+                squelette (lib/restitution-position, nº 711) : lui
+                donner une taille sans rapport avec la vraie liste
+                rouvrirait précisément le défaut que la nº 711 a fermé.
+                TROIS cartes (~1 758 px) dépassent l'écran le plus haut
+                et restent dans l'ordre de grandeur d'hier.
+                ⚠️ C'EST L'APPAREIL QUI TRANCHE (`mobile:hidden`, règle
+                nº 60), jamais une largeur — et seulement sur un fil.
+                ⚠️ LES TROIS DERNIÈRES gardent leur `hidden` de base :
+                `grille5:` est un palier de 1 600 px, qu'aucun téléphone
+                n'atteint — elles sont déjà masquées au doigt, il n'y a
+                pas deux règles d'affichage à départager (piège 389). */
+            classe={
+              rang >= 12
+                ? "hidden grille5:block"
+                : fil && rang >= 3
+                  ? "mobile:hidden"
+                  : ""
+            }
+          />
         ))}
       </ul>
     </div>
@@ -343,9 +482,11 @@ const useEffetAvantPeinture =
 function MosaiqueGrise({
   avecTitre,
   selection = false,
+  fil = false,
 }: {
   avecTitre: boolean;
   selection?: boolean;
+  fil?: boolean;
 }) {
   /*  §2 (nº 722) — AVANT LA PEINTURE du squelette, la remontée armée
       par le geste (carte de style, recherche) se joue : le squelette
@@ -370,7 +511,7 @@ function MosaiqueGrise({
       aria-label="Loading page"
       className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16`}
     >
-      <CorpsSquelette avecTitre={avecTitre} selection={selection} />
+      <CorpsSquelette avecTitre={avecTitre} selection={selection} fil={fil} />
     </main>
   );
 }
@@ -381,7 +522,8 @@ export function SqueletteRecherche() {
   return (
     <>
       <BarreSquelette centre="recherche" />
-      <MosaiqueGrise avecTitre />
+      {/*  §2 (nº 845) — LA RECHERCHE EST UN FIL AU DOIGT (nº 841). */}
+      <MosaiqueGrise avecTitre fil />
     </>
   );
 }

@@ -182,30 +182,32 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    /*  ██ LE CONSTAT DE LA nº 843 A ÉTÉ SUIVI D'EFFET À LA nº 844 ██
+    /*  ██ LE CONSTAT DE LA nº 843, ET SA FIN (nº 844 puis nº 845) ██
         CE BANC DISAIT, EN MESURANT : « la plaque ne s'affiche nulle
         part depuis la nº 841 — la rendre au parcours, ou la retirer,
-        est une décision du propriétaire ». IL A TRANCHÉ (nº 844-§4) :
-        la plaque est SUPPRIMÉE, et la vue photo du doigt revient pour
-        ses deux entrées, avec une CROIX de retour à la place.
-        Le bloc reste donc ici, retourné : il ne mesure plus l'écriture
-        d'une plaque, il vérifie qu'elle a bien disparu — et que ce qui
-        la remplace est là. */
-    titre("843 · la plaque du profil : le constat, et sa suite (nº 844)");
+        est une décision du propriétaire ». Elle a été RETIRÉE à la
+        nº 844, puis RENDUE AU PARCOURS à la nº 845 : la vue photo du
+        doigt existe de nouveau (lien partagé, vignette du Portfolio) et
+        la plaque y vit. Le constat est donc clos, et ce bloc mesure
+        désormais l'état d'arrivée : la plaque À L'ÉCRAN, avec son
+        écriture de la nº 843. */
+    titre("843 · la plaque du profil : son écriture, et sa place retrouvée (nº 845)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
     const m = await page.evaluate(() => {
-      const lecture = document.querySelector("[data-colonne-lecture]");
+      const plaque = document.querySelector("[data-habillage-photo]");
+      const bloc = plaque?.querySelector("a > span:nth-child(2)");
       return {
-        plaque: document.querySelector("[data-habillage-photo]") !== null,
-        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
-        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
-        croix: document.querySelector("[data-retour-vue-photo]") !== null,
+        nom: bloc?.querySelector(":scope > span:first-child")?.textContent.trim(),
+        sous: bloc?.querySelector(":scope > span:nth-child(2)")?.textContent.trim(),
+        badge: plaque?.querySelector("[data-badge-type]") !== null,
+        montree: (plaque?.getBoundingClientRect().height ?? 0) > 0,
+        chevron: plaque?.querySelector("a > span:last-child svg") !== null,
       };
     });
-    verif("SUITE DU CONSTAT nº 843 : la plaque a été supprimée (nº 844)", m.plaque === false);
-    verif("la vue photo du doigt est revenue, avec sa croix de retour",
-      m.vuePhoto && m.lectureMasquee === true && m.croix, JSON.stringify(m));
+    verif("son écriture dit le NOM SEUL, puis « Type · Ville »", m.nom === "Banc 843" && m.sous === "Private Studio · Lyon, FR", `${m.nom} / ${m.sous}`);
+    verif("elle ne porte pas de badge (elle est déjà un lien, et porte son chevron)", m.badge === false && m.chevron === true);
+    verif("FIN DU CONSTAT nº 843 : elle est de nouveau montrée (nº 845)", m.montree === true);
   } catch (e) {
     verif("déroulement du banc 843 (plaque)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

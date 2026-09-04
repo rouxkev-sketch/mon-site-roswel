@@ -1115,6 +1115,9 @@ export function IndexTatoueurs({
               pixel. */
           <CorpsSquelette
             avecTitre
+            //  §2 (nº 845) — c'est la liste des RÉSULTATS : au doigt,
+            //  ses cartes sont celles du fil (nº 841).
+            fil
             classe="visible absolute inset-x-0 top-0 px-4 sm:px-6"
           />
         )}

@@ -67,6 +67,30 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * l'hydratation. Ce que cela coûte est dit chez la carte.
  */
 
+/**
+ * ██ §2 (nº 845) — LES DEUX RANGÉES SONT DES ÉCRITURES NOMMÉES ██
+ * ------------------------------------------------------------------
+ * L'en-tête et le pied de la carte du fil ont un SECOND consommateur
+ * depuis la nº 845 : le SQUELETTE d'attente (components/
+ * SquelettesDePage), qui doit épouser cette carte au pixel — sans quoi
+ * la liste saute à l'arrivée. Les deux chaînes sortent donc du JSX pour
+ * être lues aux deux endroits (la règle du site, nº 276 : le second
+ * porteur extrait, aucune valeur n'est choisie au passage).
+ * ⚠️ CE SONT LES BOÎTES, PAS LEUR CONTENU : ce que chaque rangée
+ * CONTIENT reste écrit chez elle — le squelette y met des rectangles
+ * gris, la carte y met des liens et des boutons. Ce qui doit coïncider,
+ * et que ces deux chaînes garantissent, c'est la GÉOMÉTRIE : l'appareil
+ * (`mobile:`, règle nº 60), l'alignement, les écarts, les marges et la
+ * hauteur minimale.
+ */
+export const RANGEE_EN_TETE_DE_FIL =
+  "hidden mobile:flex items-center gap-3 px-4 pb-3";
+/*  ⚠️ `relative` PORTE LES POINTS EN ABSOLU (voir la note du pied) ;
+    `min-h-10` est la hauteur des cibles tactiles, et c'est elle qui
+    fixe la hauteur du pied — le squelette la reprend telle quelle. */
+export const RANGEE_PIED_DE_FIL =
+  "relative hidden mobile:flex min-h-10 items-center justify-between px-4 pt-1";
+
 /** L'EN-TÊTE DU FIL — avatar, nom, ville, puis le badge du type. */
 export function EnTeteDeFil({
   tatoueur,
@@ -78,7 +102,7 @@ export function EnTeteDeFil({
   return (
     <div
       data-en-tete-de-fil=""
-      className="hidden mobile:flex items-center gap-3 px-4 pb-3"
+      className={RANGEE_EN_TETE_DE_FIL}
     >
       {/*  UN SEUL LIEN POUR LES TROIS (avatar, titre, sous-titre), vers
            le profil — pas deux liens côte à côte vers la même
@@ -173,7 +197,7 @@ export function PiedDeFil({
           photo d'une fiche au doigt (nº 598). Les centrer entre les
           groupes les décalerait dès que l'un des deux change de
           largeur. */
-      className="relative hidden mobile:flex min-h-10 items-center justify-between px-4 pt-1"
+      className={RANGEE_PIED_DE_FIL}
     >
       {/*  SIGNALER — sa cible de 40 px ramenée sur la marge de la page :
            le retrait vaut le vide autour du glyphe, (40 − 22) / 2 = 9,

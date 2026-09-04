@@ -165,20 +165,14 @@ export function ligneDeLieuDeCarte(lieu: LieuAffichable): string {
  *       entière (nº 502), et elle porte son chevron à droite : un badge
  *       qui mène au même endroit y serait un lien dans un lien (interdit,
  *       nº 517), et sans lien il ferait doublon avec le chevron.
- *
- * ██ §4 (nº 844) — IL N'EN RESTE QU'UN PORTEUR : LA CARTE DU WEB ██
- * La PLAQUE DU PROFIL a été supprimée à la nº 844 (elle n'était plus
- * affichée nulle part depuis la nº 841 — voir FicheTatoueur). Le second
- * argument de l'arbitrage ci-dessus n'a donc plus de sujet ; il reste
- * écrit parce qu'il dit POURQUOI un badge ne convient pas à une plaque
- * déjà cliquable, et cette leçon-là survivra à la plaque.
- * L'ÉCRITURE RESTE DONC CELLE DE LA CARTE DU WEB — et elle reste ici,
- * partagée, parce que le badge du fil lit LE MÊME libellé de type
- * (`libelleTypeFiche`) : la divergence qu'on évite est entre le badge
- * et le sous-titre, pas entre deux sous-titres.
- * Le LIEU reste au porteur : la carte écrit `ligneDeLieuDeCarte` ;
- * `ligneCarteMobile` (qui abrège le pays quand une division s'écrit,
- * nº 486) servait à la plaque et n'a plus d'appelant ici.
+ * L'ÉCRITURE RESTE UNIQUE POUR LES DEUX QUI LE GARDENT — celle-ci. Le
+ * LIEU, lui, reste au porteur : la carte écrit `ligneDeLieuDeCarte`, la
+ * plaque `ligneCarteMobile` (qui abrège le pays quand une division
+ * s'écrit, nº 486) — elles ne disent pas la même chose partout, et les
+ * confondre serait un choix graphique, pas un ménage.
+ * ⚠️ LES DEUX PORTEURS SONT BIEN DEUX (nº 845) : la nº 844 avait
+ * supprimé la plaque du profil, le propriétaire l'a rétablie. Cet
+ * arbitrage vaut donc de nouveau pour elle, mot pour mot.
  */
 export function sousTitreDeCarte(
   tatoueur: { type_fiche?: string | null; etablissement?: string | null },

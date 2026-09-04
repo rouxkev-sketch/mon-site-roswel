@@ -152,10 +152,12 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
         dit (`entree=lien`), mesuré juste au-dessus. */
     titre("841 · l'ancienne route rend la VUE PHOTO depuis la nº 844 (la redirection est retirée)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&photo=${T}-p2`, { waitUntil: "networkidle" }); await page.waitForTimeout(1500);
-    const direct = await page.evaluate(() => ({ url: location.pathname + location.search, vuePhoto: document.querySelector("[data-vue-photo]") !== null, colonne: getComputedStyle(document.querySelector("[data-colonne-lecture]")).display, photo: (() => { const n = document.querySelector("[data-photo-de-tete]"); return n ? getComputedStyle(n).display : "absente"; })(), garde: document.documentElement.dataset.entreeLien ?? null, croix: document.querySelector("[data-retour-vue-photo]") !== null }));
+    const direct = await page.evaluate(() => ({ url: location.pathname + location.search, vuePhoto: document.querySelector("[data-vue-photo]") !== null, colonne: getComputedStyle(document.querySelector("[data-colonne-lecture]")).display, photo: (() => { const n = document.querySelector("[data-photo-de-tete]"); return n ? getComputedStyle(n).display : "absente"; })(), garde: document.documentElement.dataset.entreeLien ?? null, plaque: (document.querySelector("[data-habillage-photo]")?.getBoundingClientRect().height ?? 0) > 0 }));
     verif("l'adresse n'est PLUS réécrite : elle reste celle du lien partagé", direct.url === `/artist/${T}?style=blackwork&photo=${T}-p2`, direct.url);
     verif("c'est la vue photo qui s'affiche : photo montrée, colonne de lecture retirée", direct.vuePhoto && direct.photo !== "none" && direct.colonne === "none", `vue-photo ${direct.vuePhoto} · photo ${direct.photo} · colonne ${direct.colonne}`);
-    verif("la garde d'avant peinture est levée, et la croix de retour est là", direct.garde === null && direct.croix, `garde ${direct.garde} · croix ${direct.croix}`);
+    //  §1 (nº 845) — LA CROIX DE LA nº 844 EST RETIRÉE : c'est la PLAQUE
+    //  du profil, rétablie, qui donne le chemin depuis la vue photo.
+    verif("la garde d'avant peinture est levée, et la plaque du profil est là", direct.garde === null && direct.plaque, `garde ${direct.garde} · plaque ${direct.plaque}`);
   } catch (e) {
     verif("déroulement du banc 841 (doigt)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
