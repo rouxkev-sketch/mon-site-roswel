@@ -21,7 +21,6 @@ import {
   libelleStyle,
   //  §1 (nº 451) — le mot « Artiste / Salon / Studio » de la ligne
   //  grise, la MÊME écriture que le sous-titre des cartes (nº 211-§2).
-  libelleTypeFiche,
   MARQUE_YOKOFOLIO,
 } from "@/config/tatouage";
 //  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
@@ -84,6 +83,7 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AvatarRond } from "@/components/AvatarRond";
+import { TitreDeCarte } from "@/components/TitreDeCarte";
 //  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
 //  unique du site : la vue photo attend que l'adresse soit commise
 //  avant de poser la page en haut (voir `surSerieChoisie`).
@@ -1411,32 +1411,47 @@ export function FicheTatoueur({
                        garde le nom sur UNE ligne avec ses points de
                        suspension — deux ou trois caractères de moins y
                        tiennent, rien d'autre ne bouge. */}
-                  <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
-                    {tatoueur.nom}
+                  {/*  ██ §3 (nº 842) — « Mara Voss · Private Studio » ██
+                       Le TYPE monte de la ligne du dessous à celle du
+                       titre, comme sur les cartes : la même règle, la
+                       même écriture (components/TitreDeCarte). LE
+                       ROGNAGE D'UNE LIGNE PART D'ICI (`truncate`), et
+                       il le faut : il aurait coupé le type au lieu de
+                       le laisser descendre. Deux lignes au plus.
+                       ⚠️ LA PLAQUE N'A PAS DE PLANCHER (voir la note de
+                       la nº 555) : sa hauteur suit son contenu, un nom
+                       long la fait grandir d'une ligne — c'est déjà ce
+                       qu'elle faisait d'un pixel et quart à la nº 555. */}
+                  {/*  ⚠️ PAS DE `block` AVEC `line-clamp-2` (piège nº 389) : le
+                       rognage pose déjà son `display`. */}
+                  <span className="line-clamp-2 text-[16px] leading-tight text-sombre-texte">
+                    <TitreDeCarte tatoueur={tatoueur} />
                   </span>
                   {/*  §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE :
-                       « Artiste: Lyon, France ». La règle définitive du
+                       « Artiste: Lyon, France ». C'était la règle du
                        propriétaire, celle des cartes (CarteTatoueur) et
-                       des portfolios suivis (lib/selection-suivis) — les
-                       trois endroits du site où un type de profil est
-                       suivi de son lieu disent la même chose.
+                       des portfolios suivis (lib/selection-suivis).
+                       ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE, comme
+                       sur les cartes : le type est monté sur la ligne du
+                       titre. Les PORTFOLIOS SUIVIS de « Ma sélection »
+                       gardent leurs deux-points (`APRES_LE_TYPE`) — la
+                       nº 842 ne parle que des cartes et de cette plaque,
+                       et le dit.
+                       ⚠️ LE LIEU GARDE SON ÉCRITURE À ELLE
+                       (`ligneCarteMobile`, nº 486) : elle abrège le pays
+                       quand une division s'écrit, ce que la ligne des
+                       cartes ne fait pas. Les deux disent « Lyon, FR »
+                       ici ; les confondre serait un choix graphique, pas
+                       un ménage.
                        §1 (nº 455) : 14,5 px (13 à la nº 453), les 4 px
                        d'air sous le nom restent. */}
                   <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
-                    {[
-                      libelleTypeFiche(
-                        tatoueur.type_fiche,
-                        tatoueur.etablissement
-                      ),
-                      ligneCarteMobile({
-                        ville: tatoueur.ville_nom,
-                        region: tatoueur.region,
-                        pays: tatoueur.pays,
-                        code_pays: tatoueur.code_pays,
-                      }),
-                    ]
-                      .filter(Boolean)
-                      .join(": ")}
+                    {ligneCarteMobile({
+                      ville: tatoueur.ville_nom,
+                      region: tatoueur.region,
+                      pays: tatoueur.pays,
+                      code_pays: tatoueur.code_pays,
+                    })}
                   </span>
                 </span>
                 {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE

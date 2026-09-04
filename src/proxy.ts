@@ -114,9 +114,43 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Cette lecture déclenche le renouvellement de la session si besoin.
-  // Ne pas ajouter de code entre la création du client et cette ligne.
-  await supabase.auth.getClaims();
+  /*  ██ §5 (nº 842) — LE PROXY NE TOMBE PLUS AVEC SUPABASE ██
+      ------------------------------------------------------------------
+      CETTE LIGNE ÉTAIT LE SEUL POINT DE PANNE GLOBAL DU SITE. Le proxy
+      s'exécute sur TOUTES les adresses sauf les fichiers statiques
+      (voir le `matcher`, en bas) ; une exception ici n'échoue pas une
+      page, elle échoue LA REQUÊTE — donc toutes les pages, tant que la
+      cause dure. Or `getClaims` parle au serveur d'authentification de
+      Supabase par le réseau : un incident chez lui, une coupure d'une
+      seconde, une réponse malformée, et le site entier devient
+      injoignable sans qu'une seule ligne du site soit en cause.
+      CE QU'ON PERD QUAND ELLE ÉCHOUE, ET C'EST TOUT : la session n'est
+      pas RENOUVELÉE pour cette requête-là. Le cookie existant continue
+      de valoir ; la page se rend, connectée ou non, selon ce que le
+      serveur en lit. La requête suivante retentera. C'est très
+      exactement le comportement qu'on veut d'un renouvellement
+      d'avance : il aide, il ne conditionne rien.
+      ⚠️ ON NE TOUCHE À RIEN D'AUTRE : aucun code ne s'ajoute entre la
+      création du client et cette lecture (la consigne d'origine), et
+      les cookies posés par `setAll` pendant l'appel restent posés — la
+      réponse est déjà refabriquée quand l'exception arrive.
+      ⚠️ CE N'EST PAS LE MESSAGE « The site is temporarily unavailable »
+      QUE LE PROPRIÉTAIRE A VU : celui-là est le nôtre, et il est
+      HONNÊTE — il dit qu'une LECTURE DE BASE a échoué en production, où
+      le catalogue de démonstration est interdit (lib/catalogue-
+      demonstration). Le site répondait donc ; c'est la base qui ne
+      répondait pas. Ce garde-fou-ci couvre l'autre panne possible,
+      celle qui n'aurait affiché aucun message du tout. */
+  try {
+    // Cette lecture déclenche le renouvellement de la session si besoin.
+    // Ne pas ajouter de code entre la création du client et cette ligne.
+    await supabase.auth.getClaims();
+  } catch (erreur) {
+    console.warn(
+      "[proxy] session not refreshed:",
+      erreur instanceof Error ? erreur.message : String(erreur)
+    );
+  }
 
   /*  ██ §1 (nº 432) — L'AIGUILLAGE DES FICHES TAGUÉES EST DÉCLARÉ AUX
       CACHES, ET LA COPIE ROBOT N'EST PLUS CAPTURABLE ██

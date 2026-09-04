@@ -9,7 +9,9 @@ import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
 import { villeAffichee, type LieuAffichable } from "@/lib/adresse";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
-import { sousTitreDeCarte } from "@/lib/photo-tatoueur";
+import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { TitreDeCarte } from "@/components/TitreDeCarte";
+import { ligneDeLieuDeCarte } from "@/lib/photo-tatoueur";
 import type { PhotoGalerie } from "@/lib/photo-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -26,9 +28,11 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *
  * LA CARTE, DE HAUT EN BAS :
  *  a. L'EN-TÊTE (ici, `EnTeteDeFil`) : l'avatar à gauche ; à sa droite
- *     le TITRE (le nom, gras, blanc) et le SOUS-TITRE (« Artist · Lyon,
- *     FR », gris — `sousTitreDeCarte`, l'écriture partagée avec la carte
- *     du web) ; à droite, face à l'avatar, le badge « Follow »
+ *     le TITRE — « Mara Voss · Private Studio », le nom en gras blanc et
+ *     le type en gris (nº 842, components/TitreDeCarte) — et le
+ *     SOUS-TITRE, la ville seule (`ligneDeLieuDeCarte`) ; les deux
+ *     écritures sont partagées avec la carte du web et la plaque du
+ *     profil ; à droite, face à l'avatar, le badge « Follow »
  *     (`BoutonSuivre`, le badge existant, mêmes états). Avatar, titre et
  *     sous-titre sont UN SEUL lien, vers LE PROFIL (`adresseDeLienInterne`
  *     — l'adresse que la plaque du profil et les liens internes écrivent
@@ -39,10 +43,12 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *     « carte », le même carrousel que la fiche ; la pastille « 7/20 »
  *     en haut à droite (le patron partagé de la nº 839). Un toucher sur
  *     l'image NE FAIT RIEN : aucune photo n'est un lien ;
- *  c. LE PIED (ici, `PiedDeFil`) : les POINTS de position (la frise des
- *     fiches, `PointsDuCarrousel` — une seule écriture), et à droite deux
- *     icônes nues : le fanion (signaler) et le partage, celles des fiches
- *     au doigt, à l'échelle (cibles de 40 px).
+ *  c. LE PIED (ici, `PiedDeFil`), à trois places depuis la nº 842 :
+ *     SIGNALER à gauche, les POINTS de position au centre (la frise des
+ *     fiches, `PointsDuCarrousel` — une seule écriture), le PARTAGE puis
+ *     le FANION à droite. Toutes les icônes sont celles des fiches au
+ *     doigt, à l'échelle (cibles de 40 px) ; le fanion enregistre LA
+ *     PHOTO AFFICHÉE.
  *
  * ██ POURQUOI CES DEUX BLOCS SONT DES VOISINS DU LIEN DU WEB ██
  * Sur le web, la carte entière est UN lien qui la contient (nº 517) —
@@ -96,11 +102,23 @@ export function EnTeteDeFil({
           {/*  LE NOM ET SA LIGNE : la typographie de la plaque du profil
                (nº 555 pour le nom à 16 px, nº 455 pour la ligne à
                14,5) — le même texte, lu au même endroit du parcours. */}
-          <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
-            {tatoueur.nom}
+          {/*  ██ §3 (nº 842) — « Mara Voss · Private Studio », puis la
+               ville seule ██
+               Le type monte du sous-titre à la ligne du titre (la règle
+               entière : components/TitreDeCarte). LE ROGNAGE D'UNE
+               LIGNE PART D'ICI : `truncate` aurait fait disparaître le
+               type au lieu de le faire descendre. Deux lignes au plus,
+               et le type ne se coupe jamais. */}
+          {/*  ⚠️ PAS DE `block` AVEC `line-clamp-2` (piège nº 389) : le
+               rognage POSE DÉJÀ un `display` à lui, et deux
+               déclarations de la même propriété se départagent à
+               l'ordre de la feuille — mesuré, `block` gagnait et le
+               titre filait sur trois lignes. */}
+          <span className="line-clamp-2 text-[16px] leading-tight text-sombre-texte">
+            <TitreDeCarte tatoueur={tatoueur} />
           </span>
           <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
-            {sousTitreDeCarte(tatoueur, lieu)}
+            {ligneDeLieuDeCarte(lieu)}
           </span>
         </span>
       </Link>
@@ -114,8 +132,8 @@ export function EnTeteDeFil({
   );
 }
 
-/** LE PIED DU FIL — les points au centre, le fanion et le partage à
-    droite. */
+/** LE PIED DU FIL — signaler à gauche, les points au centre, le partage
+    et le fanion à droite (nº 842). */
 export function PiedDeFil({
   tatoueur,
   photos,
@@ -124,6 +142,7 @@ export function PiedDeFil({
   cheminAPartager,
   metier,
 }: {
+
   tatoueur: Tatoueur;
   photos: PhotoGalerie[];
   indice: number;
@@ -139,8 +158,29 @@ export function PiedDeFil({
   return (
     <div
       data-pied-de-fil=""
-      className="relative hidden mobile:flex min-h-10 items-center justify-end px-4 pt-1"
+      /*  ██ §4 (nº 842) — LES TROIS PLACES DU PIED ██
+          Décision du propriétaire : SIGNALER à gauche, les POINTS au
+          centre, le PARTAGE puis le FANION à droite. La nº 841 avait
+          groupé les deux gestes à droite ; ils s'écartent, et le fanion
+          les rejoint.
+          ⚠️ LES DEUX GROUPES SONT AUX EXTRÉMITÉS (`justify-between`) et
+          les points restent CENTRÉS SUR LA CARTE ENTIÈRE, pas sur ce
+          qui reste entre eux : ils sont posés en absolu, comme sous la
+          photo d'une fiche au doigt (nº 598). Les centrer entre les
+          groupes les décalerait dès que l'un des deux change de
+          largeur. */
+      className="relative hidden mobile:flex min-h-10 items-center justify-between px-4 pt-1"
     >
+      {/*  SIGNALER — sa cible de 40 px ramenée sur la marge de la page :
+           le retrait vaut le vide autour du glyphe, (40 − 22) / 2 = 9,
+           arrondi au cran de l'échelle (8 px). */}
+      <div className="relative flex shrink-0 items-center -ml-2">
+        <FenetreSignalement
+          slug={tatoueur.slug}
+          nom={tatoueur.nom}
+          variante="icone"
+        />
+      </div>
       {/*  LES POINTS, CENTRÉS SUR TOUTE LA LARGEUR de la carte — comme
            sous la photo d'une fiche au doigt (nº 598) : l'enveloppe ne
            prend aucun toucher, chaque rond reprend le sien
@@ -152,12 +192,13 @@ export function PiedDeFil({
           <PointsDuCarrousel photos={photos} indice={indice} surRang={surRang} />
         </div>
       )}
-      {/*  LES DEUX GESTES, GROUPÉS À DROITE, cibles de 40 px qui se
-           touchent — l'écriture de la rangée sous la photo d'une fiche
-           au doigt (nº 487). Le retrait négatif ramène le BORD du glyphe
-           de droite sur la marge, pas sa cible. */}
+      {/*  LE PARTAGE, PUIS LE FANION — deux cibles qui se touchent,
+           l'écriture de la rangée sous la photo d'une fiche au doigt
+           (nº 487). Le retrait négatif ramène le BORD DU GLYPHE de
+           droite sur la marge, jamais sa cible : le fanion fait 40 px
+           de large pour un dessin de 24, soit huit pixels de vide de
+           chaque côté — le même cran que le retrait. */}
       <div className="relative flex shrink-0 items-center -mr-2">
-        <FenetreSignalement slug={tatoueur.slug} nom={tatoueur.nom} variante="icone" />
         <BoutonPartageFiche
           nomArtisan={tatoueur.nom}
           cheminFiche={cheminAPartager}
@@ -170,6 +211,28 @@ export function PiedDeFil({
           marque={MARQUE_YOKOFOLIO.nom}
           objet="portfolio"
         />
+        {/*  ██ §4 (nº 842) — LE FANION ENREGISTRE LA PHOTO AFFICHÉE ██
+             Sur « 7/18 », c'est la SEPTIÈME qui part dans « Ma
+             sélection » — la consigne du propriétaire, et c'est déjà ce
+             que fait le cœur des cartes du web (nº 452) : le même
+             composant, la même variante « carte », le même état plein
+             ou vide.
+             ⚠️ LA CLÉ EST CELLE DE LA PHOTO, et il le faut : elle
+             REMONTE le bouton à chaque glissement, ce qui réamorce son
+             état sur la nouvelle photo (le motif de la carte du web,
+             `key={photoRegardee}`). Sans elle, le cœur garderait l'état
+             de la première photo en changeant de sujet.
+             ⚠️ RIEN SANS PHOTO : une fiche de démonstration ou d'avant
+             le portfolio catalogué n'a pas d'identifiant de photo —
+             enregistrer une image qui n'existe pas en base n'aurait
+             aucun sens (BoutonCoeurPhoto s'en garde aussi). */}
+        {photos[indice]?.cle && (
+          <BoutonCoeurPhoto
+            key={photos[indice].cle}
+            photoId={photos[indice].cle}
+            variante="carte"
+          />
+        )}
       </div>
     </div>
   );

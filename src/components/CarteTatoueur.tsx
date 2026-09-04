@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
@@ -16,8 +16,13 @@ import {
   legendeDeCarte,
   photoChoisie,
   photoPourStyle,
-  sousTitreDeCarte,
+  ligneDeLieuDeCarte,
 } from "@/lib/photo-tatoueur";
+import { TitreDeCarte } from "@/components/TitreDeCarte";
+import {
+  photoRetenueDeCarte,
+  retenirPhotoDeCarte,
+} from "@/lib/memoire-cartes";
 import { AvatarRond } from "@/components/AvatarRond";
 import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
@@ -258,6 +263,11 @@ function CarteTatoueurNue({
    */
   const galerieDansLaCarte = photosDeLaCarte.length > 1;
   const galerie = useGalerieDeCarte(photosDeLaCarte.length);
+  /** §1 (nº 279) — L'IDENTITÉ DE CETTE CARTE : deux galeries d'un même
+      artiste sont deux cartes, l'identifiant de la fiche ne suffit pas.
+      C'est la clé de React, celle de `data-carte`, et celle de la
+      mémoire de position (nº 372, revenue à la nº 842). */
+  const cleDeLaCarte = tatoueur.carrousel?.cle ?? tatoueur.id;
   /**
    * §1 (nº 841) — LA PHOTO REGARDÉE AU DOIGT, sur une carte du fil :
    * c'est le carrousel natif qui la possède (son observateur l'annonce,
@@ -270,7 +280,39 @@ function CarteTatoueurNue({
    * plus grand des deux est donc TOUJOURS le rang regardé — et l'autre,
    * zéro.
    */
-  const [indiceDoigt, setIndiceDoigt] = useState(0);
+  const [indiceDoigt, setIndiceDoigt] = useState(() => {
+    /*  ██ §2 (nº 842) — LA CARTE ROUVRE SUR SA PHOTO ██
+        ------------------------------------------------------------
+        LE DÉFAUT DU PROPRIÉTAIRE : faire défiler les photos d'une
+        carte, ouvrir un profil, revenir — et la carte est retombée sur
+        la première. C'est mécanique : au doigt, le retour DÉMONTE la
+        mosaïque puis la remonte, et chaque carte repart de zéro. C'est
+        exactement le défaut que la nº 372 avait traité, et sa mémoire
+        (lib/memoire-cartes) revient avec la même semence.
+        ⚠️ LE DOIGT SEUL, et par l'appareil (règle nº 60) : sur le web,
+        la fenêtre se pose PAR-DESSUS la mosaïque sans rien démonter —
+        les positions y survivent d'elles-mêmes.
+        ⚠️ AUCUN ÉCART D'HYDRATATION : au premier chargement d'un
+        document, la table est vide (c'est une variable de module, elle
+        meurt avec le document) — le serveur et le navigateur rendent
+        donc tous deux zéro. Elle ne parle qu'aux montages SUIVANTS,
+        ceux d'une navigation de client. */
+    if (typeof document === "undefined") return 0;
+    if (document.documentElement.dataset.appareil !== "mobile") return 0;
+    return Math.min(
+      photoRetenueDeCarte(cleDeLaCarte),
+      Math.max(0, photosDeLaCarte.length - 1)
+    );
+  });
+  /*  §1 (nº 373) — ON RETIENT APRÈS COUP, DANS UN EFFET À LUI, et
+      surtout PAS par un rappel fabriqué ici : `surChangement` est une
+      dépendance de l'observateur du carrousel, et un rappel instable le
+      referait à chaque rendu — en repositionnant la piste au passage.
+      C'est la régression que la nº 373 a coupée ; on ne la rouvre pas.
+      Le poseur d'état de React, lui, est stable pour toujours. */
+  useEffect(() => {
+    retenirPhotoDeCarte(cleDeLaCarte, indiceDoigt);
+  }, [cleDeLaCarte, indiceDoigt]);
   const rangRegarde = Math.max(galerie.indice, indiceDoigt);
 
   /** ⚠️ LE TEXTE ET LE DÉFILEMENT SONT INDÉPENDANTS (nº 213-§1) : la
@@ -548,7 +590,7 @@ function CarteTatoueurNue({
       //  montre un : deux galeries d'un même artiste sont deux cartes
       //  distinctes, et la mémoire de position doit pouvoir les
       //  distinguer — l'identifiant de la fiche ne le peut plus.
-      data-carte={tatoueur.carrousel?.cle ?? tatoueur.id}
+      data-carte={cleDeLaCarte}
       /**
        * ██ §3 (nº 424) — `content-visibility: auto` EST RETIRÉ DE LA
        * CARTE, ET VOICI POURQUOI ██
@@ -1201,7 +1243,21 @@ function CarteTatoueurNue({
               elles est le même qu'avant, d'un cran, mais il pèse
               désormais moins lourd à l'œil. Le blanc vient du jeton,
               comme avant. */
-          className={`font-semibold leading-[18px] line-clamp-1 mobile:hidden text-[15px] text-sombre-texte ${
+          /*  ██ §3 (nº 842) — « Mara Voss · Private Studio » ██
+              Le TYPE monte du sous-titre à la ligne du titre (le
+              pourquoi et la règle : components/TitreDeCarte). Deux
+              conséquences ici, et deux seulement :
+               · LA GRAISSE QUITTE CETTE LIGNE pour le seul nom — le
+                 type la veut normale, et une graisse posée sur toute
+                 la ligne l'aurait imposée aux deux ;
+               · LE ROGNAGE PASSE À DEUX LIGNES : sans quoi le type,
+                 poussé à la ligne par un nom long, disparaîtrait au
+                 lieu de descendre.
+              ⚠️ NI LA TAILLE NI LA HAUTEUR DE LIGNE NE BOUGENT :
+              l'équation du rond de profil (18 + 4 + 18 = 40, nº 485)
+              tient tant qu'une seule ligne s'écrit — un nom long
+              descend le bloc d'un cran, et le rond se recentre. */
+          className={`leading-[18px] line-clamp-2 mobile:hidden text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[20px]"
               : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1217,7 +1273,7 @@ function CarteTatoueurNue({
                lit plus dans ce texte mais dans l'étiquette explicite du
                lien unique — sans quoi une carte s'annoncerait en
                récitant son style, son nom et sa ville d'un trait. */}
-          {tatoueur.nom}
+          <TitreDeCarte tatoueur={tatoueur} />
         </h3>
         <p
           className={`text-sombre-texte-doux leading-[18px] line-clamp-1 ${
@@ -1260,16 +1316,18 @@ function CarteTatoueurNue({
                (`APRES_LE_TYPE`, lib/selection-suivis) et que celle de
                la rangée du profil de la fiche.
                ██ §2 (nº 841) — LE POINT MÉDIAN, SUR LES CARTES :
-               « Artist · Lyon, FR ». Décision du propriétaire, et
-               l'écriture est désormais UNIQUE — `sousTitreDeCarte`
-               (lib/photo-tatoueur), la même que l'en-tête de la carte
-               du fil mobile. La plaque du profil et les portfolios
-               suivis gardent leurs deux-points : la nº 841 ne touche
-               que les cartes, et le dit là-bas.
+               « Artist · Lyon, FR », une seule écriture pour la carte
+               du web et l'en-tête du fil.
+               ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE. Le
+               propriétaire a trouvé cette ligne trop longue : le TYPE
+               est monté sur la ligne du titre, à côté du nom
+               (components/TitreDeCarte), et ce sous-titre redevient ce
+               qu'il était avant la nº 613 — le lieu, et lui seul.
+               L'écriture reste unique (`ligneDeLieuDeCarte`).
                ⚠️ CETTE CARTE EST RENDUE PARTOUT — moteur, vitrines,
-               « Ma sélection » : le signe changé ici se voit sur les
+               « Ma sélection » : ce qui change ici se voit sur les
                trois d'un seul geste. */}
-          {sousTitreDeCarte(tatoueur, lieuDeLaCarte)}
+          {ligneDeLieuDeCarte(lieuDeLaCarte)}
         </p>
         </div>
         </div>

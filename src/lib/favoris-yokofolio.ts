@@ -333,7 +333,31 @@ export async function ecrireFavori(
     const reponse = await fetch(
       genre === "photo"
         ? "/api/yokofolio/favoris/photo"
-        : "/api/yokofolio/favoris/artist",
+        : /*  ██ §1 (nº 842) — L'ADRESSE DE LA ROUTE, ET NON LE MOT
+                ANGLAIS ██
+              ------------------------------------------------------
+              LE DÉFAUT, ET IL A COÛTÉ SIX PASSES : la nº 836 (« toutes
+              les adresses du site passent en anglais ») a renommé CETTE
+              CHAÎNE — `tatoueur` → `artist` — sans renommer le DOSSIER
+              DE ROUTE qui la sert (`src/app/api/yokofolio/favoris/
+              tatoueur`). L'envoi partait donc sur une adresse qui
+              n'existe pas : 404, `ecrireFavori` rendait FAUX, et
+              `basculer` remettait aussitôt l'état d'avant (voir
+              BoutonSuivre). Vu de l'écran : le badge « Follow » ne
+              répondait plus — NI POUR SUIVRE, NI POUR NE PLUS SUIVRE —
+              et cela SUR TOUT LE SITE, la fiche comprise, pas seulement
+              dans le fil de la nº 841 où le propriétaire l'a vu.
+              ⚠️ CE N'EST PAS UNE ADRESSE DE SITE : c'est une route
+              interne, que personne ne lit ni ne partage. Ses deux
+              sœurs (`miens`, `photo`) sont restées en français, et
+              elles fonctionnent. La nº 836 visait les adresses
+              VISIBLES ; celle-ci n'en est pas une, et c'est le dossier
+              qui fait foi.
+              ⚠️ VÉRIFIÉ POUR TOUTES LES AUTRES : un balayage des 44
+              adresses `/api/…` citées dans le code contre les 32 routes
+              existantes ne trouve plus aucune adresse morte (les trois
+              autres écarts vivent dans des commentaires). */
+          "/api/yokofolio/favoris/tatoueur",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -24,7 +24,9 @@ const TEINTES = ["blackwork", "old-school", "geometrique", "ornemental", "japona
 {
   const gabarit = (await lire("tatoueurs", "slug=eq.demo-blackwork-12"))[0];
   await ranger("tatoueurs", { ...gabarit, id: ID, slug: T, nom: "Banc 841", styles: ["blackwork"], ville_slug: `lyon-${T}`, type_fiche: "artiste" });
-  await ranger("photos_tatoueur", TEINTES.map((teinte, i) => ({ id: `${T}-p${i + 1}`, tatoueur_id: ID, style: "blackwork", rendu: "black", nature: "tatouage", url: `/images-demo/tatouage/${teinte}-1.svg`, miniature: `/images-demo/tatouage/${teinte}-1.svg`, ordre: i + 1, cree_le: "2026-01-01T00:00:00Z" })));
+  /*  ⚠️ DE VRAIS IDENTIFIANTS DE BASE (nº 842) : le fanion du pied ne se
+      rend que pour eux (`estIdentifiantDeBase`, règle nº 137). */
+  await ranger("photos_tatoueur", TEINTES.map((teinte, i) => ({ id: `41000009-0000-4000-8000-${(i + 1).toString().padStart(12, "0")}`, tatoueur_id: ID, style: "blackwork", rendu: "black", nature: "tatouage", url: `/images-demo/tatouage/${teinte}-1.svg`, miniature: `/images-demo/tatouage/${teinte}-1.svg`, ordre: i + 1, cree_le: "2026-01-01T00:00:00Z" })));
 }
 const MOSAIQUE = "/search?style=blackwork&nature=tatouage";
 const CARTE = `[data-carte]:has([data-lien-profil-de-fil][href*="${T}"])`;
@@ -57,9 +59,12 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
         ordre: y(enTete) < y(cadre) && y(cadre) < y(pied),
         largeurs: { ecran: innerWidth, carte: Math.round(c.getBoundingClientRect().width), cadre: Math.round(cadre.getBoundingClientRect().width) },
         avatarAGauche: Math.round(avatar.getBoundingClientRect().left), avatarTaille: Math.round(avatar.getBoundingClientRect().width),
-        titre: c.querySelector("[data-lien-profil-de-fil] span:nth-child(2) > span:first-child")?.textContent,
-        sousTitre: c.querySelector("[data-lien-profil-de-fil] span:nth-child(2) > span:nth-child(2)")?.textContent,
-        titreGras: getComputedStyle(c.querySelector("[data-lien-profil-de-fil] span:nth-child(2) > span:first-child")).fontWeight,
+        //  §3 (nº 842) — le TYPE a rejoint le nom sur la ligne du titre,
+        //  et le sous-titre ne garde que la ville. La graisse se lit
+        //  donc sur le NOM lui-même, pas sur la ligne entière.
+        titre: c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child")?.textContent.replace(/\s+/g, " ").trim(),
+        sousTitre: c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:nth-child(2)")?.textContent,
+        titreGras: getComputedStyle(c.querySelector("[data-lien-profil-de-fil] > span:nth-child(2) > span:first-child > span:first-child")).fontWeight,
         suivre: suivre?.getAttribute("aria-label"), suivreADroite: suivre ? Math.round(innerWidth - suivre.getBoundingClientRect().right) : null,
         suivreFace: suivre ? Math.abs((suivre.getBoundingClientRect().top + suivre.getBoundingClientRect().height / 2) - (avatar.getBoundingClientRect().top + avatar.getBoundingClientRect().height / 2)) < 2 : false,
         compteur: cadre.querySelector('[data-role="compteur"]')?.textContent, compteurVisible: vis(cadre.querySelector('[data-role="compteur"]')),
@@ -78,11 +83,15 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     verif("de haut en bas : en-tête, image, pied", structure.ordre);
     verif("l'image est pleine largeur (carte et cadre = écran)", structure.largeurs.carte === structure.largeurs.ecran && structure.largeurs.cadre === structure.largeurs.ecran, JSON.stringify(structure.largeurs));
     verif("l'avatar à gauche (40 px, sur la marge de 16)", structure.avatarAGauche === 16 && structure.avatarTaille === 40, `x ${structure.avatarAGauche}, ${structure.avatarTaille} px`);
-    verif("le titre (gras) puis le sous-titre « Type · Ville »", structure.titre === "Banc 841" && structure.sousTitre === "Artist · Lyon, FR" && Number(structure.titreGras) >= 600, `${structure.titre} / ${structure.sousTitre} / ${structure.titreGras}`);
+    verif("le titre « Nom · Type » (nom demi-gras) puis la ville seule", structure.titre === "Banc 841 · Artist" && structure.sousTitre === "Lyon, FR" && Number(structure.titreGras) >= 600, `${structure.titre} / ${structure.sousTitre} / ${structure.titreGras}`);
     verif("« Follow » à droite, face à l'avatar", structure.suivre === "Follow Banc 841" && structure.suivreADroite === 16 && structure.suivreFace, `${structure.suivre} · ${structure.suivreADroite} px du bord`);
     verif("la pastille « 1/5 » en haut à droite de l'image", structure.compteur === "1/5" && structure.compteurVisible === "visible" && structure.compteurEnHautADroite);
     verif("le glissement est natif, avec accrochage par photo", structure.accrochage === "x mandatory", structure.accrochage);
-    verif("le pied : cinq points, puis le fanion et le partage à droite", structure.points === 5 && structure.icones.length === 2 && structure.icones[0].startsWith("Report") && structure.icones[1].startsWith("Share") && structure.iconesADroite, structure.icones.join(" · "));
+    //  §4 (nº 842) — le pied s'écarte en trois places : signaler à
+    //  gauche, les points au centre, partage puis fanion à droite. Le
+    //  détail (les bords, les cibles) est mesuré par le banc 842 ; ici
+    //  on vérifie seulement qu'ils sont tous là et dans cet ordre.
+    verif("le pied : signaler, cinq points, partage et fanion", structure.points === 5 && structure.icones.length === 3 && structure.icones[0].startsWith("Report") && structure.icones[1].startsWith("Share") && /photo/.test(structure.icones[2]), structure.icones.join(" · "));
 
     titre("841 · les photos : la première seule au loin, la suivante à l'approche, jamais tout");
     const ecran = await page.evaluate(() => innerHeight);
@@ -152,7 +161,10 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     const web = await page.evaluate((VIS) => {
       const vis = new Function("return " + VIS)();
       const cartes = [...document.querySelectorAll("[data-carte]")];
-      const sousTitres = cartes.map((c) => [...c.querySelectorAll("[data-lien-carte] p")].map((p) => p.textContent).find((t) => /·|: /.test(t)) ?? "");
+      //  §3 (nº 842) — le point médian a quitté le sous-titre pour la
+      //  ligne du TITRE (« Nom · Type ») ; le sous-titre, lui, ne porte
+      //  plus que la ville, et donc plus aucun signe.
+      const sousTitres = cartes.map((c) => (c.querySelector("[data-lien-carte] h3")?.textContent ?? "").replace(/\s+/g, " ").trim());
       return {
         colonnes: getComputedStyle(document.querySelector("[data-grille-tatoueurs]")).gridTemplateColumns.split(" ").length,
         sousTitres,
@@ -164,7 +176,7 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       };
     }, vis);
     verif("quatre colonnes, comme avant", web.colonnes === 4, `${web.colonnes}`);
-    verif("LE POINT MÉDIAN sur chaque carte, et plus un seul deux-points", web.sousTitres.every((t) => t.includes(" · ") && !t.includes(": ")), web.sousTitres.slice(0, 3).join(" | "));
+    verif("LE POINT MÉDIAN sur chaque titre, et plus un seul deux-points", web.sousTitres.every((t) => t.includes(" · ") && !t.includes(": ")), web.sousTitres.slice(0, 3).join(" | "));
     verif("l'en-tête, le cadre et le pied du fil sont masqués sur le web", web.filMasque);
     verif("le lien de la carte du web est là, sa piste n'a qu'une image, aucune pastille au repos", web.lienWeb && web.piste && web.pastilles);
     verif("le réseau : au plus une image par carte (la structure masquée n'en demande aucune de plus)", images.length <= web.n, `${images.length} image(s) pour ${web.n} cartes`);

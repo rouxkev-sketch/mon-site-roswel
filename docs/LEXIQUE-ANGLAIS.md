@@ -321,6 +321,18 @@ Aucune phrase neuve : la carte du fil réemploie mot pour mot les
 | partager (le pied d'une carte du fil) | **Share <nom>'s portfolio** (inchangé) | `BoutonPartageFiche` en variante « icone », comme sous la photo d'une fiche |
 | le sous-titre d'une carte (web et fil) | **Artist · Lyon, FR** — le point médian remplace les deux-points | `sousTitreDeCarte` (lib/photo-tatoueur), une seule écriture. ⚠️ La plaque du profil et les portfolios suivis gardent « Artist: Lyon, FR » (nº 613) : la nº 841 ne touche que les cartes |
 
+### Ajouts de la 842 (le titre des cartes, et le fanion du fil)
+
+| Français | Anglais | Note |
+|---|---|---|
+| le titre d'une carte | **Mara Voss · Private Studio** | le nom demi-gras blanc, le type en gris graisse normale, séparés par le point médian — `components/TitreDeCarte`, une seule écriture pour la carte du web, l'en-tête du fil et la plaque du profil. ⚠️ Le type est INSÉCABLE : un nom long le fait passer à la ligne entier, jamais coupé |
+| le sous-titre d'une carte | **Lyon, FR** — la ville seule | le type l'a quitté (nº 842) ; il redevient ce qu'il était avant la nº 613 |
+| enregistrer la photo affichée (le fanion du pied, au doigt) | **Save this photo** / **Remove this photo from my favorites** (inchangés) | `BoutonCoeurPhoto` en variante « carte », le cœur des cartes du web — sur « 7/18 », c'est la septième qui part dans Ma sélection |
+
+> **Les portfolios suivis de « Ma sélection » gardent leurs deux-points**
+> (« Artist: Lyon, FR », `APRES_LE_TYPE`) : la nº 842 ne parle que des
+> cartes et de la plaque du profil.
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases
