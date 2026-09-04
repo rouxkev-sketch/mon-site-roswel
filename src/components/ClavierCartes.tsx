@@ -24,14 +24,23 @@ import { useEffect } from "react";
  * l'élément le plus profond survolé : c'est exactement celui qui est
  * sous la souris, et il n'y en a qu'un.
  *
- * COMMENT ON FAIT DÉFILER : on pousse SON cadre de défilement
- * (`data-role="cadre"`, CarrouselPortfolio) d'une largeur de colonne,
- * exactement comme le ferait un doigt. Le carrousel n'a rien à
- * apprendre : son observateur voit passer la photo et met son compte à
- * jour tout seul — la capsule suit, le fanion suit, et RIEN N'ÉCRIT
- * DANS L'ADRESSE : aucune entrée d'historique (règle 332-§1).
- * ⚠️ ON NE TOUCHE PAS AU CONTENEUR DE DÉFILEMENT, ni à sa géométrie :
- * on l'utilise comme le doigt l'utilise, c'est tout.
+ * ██ §1 (nº 840) — CE QU'IL POUSSE A CHANGÉ DE NATURE ██
+ * ------------------------------------------------------------------
+ * ÉCRIT À LA nº 371, IL POUSSAIT le cadre de défilement du carrousel
+ * qu'une carte montait alors (`data-role="cadre"`). La nº 445 a retiré
+ * ce carrousel des cartes : depuis, ce sélecteur ne trouvait plus rien
+ * et LES FLÈCHES DU CLAVIER NE FAISAIENT PLUS RIEN. Le propriétaire
+ * l'a relevé sur la galerie de la nº 839 — le défaut est plus vieux
+ * qu'elle de quatre cents passes.
+ * COMMENT ON FAIT DÉFILER, DÉSORMAIS : on APPUIE SUR SON CHEVRON — le
+ * bouton que la carte survolée montre déjà (`data-fleche-de-carte`,
+ * GalerieDeCarte). C'est le geste de la souris, à la lettre : même
+ * chemin, même garde, même préchargement de la photo suivante, et rien
+ * à tenir d'accord entre deux écritures (piège nº 378). La galerie n'a
+ * rien à apprendre du clavier, et rien n'est écrit dans l'adresse :
+ * aucune entrée d'historique (règle 332-§1).
+ * ⚠️ ON NE TOUCHE À AUCUNE GÉOMÉTRIE : on ne mesure rien, on ne déplace
+ * rien — on appuie sur un bouton qui existe.
  *
  * LES QUATRE GARDES, dans l'ordre :
  *  1. UNE TOUCHE NUE — avec Commande, Contrôle, Alt ou Majuscule, on
@@ -41,8 +50,9 @@ import { useEffect } from "react";
  *     appartiennent au texte, et rien d'autre ne se produit ;
  *  3. UNE CARTE EST SURVOLÉE — sinon la page garde exactement son
  *     comportement (aucun `preventDefault` n'est appelé) ;
- *  4. SON CADRE DÉFILE VRAIMENT — une carte à photo unique n'a rien à
- *     faire défiler.
+ *  4. LE CHEVRON DE CE CÔTÉ-LÀ EXISTE — une carte à photo unique n'en
+ *     a aucun, et une carte arrivée au bout n'a plus celui du bout :
+ *     la galerie ne boucle pas, le clavier non plus.
  * ⚠️ `preventDefault` N'EST APPELÉ QU'APRÈS LES QUATRE : sans cela on
  * volerait le défilement de la page dans tous les autres cas.
  * ⚠️ RIEN AU DOIGT : sans souris il n'y a pas de survol, donc jamais
@@ -76,12 +86,14 @@ export function ClavierCartes() {
       ) {
         return;
       }
-      const cadre = document.querySelector<HTMLElement>(
-        '[data-carte]:hover [data-role="cadre"]'
+      const chevron = document.querySelector<HTMLElement>(
+        `[data-carte]:hover [data-fleche-de-carte="${
+          sens === 1 ? "droite" : "gauche"
+        }"]`
       );
-      if (!cadre || cadre.scrollWidth <= cadre.clientWidth + 1) return;
+      if (!chevron) return;
       evenement.preventDefault();
-      cadre.scrollBy({ left: sens * cadre.clientWidth, behavior: "smooth" });
+      chevron.click();
     };
     document.addEventListener("keydown", auClavier);
     return () => document.removeEventListener("keydown", auClavier);

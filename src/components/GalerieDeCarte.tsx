@@ -130,6 +130,46 @@ export function useGalerieDeCarte(nombre: number) {
  * masquer et une position à mesurer. Une transformation ne prend aucun
  * geste, ne se laisse pas bousculer, et l'encadré ne bouge pas : la
  * mosaïque est immobile par construction.
+ *
+ * ██ §2 (nº 840) — CHAQUE PHOTO PORTE SON DÉCALAGE ; LA PISTE NE BOUGE
+ * PLUS ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DE LA nº 839, ET SA CAUSE EXACTE, MESURÉE. Une bande de
+ * l'image SUIVANTE restait visible sur toute la hauteur, au bord droit.
+ * Elle n'apparaissait QUE sur les largeurs de carte FRACTIONNAIRES —
+ * une mosaïque de quatre colonnes dans une fenêtre de 1442 px donne des
+ * cartes de 333,5 px, et il y en a plus de fractionnaires que d'entières.
+ * La nº 839 déplaçait UNE piste portant toutes les photos côte à côte :
+ * pour montrer la photo k, elle glissait de −k × 333,5 px. Deux
+ * conséquences se cumulaient :
+ *  1. LA COUTURE ENTRE DEUX PHOTOS TOMBAIT PILE SUR LE BORD DE
+ *     L'ENCADRÉ (les deux à 333,5 px) — donc À L'INTÉRIEUR du dernier
+ *     pixel physique, que la découpe ne peut pas couper en deux ;
+ *  2. une translation fractionnaire fait RÉÉCHANTILLONNER la couche
+ *     entière par le compositeur : les pixels de bord de la photo
+ *     suivante se mélangent à ceux de la photo montrée.
+ *     Relevé au pixel à 1442 px de large, rang 1 : la dernière colonne
+ *     de l'encadré rendait 48,26,26 quand la photo, elle, est à
+ *     158,60,43 — un mélange, pas la photo.
+ * LE REMÈDE, ET IL EST GÉOMÉTRIQUE. Les photos ne sont plus posées
+ * CÔTE À CÔTE dans une piste qui glisse : elles sont EMPILÉES au même
+ * endroit (chacune sur l'encadré entier), et chacune porte SON PROPRE
+ * décalage, `(rang − rang montré) × (100 % + 1 px)`. Il en découle
+ * trois choses, et ce sont exactement les trois qu'on voulait :
+ *  · LA PHOTO MONTRÉE A UN DÉCALAGE NUL — elle est peinte exactement à
+ *    la place de l'encadré, comme l'image simple d'avant la nº 839.
+ *    Aucune translation, donc aucun rééchantillonnage, donc aucun
+ *    mélange : son bord droit est celui de n'importe quelle photo de
+ *    carte du site, à n'importe quel rang ;
+ *  · SES DEUX VOISINES SONT REPOUSSÉES D'UN PIXEL AU-DELÀ de la
+ *    découpe (un pixel de chaque côté) : même rééchantillonnées, elles
+ *    ne peuvent plus déborder à l'intérieur ;
+ *  · le glissement est le même à l'œil — toutes les photos se déplacent
+ *    ensemble, du même pas.
+ * ⚠️ CE PIXEL D'ÉCART SE VOIT-IL ? Seulement EN MOUVEMENT, et c'est un
+ * trait d'un pixel entre deux photos pendant trois dixièmes de seconde
+ * — les galeries de profil en montrent trois (`gap-[3px]`). À l'arrêt,
+ * il est hors de l'encadré.
  * ⚠️ AUCUNE PROMOTION DE COUCHE PERMANENTE : pas de `will-change` sur
  * vingt cartes — le navigateur promeut le temps de la transition, et
  * rend la mémoire ensuite.
@@ -154,17 +194,26 @@ export function PisteDeCarte({
   prioritaire: boolean;
 }) {
   return (
-    <div
-      data-piste-de-carte=""
-      className="absolute inset-0 flex transition-transform duration-300
-                 ease-out motion-reduce:transition-none"
-      /*  LA POSITION EST UNE VALEUR, PAS UNE CLASSE : vingt photos
-          feraient vingt classes de translation dans la feuille, pour
-          une valeur qui se calcule. */
-      style={{ transform: `translate3d(-${indice * 100}%, 0, 0)` }}
-    >
+    <div data-piste-de-carte="" className="absolute inset-0">
       {photos.slice(0, chargees).map((photo, rang) => (
-        <div key={photo.cle} className="relative w-full h-full shrink-0">
+        <div
+          key={photo.cle}
+          data-case-de-carte={rang}
+          className="absolute inset-0 transition-transform duration-300
+                     ease-out motion-reduce:transition-none"
+          /*  LE DÉCALAGE EST UNE VALEUR, PAS UNE CLASSE : vingt photos
+              feraient vingt classes de translation dans la feuille,
+              pour une valeur qui se calcule. Le pourcentage se résout
+              sur la boîte de la case — qui est l'encadré, puisqu'elle
+              l'épouse : le pas vaut donc bien une largeur d'encadré,
+              plus le pixel d'écart expliqué au-dessus.
+              ⚠️ LA PHOTO MONTRÉE A UN DÉCALAGE NUL, et c'est TOUT le
+              correctif : `calc(0 * …)` vaut zéro, la case est peinte à
+              sa place de mise en page, sans transformation. */
+          style={{
+            transform: `translate3d(calc(${rang - indice} * (100% + 1px)), 0, 0)`,
+          }}
+        >
           <PhotoDeCarte
             url={photo.miniature}
             urlPleine={photo.url}

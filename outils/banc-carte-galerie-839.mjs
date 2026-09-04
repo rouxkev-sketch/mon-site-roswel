@@ -121,28 +121,33 @@ try {
 
   //  ── 3. LE GLISSEMENT ──────────────────────────────────────────────
   titre("839 · le glissement : fluide, et l'encadré ne bouge pas");
+  /*  ⚠️ LE DÉCALAGE VIT SUR CHAQUE PHOTO DEPUIS LA nº 840, plus sur la
+      piste : c'est ce qui rend le bord droit net (la photo montrée n'a
+      AUCUNE transformation, donc rien à rééchantillonner). On mesure
+      donc le glissement sur LA PHOTO QUI ARRIVE — la case de rang 1. */
   const avant = await page.evaluate(() => {
     const c = document.querySelector("[data-carte]");
     const g = document.querySelector("[data-grille-tatoueurs]");
     const p = c.querySelector("[data-piste-de-carte]");
-    const s = getComputedStyle(p);
+    const s = getComputedStyle(c.querySelector('[data-case-de-carte="1"]'));
     return { carte: c.getBoundingClientRect().toJSON(), grille: g.getBoundingClientRect().toJSON(), cadre: p.parentElement.getBoundingClientRect().toJSON(), scroll: window.scrollY, transition: s.transitionProperty, duree: s.transitionDuration, transforme: s.transform, compteur: c.querySelector("[data-compteur-de-carte]").textContent };
   });
-  verif("la piste est bien en transition de TRANSFORMATION (un glissement, pas un saut)", avant.transition.includes("transform") && avant.duree === "0.3s", `${avant.transition} · ${avant.duree}`);
+  verif("la photo qui arrive est en transition de TRANSFORMATION (un glissement, pas un saut)", avant.transition.includes("transform") && avant.duree === "0.3s", `${avant.transition} · ${avant.duree}`);
   await page.locator('[data-carte] [data-fleche-de-carte="droite"]').first().click();
   await page.waitForTimeout(120);
-  const milieu = await page.evaluate(() => getComputedStyle(document.querySelector("[data-piste-de-carte]")).transform);
+  const milieu = await page.evaluate(() => getComputedStyle(document.querySelector('[data-case-de-carte="1"]')).transform);
   await page.waitForTimeout(600);
   const apres = await page.evaluate(() => {
     const c = document.querySelector("[data-carte]");
     const g = document.querySelector("[data-grille-tatoueurs]");
     const p = c.querySelector("[data-piste-de-carte]");
-    return { carte: c.getBoundingClientRect().toJSON(), grille: g.getBoundingClientRect().toJSON(), cadre: p.parentElement.getBoundingClientRect().toJSON(), scroll: window.scrollY, transforme: getComputedStyle(p).transform, compteur: c.querySelector("[data-compteur-de-carte]").textContent, gauche: c.querySelector('[data-fleche-de-carte="gauche"]') !== null, images: c.querySelectorAll("[data-piste-de-carte] img").length, href: c.querySelector("[data-lien-carte]").getAttribute("href") };
+    const case1 = c.querySelector('[data-case-de-carte="1"]');
+    return { carte: c.getBoundingClientRect().toJSON(), grille: g.getBoundingClientRect().toJSON(), cadre: p.parentElement.getBoundingClientRect().toJSON(), scroll: window.scrollY, transforme: getComputedStyle(case1).transform, place: case1.getBoundingClientRect().toJSON(), compteur: c.querySelector("[data-compteur-de-carte]").textContent, gauche: c.querySelector('[data-fleche-de-carte="gauche"]') !== null, images: c.querySelectorAll("[data-piste-de-carte] img").length, href: c.querySelector("[data-lien-carte]").getAttribute("href") };
   });
-  const x = (t) => Number((t.match(/matrix\(([^)]*)\)/)?.[1] ?? "").split(",")[4] ?? 0);
+  const x = (t) => (t === "none" ? 0 : Number((t.match(/matrix\(([^)]*)\)/)?.[1] ?? "").split(",")[4] ?? 0));
   const largeurPiste = apres.cadre.width;
-  verif("la piste a glissé d'exactement une photo", Math.abs(x(apres.transforme) + largeurPiste) < 2, `${Math.round(x(apres.transforme))} px pour un cadre de ${Math.round(largeurPiste)} px`);
-  verif("le glissement est PROGRESSIF (mesuré en cours de route)", x(milieu) < -1 && x(milieu) > x(apres.transforme) + 1, `à mi-chemin : ${Math.round(x(milieu))} px`);
+  verif("la photo qui arrive est venue EXACTEMENT à la place de l'encadré", Math.abs(x(apres.transforme)) < 0.01 && Math.abs(apres.place.left - apres.cadre.left) < 0.01 && Math.abs(apres.place.width - apres.cadre.width) < 0.01, `décalage ${apres.transforme} · bord gauche ${apres.place.left} pour un cadre à ${apres.cadre.left}`);
+  verif("le glissement est PROGRESSIF (mesuré en cours de route)", x(milieu) > 1 && x(milieu) < x(avant.transforme) - 1, `à mi-chemin : ${Math.round(x(milieu))} px, partie de ${Math.round(x(avant.transforme))} px pour un cadre de ${Math.round(largeurPiste)} px`);
   const total = avant.compteur.split("/")[1];
   verif("le compteur suit", avant.compteur === `1/${total}` && apres.compteur === `2/${total}`, `${avant.compteur} → ${apres.compteur}`);
   verif("la flèche gauche apparaît dès qu'il y a du chemin derrière", apres.gauche === true);
