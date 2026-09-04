@@ -83,7 +83,7 @@ import {
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
-import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
+import { AvatarRond } from "@/components/AvatarRond";
 //  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
 //  unique du site : la vue photo attend que l'adresse soit commise
 //  avant de poser la page en haut (voir `surSerieChoisie`).
@@ -1373,31 +1373,18 @@ export function FicheTatoueur({
                      entièrement. */}
                 {/*  §1 (nº 524) — le rond revient à sa valeur d'avant
                      la nº 523, avec sa plaque (voir plaque.ts). */}
-                <span
-                  className="flex h-10 w-10 shrink-0 items-center justify-center
-                             overflow-hidden rounded-full bg-sombre-haut"
-                >
-                  {tatoueur.photo_profil ? (
-                    /* eslint-disable-next-line @next/next/no-img-element --
-                       photo déposée par le tatoueur, servie telle quelle. */
-                    <img
-                      //  §1 (nº 718) — la petite variante (rond de 40).
-                      src={sourceAvatar(tatoueur.photo_profil, AVATAR_PETIT)}
-                      alt=""
-                      decoding="async"
-                      width={40}
-                      height={40}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden="true"
-                      className="text-[16px] font-bold text-sombre-texte-doux"
-                    >
-                      {tatoueur.nom.trim().charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </span>
+                {/*  §1 (nº 841) — LE ROND EST L'ÉCRITURE PARTAGÉE
+                     (AvatarRond) depuis la carte du fil, son troisième
+                     porteur : le cran du dessus et l'initiale de 16 px
+                     sont LES SIENS, inchangés au pixel. Seules les
+                     dimensions déclarées de l'image passent au carré du
+                     site (PORTRAIT_ROND) : un format, pas une taille. */}
+                <AvatarRond
+                  photo={tatoueur.photo_profil}
+                  nom={tatoueur.nom}
+                  classeFond="bg-sombre-haut"
+                  classeInitiale="text-[16px] font-bold text-sombre-texte-doux"
+                />
                 <span className="min-w-0 flex-1">
                   {/*  ██ §2 (nº 555) — CE NOM SUIT LES DEUX AUTRES ██
                        LA QUESTION POSÉE : cette plaque doit-elle monter

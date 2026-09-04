@@ -217,9 +217,16 @@ r.style.backgroundColor=${fond};
    page de carrousel partagé et sur le jumeau complet — où PERSONNE ne
    la lève (FicheSelonLAdresse n'y est pas montée) : photo masquée
    pour toujours. */
+/* nº 841 — AU DOIGT, TOUTE FICHE EST LE PROFIL : la vue photo du
+   mobile n'existe plus (FicheSelonLAdresse la redirige vers
+   « entree=lien »). Pour que l'œil ne voie jamais la photo en haut —
+   pas même le battement d'avant l'hydratation —, la garde
+   « entree=lien » est posée sur TOUTE fiche dès que l'appareil est un
+   mobile, adresse nue comprise. Le web ne change pas. */
 try{if(/^\\/artist\\/[^\\/]+$/.test(location.pathname)){var qf=location.search;
 if(qf&&/[?&](style|rendu|nature|photo|studio|entree)=/.test(qf)){r.dataset.ficheParametree="1";
-if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}}}catch(e){}
+if(/[?&]entree=lien(&|$)/.test(qf))r.dataset.entreeLien="1";}
+if(r.dataset.appareil==="mobile")r.dataset.entreeLien="1";}}catch(e){}
 try{var ck=document.cookie;
 r.dataset.compte=/(^|; )sb-[^=]*-auth-token/.test(ck)?"connecte":(ck.indexOf(${JSON.stringify(`${COOKIE_DEJA_CONNECTE}=1`)})>=0?"revenant":"nouveau");
 }catch(e){}

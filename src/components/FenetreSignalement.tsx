@@ -21,9 +21,19 @@ import { PastilleEvenement } from "@/components/PastilleEvenement";
 export function FenetreSignalement({
   slug,
   nom,
+  variante = "lien",
 }: {
   slug: string;
   nom: string;
+  /**
+   * §1 (nº 841) — « icone » : LE FANION SEUL, sans le mot — l'écriture
+   * du pied de la carte du fil mobile, à côté du partage. La cible fait
+   * 40 px (le gabarit des icônes nues de la fiche, nº 458), le glyphe
+   * 22, le trait au blanc du site. MÊME fenêtre, même envoi : rien
+   * d'autre ne change. « lien » (le défaut) est le lien discret des
+   * fiches, inchangé.
+   */
+  variante?: "lien" | "icone";
 }) {
   const [ouverte, setOuverte] = useState(false);
   const [motifs, setMotifs] = useState<string[]>([]);
@@ -91,6 +101,17 @@ export function FenetreSignalement({
       {/* LE LIEN — en bas à GAUCHE de la colonne, un DRAPEAU devant,
           SANS soulignement : discret mais reconnaissable, pareil sur
           web et smartphone. */}
+      {variante === "icone" ? (
+        <button
+          type="button"
+          onClick={ouvrir}
+          aria-label={`Report ${nom}'s portfolio`}
+          className="flex h-10 w-10 shrink-0 items-center justify-center
+                     text-sombre-texte transition-transform active:scale-95"
+        >
+          <IconeDrapeau taille={22} />
+        </button>
+      ) : (
       <button
         type="button"
         onClick={ouvrir}
@@ -100,6 +121,7 @@ export function FenetreSignalement({
         <IconeDrapeau taille={16} classe="shrink-0" />
         Report this portfolio
       </button>
+      )}
 
       {ouverte && (
         <div

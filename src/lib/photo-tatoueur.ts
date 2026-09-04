@@ -1,4 +1,5 @@
-import { libelleStyle } from "@/config/tatouage";
+import { libelleStyle, libelleTypeFiche } from "@/config/tatouage";
+import { ligneLieuDeCarte, type LieuAffichable } from "@/lib/adresse";
 import {
   galerieOrdonnee,
   libelleRendu,
@@ -125,6 +126,37 @@ export function photoChoisie(
  * Aucune galerie du tout : on s'arrête à la ville. Jamais de tag
  * inventé — un texte de remplacement qui ment est pire que rien.
  */
+/**
+ * ██ §2 (nº 841) — LE SOUS-TITRE D'UNE CARTE : « Artist · Lyon, FR » ██
+ * ==================================================================
+ * LE TYPE DU PORTFOLIO (artiste, studio privé, salon), puis son lieu,
+ * séparés par LE POINT MÉDIAN — la décision du propriétaire à la
+ * nº 841, qui remplace les deux-points de la nº 613 SUR LES CARTES.
+ * ÉCRIT UNE SEULE FOIS : la carte du web (sous sa photo) et l'en-tête
+ * de la carte du fil mobile (à droite de l'avatar) disent exactement
+ * la même chose, par cette fonction. Deux écritures auraient divergé
+ * à la première retouche (piège nº 378).
+ * ⚠️ LE LIEU NE CHANGE PAS : c'est `ligneLieuDeCarte`, celui des
+ * cartes depuis toujours — « Lyon, FR ». Seul le signe entre les deux
+ * change.
+ * ⚠️ CE QUI NE PASSE PAS PAR ICI, et qui garde ses deux-points : la
+ * plaque du profil au doigt (FicheTatoueur) et la liste des portfolios
+ * suivis (lib/selection-suivis) — la nº 613 les avait alignés sur les
+ * cartes ; la nº 841 ne touche que les cartes, et le dit.
+ */
+export const SEPARATEUR_TYPE_LIEU = " · ";
+export function sousTitreDeCarte(
+  tatoueur: { type_fiche?: string | null; etablissement?: string | null },
+  lieu: LieuAffichable
+): string {
+  return [
+    libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
+    ligneLieuDeCarte(lieu),
+  ]
+    .filter(Boolean)
+    .join(SEPARATEUR_TYPE_LIEU);
+}
+
 export function legendeDeCarte(
   tatoueur: {
     nom: string;

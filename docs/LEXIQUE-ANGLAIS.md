@@ -309,6 +309,18 @@ CELLES DU CARROUSEL DES FICHES, reprises à l'identique.
 | photo suivante / précédente (les chevrons d'une carte de la mosaïque) | **Next photo** / **Previous photo** | `GalerieDeCarte` — les mêmes étiquettes que le carrousel d'une fiche (`CarrouselPortfolio`), et non celles des galeries de profil (« Next thumbnails ») : sur une carte, ce qui change est bien LA PHOTO, pas une rangée de vignettes |
 | le compteur d'une carte (« 7/20 ») | **7/20** | des chiffres, rien à traduire ; la pastille est celle des fiches (`PASTILLE_COMPTEUR`, config/tatouage) |
 
+### Ajouts de la 841 (le fil des résultats au doigt)
+
+Aucune phrase neuve : la carte du fil réemploie mot pour mot les
+étiquettes des fiches.
+
+| Français | Anglais | Note |
+|---|---|---|
+| suivre (le badge de l'en-tête d'une carte du fil) | **Follow** / **Following** (inchangés) | `BoutonSuivre`, le composant des fiches, mêmes états |
+| signaler (le fanion du pied d'une carte du fil, icône seule) | **Report <nom>'s portfolio** (l'étiquette accessible, inchangée) | `FenetreSignalement` en variante « icone » : le mot « Report this portfolio » ne s'écrit pas, le drapeau le dit |
+| partager (le pied d'une carte du fil) | **Share <nom>'s portfolio** (inchangé) | `BoutonPartageFiche` en variante « icone », comme sous la photo d'une fiche |
+| le sous-titre d'une carte (web et fil) | **Artist · Lyon, FR** — le point médian remplace les deux-points | `sousTitreDeCarte` (lib/photo-tatoueur), une seule écriture. ⚠️ La plaque du profil et les portfolios suivis gardent « Artist: Lyon, FR » (nº 613) : la nº 841 ne touche que les cartes |
+
 ## 3 · Le ton
 
 - **Anglais américain, décontracté** : le « you » direct, phrases

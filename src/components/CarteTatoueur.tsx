@@ -1,19 +1,26 @@
 "use client";
 
-import { memo, useRef } from "react";
+import { memo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CADRE_PHOTO_PORTFOLIO,
   FOND_RESERVE_PHOTO,
   libelleStyle,
-  libelleTypeFiche,
   //  nº 366 — les dimensions intrinsèques de la photo sont désormais
   //  déclarées par `PhotoDeCarte`, l'écriture unique de l'image d'une
   //  carte : la réserve de hauteur ne se fait plus qu'à un endroit.
-  PORTRAIT_ROND,
+  //  nº 841 — celles du rond de profil, par `AvatarRond`.
 } from "@/config/tatouage";
 import { useDispositionGrille } from "@/components/AffichageMosaique";
-import { legendeDeCarte, photoChoisie, photoPourStyle } from "@/lib/photo-tatoueur";
+import {
+  legendeDeCarte,
+  photoChoisie,
+  photoPourStyle,
+  sousTitreDeCarte,
+} from "@/lib/photo-tatoueur";
+import { AvatarRond } from "@/components/AvatarRond";
+import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
+import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import {
   CommandesDeCarte,
   PisteDeCarte,
@@ -33,7 +40,6 @@ import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 //  §2 (nº 486) — la ligne de lieu DES CARTES : « Ville, Pays »,
 //  sans État ni région (lib/adresse) — une seule écriture, les deux
 //  appareils.
-import { ligneLieuDeCarte } from "@/lib/adresse";
 import { pincementRecent, usePincement } from "@/components/ZoomPincement";
 //  §1 (nº 517) — « ce qui est surligné est ce qui est copié »
 //  (nº 514) : la carte devient un lien qui CONTIENT son texte.
@@ -41,7 +47,6 @@ import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
-import { AVATAR_PETIT, sourceAvatar } from "@/lib/avatar-variantes";
 //  §2 (nº 725) — la balise de popularité, écrite une seule fois.
 import { signalerConsultation } from "@/lib/balise-popularite";
 
@@ -88,9 +93,44 @@ function CarteTatoueurNue({
   prioritaire = false,
   phototheque = false,
   fanion = false,
+  fil = false,
+  approchee = false,
   surOuverture,
   surApproche,
 }: {
+  /**
+   * ██ §1 (nº 841) — CETTE CARTE EST-ELLE UNE CARTE DU FIL ? ██
+   * ------------------------------------------------------------------
+   * Sur un vrai mobile, les RÉSULTATS DE RECHERCHE ne sont plus une
+   * grille de deux colonnes mais un FIL pleine largeur (CarteFil) : un
+   * en-tête (avatar, nom, sous-titre, « Follow »), l'image à glissement
+   * natif avec sa pastille, un pied (les points, le fanion, le partage).
+   * C'est la GRILLE des résultats (GrilleTatoueurs) qui le dit, et elle
+   * seule : « Ma sélection » monte cette carte sans ce drapeau et garde
+   * ses cartes côte à côte, au pixel.
+   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE (la règle de
+   * la nº 365) : l'appelant sait sur quelle surface il est.
+   * ⚠️ ET UNE BASCULE DE FEUILLE DE STYLE, PAS D'APPAREIL EN JAVASCRIPT :
+   * avec ce drapeau, la carte rend LES DEUX structures — celle du web
+   * (le lien qui contient tout, nº 517) masquée au doigt, celles du fil
+   * masquées ailleurs — et `data-appareil` choisit (règle nº 60). Le
+   * serveur écrit la même chose pour tout le monde : aucun écart
+   * d'hydratation, et le premier rendu est déjà le bon sur les deux
+   * appareils — rien ne saute quand le script arrive.
+   * CE QUE ÇA COÛTE, ET C'EST DIT : sur le web, chaque carte porte en
+   * plus, masqué, l'en-tête et le pied du fil (une trentaine de nœuds,
+   * un badge « Follow » abonné aux favoris) ; au doigt, la carte du
+   * web masquée. AUCUNE IMAGE DE PLUS N'EST DEMANDÉE : les deux
+   * structures montrent LA MÊME première photo, à la même adresse et
+   * aux mêmes tailles (`TAILLES_CARTE`) — une image différée dans un
+   * élément sans boîte ne part jamais, et deux images de même adresse
+   * ne font qu'une requête.
+   */
+  fil?: boolean;
+  /** §1 (nº 841) — La carte du fil est à moins d'un écran (levé par
+      l'observateur unique de la grille) : sa deuxième photo se charge
+      sans attendre. Voir `approchee` chez CarrouselPortfolio. */
+  approchee?: boolean;
   /** LA VUE PHOTOTHÈQUE (nº 140) : la photo seule — ni badge, ni
       portrait, ni nom, ni adresse. SEUL LE FANION des favoris reste,
       dans l'angle (et seulement là où il est encore posé — voir
@@ -218,6 +258,20 @@ function CarteTatoueurNue({
    */
   const galerieDansLaCarte = photosDeLaCarte.length > 1;
   const galerie = useGalerieDeCarte(photosDeLaCarte.length);
+  /**
+   * §1 (nº 841) — LA PHOTO REGARDÉE AU DOIGT, sur une carte du fil :
+   * c'est le carrousel natif qui la possède (son observateur l'annonce,
+   * nº 217), la carte la tient. Le poseur d'état est stable pour
+   * toujours — c'est une dépendance de l'observateur (nº 373).
+   * ⚠️ DEUX RANGS, DONT UN SEUL BOUGE JAMAIS : celui du web ne change
+   * que par ses chevrons et son clavier, qui n'existent pas au doigt
+   * (`hidden`, et ClavierCartes se tait sur un mobile) ; celui du doigt
+   * ne change que par un glissement, qui n'existe pas à la souris. Le
+   * plus grand des deux est donc TOUJOURS le rang regardé — et l'autre,
+   * zéro.
+   */
+  const [indiceDoigt, setIndiceDoigt] = useState(0);
+  const rangRegarde = Math.max(galerie.indice, indiceDoigt);
 
   /** ⚠️ LE TEXTE ET LE DÉFILEMENT SONT INDÉPENDANTS (nº 213-§1) : la
       photothèque masque les TEXTES, elle n'a jamais eu à décider si
@@ -361,7 +415,7 @@ function CarteTatoueurNue({
   //  SUR la septième. Sans galerie (une seule photo), le rang vaut zéro
   //  et la valeur est exactement celle d'avant.
   const photoRegardee =
-    photosDeLaCarte[galerie.indice]?.cle ||
+    photosDeLaCarte[rangRegarde]?.cle ||
     photoRecherche ||
     photoEnregistrable?.id ||
     "";
@@ -638,8 +692,14 @@ function CarteTatoueurNue({
         //  pixel de débord sur la gouttière de la grille. Le
         //  soulignement d'avant visait le NOM seul ; sur un lien qui
         //  contient trois lignes et une image, il soulignerait tout.
-        className="flex flex-col outline-none focus-visible:outline-2
-                   focus-visible:-outline-offset-2 focus-visible:outline-primaire"
+        //  §1 (nº 841) — SUR UNE CARTE DU FIL, LE LIEN DU WEB N'EXISTE
+        //  PAS AU DOIGT : la structure du fil (en-tête, image, pied)
+        //  prend sa place, après lui. Une bascule de feuille de style,
+        //  sur l'appareil (règle nº 60).
+        className={`flex flex-col outline-none focus-visible:outline-2
+                   focus-visible:-outline-offset-2 focus-visible:outline-primaire ${
+                     fil ? "mobile:hidden" : ""
+                   }`}
       >
       {/* L'ENVELOPPE DE LA PHOTO — elle ne bouge JAMAIS. C'est elle
           qui porte le badge : le pincement ne transforme que le cadre
@@ -651,7 +711,10 @@ function CarteTatoueurNue({
             C'est CE CADRE ENTIER que le pincement agrandit (il passe
             par-dessus ses voisines le temps du geste, puis se range). */}
         <div
-          ref={cadrePhoto}
+          //  §1 (nº 841) — le pincement (un geste du doigt) vise le cadre
+          //  que le doigt voit : sur une carte du fil, c'est celui du
+          //  fil, plus bas ; ici, celui du web.
+          ref={fil ? undefined : cadrePhoto}
           className={`relative w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden rounded-none
                      shadow-[0_2px_12px_rgba(0,0,0,0.35)]
                      transition-shadow duration-300
@@ -1048,47 +1111,25 @@ function CarteTatoueurNue({
              classes, son écart de 10 px et la hauteur du rond n'ont
              pas bougé. */}
         <div className="flex items-center gap-2.5">
-        <span
-          /*  §1 (nº 486) — LE ROND DE PROFIL QUITTE LES CARTES DU
+        {/*  §1 (nº 486) — LE ROND DE PROFIL QUITTE LES CARTES DU
               DOIGT, LES DEUX DISPOSITIONS. Il n'était rendu que POUR
               ACCOMPAGNER LE NOM (il en reprend la hauteur, écart
               compris) : le nom parti, il n'a plus personne à côté de
               qui se tenir. Il vivait déjà caché sur les cartes côte à
               côte ; il l'est désormais aussi en pleine largeur.
               ⚠️ LE WEB LE GARDE, à quarante pixels — son équation avec
-              la hauteur des lignes 2 et 3 (nº 485) est intacte. */
-          className="shrink-0 h-10 w-10 flex items-center
-                     justify-center overflow-hidden rounded-full
-                     bg-sombre-eleve mobile:hidden"
-        >
-          {tatoueur.photo_profil ? (
-            /* eslint-disable-next-line @next/next/no-img-element --
-               photo déposée par le tatoueur, servie telle quelle. */
-            <img
-              //  §1 (nº 718) — la PETITE variante : ce rond fait 40 px,
-              //  il n'a jamais eu besoin des 800 de l'original (audit
-              //  nº 717 : vingt fois trop grand, vingt-quatre fois par
-              //  grille). Une photo d'avant la nº 718 est rendue telle
-              //  quelle par `sourceAvatar` — aucun avatar ne disparaît.
-              src={sourceAvatar(tatoueur.photo_profil, AVATAR_PETIT)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width={PORTRAIT_ROND}
-              height={PORTRAIT_ROND}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            /* LE REPLI DES FICHES D'AVANT LA PHOTO DE PROFIL :
-               l'initiale, comme partout ailleurs sur le site. */
-            <span
-              aria-hidden="true"
-              className="text-[13px] font-bold text-sombre-texte-doux"
-            >
-              {tatoueur.nom.trim().charAt(0).toUpperCase()}
-            </span>
-          )}
-        </span>
+              la hauteur des lignes 2 et 3 (nº 485) est intacte.
+             §1 (nº 841) — LE ROND EST L'ÉCRITURE PARTAGÉE (AvatarRond)
+             depuis la carte du fil, son troisième porteur : fond et
+             initiale sont LES SIENS, inchangés au pixel. */}
+        <AvatarRond
+          photo={tatoueur.photo_profil}
+          nom={tatoueur.nom}
+          classeFond="bg-sombre-eleve"
+          classeInitiale="text-[13px] font-bold text-sombre-texte-doux"
+          paresseux
+          classe="mobile:hidden"
+        />
 
         {/* LE BLOC DE TEXTE — deux lignes, hauteur au pixel : 19 + 2 +
             19 = 40 px (21 + 2 + 21 = 44 px en une colonne sur
@@ -1214,26 +1255,95 @@ function CarteTatoueurNue({
                écarte ce qui manque avant de joindre — pas de type, pas
                de lieu, et jamais une ponctuation orpheline.
                ██ §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE : « Salon :
-               Lyon, France ». C'est la règle définitive du propriétaire,
-               la même que celle des portfolios suivis de « Ma
-               sélection » (`APRES_LE_TYPE`, lib/selection-suivis) et
-               que celle de la rangée du profil de la fiche. Les deux
-               points ANNONCENT le lieu au lieu de le juxtaposer.
+               Lyon, France ». C'était la règle du propriétaire, la
+               même que celle des portfolios suivis de « Ma sélection »
+               (`APRES_LE_TYPE`, lib/selection-suivis) et que celle de
+               la rangée du profil de la fiche.
+               ██ §2 (nº 841) — LE POINT MÉDIAN, SUR LES CARTES :
+               « Artist · Lyon, FR ». Décision du propriétaire, et
+               l'écriture est désormais UNIQUE — `sousTitreDeCarte`
+               (lib/photo-tatoueur), la même que l'en-tête de la carte
+               du fil mobile. La plaque du profil et les portfolios
+               suivis gardent leurs deux-points : la nº 841 ne touche
+               que les cartes, et le dit là-bas.
                ⚠️ CETTE CARTE EST RENDUE PARTOUT — moteur, vitrines,
                « Ma sélection » : le signe changé ici se voit sur les
                trois d'un seul geste. */}
-          {[
-            libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement),
-            ligneLieuDeCarte(lieuDeLaCarte),
-          ]
-            .filter(Boolean)
-            .join(": ")}
+          {sousTitreDeCarte(tatoueur, lieuDeLaCarte)}
         </p>
         </div>
         </div>
       </div>
       )}
       </Link>
+
+      {/**
+        * ██ §1 (nº 841) — LA CARTE DU FIL : EN-TÊTE, IMAGE, PIED ██
+        * ================================================================
+        * Les trois blocs du doigt, rendus par le serveur pour tout le
+        * monde et montrés au doigt seulement (`hidden mobile:…`, chez
+        * chacun) — le pourquoi entier est écrit sur la propriété `fil`
+        * et chez CarteFil. Ici, ce que la carte est seule à savoir :
+        *  · L'IMAGE : le carrousel de la fiche en variante « carte »
+        *    (défilement natif, accrochage, pastille du patron partagé,
+        *    photos différées) — SANS lien : un toucher sur la photo ne
+        *    fait rien, c'est la consigne. Une carte à photo unique garde
+        *    l'image simple, comme sur le web ;
+        *  · LE CADRE porte le pincement (le geste du doigt) et la plaque
+        *    d'attente rentrée de 2 px (nº 648), comme celui du web ;
+        *  · LE PIED partage LA PHOTO REGARDÉE — la même adresse que le
+        *    lien du web emporte (`adresseFiche`).
+        */}
+      {fil && (
+        <>
+          <EnTeteDeFil tatoueur={tatoueur} lieu={lieuDeLaCarte} />
+          <div
+            ref={cadrePhoto}
+            data-cadre-de-fil=""
+            className={`relative hidden mobile:block w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden`}
+          >
+            <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
+            {galerieDansLaCarte ? (
+              <CarrouselPortfolio
+                photos={photosDeLaCarte}
+                nomTatoueur={tatoueur.nom}
+                styleLabel={libelleStyle(
+                  photoEnregistrable?.style ?? styleRecherche
+                )}
+                natureDeLaSerie={photoEnregistrable?.nature ?? ""}
+                indice={indiceDoigt}
+                surChangement={setIndiceDoigt}
+                variante="carte"
+                prioritaire={prioritaire}
+                approchee={approchee}
+              />
+            ) : (
+              <PhotoDeCarte
+                url={photo}
+                urlPleine={photoEnregistrable?.url}
+                tailles={TAILLES_CARTE}
+                alt={legendeDeCarte(
+                  tatoueur,
+                  styleRecherche,
+                  renduRecherche,
+                  natureRecherche
+                )}
+                chargement={prioritaire ? "eager" : "lazy"}
+                priorite={prioritaire ? "high" : undefined}
+                classe="relative w-full h-full object-cover"
+              />
+            )}
+          </div>
+          <PiedDeFil
+            tatoueur={tatoueur}
+            photos={photosDeLaCarte}
+            indice={indiceDoigt}
+            surRang={setIndiceDoigt}
+            cheminAPartager={adresseFiche}
+            metier={libelleStyle(photoEnregistrable?.style ?? styleRecherche)}
+          />
+        </>
+      )}
 
       {/**
         * ██ §1 (nº 517) — LE FANION EST DEVENU LE VOISIN DU LIEN ██

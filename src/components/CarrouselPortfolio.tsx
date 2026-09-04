@@ -143,6 +143,7 @@ export function CarrouselPortfolio({
   natureDeLaSerie = "",
   badgeReduit = false,
   lien,
+  approchee = false,
   sansCompteur = false,
   //  §1 (nº 368) — `sansPoints` n'est plus LU : la frise a quitté les
   //  cartes, et personne d'autre ne la rendait ici. La propriété reste
@@ -203,6 +204,20 @@ export function CarrouselPortfolio({
     onClick?: (evenement: React.MouseEvent) => void;
     label: string;
   };
+  /**
+   * ██ §1 (nº 841) — LA CARTE DU FIL S'APPROCHE DE L'ÉCRAN ██
+   * ------------------------------------------------------------------
+   * En variante « carte », la consigne du propriétaire est en trois
+   * temps : la PREMIÈRE photo seule au chargement ; la SUIVANTE quand
+   * on approche ; jamais le portfolio entier. Ce drapeau est le second
+   * temps : la grille (GrilleTatoueurs, un seul observateur pour toutes
+   * les cartes) le lève quand la carte arrive à moins d'un écran. Tant
+   * qu'il est baissé, la fenêtre montée se réduit à la photo regardée ;
+   * levé, elle s'ouvre à ses voisines (`VOISINES_CARTE`), et celles-ci
+   * se chargent SANS ATTENDRE — quand le doigt glisse, la photo est déjà
+   * là. Sans effet sur une fiche.
+   */
+  approchee?: boolean;
   /**
    * §Fenêtre (nº 284) — LA CAPSULE « 3/12 » NE S'AFFICHE PAS. Dans la
    * fenêtre de carrousel du smartphone, la photo est NETTE : rien de
@@ -587,7 +602,9 @@ export function CarrouselPortfolio({
     const rangs = new Set<number>();
     //  §2 (nº 368) — une carte prend UNE voisine de chaque côté, une
     //  fiche en garde DEUX (voir les deux notes en tête de fichier).
-    const rayon = surCarte ? VOISINES_CARTE : VOISINES;
+    //  §1 (nº 841) — sur une carte du fil, aucune voisine tant qu'on
+    //  n'approche pas : la première photo, et elle seule.
+    const rayon = surCarte ? (approchee ? VOISINES_CARTE : 0) : VOISINES;
     for (let rang = indice - rayon; rang <= indice + rayon; rang += 1) {
       if (rang >= 0 && rang < n) rangs.add(rang);
     }
@@ -683,7 +700,13 @@ export function CarrouselPortfolio({
           //  travers de l'élan du doigt — et l'on voyait passer la
           //  tranche d'une image.
           dernierPose.current = rang;
-          if (!surCarte)           surChangement(rang);
+          //  §1 (nº 841) — L'OBSERVATEUR PARLE AUSSI SUR UNE CARTE. La
+          //  garde `!surCarte` datait du retrait des cartes (nº 445) :
+          //  plus personne ne les écoutait. La carte du fil, elle, a
+          //  besoin du rang — sa pastille, ses points et sa photo
+          //  regardée en dépendent (nº 372-373, l'écriture d'origine :
+          //  le rappel de React, stable pour toujours).
+          surChangement(rang);
         }
       },
       { root: zone, threshold: 0.6 }
@@ -1394,7 +1417,18 @@ export function CarrouselPortfolio({
               //  fois montées — c'est-à-dire au premier geste.
               //  (nº 366 : passé tel quel, l'ordre de priorité de la
               //  mosaïque ne change pas d'un cran.)
-              chargement={rang === 0 && prioritaire ? undefined : "lazy"}
+              //  §1 (nº 841) — ET LA VOISINE D'UNE CARTE APPROCHÉE NE
+              //  DIFFÈRE PAS : elle n'est montée que parce que la carte
+              //  est à moins d'un écran (voir `approchee`), et c'est là
+              //  qu'on veut qu'elle arrive — avant le geste, pas
+              //  pendant. Une voisine `lazy` et rognée par le cadre ne
+              //  partirait qu'une fois glissée sous les yeux : un cadre
+              //  vide le temps du réseau.
+              chargement={
+                (rang === 0 && prioritaire) || (rang > 0 && approchee)
+                  ? undefined
+                  : "lazy"
+              }
               priorite={rang === 0 && prioritaire ? "high" : undefined}
               //  §2 (nº 295) — LE DÉBORDEMENT D'UN PIXEL DE LA nº 294 EST
               //  ANNULÉ : c'est LUI qui posait la dernière colonne de

@@ -132,6 +132,26 @@ export const GOUTTIERES_DEUX_COLONNES = "mobile:gap-x-[2px] mobile:gap-y-4";
 /** La grille standard, entière — cartes en deux colonnes au doigt. */
 export const CLASSES_GRILLE_CARTES = `${SOCLE_GRILLE_CARTES} ${GOUTTIERES_DEUX_COLONNES} ${COLONNES_MOSAIQUE}`;
 
+/**
+ * ██ §1 (nº 841) — LE FIL DES RÉSULTATS, AU DOIGT ██
+ * ------------------------------------------------------------------
+ * Sur un vrai mobile, LES RÉSULTATS DE RECHERCHE ne sont plus la grille
+ * de deux colonnes façon Instagram (nº 443) mais un FIL : UNE carte par
+ * rangée, pleine largeur (le socle saigne déjà jusqu'aux bords,
+ * `mobile:-mx-4`), les rangées détachées de 24 px — la gouttière que la
+ * pleine largeur d'hier s'était donnée (nº 398, « le cran au-dessous
+ * dans l'échelle »). L'interstice de deux pixels des colonnes n'a plus
+ * lieu d'être : il n'y a plus qu'une colonne.
+ * ⚠️ CES DEUX ÉCRITURES NE VALENT QUE POUR CETTE GRILLE — celle des
+ * résultats. « Ma sélection » consomme `CLASSES_GRILLE_CARTES` (juste
+ * au-dessus) et garde ses deux colonnes, au pixel.
+ * ⚠️ `mobile:grid-cols-1` REMPLACE `grid-cols-2` sur l'appareil — une
+ * seule valeur à la fois, jamais deux empilées (piège nº 389) : c'est la
+ * variante d'appareil qui tranche (règle nº 60), pas une largeur.
+ */
+export const COLONNE_UNIQUE_DU_FIL = "mobile:grid-cols-1";
+export const GOUTTIERE_DU_FIL = "mobile:gap-y-6";
+
 export function GrilleTatoueurs({
   tatoueurs,
   styleRecherche = "",
@@ -277,6 +297,55 @@ export function GrilleTatoueurs({
     };
     //  LA LISTE DES CARTES CHANGE À CHAQUE « VOIR PLUS » : l'observateur
     //  est refait, jamais empilé (le nettoyage passe avant).
+  }, [tatoueurs]);
+
+  /**
+   * ██ §1 (nº 841) — L'APPROCHE D'UNE CARTE DU FIL, UN SEUL OBSERVATEUR ██
+   * ------------------------------------------------------------------
+   * La consigne du propriétaire, en trois temps : la première photo
+   * seule au chargement ; la SUIVANTE quand on approche ; jamais le
+   * portfolio entier. Cet observateur est le second temps : quand une
+   * carte arrive À MOINS D'UN ÉCRAN (une hauteur de fenêtre au-dessus
+   * comme au-dessous), elle est notée « approchée » — pour toujours :
+   * ce qui a été chargé le reste, et une carte qui s'éloigne ne perd
+   * rien (la mémoire des images, c'est l'observateur du dessus qui la
+   * tient, à deux écrans). La carte passe le drapeau à son carrousel,
+   * qui monte alors la deuxième photo sans la différer.
+   * ⚠️ UN SEUL OBSERVATEUR POUR TOUTES LES CARTES (la règle de la
+   * nº 224-§4 : « borné, pas proportionnel »), refait à chaque « Voir
+   * plus », jamais empilé. ⚠️ AU DOIGT SEULEMENT (l'appareil, jamais la
+   * largeur — règle nº 60) : sur le web, la structure du fil est
+   * masquée et sa deuxième photo, montée sans boîte, PARTIRAIT quand
+   * même si on la marquait « sans attendre » — donc on ne marque rien.
+   * ⚠️ LA CLÉ EST CELLE DE LA CARTE (`data-carte`, la même que React) :
+   * un ensemble de clés, et une carte ne se rend de nouveau que si SA
+   * clé y entre — les autres, mémorisées, ne bougent pas.
+   */
+  const [approchees, setApprochees] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const grille = zoneGrille.current;
+    if (!grille || typeof IntersectionObserver === "undefined") return;
+    if (document.documentElement.dataset.appareil !== "mobile") return;
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        const nouvelles: string[] = [];
+        for (const entree of entrees) {
+          if (!entree.isIntersecting) continue;
+          const cle = (entree.target as HTMLElement).dataset.carte;
+          if (cle) nouvelles.push(cle);
+        }
+        if (!nouvelles.length) return;
+        setApprochees((eues) => {
+          if (nouvelles.every((cle) => eues.has(cle))) return eues;
+          return new Set([...eues, ...nouvelles]);
+        });
+      },
+      { root: null, rootMargin: "100% 0px" }
+    );
+    for (const carte of grille.querySelectorAll("[data-carte]")) {
+      observateur.observe(carte);
+    }
+    return () => observateur.disconnect();
   }, [tatoueurs]);
 
   const premiereDisposition = useRef(true);
@@ -714,12 +783,14 @@ export function GrilleTatoueurs({
                 //  « Ma sélection » (qui consomme CLASSES_GRILLE_CARTES,
                 //  jamais cette branche) ne changent pas.
                 "mobile:gap-y-6"
-              : GOUTTIERES_DEUX_COLONNES
+              : //  §1 (nº 841) — LE FIL : au doigt, cette grille n'a plus
+                //  qu'une colonne, et c'est sa gouttière à lui.
+                GOUTTIERE_DU_FIL
         } ${
           //  L'ESTOMPE DE RECHERCHE — la seule opacité de la mosaïque
           //  désormais (nº 166) : plus rien ne l'efface à la bascule.
           `duration-200 ${estompee ? "opacity-60" : "opacity-100"}`
-        } ${COLONNES_MOSAIQUE}`}
+        } ${COLONNES_MOSAIQUE} ${COLONNE_UNIQUE_DU_FIL}`}
       >
         {/*  ⚠️ DEUX FONCTIONS CONSTANTES, ET C'EST LE POINT (nº 219-§1).
              Elles étaient fabriquées à chaque rendu — `() => ouvrir(t)` —
@@ -755,6 +826,11 @@ export function GrilleTatoueurs({
                  et gardent le nom par le défaut de la carte. */
             surApproche={precharger}
             surOuverture={ouvrir}
+            //  §1 (nº 841) — CETTE GRILLE EST CELLE DES RÉSULTATS : au
+            //  doigt, ses cartes sont celles du fil. Et chacune sait si
+            //  elle est à moins d'un écran (voir l'observateur d'approche).
+            fil
+            approchee={approchees.has(tatoueur.carrousel?.cle ?? tatoueur.id)}
           />
         ))}
       </div>

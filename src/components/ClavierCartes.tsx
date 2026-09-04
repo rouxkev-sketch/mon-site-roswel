@@ -86,6 +86,12 @@ export function ClavierCartes() {
       ) {
         return;
       }
+      //  §1 (nº 841) — RIEN AU DOIGT, et c'est écrit plutôt que
+      //  supposé : un écran tactile peut tenir un `:hover` après un
+      //  toucher, et une tablette peut avoir un clavier. Le chevron y
+      //  existe dans le document (masqué) et un `click()` l'atteindrait
+      //  quand même. L'appareil tranche (règle nº 60).
+      if (document.documentElement.dataset.appareil === "mobile") return;
       const chevron = document.querySelector<HTMLElement>(
         `[data-carte]:hover [data-fleche-de-carte="${
           sens === 1 ? "droite" : "gauche"

@@ -13,6 +13,8 @@ import {
 //  chez leurs données pour cette raison précise (nº 359). Le TYPE, lui,
 //  s'efface à la compilation — il peut venir de n'importe où.
 import { renduConnu, styleConnu } from "@/config/tatouage";
+import { useAppareilMobile } from "@/lib/appareil";
+import { avecConsigneDeLienInterne, ENTREE_LIEN } from "@/lib/lien-interne";
 import { natureCherchee } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
@@ -116,6 +118,44 @@ export function FicheSelonLAdresse({
       studio: params.get("studio"),
     };
   }, [requete]);
+  /**
+   * ██ §3 (nº 841) — AU DOIGT, LA VUE PHOTO N'EXISTE PLUS : TOUTE FICHE
+   * EST LE PROFIL ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : la fiche intermédiaire du doigt (carte →
+   * vue photo → plaque du profil) disparaît, ce qu'elle montrait vit
+   * désormais dans la carte du fil (CarteFil). Sur un vrai mobile, une
+   * adresse de fiche SANS `entree=lien` est donc lue COMME SI elle le
+   * portait — la vue profil (règle 6, nº 295) — et l'adresse est mise
+   * au pas (`replaceState`, plus bas) : ce que l'écran montre, l'adresse
+   * le dit (règles 328/329), et l'ancienne adresse REDIRIGE.
+   * ⚠️ L'APPAREIL, PAR LE CROCHET DU SITE (`useAppareilMobile`, un seul
+   * écrivain — règle nº 60) : il vaut « web » au premier rendu, celui
+   * que le serveur a fait, puis le vrai appareil un battement plus tard.
+   * Sur ce battement, la garde d'avant peinture couvre l'écran : le
+   * script pose `data-entree-lien` sur toute fiche au doigt (nº 841),
+   * et la garde n'est levée qu'une fois le PROFIL commis (voir l'effet
+   * de levée) — l'œil ne voit jamais la photo en haut, pas même un
+   * instant.
+   * ⚠️ CE QUE CELA CHANGE AU-DELÀ DES CARTES DU FIL, ET C'EST DIT : toute
+   * arrivée au doigt sur une vue photo mène au profil — les cartes de
+   * « Ma sélection », un lien partagé, une vignette de l'onglet
+   * Portfolio (nº 455), un retour d'historique. Le web n'est pas touché.
+   */
+  const mobile = useAppareilMobile();
+  const entree = tags ? tags.entree || (mobile ? ENTREE_LIEN : "") : "";
+  useEffect(() => {
+    if (!mobile || !tags || tags.entree === ENTREE_LIEN) return;
+    if (!/^\/artist\/[^/]+$/.test(window.location.pathname)) return;
+    //  LE MÊME GESTE QUE LES FILTRES DE « MA SÉLECTION » (nº 516) et
+    //  l'étape refermable : remplacer, jamais empiler — revenir d'un
+    //  cran ramène aux résultats, pas à une vue photo qui n'existe plus.
+    window.history.replaceState(
+      window.history.state,
+      "",
+      avecConsigneDeLienInterne(window.location.pathname + window.location.search)
+    );
+  }, [mobile, tags]);
   const cle = tags
     ? [
         tatoueur.slug,
@@ -123,7 +163,7 @@ export function FicheSelonLAdresse({
         tags.rendu,
         tags.nature,
         tags.photo,
-        tags.entree,
+        entree,
         tags.studio ?? "",
       ].join("|")
     : null;
@@ -138,9 +178,20 @@ export function FicheSelonLAdresse({
     //  contredit, juste avant le resemis. Une adresse nue, elle, n'a
     //  jamais fait poser de garde : ne rien lever n'y retire rien.
     if (!requete) return;
+    //  §3 (nº 841) — AU DOIGT, LA GARDE NE SE LÈVE QUE SUR LE PROFIL :
+    //  tant que le crochet d'appareil n'a pas parlé, la fiche rendue
+    //  est encore la vue photo — la lever ici la montrerait le temps
+    //  d'un battement. L'attribut est lu tel quel : c'est ce que le
+    //  script a écrit, et la seule vérité disponible à cet instant.
+    if (
+      document.documentElement.dataset.appareil === "mobile" &&
+      entree !== ENTREE_LIEN
+    ) {
+      return;
+    }
     delete document.documentElement.dataset.ficheParametree;
     delete document.documentElement.dataset.entreeLien;
-  }, [cle, requete]);
+  }, [cle, requete, entree]);
 
   /*  L'ARRIVÉE N'EST PAS COMMISE (premier rendu d'une navigation
       douce) : on ne rend RIEN plutôt qu'une fiche aux tags de la page
@@ -158,7 +209,7 @@ export function FicheSelonLAdresse({
       renduInitial={tags.rendu}
       natureInitiale={tags.nature}
       photoInitiale={tags.photo}
-      entreeInitiale={tags.entree}
+      entreeInitiale={entree}
     />
   );
 }
