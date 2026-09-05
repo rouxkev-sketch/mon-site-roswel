@@ -1206,10 +1206,21 @@ export function MenuDeroulant({
              nº 581-584 ne change pas, seul le plancher monte.
              ⚠️ NE JAMAIS RECOLLER L'INTERPOLATION À LA CLASSE : le
              banc 865 (§3) lit le rembourrage calculé et tombe si la
-             règle manque à nouveau. */
+             règle manque à nouveau.
+
+             ██ §4 (nº 867) — TRENTE-DEUX, C'ÉTAIT TROP : VINGT-HUIT ██
+             Le propriétaire a regardé les 32 px de la nº 865 sur son
+             téléphone et les trouve trop grands. Le plancher descend
+             d'un cran de l'échelle (28) : sous le dernier titre, ses
+             4 px de rembourrage plus 28 font TRENTE-DEUX pixels jusqu'au
+             bord, contre 36 hier — et 37 restent au-dessus du premier
+             titre, qui ne bouge pas. La règle des nº 581-584 ne change
+             pas d'un mot : on prend toujours LE PLUS GRAND des deux, le
+             plancher ou la barre d'accueil du téléphone (34 px sur les
+             iPhone récents, qui l'emportent alors comme avant). */
         className={`shrink-0 ${
           enBas
-            ? `border-t pb-[max(2rem,env(safe-area-inset-bottom))] ${
+            ? `border-t pb-[max(1.75rem,env(safe-area-inset-bottom))] ${
                 /*  ██ §1 (nº 584) — L'AIR SOUS LE TRAIT, MESURÉ EN ENCRE
                      ET NON PLUS EN BOÎTES ██
                      LE DÉFAUT : une section ouverte, l'air entre le
@@ -1294,9 +1305,20 @@ export function MenuDeroulant({
              garde — il dit « ceci s'ouvre » — mais l'ÉTAT est dit par
              le trait, et deux signes pour une même chose en font un de
              trop. Ailleurs, il pivote comme depuis la nº 572-574. */}
-        {entetesDesSections.map((entete) => (
+        {/*  ██ §4 (nº 867) — MOINS D'AIR AU-DESSUS DU DEUXIÈME TITRE ██
+             Décision du propriétaire : l'air entre les deux titres se
+             resserre. Il vaut le rembourrage BAS du titre du dessus
+             (quatre pixels) plus le rembourrage HAUT de celui du
+             dessous — douze jusqu'ici, HUIT désormais : seize pixels de
+             boîte à boîte deviennent DOUZE, et l'encre passe de 34 à 30.
+             ⚠️ LE PREMIER TITRE GARDE LES SIENS, et c'est pour cela que
+             le rembourrage est donné PAR RANG : au-dessus de lui il n'y
+             a pas un titre mais le trait de préhension, et l'air qui
+             l'en sépare (vingt-quatre plus douze) n'est pas en cause —
+             le propriétaire ne l'a pas nommé, il ne bouge pas. */}
+        {entetesDesSections.map((entete, rang) => (
           <div key={entete}>
-            {enTeteSection(entete, `${retrait} pt-3 pb-1`, {
+            {enTeteSection(entete, `${retrait} ${rang === 0 ? "pt-3" : "pt-2"} pb-1`, {
               graisse:
                 groupeDeplie === entete
                   ? GRAISSE_TITRE_GROUPE
@@ -2197,7 +2219,14 @@ export function MenuDeroulant({
                 rien ne couvrait. Sans bloc, elle reste sur la plaque,
                 à sa valeur d'origine. */
             className={`relative rounded-t-3xl max-h-[80vh] flex flex-col ${
-              blocEntetes ? "" : "pb-[max(1rem,env(safe-area-inset-bottom))] "
+              /*  §4 (nº 867) — LA MÊME RÉDUCTION QUAND IL N'Y A PAS DE
+                  TITRES : cette réserve-là (la feuille n'a que ses
+                  options, c'est la plaque qui la porte) descend du même
+                  nombre de pixels que le bloc juste au-dessus — quatre
+                  — soit de seize à DOUZE. Le principe ne change pas :
+                  le plus grand des deux, ce plancher ou la barre
+                  d'accueil du téléphone. */
+              blocEntetes ? "" : "pb-[max(0.75rem,env(safe-area-inset-bottom))] "
             }${
               feuilleDecollee ? "mx-4 " : ""
             }${

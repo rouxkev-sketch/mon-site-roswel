@@ -109,7 +109,17 @@ export function FenetreSignalement({
           className="flex h-10 w-10 shrink-0 items-center justify-center
                      text-sombre-texte transition-transform active:scale-95"
         >
-          <IconeDrapeau taille={22} />
+          {/*  ██ §7 (nº 867) — VINGT-QUATRE, COMME LES DEUX DE DROITE ██
+               Décision du propriétaire : dans le pied des cartes, le
+               signalement et les vues doivent avoir LA MÊME TAILLE que
+               le fanion et le partage — dessin ET cible. Le dessin
+               passe donc de 22 à 24, la cible reste 40 : le glyphe a
+               huit pixels de vide de chaque côté, exactement comme
+               ceux de droite.
+               ⚠️ CETTE VARIANTE N'A QU'UN SEUL PORTEUR (le pied du fil,
+               CarteFil) : la ligne « Report this portfolio » du bas de
+               fiche est l'autre variante, et elle ne bouge pas. */}
+          <IconeDrapeau taille={24} />
         </button>
       ) : (
       <button

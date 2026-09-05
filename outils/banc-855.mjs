@@ -64,8 +64,10 @@ const URL_RECHERCHE = `${BASE}/search?${RECHERCHE}`;
     verif("… le DESSIN ouvre le bloc, le nombre suit (« icône puis 28 »)",
       vu?.dessinDAbord === true && vu?.nombre === "28",
       vu ? `dessin d'abord ${vu.dessinDAbord} · « ${vu.nombre} »` : "pied absent");
-    verif("… le dessin fait vingt pixels",
-      vu?.taille === 20, vu ? `${vu.taille} px` : "pied absent");
+    //  nº 867-§7 — VINGT-QUATRE : le dessin des vues (l'histogramme
+    //  depuis la nº 866) a pris la taille du fanion et du partage.
+    verif("… le dessin fait vingt-quatre pixels depuis la nº 867 (vingt avant)",
+      vu?.taille === 24, vu ? `${vu.taille} px` : "pied absent");
     /*  LE BLANC DE LA CHARTE (#F2F2F4), pas un blanc inventé : c'est
         `text-sombre-texte`, la couleur de texte du site. */
     verif("… et les deux sont en BLANC (le blanc de la charte)",

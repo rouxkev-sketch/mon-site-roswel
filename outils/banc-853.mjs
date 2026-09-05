@@ -171,8 +171,9 @@ const RESULTATS = `${BASE}/search?style=blackwork&nature=tatouage`;
         vingt pixels. La place, l'ordre, le dessin et la couleur se
         mesurent au banc 855 — deux bancs ne diront pas deux vérités
         sur le même sujet. */
-    verif("le pied montre le nombre, avec son dessin de 20 px",
-      vu && vu.texte === "28" && vu.dessin === 20,
+    //  nº 867-§7 — le dessin fait 24 px depuis cette passe.
+    verif("le pied montre le nombre, avec son dessin de 24 px",
+      vu && vu.texte === "28" && vu.dessin === 24,
       vu ? `« ${vu.texte} » · dessin ${vu.dessin} px` : "bloc absent");
     verif("… et il est du côté du signalement (nº 855 : à sa droite)",
       vu && vu.aDroiteDeSignaler, vu ? `à droite ${vu.aDroiteDeSignaler}` : "bloc absent");

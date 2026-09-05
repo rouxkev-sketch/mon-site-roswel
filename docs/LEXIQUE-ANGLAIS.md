@@ -533,3 +533,27 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > 142 et 132 avec l'icône, pour des colonnes de 179 à 390 px, 164 à
 > 360). Rien d'autre ne change : ni le nom du groupe, ni les onglets
 > de la page de recherche.
+
+---
+
+## Passe nº 867 — le nombre de vues, écrit court
+
+| valeur en base | à l'écran | où |
+| --- | --- | --- |
+| 0 à 999 | **999** — le nombre entier | `vuesAffichees`, `src/lib/format-vues.ts` |
+| 1 000 | **1K** | idem |
+| 12 300 | **12.3K** — un chiffre après le point, tronqué | idem |
+| 1 000 000 | **1M** | idem |
+
+> **La forme est anglaise, et elle est écrite une seule fois** : le
+> POINT décimal (« 12.3K »), la lettre collée au nombre, aucune espace.
+> On n'appelle pas `toLocaleString` — sa sortie suivrait la langue du
+> navigateur, et deux visiteurs ne liraient pas la même chose.
+> **On tronque, on n'arrondit pas** : 12 399 s'écrit « 12.3K ». Un
+> compteur n'annonce jamais plus que ce qui a été compté.
+> **Rien d'autre ne change** : le bloc paraît toujours, et « 0 » reste
+> un nombre (règle de la nº 854).
+>
+> **Le seul porteur aujourd'hui** est le pied des cartes du doigt
+> (`PiedDeFil`, CarteFil) — résultats, vue photo, fil de galeries.
+

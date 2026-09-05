@@ -20,6 +20,7 @@ import {
   MARQUE_YOKOFOLIO,
   PORTRAIT_ROND,
   TRAIT_SEPARATION,
+  ROBE_BADGE_CONTOUR,
 } from "@/config/tatouage";
 //  §2 (nº 458) — la ville lisible partout, pour le partage du profil.
 import { villeAffichee } from "@/lib/adresse";
@@ -258,7 +259,14 @@ import { AVATAR_MOYEN, sourceAvatar } from "@/lib/avatar-variantes";
 /** La hauteur d'une capsule : 18 px de ligne + 2 × 4 px de
     rembourrage. C'est elle qui donne la hauteur de la boîte d'icône
     ET la borne des deux lignes. */
-const HAUTEUR_CAPSULE = 26;
+/*  §6 (nº 867) — VINGT-HUIT DEPUIS QUE LA CAPSULE A UN CONTOUR : la
+    boîte n'a pas grandi d'air (18 de ligne, 4 + 4 de rembourrage), elle
+    a gagné LE TRAIT — un pixel en haut, un en bas. Cette hauteur sert à
+    deux choses, et les deux doivent la suivre : la boîte de l'icône en
+    tête de ligne (qui s'aligne sur la première capsule) et le plafond
+    de deux lignes (`maxHeight`), qui déciderait sinon de couper une
+    ligne trop tôt. */
+const HAUTEUR_CAPSULE = 28;
 /** L'écart entre deux capsules (`gap-1.5`). */
 const ECART_CAPSULES = 6;
 /** La place réservée au compteur en fin de deuxième ligne, AVANT
@@ -289,7 +297,25 @@ const LARGEUR_COMPTEUR = 72;
  * les valeurs qu'il cache. La note de la nº 505, plus haut, décrivait
  * l'ancien rapport : elle est remise d'aplomb là-bas.
  */
-const FOND_CAPSULE = "bg-sombre-eleve";
+/*  ██ §6 (nº 867) — LA ROBE DU BADGE DU COMPTE, POUR LES CAPSULES ██
+    ------------------------------------------------------------------
+    DÉCISION DU PROPRIÉTAIRE : les capsules d'un profil — les styles,
+    les techniques, les couleurs, la taille de pièce — n'ont PLUS DE
+    FOND D'ACTION. Elles prennent la robe du BADGE DU COMPTE (le titre
+    de la page de résultats, nº 847) : le fond du site, et un contour
+    fin. Un aplat plus clair que la page annonce quelque chose à
+    toucher ; une valeur ne se touche pas.
+    ⚠️ C'EST L'ÉCRITURE DU BADGE, PAS UNE COPIE : `ROBE_BADGE_CONTOUR`
+    (config/tatouage) dit déjà « boîte de badge, contour fin, aucun
+    remplissage » — les deux robes ne peuvent donc pas diverger. Ce
+    qu'elle apporte en plus de la couleur (le refus de rétrécir, le
+    refus de couper le mot, le rayon) est ce que la capsule faisait
+    DÉJÀ, écrit une fois pour les deux.
+    ⚠️ LE COMPTEUR « +2 » N'EN EST PLUS UN (voir plus bas) : il quitte
+    la famille des capsules et devient du texte nu.
+    ⚠️ WEB ET DOIGT ENSEMBLE : cette ligne est la seule qui les
+    habille, elle n'a jamais eu de variante d'appareil. */
+const FOND_CAPSULE = ROBE_BADGE_CONTOUR;
 
 /** `useLayoutEffect` mesure AVANT la peinture — c'est ce qui empêche
     de voir les capsules se retirer une à une. Il n'existe pas au
@@ -471,7 +497,12 @@ function LigneDeCapsules({
                  site donne déjà le texte plein à ses valeurs. Rien
                  d'autre ne bouge — ni la taille, ni la graisse, ni le
                  fond. */
-            className={`inline-flex items-center whitespace-nowrap rounded-lg px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte ${fond}`}
+            /*  §6 (nº 867) — LA BOÎTE VIENT DE LA ROBE (`fond`, qui est
+                celle du badge du compte depuis cette passe) : elle
+                porte déjà l'alignement, le refus de couper le mot et le
+                rayon. Ne restent ici que l'air intérieur, le corps et
+                la couleur du texte — inchangés. */
+            className={`px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte ${fond}`}
           >
             {libelle(slug)}
           </span>
@@ -536,10 +567,27 @@ function LigneDeCapsules({
                  capsules : il héritait du même `LIGNE_GRISE`. Il prend
                  le même texte plein — 4,94 → 10,44 sur son fond, qui
                  est d'un cran au-dessus du leur. Rien d'autre ne bouge. */
+            /*  ██ §6 (nº 867) — LE COMPTEUR N'EST PLUS UN BADGE ██
+                Décision du propriétaire : « +2 ⌄ » (et « Less ⌃ ») est
+                du TEXTE NU avec sa flèche, posé sur l'écran — plus de
+                capsule, plus de fond, plus de contour. Il cesse donc de
+                se faire passer pour une valeur de plus : c'est une
+                commande, et le seul signe qui reste est sa flèche.
+                CE QUI RESTE, ET QU'IL FAUT GARDER : la MÊME HAUTEUR que
+                les capsules (le rembourrage vertical et l'interligne ne
+                bougent pas, plus un pixel de chaque côté pour remplacer
+                le trait qu'il perd) — sans quoi il ne s'alignerait plus
+                sur la ligne qu'il termine, et le calcul des deux lignes
+                (qui mesure sa boîte) se tromperait. Son écriture, elle,
+                est celle des capsules, au cheveu.
+                ⚠️ SANS FOND, IL NE PEUT PLUS S'ÉCLAIRCIR AU SURVOL : la
+                réponse au doigt et à la souris passe donc au TEXTE, qui
+                blanchit — le geste des liens du site (nº 505 lui donnait
+                un fond, il n'en a plus). */
             className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap
-                       rounded-lg bg-sombre-eleve-clair px-2.5 py-1 text-[13.5px] leading-[18px]
-                       text-sombre-texte transition-colors hover:bg-sombre-haut
-                       active:bg-sombre-haut"
+                       px-0.5 py-[5px] text-[13.5px] leading-[18px]
+                       text-sombre-texte-doux transition-colors hover:text-sombre-texte
+                       active:text-sombre-texte"
           >
             {deplie ? "Less" : `+${restant}`}
             <span

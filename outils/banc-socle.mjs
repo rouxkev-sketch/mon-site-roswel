@@ -16,9 +16,16 @@
 //  BASE (le site) et DOUBLURE (la base) se surchargent par l'environnement.
 //  Chaque banc termine par TOUT EST VERT (code 0) ou la liste des ratés (code 1).
 let chromium;
+/*  §5 (nº 867) — LE MOTEUR DE SAFARI, POUR LES DÉFAUTS QUI N'EXISTENT
+    QUE LÀ. Le propriétaire a vu un bogue de retour sur SON iPhone, que
+    Chromium ne reproduit pas ; WebKit est le seul moteur qui le montre.
+    Il est FACULTATIF : un atelier sans WebKit installé garde tous ses
+    bancs, seuls ceux qui le demandent expressément s'arrêtent. */
+let webkit;
 try {
   const paquet = await import(process.env.BANC_PLAYWRIGHT ?? "playwright-core");
   chromium = paquet.chromium ?? paquet.default?.chromium;
+  webkit = paquet.webkit ?? paquet.default?.webkit;
   if (!chromium) throw new Error("chromium introuvable dans le paquet");
 } catch {
   console.error(
@@ -29,7 +36,7 @@ try {
   process.exit(1);
 }
 const NAVIGATEUR = process.env.BANC_NAVIGATEUR;
-export { chromium };
+export { chromium, webkit };
 export const BASE = process.env.BASE ?? "http://localhost:3000";
 export const DOUBLURE = process.env.DOUBLURE ?? "http://127.0.0.1:3222";
 
@@ -65,8 +72,21 @@ export function cookieDeSession(id, email, extra = {}) {
   return { name: `sb-${projet}-auth-token`, value: "base64-" + Buffer.from(JSON.stringify(session), "utf8").toString("base64").replace(/\+/g, "-").replace(/\//g, "_"), domain: "localhost", path: "/" };
 }
 
-export async function ouvrir(mode = "web", { session = null } = {}) {
-  const nav = await chromium.launch({ ...(NAVIGATEUR ? { executablePath: NAVIGATEUR } : {}), args: ["--no-proxy-server"] });
+export async function ouvrir(mode = "web", { session = null, moteur = "chromium" } = {}) {
+  /*  §5 (nº 867) — DEUX MOTEURS : Chromium par défaut (tous les bancs),
+      WebKit sur demande — le moteur de Safari, pour les défauts qui ne
+      se voient que sur l'iPhone du propriétaire. Le chemin du binaire
+      (`BANC_NAVIGATEUR`) ne vaut que pour Chromium : WebKit prend le
+      sien dans le paquet. */
+  if (moteur === "webkit" && !webkit) {
+    throw new Error("WebKit n'est pas installé dans ce Playwright (banc-socle, nº 867)");
+  }
+  const lanceur = moteur === "webkit" ? webkit : chromium;
+  const nav = await lanceur.launch(
+    moteur === "webkit"
+      ? {}
+      : { ...(NAVIGATEUR ? { executablePath: NAVIGATEUR } : {}), args: ["--no-proxy-server"] }
+  );
   const options = mode === "doigt"
     ? { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }
     : { viewport: { width: 1440, height: 950 } };

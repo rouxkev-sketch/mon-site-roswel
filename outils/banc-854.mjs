@@ -88,8 +88,10 @@ const cranALArrivee = await fichePartielle(true);
     verif("à zéro vue, le bloc paraît quand même…",
       aZero?.present === true,
       aZero ? `présent ${aZero.present}` : "sa carte est introuvable dans le fil");
-    verif("… et il montre « 0 », suivi de l'icône de 20 px",
-      aZero?.texte === "0" && aZero?.dessin === 20,
+    //  nº 867-§7 — l'icône est passée à 24 px (la taille des deux de
+    //  droite) ; le sujet de ce banc, lui, est le ZÉRO qui s'affiche.
+    verif("… et il montre « 0 », suivi de l'icône de 24 px (20 avant la nº 867)",
+      aZero?.texte === "0" && aZero?.dessin === 24,
       aZero ? `« ${aZero.texte} » · dessin ${aZero.dessin} px` : "carte absente");
 
     //  UN NOMBRE : il doit traverser la fiche RÉDUITE et arriver au pied.

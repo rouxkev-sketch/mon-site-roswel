@@ -870,6 +870,19 @@ export function noterPageOnglet(url: string) {
  * par-dessus la mosaïque — on ne la note pas, on garde la dernière
  * vraie page et on ne met à jour que l'instant.
  */
+/**
+ * §5 (nº 867) — « LE DÉPART EST-IL FRAIS ? », EN UN SEUL NOMBRE.
+ * ------------------------------------------------------------------
+ * Le départ d'un document (`quand`, juste en dessous) n'a de sens que
+ * s'il vient d'avoir lieu : le document suivant naît dans la seconde.
+ * Huit secondes — la même largeur que le filet de réparation du script
+ * d'avant-peinture, qui lit la même note pour la même raison.
+ * SON SECOND LECTEUR EST `lib/bas-de-la-pile` (nº 867) : il s'en sert
+ * pour savoir si la page qu'on vient de quitter est une page DU SITE,
+ * et donc s'il y a quelqu'un derrière nous dans cet onglet.
+ */
+export const DEPART_ONGLET_FRAIS_MS = 8000;
+
 export function noterDepartOnglet() {
   const etat = lireOnglet();
   const fenetre = Boolean(

@@ -1358,6 +1358,13 @@ export function MoteurTatouage({
     const index = Math.max(0, RAYONS_TATOUAGE.indexOf(valeurs.rayonMi));
     return (
     <div
+      /*  ██ §1-b (nº 867) — LE BALAYAGE DE LA PAGE NE PART PAS D'ICI ██
+          La page de recherche du doigt bascule Tattoo / Flash à un
+          balayage horizontal (PageRechercheMobile). Ce curseur SE RÈGLE
+          par le même geste, et c'est son geste à lui : la page ne le
+          lui prend pas. Le marqueur est la seule chose que la page
+          regarde — elle ne connaît ni ce curseur, ni sa forme. */
+      data-sans-balayage=""
       className={`flex items-center gap-3 text-[13px] transition-opacity ${
         actif ? "opacity-100" : "opacity-40"
       }`}
@@ -1847,6 +1854,15 @@ export function MoteurTatouage({
               options={optionsDeLOnglet(vuePage)}
               //  §3 (nº 303) — le même mot qu'en web : « Style ».
               ariaLabel="Style"
+              /*  ██ §2 (nº 867) — SA FLÈCHE NE VIRE PLUS AU ROUGE ██
+                  Décision du propriétaire : dans le menu des styles du
+                  moteur, la flèche du champ garde sa couleur au repos
+                  quand le menu s'ouvre. Le champ du WEB le fait depuis
+                  la nº 648 (même drapeau, même raison, note là-haut) ;
+                  celui du DOIGT restait rouge — les deux menus de
+                  styles se comportent enfin pareil. Le contour du champ,
+                  lui, ne change pas : c'est lui qui dit l'ouverture. */
+              flecheFigee
               placeholder="Choose a style"
               hauteur="min-h-[54px]"
               taillePolice="text-[16px]"

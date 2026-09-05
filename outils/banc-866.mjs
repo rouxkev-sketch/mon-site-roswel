@@ -163,8 +163,10 @@ const BLANC = "rgb(242, 242, 244)";
     verif("la carte OUVERTE est la troisième, sur la photo 4 (« 4/6 »)", fil.cartes[2].ouverte && fil.cartes[2].pastille === "4/6" && fil.cartes.filter((c) => c.ouverte).length === 1,
       `ouverte ${fil.cartes.findIndex((c) => c.ouverte)} · ${fil.cartes[2].pastille}`);
     verif("LA PAGE S'OUVRE POSITIONNÉE SUR ELLE : défilée de la distance exacte qui la sépare de la première", fil.y > 0 && fil.y === fil.distance, `page à ${fil.y} · distance ${fil.distance}`);
-    verif("le titre dans la boîte de l'en-tête du fil (seize du bord, douze au-dessus de l'image), le pied soudé à l'image",
-      fil.cartes.every((c) => Math.round(c.titreBoite.g) === 16 && Math.round(c.cadre.y - c.titreBoite.bas) === 12 && c.cadreAPied === 0 && c.cadre.g === 0 && c.cadre.d === 390),
+    //  nº 867-§3 — l'avatar du portfolio ouvre l'en-tête : le rond de
+    //  quarante est à seize du bord, le titre commence après lui (68).
+    verif("le titre dans la boîte de l'en-tête du fil (après le rond, douze au-dessus de l'image), le pied soudé à l'image",
+      fil.cartes.every((c) => Math.round(c.titreBoite.g) === 68 && Math.round(c.cadre.y - c.titreBoite.bas) === 12 && c.cadreAPied === 0 && c.cadre.g === 0 && c.cadre.d === 390),
       fil.cartes.map((c) => `${c.titreBoite.g}/${Math.round(c.cadre.y - c.titreBoite.bas)}/${c.cadreAPied}`).join(" "));
     verif("les images restent différées : aucune carte ne monte toute sa galerie", fil.cartes.every((c) => c.photosMontees <= 3), fil.cartes.map((c) => c.photosMontees).join(","));
 
@@ -215,12 +217,20 @@ const BLANC = "rgb(242, 242, 244)";
       await page.waitForSelector(attente, { timeout: 20000 });
       await page.waitForTimeout(1200);
       const p = await sonderPied(page, racine);
-      verif("les vues portent l'HISTOGRAMME : trois barres, trait 1,8, 20 px, sans cercle d'œil",
-        p?.par.vues && p.par.vues.chemins.length === 1 && p.par.vues.chemins[0] === HISTOGRAMME && p.par.vues.cercles === 0 && p.par.vues.trait === 1.8 && p.par.vues.l === 20 && p.par.vues.h === 20 && p.par.vues.remplissage === "none",
+      //  nº 867-§7 — le dessin est passé de 20 à 24 px (la taille des
+      //  deux de droite) ; le tracé, lui, n'a pas bougé d'un point.
+      verif("les vues portent l'HISTOGRAMME : trois barres, trait 1,8, 24 px depuis la nº 867, sans cercle d'œil",
+        p?.par.vues && p.par.vues.chemins.length === 1 && p.par.vues.chemins[0] === HISTOGRAMME && p.par.vues.cercles === 0 && p.par.vues.trait === 1.8 && p.par.vues.l === 24 && p.par.vues.h === 24 && p.par.vues.remplissage === "none",
         JSON.stringify(p?.par.vues && { chemins: p.par.vues.chemins, cercles: p.par.vues.cercles, trait: p.par.vues.trait, l: p.par.vues.l }));
       verif("… blanc comme le nombre", p?.par.vues?.couleur === BLANC && p.couleurDuNombre === BLANC && /^\d+$/.test(p.nombre ?? ""), `${p?.par.vues?.couleur} · ${p?.couleurDuNombre} · « ${p?.nombre} »`);
       verif("signaler → vues = fanion → partage = SEIZE pixels, de boîte à boîte", p?.boiteGauche === 16 && p.boiteDroite === 16, `${p?.boiteGauche} · ${p?.boiteDroite}`);
-      verif("… et l'encre à égalité (au demi-pixel)", p && Math.abs(p.encreGauche - p.encreDroite) <= 0.5, `${p?.encreGauche} · ${p?.encreDroite}`);
+      /*  nº 867-§7 — L'ENCRE N'EST PLUS TOUT À FAIT À ÉGALITÉ, et c'est
+          la conséquence assumée de la consigne : les quatre dessins ont
+          désormais la MÊME taille (24) dans la MÊME cible (40), donc les
+          boîtes sont exactement à seize des deux côtés — mais le blanc
+          propre à chaque glyphe diffère, et l'encre s'écarte de 1,2 px.
+          C'est la boîte qui commande depuis la nº 867. */
+      verif("… et l'encre reste à un pixel près", p && Math.abs(p.encreGauche - p.encreDroite) <= 1.5, `${p?.encreGauche} · ${p?.encreDroite}`);
     }
   } catch (e) {
     verif("déroulement du banc 866 (§2/§3)", false, String(e).slice(0, 500));

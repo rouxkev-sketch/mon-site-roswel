@@ -4,6 +4,8 @@ import Link from "next/link";
 import { AvatarRond } from "@/components/AvatarRond";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import { IconeHistogramme } from "@/components/Icones";
+//  §8 (nº 867) — l'écriture unique du nombre de vues (999, 1K, 12.3K, 1M).
+import { vuesAffichees } from "@/lib/format-vues";
 import { PointsDuCarrousel } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -264,18 +266,31 @@ export function PiedDeFil({
            pixels de vide que le signalement porte déjà à l'intérieur
            de sa propre cible. L'écart se lit donc régulier, sans
            qu'aucun nombre ait été inventé pour lui.
-           ██ §3 (nº 866) — CES NEUF PIXELS ÉTAIENT TROP SERRÉS ██
+           ██ §7 (nº 867) — LES QUATRE DESSINS À LA MÊME TAILLE ██
+           Décision du propriétaire : le signalement et les vues
+           prennent la taille du fanion et du partage — DESSIN de 24 px
+           (chez le signalement, FenetreSignalement ; ici pour
+           l'histogramme) et CIBLE de 40 px (le bloc des vues reçoit la
+           hauteur des trois cibles ; celle du signalement les avait
+           déjà). Les glyphes de gauche gagnent donc deux pixels, et
+           l'air se recalcule au pixel juste en dessous.
+           ██ §3 (nº 866, REPRIS nº 867) — CES NEUF PIXELS ÉTAIENT TROP SERRÉS ██
            Le propriétaire compare les deux bouts de la rangée : entre
            le FANION et le PARTAGE, les cibles de 40 px se touchent et
            leurs glyphes de 24 laissent SEIZE pixels de boîte à boîte
            (8 + 8) ; entre SIGNALER et le bloc des vues, il n'y en
            avait que neuf. Les deux airs doivent être LE MÊME, et c'est
            celui de droite qui fait la valeur : SEIZE. Le bloc des vues
-           reçoit donc sept pixels de marge à gauche (16 − 9, le vide
-           que la cible du signalement ne porte pas) — mesuré sur les
-           boîtes des dessins, 16 des deux côtés ; en encre, 23,7 des
-           deux côtés, l'histogramme ayant été dessiné pour cela (voir
-           IconeHistogramme). */}
+           reçoit donc de la marge à gauche — mesuré sur les boîtes des
+           dessins, 16 des deux côtés ; en encre, 23,7 des deux côtés,
+           l'histogramme ayant été dessiné pour cela (voir
+           IconeHistogramme).
+           ⚠️ LA VALEUR SUIT LA TAILLE DES DESSINS (nº 867) : le glyphe
+           du signalement passe de 22 à 24 px dans sa cible de 40, le
+           vide qu'elle porte à droite tombe donc de neuf à HUIT — et
+           la marge du bloc des vues passe de sept à HUIT pour que les
+           deux airs vaillent toujours seize. Aucun nombre neuf : c'est
+           le même compte, refait sur les nouvelles boîtes. */}
       <div className="relative flex shrink-0 items-center -ml-2">
         <FenetreSignalement
           slug={tatoueur.slug}
@@ -304,11 +319,19 @@ export function PiedDeFil({
              paraît — résultats, vue photo, fil de galeries — c'est lui. */}
         <span
           data-vues-de-fil=""
-          className="ml-[7px] flex items-center gap-1.5 text-[13px]
+          /*  §7 (nº 867) — LA CIBLE DES TROIS AUTRES : quarante pixels
+              de haut. Ce bloc n'est toujours PAS un bouton (nº 855) —
+              rien à toucher — mais il occupe la même hauteur, et son
+              dessin s'aligne sur les leurs sans qu'aucun décalage soit
+              écrit à la main. */
+          className="ml-2 flex min-h-10 items-center gap-1.5 text-[13px]
                      font-semibold text-sombre-texte"
         >
-          <IconeHistogramme taille={20} />
-          {typeof vues === "number" ? vues : 0}
+          <IconeHistogramme taille={24} />
+          {/*  §8 (nº 867) — LE NOMBRE S'ÉCRIT COURT au-delà de mille
+               (« 1K », « 12.3K », « 1M ») : la règle du propriétaire,
+               écrite une seule fois dans lib/format-vues. */}
+          {vuesAffichees(vues)}
         </span>
       </div>
       {/*  LES POINTS, CENTRÉS SUR TOUTE LA LARGEUR de la carte — comme

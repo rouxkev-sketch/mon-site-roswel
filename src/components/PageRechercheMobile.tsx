@@ -14,7 +14,7 @@ import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
 import { useEtapeQuiSeReferme } from "@/lib/etape-refermable";
-import { IconeLoupe } from "@/components/Icones";
+import { IconeEclair, IconeGoutteDEncre, IconeLoupe } from "@/components/Icones";
 import { OngletsLigne } from "@/components/OngletsLigne";
 //  §4 (nº 465) — l'en-tête de cette page est devenu l'écriture
 //  partagée des pages plein écran du doigt (la croix vit là-bas).
@@ -114,6 +114,57 @@ type Phase = "arrive" | "posee" | "part";
     constaté sur son téléphone. Elle revient dans la GRAMMAIRE DE LA
     CHARTE : les mots côte à côte sur la ligne fine au segment rose
     (OngletsLigne), plus jamais la piste à fond rose plein d'avant. */
+
+/**
+ * §1-a (nº 867) — UN MOT DERRIÈRE SON ICÔNE, l'écriture du va-et-vient
+ * de l'accueil (VaEtVientNature) reprise telle quelle : l'icône ne
+ * rétrécit pas, le mot vit dans une colonne qui peut se resserrer.
+ * ⚠️ UNE FONCTION APPELÉE, jamais un composant monté : elle rend des
+ * éléments, elle ne crée aucun type — rien ne se remonte à chaque
+ * rendu (la leçon de la nº 747).
+ */
+function motAvecIcone(
+  Icone: typeof IconeGoutteDEncre,
+  mot: string
+): React.ReactNode {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <Icone taille={20} classe="shrink-0" />
+      <span className="min-w-0">{mot}</span>
+    </span>
+  );
+}
+
+/**
+ * ██ §1-b (nº 867) — LE BALAYAGE QUI BASCULE TATTOO / FLASH ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : sur la page de recherche du doigt, un
+ * BALAYAGE HORIZONTAL de la page bascule d'un onglet à l'autre — vers
+ * la gauche on va à Flash (l'onglet de droite), vers la droite on
+ * revient à Tattoo. C'est le geste des applications, et il double le
+ * toucher sans le remplacer : les deux onglets restent des cibles.
+ *
+ * ⚠️ ET IL NE PREND JAMAIS LE GESTE DU CURSEUR DE DISTANCE, c'est la
+ * seconde moitié de la consigne. Le curseur (« Distance … mi ») se
+ * règle par un glissement horizontal, exactement le même geste : il se
+ * NOMME donc (`data-sans-balayage`, posé chez lui dans MoteurTatouage),
+ * et un geste qui commence à l'intérieur de ce marqueur n'est pas lu
+ * ici. La page ne connaît ni le curseur ni sa forme — elle ne connaît
+ * que le marqueur ; n'importe quel autre réglage qui glisserait un jour
+ * le posera de la même façon.
+ * ⚠️ LES AUTRES GESTES NE SONT PAS TOUCHÉS : un DÉFILEMENT vertical
+ * (le doigt descend plus qu'il ne va de côté) n'est pas un balayage, et
+ * un déplacement trop court non plus — les deux seuils sont ci-dessous.
+ * Le geste est LU, jamais capturé : rien n'est empêché, le défilement
+ * naturel de la page continue de fonctionner pendant qu'on mesure.
+ * ⚠️ UN SEUL DOIGT : un second contact (pincement) annule la mesure.
+ */
+/** Le déplacement horizontal minimal d'un balayage — en dessous, c'est
+    un appui qui a bougé. */
+const BALAYAGE_MINIMUM_PX = 56;
+/** Et il doit être franchement horizontal : au moins deux fois plus
+    large que haut, sans quoi c'est un défilement. */
+const BALAYAGE_PENTE = 2;
 
 export function PageRechercheMobile({
   vue,
@@ -396,6 +447,41 @@ export function PageRechercheMobile({
 
   const enGlissade = phase !== "posee";
 
+  /*  §1-b (nº 867) — LE DÉPART DU GESTE : un seul doigt, et pas dans un
+      réglage qui glisse (voir la note du balayage, plus haut). */
+  const balayage = useRef<{ id: number; x: number; y: number } | null>(null);
+  const surDebutDeBalayage = (evenement: React.PointerEvent) => {
+    if (!evenement.isPrimary) {
+      balayage.current = null;
+      return;
+    }
+    const cible = evenement.target as HTMLElement | null;
+    if (cible?.closest?.("[data-sans-balayage]")) {
+      balayage.current = null;
+      return;
+    }
+    balayage.current = {
+      id: evenement.pointerId,
+      x: evenement.clientX,
+      y: evenement.clientY,
+    };
+  };
+  const surFinDeBalayage = (evenement: React.PointerEvent) => {
+    const debut = balayage.current;
+    balayage.current = null;
+    if (!debut || evenement.pointerId !== debut.id) return;
+    const dx = evenement.clientX - debut.x;
+    const dy = evenement.clientY - debut.y;
+    if (Math.abs(dx) < BALAYAGE_MINIMUM_PX) return;
+    if (Math.abs(dx) < Math.abs(dy) * BALAYAGE_PENTE) return;
+    //  VERS LA GAUCHE, ON AVANCE (Tattoo → Flash) ; vers la droite, on
+    //  recule. Un balayage qui pousse vers l'onglet déjà ouvert ne fait
+    //  rien : `surVue` reçoit toujours une nature, jamais un basculement
+    //  aveugle.
+    const voulue: VueRecherche = dx < 0 ? "flash" : "tatouage";
+    if (voulue !== vue) surVue(voulue);
+  };
+
   return createPortal(
     <div
       // ⚠️ CE MARQUEUR EST LU PAR globals.css : c'est lui qui distingue
@@ -405,6 +491,14 @@ export function PageRechercheMobile({
       aria-modal="true"
       aria-label="Find a tattoo artist"
       ref={conteneur}
+      /*  §1-b (nº 867) — le balayage se lit sur TOUTE la page, en
+          remontée (jamais en capture) : ce qui traite le geste avant
+          nous — le curseur, un menu, une liste — le garde. */
+      onPointerDown={surDebutDeBalayage}
+      onPointerUp={surFinDeBalayage}
+      onPointerCancel={() => {
+        balayage.current = null;
+      }}
       style={
         enGlissade
           ? {
@@ -497,13 +591,21 @@ export function PageRechercheMobile({
                chacun ses critères. Les clés sont les natures du
                catalogue — c'est l'onglet qui porte la nature de la
                recherche validée. */}
+          {/*  ██ §1-a (nº 867) — LES DEUX ICÔNES DEVANT LES TITRES ██
+               Décision du propriétaire : la goutte d'encre pour Tattoo,
+               l'éclair pour Flash, « comme sur l'accueil ». C'est le
+               MÊME dessin et la MÊME écriture que le va-et-vient de
+               l'accueil (VaEtVientNature, nº 863-§1) : icône de 20 px
+               qui ne rétrécit pas, huit pixels d'écart, le mot dans une
+               colonne qui peut se resserrer. Rien n'est redessiné ici —
+               les deux icônes viennent du jeu du site. */}
           <OngletsLigne
             ariaLabel="Tattoo or flash"
             cleActive={vue}
             surChoix={(cle) => surVue(cle as VueRecherche)}
             options={[
-              { cle: "tatouage", label: "Tattoo" },
-              { cle: "flash", label: "Flash" },
+              { cle: "tatouage", label: motAvecIcone(IconeGoutteDEncre, "Tattoo") },
+              { cle: "flash", label: motAvecIcone(IconeEclair, "Flash") },
             ]}
           />
         </div>

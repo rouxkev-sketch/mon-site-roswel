@@ -235,8 +235,10 @@ const lireBande = (page) => page.evaluate((SEL) => {
     verif("… même couleur, même corps, même graisse que sur le profil",
       JSON.stringify(carte.surtitre) === JSON.stringify(titresDuProfil.surtitre) && JSON.stringify(carte.titre) === JSON.stringify(titresDuProfil.titre),
       `fil ${JSON.stringify(carte.titre)} — profil ${JSON.stringify(titresDuProfil.titre)}`);
-    verif("… dans la boîte de l'en-tête du fil : seize pixels du bord, douze au-dessus de l'image",
-      carte.titreBoite && Math.round(carte.titreBoite.g) === 16 && carte.cadre && Math.round(carte.cadre.y - carte.titreBoite.bas) === 12,
+    //  nº 867-§3 — l'avatar du portfolio ouvre l'en-tête : le titre
+    //  commence après le rond de quarante (16 + 40 + 12).
+    verif("… dans la boîte de l'en-tête du fil : après le rond, douze au-dessus de l'image",
+      carte.titreBoite && Math.round(carte.titreBoite.g) === 68 && carte.cadre && Math.round(carte.cadre.y - carte.titreBoite.bas) === 12,
       `gauche ${carte.titreBoite?.g} · titre→image ${carte.cadre && carte.titreBoite ? Math.round(carte.cadre.y - carte.titreBoite.bas) : "?"}`);
     verif("l'image : pleine largeur, le format de la carte du fil",
       carte.cadre && carte.cadre.g === 0 && carte.cadre.d === 390 && carte.cadre.h === etalon.cadre.h, `${carte.cadre?.h} · étalon ${etalon.cadre?.h}`);
@@ -245,7 +247,9 @@ const lireBande = (page) => page.evaluate((SEL) => {
         && JSON.stringify(carte.icones.filter((i) => i.role !== "point")) === JSON.stringify(etalon.icones.filter((i) => i.role !== "point")),
       `pied ${carte.pied?.h} (${JSON.stringify(carte.icones)}) — étalon ${etalon.pied?.h} (${JSON.stringify(etalon.icones.filter((i) => i.role !== "point"))})`);
     verif("… avec ses points : la carte glisse entre ses onze photos (nº 866)", carte.icones.some((i) => i.role === "point"));
-    verif("… et les vues sont là", carte.vues !== null && carte.vues.h === 20);
+    //  nº 867-§7 — le bloc des vues a pris la cible des trois autres :
+    //  quarante pixels de haut.
+    verif("… et les vues sont là", carte.vues !== null && carte.vues.h === 40, JSON.stringify(carte.vues));
 
     //  nº 866 — N−1 ET N+1 ne sont plus des cartes voisines : les photos
     //  d'une galerie glissent DANS sa carte (le banc 866 le mesure). On

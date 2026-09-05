@@ -122,17 +122,24 @@ for (const largeur of [390, 360]) {
     });
     const v = await mesurer();
     verif("la feuille est montée, avec ses deux titres (Styles, Profile)", !v.absente && v.titres.length === 2, JSON.stringify(v.titres?.map((t) => t.texte)));
-    verif("le rembourrage bas du bloc est PEINT : 32 px calculés (zéro avant la nº 865)", v.bloc?.padBas === "32px", v.bloc?.padBas);
-    verif("trente-deux pixels entre la boîte du dernier titre (ses 4 px de rembourrage compris) et le bord", v.boiteDessous === 32, `${v.boiteDessous} px`);
-    verif("en encre, l'air sous le dernier titre égale l'air au-dessus du premier (au demi-pixel près)",
-      Math.abs(v.dessus - v.dessous) <= 1 && v.dessous >= 40, `dessus ${v.dessus} px, dessous ${v.dessous} px`);
+    //  nº 867-§4 — le propriétaire a trouvé les 32 px trop grands : 28.
+    //  Ce que ce banc défend reste le même — la règle est PEINTE, elle
+    //  ne vaut plus zéro comme avant la nº 865.
+    verif("le rembourrage bas du bloc est PEINT : 28 px calculés depuis la nº 867 (zéro avant la nº 865)", v.bloc?.padBas === "28px", v.bloc?.padBas);
+    verif("vingt-huit pixels entre la boîte du dernier titre et le bord (trente-deux avant la nº 867)", v.boiteDessous === 28, `${v.boiteDessous} px`);
+    /*  nº 867-§4 — L'ÉGALITÉ DE LA nº 865 EST LEVÉE, SUR CONSIGNE : le
+        propriétaire veut MOINS d'air sous le dernier titre qu'au-dessus
+        du premier. On mesure donc l'écart voulu (quatre pixels), pas
+        l'égalité. */
+    verif("en encre, l'air sous le dernier titre vaut quatre pixels de moins qu'au-dessus du premier (nº 867)",
+      Math.abs(v.dessus - v.dessous - 2.5) <= 1.5 && v.dessous >= 38, `dessus ${v.dessus} px, dessous ${v.dessous} px`);
     verif("la plaque touche le bas de l'écran", v.plaque.bas === v.ecran, `${v.plaque.bas} / ${v.ecran}`);
     //  UNE SECTION OUVERTE : le bas ne bouge pas, seul le haut du bloc gagne son air (nº 584).
     await page.locator("button", { hasText: /^Styles$/ }).first().evaluate((b) => b.click());
     await page.waitForTimeout(600);
     const o = await mesurer();
-    verif("section ouverte : le rembourrage bas reste à 32 px et la plaque au bas de l'écran",
-      o.bloc?.padBas === "32px" && o.plaque.bas === o.ecran && o.boiteDessous === 32, JSON.stringify({ padBas: o.bloc?.padBas, boiteDessous: o.boiteDessous }));
+    verif("section ouverte : le rembourrage bas reste à 28 px et la plaque au bas de l'écran",
+      o.bloc?.padBas === "28px" && o.plaque.bas === o.ecran && o.boiteDessous === 28, JSON.stringify({ padBas: o.bloc?.padBas, boiteDessous: o.boiteDessous }));
   } catch (e) {
     verif("déroulement du banc 865 (§3)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

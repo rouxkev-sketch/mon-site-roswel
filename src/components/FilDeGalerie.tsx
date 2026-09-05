@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AvatarRond } from "@/components/AvatarRond";
 import { MARGES_EN_TETE_DE_FIL, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
@@ -39,13 +40,23 @@ export type SerieDuFil = { style: string; nature: string; rendu: string };
  * photo » a disparu, code compris.
  *
  * LA CARTE, DE HAUT EN BAS — et rien n'y est dessiné pour l'occasion :
- *  a. LE TITRE ET LE SOUS-TITRE DE LA GALERIE (« TATTOOS » /
- *     « Blackwork • Black ») — `TitreDeGalerie`, le composant même qui
- *     les écrit sur le profil : même couleur, même corps, même graisse,
- *     parce que c'est le même marquage. Posé dans LA BOÎTE DE L'EN-TÊTE
- *     DU FIL (`MARGES_EN_TETE_DE_FIL`, CarteFil) : seize pixels de
- *     côté, douze au-dessus de l'image — la carte a la forme d'une
- *     carte du fil, avec un autre en-tête ;
+ *  a. L'AVATAR DU PORTFOLIO, puis LE TITRE ET LE SOUS-TITRE DE LA
+ *     GALERIE (« TATTOOS » / « Blackwork • Black ») — `TitreDeGalerie`,
+ *     le composant même qui les écrit sur le profil : même couleur,
+ *     même corps, même graisse, parce que c'est le même marquage. Posé
+ *     dans LA BOÎTE DE L'EN-TÊTE DU FIL (`MARGES_EN_TETE_DE_FIL`,
+ *     CarteFil) : seize pixels de côté, douze au-dessus de l'image — la
+ *     carte a la forme d'une carte du fil, avec un autre en-tête.
+ *     ██ §3 (nº 867) — LE ROND DE QUARANTE, À GAUCHE DU TITRE ██
+ *     Décision du propriétaire : la carte porte l'avatar du portfolio,
+ *     à gauche de ses deux lignes. C'est LE ROND DES CARTES DU FIL
+ *     (`AvatarRond`, quarante pixels, l'initiale quand il n'y a pas de
+ *     photo), avec la robe exacte de l'en-tête des résultats
+ *     (EnTeteDeFil) et l'écart de sa rangée : rien n'est redessiné, ni
+ *     retaillé. Il ne mène nulle part — ce n'est pas un lien : on est
+ *     déjà chez cet artiste, et une carte du fil de galeries n'a pas de
+ *     profil à ouvrir (piège nº 455 : deux liens voisins vers la même
+ *     destination) ;
  *  b. L'IMAGE — l'encadré d'une carte des résultats (CarteTatoueur au
  *     doigt, à la lettre) : pleine largeur, le format 4:5 du site
  *     (`CADRE_PHOTO_PORTFOLIO`), la réserve grise (`FOND_RESERVE_PHOTO`)
@@ -295,11 +306,25 @@ function CarteDeGalerie({
       data-carte-ouverte={ouverte ? "" : undefined}
       data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
     >
-      <div className={MARGES_EN_TETE_DE_FIL}>
-        <TitreDeGalerie
-          nature={titre}
-          titre={titreDeGalerie(serie.label, serie.rendu)}
+      {/*  §3 (nº 867) — L'AVATAR, PUIS LES DEUX LIGNES : l'écart de la
+           rangée d'en-tête du fil (douze pixels), et une colonne qui
+           peut rétrécir (`min-w-0`) pour que le titre s'abrège au lieu
+           de pousser le rond. Centré sur la hauteur des deux lignes,
+           comme sur une carte des résultats. */}
+      <div className={`flex items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`}>
+        <AvatarRond
+          photo={tatoueur.photo_profil}
+          nom={tatoueur.nom}
+          classeFond="bg-sombre-haut"
+          classeInitiale="text-[16px] font-bold text-sombre-texte-doux"
+          paresseux
         />
+        <span className="min-w-0 flex-1">
+          <TitreDeGalerie
+            nature={titre}
+            titre={titreDeGalerie(serie.label, serie.rendu)}
+          />
+        </span>
       </div>
       <div
         data-cadre-de-galerie=""

@@ -258,8 +258,10 @@ for (const [appareil, hauteurAttendue] of [["web", 40], ["doigt", 30]]) {
         ["signaler", "fanion", "partage"].every((r) => vue.icones.some((i) => i.role === r))
         && vue.icones.filter((i) => i.role === "point").length >= 1,
         vue.icones.map((i) => i.role).join(" · "));
+      //  nº 867-§7 — la cible du bloc des vues vaut celle des trois
+      //  autres icônes du pied : quarante pixels.
       verif("les vues sont là, à gauche, avec leur nombre",
-        vue.vues !== null && vue.vues.h === 20, JSON.stringify(vue.vues));
+        vue.vues !== null && vue.vues.h === 40, JSON.stringify(vue.vues));
       if (entree === "un lien partagé") {
         //  L'ÉGALITÉ AU MILLIÈME n'a de sens que sur LE MÊME portfolio :
         //  c'est l'entrée dont on choisit l'adresse.
