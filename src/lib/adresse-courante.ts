@@ -1,6 +1,6 @@
 "use client";
 
-import { estLaMosaique } from "@/lib/chemin-recherche";
+import { porteSaRequeteDeMosaique } from "@/lib/chemin-recherche";
 
 /**
  * L'ADRESSE COURANTE, ET TOUS SES CHANGEMENTS
@@ -126,7 +126,9 @@ export function lireRequeteDeLaPage(chemin: string): string | null {
  * POURQUOI UNE JUMELLE, ET PAS `lireRequeteDeLaPage`. La mémoire de la
  * nº 360 appartient à LA PAGE DE FICHE (un seul lecteur à la fois,
  * c'est écrit dans sa note) ; la mosaïque, qui vit sur DEUX chemins
- * (« / » et « /search » — `estLaMosaique`, lib/chemin-recherche),
+ * (« / », « /flash » et « /search » — `porteSaRequeteDeMosaique`,
+ * lib/chemin-recherche ; « /flash » y manquait jusqu'à la nº 861, et
+ * c'est ce qui la laissait bloquée sur un squelette),
  * a donc SA mémoire, et la même règle :
  *  · tant que l'adresse est celle de la mosaïque, on lit et on
  *    mémorise ;
@@ -147,7 +149,7 @@ export function lireRequeteDeLaPage(chemin: string): string | null {
  */
 let requeteMosaiqueGelee: string | null = null;
 export function lireRequeteDeLaMosaique(): string | null {
-  if (estLaMosaique(window.location.pathname)) {
+  if (porteSaRequeteDeMosaique(window.location.pathname)) {
     requeteMosaiqueGelee = window.location.search;
   }
   return requeteMosaiqueGelee;

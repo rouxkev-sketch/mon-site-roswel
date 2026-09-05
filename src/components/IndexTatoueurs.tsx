@@ -12,7 +12,7 @@ import {
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import {
   ADRESSE_RECHERCHE,
-  estLaMosaique,
+  porteSaRequeteDeMosaique,
   PREPARER_LA_RECHERCHE_A_LAVANCE,
 } from "@/lib/chemin-recherche";
 //  §1 (nº 654) — la boîte noire de navigation (mesure temporaire).
@@ -736,7 +736,9 @@ export function IndexTatoueurs({
   //  comparer, et il sort à sa première ligne dans le cas normal.
   useEffect(() => {
     //  §1 (nº 732) — la borne : hors de la mosaïque, rien à juger.
-    if (!estLaMosaique(window.location.pathname)) return;
+    //  §1 (nº 861) — et « la mosaïque », ici, ce sont les écrans qui
+    //  PORTENT LEUR REQUÊTE — « /flash » comprise, depuis la nº 860.
+    if (!porteSaRequeteDeMosaique(window.location.pathname)) return;
     const demande = signatureDesCriteres(window.location.search);
     if (demande === cleSignee) {
       //  Tout est en ordre : on rouvre le droit à une reprise, pour que

@@ -148,5 +148,54 @@ export const PREPARER_LA_RECHERCHE_A_LAVANCE = false;
  * fonction ne lit que la constante du dessus.
  */
 export function estLaMosaique(chemin: string | null): boolean {
-  return chemin === "/" || chemin === ADRESSE_RECHERCHE;
+  return chemin === ADRESSE_ACCUEIL || chemin === ADRESSE_RECHERCHE;
+}
+
+/**
+ * ██ BOGUE Nº 861 — LES ÉCRANS QUI PORTENT LEUR PROPRE REQUÊTE ██
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE A VU : dans Flash, après un aller-retour, la
+ * page restait bloquée sur un squelette — et sur le MAUVAIS, celui de
+ * la grille de cartes — sans jamais charger.
+ * LA CAUSE, ENTIÈRE ET MESURÉE. La mosaïque garde sa requête dans une
+ * valeur GELÉE (lib/adresse-courante), rafraîchie seulement quand on
+ * est sur un écran de mosaïque. Le gel est voulu : pendant qu'une
+ * fiche est ouverte par-dessus, le chemin est celui de la fiche, et la
+ * mosaïque doit garder sa requête. Mais la liste ne connaissait que
+ * « / » et « /search » : « /flash » héritait donc de la requête d'un
+ * écran précédent, et RIEN SUR ELLE ne pouvait la corriger.
+ * LE CHEMIN QUI CASSE, rejoué au banc 861 : accueil → Flash → une
+ * carte de style (« /search?style=…&nature=flash », qui gèle CETTE
+ * requête) → retour vers Flash. La page compare alors la requête gelée
+ * à ses critères servis — vides — ne s'y retrouve pas, et se déclare
+ * EN CHANTIER : `aria-busy`, corps invisible, squelette de cartes
+ * par-dessus. Pour toujours.
+ * ⚠️ CE N'ÉTAIT NI LE PRÉRENDU, NI LE SQUELETTE, NI LA RESTITUTION DE
+ * POSITION de la nº 860 (les trois pistes) : le service worker du site
+ * est une pierre tombale sans gestionnaire `fetch` — il ne ressert
+ * rien — et l'attente de contenu se démasque toujours sous deux
+ * secondes et demie.
+ *
+ * ██ POURQUOI DEUX FONCTIONS, ET NON UNE LISTE ALLONGÉE ██
+ * ------------------------------------------------------------------
+ * La première version de cette correction ajoutait « /flash » à
+ * `estLaMosaique`. Elle réparait le blocage ET EN CASSAIT UN AUTRE,
+ * pris au banc 860 : cette fonction-là sert AUSSI à DefilementEnHaut,
+ * où elle répond à une tout autre question — « ces deux adresses
+ * sont-elles LE MÊME ÉCRAN, celui qu'on ne remonte pas quand on passe
+ * de l'un à l'autre ? ». « / » et « /search » le sont (chercher depuis
+ * l'accueil n'est pas changer d'écran) ; « / » et « /flash », NON : ce
+ * sont deux accueils, et passer de l'un à l'autre doit arriver en haut
+ * — c'est très exactement ce que la nº 860 est allée chercher. Une
+ * seule liste pour deux questions, et l'on répare d'un côté ce qu'on
+ * casse de l'autre. Chaque question a donc sa fonction.
+ * ⚠️ ÉCRITE UNE SEULE FOIS, ET À PARTIR DES CONSTANTES : ajouter une
+ * page d'accueil sans l'ajouter ici, c'est reproduire ce bogue.
+ */
+export function porteSaRequeteDeMosaique(chemin: string | null): boolean {
+  return (
+    chemin === ADRESSE_ACCUEIL ||
+    chemin === ADRESSE_ACCUEIL_FLASH ||
+    chemin === ADRESSE_RECHERCHE
+  );
 }
