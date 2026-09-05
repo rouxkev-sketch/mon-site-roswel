@@ -2,7 +2,11 @@
 
 import { useEffect, useLayoutEffect } from "react";
 import { LogoYokofolio } from "@/components/LogoYokofolio";
-import { CADRE_PHOTO_PORTFOLIO, LARGEUR_SITE } from "@/config/tatouage";
+import {
+  CADRE_PHOTO_PORTFOLIO,
+  HAUTEUR_BADGE_GRIS,
+  LARGEUR_SITE,
+} from "@/config/tatouage";
 import {
   CLASSES_GRILLE_CARTES,
   COLONNE_UNIQUE_DU_FIL,
@@ -373,8 +377,10 @@ function CarteGriseDuFil() {
           {/*  18,125 px — la ville (14,5 × 1,25), 4 px plus bas. */}
           <div className="mt-1 h-[18.125px] w-1/3 bg-sombre-eleve" />
         </div>
-        {/*  LE BADGE DU TYPE : 30 px de haut, la hauteur qu'il se donne
-             (`min-h-[30px]`, chez lui — BadgeTypeDeFiche).
+        {/*  LE BADGE DU TYPE : la hauteur de la charte, LUE et non
+             recopiée (`HAUTEUR_BADGE_GRIS`, config/tatouage — nº 855).
+             Elle valait trente ; l'air neuf des badges la porte à
+             quarante, et ce gris suit sans qu'on y touche.
              SA LARGEUR NE PEUT PAS ÊTRE SUE : elle dépend du libellé, et
              il y en a trois. MESURÉS à l'atelier : « Artist » 69 px,
              « Tattoo Shop » 115, « Private Studio » 128. On pose donc le
@@ -386,7 +392,7 @@ function CarteGriseDuFil() {
              flex-1`) — la hauteur de la rangée, donc celle de la carte,
              ne dépend pas de cette largeur. C'est mesuré au banc nº 845,
              où le squelette et la vraie carte tombent au millième. */}
-        <span className="h-[30px] w-[98px] shrink-0 rounded-lg bg-sombre-eleve" />
+        <span className={`${HAUTEUR_BADGE_GRIS} w-[98px] shrink-0 rounded-lg bg-sombre-eleve`} />
       </div>
       <div className={`hidden mobile:block w-full ${CADRE_PHOTO_PORTFOLIO} bg-sombre-eleve`} />
       <div className={RANGEE_PIED_DE_FIL}>
@@ -530,8 +536,8 @@ export function CorpsSquelette({
                « Blackwork » 127 au doigt pour 129 au web — d'où 118 et
                128. */}
           <div data-squelette-badges="" className="flex items-center gap-2">
-            <div className="h-[30px] w-[118px] rounded-lg bg-sombre-eleve" />
-            <div className="h-[30px] w-[128px] rounded-lg bg-sombre-eleve" />
+            <div className={`${HAUTEUR_BADGE_GRIS} w-[118px] rounded-lg bg-sombre-eleve`} />
+            <div className={`${HAUTEUR_BADGE_GRIS} w-[128px] rounded-lg bg-sombre-eleve`} />
           </div>
         </div>
       ) : (

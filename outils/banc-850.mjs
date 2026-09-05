@@ -24,7 +24,13 @@ import { BASE, ouvrir, verif, titre, bilan } from "./banc-socle.mjs";
     désormais au banc 851, badge contre badge, aux deux appareils.
     CE QUI RESTE ICI, et qui n'appartient qu'à ce banc : LE SQUELETTE
     d'attente promet la hauteur qui vient, sans saut d'un pixel. */
-const HAUTEUR_BADGE = 30;
+/*  ██ nº 855 — LA HAUTEUR A CHANGÉ, ET ELLE VIT AILLEURS ██
+    Elle valait trente. L'air neuf des badges (quinze pixels jusqu'à
+    l'encre, en haut, en bas et à gauche) la porte à quarante — le
+    calcul est écrit en entier dans config/tatouage (`AIR_BADGE`), qui
+    en est la seule source ; ce nombre-ci n'est que sa copie de
+    lecture, et le banc 855 vérifie l'air dont il découle. */
+const HAUTEUR_BADGE = 40;
 
 const RECHERCHE = new URLSearchParams({
   style: "blackwork", nature: "tatouage", lieu: "Lyon", zone: "69",

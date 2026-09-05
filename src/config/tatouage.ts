@@ -2452,15 +2452,16 @@ export const PASTILLE_COMPTEUR =
  * LIEN (il doit répondre au doigt) ; celui du compte ne l'est pas (« ce
  * n'est pas une action », nº 847-§2). Chacun ajoute ce qui le regarde.
  */
-/*  ⚠️ §2 (nº 848) — LA HAUTEUR N'EN FAIT PLUS PARTIE. Elle valait
-    `min-h-[30px]`, et c'était juste tant que les deux porteurs
-    partageaient la même boîte. Depuis que la rangée de recherche prend
-    un air intérieur ÉGAL sur ses quatre côtés (nº 848-§2), sa hauteur se
-    DÉDUIT de cet air, de sa ligne de texte et de son trait — 44 au
-    doigt, 46 au web — tandis que le badge du type garde ses 30. C'est donc au PORTEUR de
-    dire sa boîte ; la robe ne dit plus que la couleur et la forme.
-    ⚠️ LE BADGE DU TYPE NE BOUGE PAS D'UN PIXEL : il écrit désormais son
-    `min-h-[30px]` lui-même, à la lettre. */
+/*  ⚠️ §2 (nº 848) — LA HAUTEUR N'EN FAIT PAS PARTIE : la robe ne dit
+    que la couleur et la forme. Elle en faisait partie tant que les deux
+    porteurs partageaient la même boîte ; la nº 848 les avait séparés, et
+    chacun disait alors la sienne.
+    ⚠️ §2 (nº 855) — ILS LA PARTAGENT DE NOUVEAU, ET AILLEURS. Le
+    propriétaire veut une écriture unique pour les badges de recherche et
+    ceux du type (« ils suivent ») : la hauteur, l'air et la typographie
+    vivent maintenant dans `AIR_BADGE` et `ECRITURE_BADGE`, juste
+    au-dessus, que les deux LISENT. La robe, elle, n'a toujours pas
+    changé de rôle. */
 /**
  * ██ §6 (nº 852) — LA BOÎTE SEULE, SANS SA ROBE ██
  * La forme d'un badge du site — la ligne, le rayon (nº 449), le refus
@@ -2476,6 +2477,63 @@ export const BOITE_BADGE =
   "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg";
 
 export const ROBE_BADGE_CONTOUR = `${BOITE_BADGE} border border-sombre-haut bg-transparent`;
+
+/**
+ * ██ §2 (nº 855) — L'AIR D'UN BADGE : QUINZE PIXELS JUSQU'À L'ENCRE ██
+ * ==================================================================
+ * LA RÈGLE DU PROPRIÉTAIRE, à la lettre : « l'air au-dessus et
+ * au-dessous du texte = l'air entre le bord gauche du badge et la
+ * première lettre — mesuré aux LETTRES, pas la boîte de ligne ».
+ *
+ * CE QU'ON MESURAIT AVANT (nº 854, à l'encre, aux deux appareils) :
+ *   compte « 14 portfolios »  haut 10 · bas  8 · gauche 15
+ *   filtre « Blackwork »      haut 10 · bas 10 · gauche 16
+ *   type   « Tattoo Artist »  haut 10 · bas 11 · gauche 13
+ * Dix pixels au-dessus des lettres pour quinze à leur gauche : le
+ * badge était TROP SERRÉ EN HAUTEUR, et c'est ce que l'œil voyait.
+ *
+ * D'OÙ VIENT LE QUINZE, ET POURQUOI CE NOMBRE-LÀ : c'est l'air gauche
+ * tel qu'il se mesure aujourd'hui — le trait d'un pixel plus les
+ * quatorze du rembourrage (`px-3.5`). On ne touche pas aux côtés : on
+ * amène le haut et le bas SUR EUX.
+ * LA HAUTEUR SE DÉDUIT, elle ne se choisit pas : 15 + 10 + 15 = 40.
+ * Le dix du milieu est la hauteur d'encre d'une ligne de ce corps
+ * (14 px, demi-gras) — du haut des capitales à la ligne de base,
+ * mesuré, pas supposé.
+ *
+ * ⚠️ LES DESCENDANTES DÉBORDENT PAR LE BAS, et c'est juste : le « p »
+ * de « portfolios » descend sous la ligne de base, comme dans tout
+ * texte bien composé. L'air se compte des capitales à la ligne de
+ * base — le reste est le dessin de la lettre, pas de l'air.
+ * ⚠️ IL RESTE UN PIXEL DE JEU À GAUCHE selon la première lettre : le
+ * « T » de « Tattoo » avance sur sa marge, le « B » de « Blackwork »
+ * recule d'un flanc. C'est le FLANC DU GLYPHE, que rien ne peut
+ * égaliser sans décaler le mot lui-même.
+ *
+ * ⚠️ UNE SEULE ÉCRITURE, ET ELLE VIT ICI (piège nº 378). Les badges de
+ * la rangée de recherche (components/FiltresActifs) et le badge du
+ * type des cartes (components/BadgeTypeDeFiche) la LISENT — ils ne la
+ * recopient plus. C'est la consigne du propriétaire : « les badges
+ * type des cartes partagent cette écriture : ils suivent ».
+ * ⚠️ AUCUNE VARIANTE D'APPAREIL (règle nº 60) : les deux appareils ont
+ * la même écriture depuis la nº 853-§4, et la mesure de l'encre les
+ * donne identiques au pixel.
+ */
+export const AIR_BADGE = "min-h-[40px] px-3.5";
+
+/** L'écriture des badges — corps, graisse, couleur (nº 853-§4). Elle
+    voyage avec l'air : les deux ne se séparent jamais. */
+export const ECRITURE_BADGE = "text-[14px] font-semibold text-sombre-texte";
+
+/**
+ * LA MÊME HAUTEUR, POUR LE SQUELETTE D'ATTENTE.
+ * Le gris ne peut pas porter `min-h-` : il n'a pas de texte à
+ * contenir, il DOIT faire exactement la hauteur promise. C'est donc
+ * l'autre propriété (`h-`), mais le même nombre — et il est écrit
+ * juste ici, contre celui du vrai badge, pour que les deux ne
+ * puissent pas se séparer d'une passe à l'autre (nº 855).
+ */
+export const HAUTEUR_BADGE_GRIS = "h-[40px]";
 
 /**
  * ██ §3 (nº 845) — L'AIR DE LA PASTILLE SUR UNE CARTE DU DOIGT ██

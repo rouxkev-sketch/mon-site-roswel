@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AvatarRond } from "@/components/AvatarRond";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
-import { IconeStatistiques } from "@/components/Icones";
+import { IconeOeil } from "@/components/Icones";
 import { PointsDuCarrousel } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -229,13 +229,18 @@ export function PiedDeFil({
           largeur. */
       className={RANGEE_PIED_DE_FIL}
     >
-      {/*  ██ §7 (nº 852) — LES VUES OUVRENT LE PIED, PUIS LE SIGNALEMENT ██
-           « À gauche de l'icône signaler, une icône statistiques
-           précédée du nombre de vues » : le nombre, puis le dessin,
-           puis le signalement — dans cet ordre, à la lettre.
+      {/*  ██ §1 (nº 855) — LE SIGNALEMENT OUVRE LE PIED, PUIS LES VUES ██
+           TROIS CHOSES CHANGENT, ET CE SONT LES TROIS DE LA CONSIGNE :
+            · LA PLACE — le bloc des vues passe À DROITE du signalement
+              (la nº 852 l'avait mis à gauche) ;
+            · L'ORDRE À L'INTÉRIEUR — le DESSIN d'abord, le NOMBRE
+              ensuite (« icône puis 28 »), l'inverse de la nº 852 ;
+            · LE DESSIN ET LA COULEUR — un ŒIL au trait fin à la place
+              de l'histogramme, et les deux en BLANC (le blanc de la
+              charte, `text-sombre-texte`) là où le gris doux les
+              posait en retrait.
            ⚠️ CE N'EST PAS UN BOUTON : rien à toucher, rien à ouvrir. Un
-           nombre et un dessin, en gris doux comme les autres icônes du
-           pied, avec l'écart de la rangée entre eux.
+           dessin et un nombre, avec l'écart de la rangée entre eux.
            ⚠️ IL PARAÎT TOUJOURS, ET « 0 » EST UN NOMBRE (nº 854). La
            nº 853 le cachait tant que le compteur n'avait pas dépassé
            un ; le propriétaire tranche : le bloc s'affiche sur chaque
@@ -243,30 +248,43 @@ export function PiedDeFil({
            annonce zéro. Une carte sans nombre du tout — base sans le
            SQL nº 852 — dit zéro elle aussi : c'est la vérité de ce que
            le site sait compter.
-           SIGNALER garde sa place et son retrait : sa cible de 40 px
-           ramenée sur la marge de la page — le retrait vaut le vide
-           autour du glyphe, (40 − 22) / 2 = 9, arrondi au cran de
-           l'échelle (8 px). */}
+           SIGNALER GARDE SA PLACE ET SON RETRAIT, et c'est lui qui
+           ouvre désormais la rangée : sa cible de 40 px ramenée sur la
+           marge de la page — le retrait vaut le vide autour du glyphe,
+           (40 − 22) / 2 = 9, arrondi au cran de l'échelle (8 px).
+           ⚠️ ET LES VUES N'ONT PLUS DE REMBOURRAGE À GAUCHE : le bloc
+           commence là où finit la cible du signalement, ce qui laisse
+           entre le glyphe barré et l'œil très exactement les neuf
+           pixels de vide que le signalement porte déjà à l'intérieur
+           de sa propre cible. L'écart se lit donc régulier, sans
+           qu'aucun nombre ait été inventé pour lui. */}
       <div className="relative flex shrink-0 items-center -ml-2">
-        {/*  ██ BOGUE Nº 853, CORRIGÉ À LA nº 854 ██
-             La nº 853 écrivait ici `vues > 0` : « à partir d'une vue,
-             pas de zéro ». Le propriétaire le refuse — le bloc doit
-             PARAÎTRE, et montrer « 0 » quand le compteur est à zéro.
-             Aucune condition ne reste donc : un nombre absent (base
-             sans le SQL nº 852, fiche de démonstration) se lit zéro. */}
-        <span
-          data-vues-de-fil=""
-          className="flex items-center gap-1.5 pl-2 pr-1 text-[13px]
-                     font-semibold text-sombre-texte-doux"
-        >
-          {typeof vues === "number" ? vues : 0}
-          <IconeStatistiques taille={20} />
-        </span>
         <FenetreSignalement
           slug={tatoueur.slug}
           nom={tatoueur.nom}
           variante="icone"
         />
+        {/*  ██ BOGUE Nº 853, CORRIGÉ À LA nº 854 ██
+             La nº 853 écrivait ici `vues > 0` : « à partir d'une vue,
+             pas de zéro ». Le propriétaire le refuse — le bloc doit
+             PARAÎTRE, et montrer « 0 » quand le compteur est à zéro.
+             Aucune condition ne reste donc : un nombre absent (base
+             sans le SQL nº 852, fiche de démonstration) se lit zéro.
+             ⚠️ L'ŒIL EST CELUI DU SITE (`IconeOeil`), pas un second
+             dessin d'œil : il sert déjà à montrer un mot de passe, et
+             les deux ne se croisent nulle part — une carte de recherche
+             et un champ de connexion ne vivent pas sur le même écran.
+             Un seul œil dans le site, c'est la règle du dessin unique
+             (piège nº 378) ; et l'histogramme qu'il remplace est parti
+             avec, faute d'emploi (nº 855). */}
+        <span
+          data-vues-de-fil=""
+          className="flex items-center gap-1.5 text-[13px]
+                     font-semibold text-sombre-texte"
+        >
+          <IconeOeil taille={20} />
+          {typeof vues === "number" ? vues : 0}
+        </span>
       </div>
       {/*  LES POINTS, CENTRÉS SUR TOUTE LA LARGEUR de la carte — comme
            sous la photo d'une fiche au doigt (nº 598) : l'enveloppe ne

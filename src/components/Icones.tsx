@@ -955,34 +955,6 @@ export function IconeDrapeau({ taille = 16, classe = "", trait = 1.8 }: Propriet
   );
 }
 
-/**
- * ██ §7 (nº 852) — LES STATISTIQUES : TROIS BARRES QUI MONTENT ██
- * ------------------------------------------------------------------
- * Demandée par le propriétaire pour le pied des cartes du fil, devant
- * le nombre de vues. Le site n'avait AUCUNE icône de ce sens : ni
- * graphique, ni barres, ni courbe — vérifié dans ce fichier, qui les
- * tient toutes. Elle est donc dessinée, et une seule fois.
- * LE DESSIN : trois barres de hauteurs croissantes, sur la même ligne
- * de base, aux mêmes conventions que toutes ses voisines — boîte de 24,
- * trait de 1,8, extrémités rondes, `currentColor`. Un quart d'unité de
- * retrait tout autour, comme le drapeau de la nº 812.
- * ⚠️ CE N'EST PAS UN ŒIL : `IconeOeil` existe et dit « voir / masquer »
- * (un mot de passe, une prévisualisation) — lui donner un second sens
- * dans le même écran brouillerait les deux.
- */
-export function IconeStatistiques({ taille = 22, classe = "", trait = 1.8 }: ProprietesIcone) {
-  return (
-    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
-      <path
-        d="M6.25 19.75v-5.5m5.75 5.5V8.5m5.75 11.25V4.25"
-        stroke="currentColor"
-        strokeWidth={trait}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 /* ------------------------------------------------------------------
  * PARTAGE — les trois icônes qui manquaient à la fenêtre « Partager
  * cette fiche ». Même gabarit que toutes les autres : viewBox 24,
@@ -1046,6 +1018,21 @@ export function IconeArobase({ taille = 20, classe = "", trait = 1.8 }: Propriet
  * couper. C'est la convention la plus répandue, et l'inverse fait
  * hésiter tout le monde.
  * Même trait (1.8) et même viewBox que leurs voisines.
+ *
+ * ██ §1 (nº 855) — L'ŒIL DIT AUSSI « VU » ██
+ * DÉCISION DU PROPRIÉTAIRE : au pied des cartes du fil, l'œil remplace
+ * l'histogramme devant le nombre de vues. C'est un SECOND SENS pour ce
+ * dessin — et la nº 852 s'en était méfiée, à raison, en dessinant un
+ * histogramme plutôt que de le réemployer.
+ * POURQUOI C'EST SANS DANGER ICI, ET SEULEMENT ICI : les deux emplois
+ * ne se croisent NULLE PART. Le premier vit au bout d'un champ de mot
+ * de passe (connexion, inscription, changement de mot de passe) ; le
+ * second au pied d'une carte de recherche. Aucun écran du site ne
+ * montre les deux, et le sens se lit du contexte : à côté d'un champ,
+ * « montrer » ; à côté d'un nombre, « vu ».
+ * ⚠️ ET IL N'Y A QU'UN ŒIL DANS LE SITE (piège nº 378) : on ne dessine
+ * pas un second œil pour le second sens. L'histogramme de la nº 852,
+ * lui, est parti avec son unique emploi.
  */
 export function IconeOeil({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (

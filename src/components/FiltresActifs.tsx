@@ -1,7 +1,12 @@
 "use client";
 
 import { IconeCroix } from "@/components/Icones";
-import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
+import {
+  AIR_BADGE,
+  COULEURS_SOMBRE,
+  ECRITURE_BADGE,
+  ROBE_BADGE_CONTOUR,
+} from "@/config/tatouage";
 
 /**
  * ██ LA RANGÉE DES BADGES — SOUS LE COMPTE, PUIS À SA PLACE (nº 846,
@@ -138,89 +143,21 @@ import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * son exact complément.
  */
 /**
- * ██ §4 (nº 853) — LE WEB REJOINT LE DOIGT : UNE SEULE ÉCRITURE ██
+ * ██ §2 (nº 855) — L'AIR ET L'ÉCRITURE ONT DÉMÉNAGÉ DANS LA CHARTE ██
  * ------------------------------------------------------------------
- * DÉCISION DU PROPRIÉTAIRE : au web comme au doigt, ces badges prennent
- * les mesures du badge du TYPE des cartes (`BadgeTypeDeFiche`) —
- * hauteur, corps, air. C'est ce que la nº 851 avait fait pour le seul
- * smartphone ; le web suit aujourd'hui.
- * CE QUE CELA SIMPLIFIE, ET C'EST LE POINT : il n'y a plus de variante
- * d'appareil du tout ici. Corps 14, demi-gras, et la boîte de ligne
- * naturelle de la fonte (21 px) — les trois mêmes valeurs partout,
- * lues sur un seul badge. Les quatre écritures que les nº 848 à 851
- * avaient empilées (deux corps, deux graisses, une interligne forcée)
- * s'en vont ensemble.
+ * CE QUI ÉTAIT ÉCRIT ICI, et qui n'y est plus : la hauteur, l'air
+ * latéral, le corps et la graisse des trois badges de la rangée. Ils
+ * vivaient EN DOUBLE — une fois ici, une fois chez le badge du type
+ * (`BadgeTypeDeFiche`) — depuis que la nº 851 avait demandé aux deux
+ * d'être identiques. Deux copies d'une même mesure finissent toujours
+ * par se séparer (piège nº 378) ; le propriétaire tranche à la nº 855
+ * (« les badges type des cartes partagent cette écriture : ils
+ * suivent »), et la mesure part donc là où les deux la LISENT —
+ * `AIR_BADGE` et `ECRITURE_BADGE`, dans config/tatouage, où le
+ * pourquoi du quinze est écrit en entier.
+ * CE QUI CHANGE À L'ÉCRAN : la seule hauteur, qui suit l'air neuf.
+ * Les côtés, la croix, les couleurs et les mots ne bougent pas.
  */
-const ECRITURE_BADGE = "text-[14px] font-semibold text-sombre-texte";
-
-/**
- * ██ §1-§2-§3 (nº 850) — L'AIR VISUEL : DOUZE SUR LES CÔTÉS, HUIT EN
- * HAUT ET EN BAS ██
- * ------------------------------------------------------------------
- * LA RÈGLE DONNÉE : « l'air VISUEL — du bord du badge jusqu'aux glyphes
- * (haut de capitale, ligne de base) et jusqu'à la première lettre / au
- * bord de la croix — suit la proportion standard des badges : horizontal
- * légèrement supérieur au vertical ». L'ordre de grandeur donné est
- * 12 px sur les côtés, 8 en haut et en bas.
- *
- * CE QUI ÉTAIT MESURÉ AVANT (nº 848), À L'ENCRE, sur les trois badges :
- *   au doigt   haut 17 · bas 17 · gauche 12 · droite 18
- *   au web     haut 16 · bas 18 · gauche 12 · droite 18
- * Le vertical était donc DEUX FOIS le nombre voulu, aux deux appareils —
- * « beaucoup trop d'air haut/bas », à la lettre. Et à droite, la croix
- * laissait six pixels de plus que le texte à gauche, alors qu'elle doit
- * laisser le MÊME.
- *
- * CE QUE CES QUATRE NOMBRES VALENT MAINTENANT :
- *  · HAUT et BAS — 7 px de rembourrage plus le trait d'un pixel font 8,
- *    et c'est tout : la boîte de ligne vaut désormais les capitales
- *    (voir `ECRITURE_BADGE`), elle n'ajoute donc plus rien. AU WEB, LES
- *    DEUX NOMBRES DIFFÈRENT D'UN PIXEL (8 en haut, 6 en bas) et c'est
- *    ce qui rend l'air ÉGAL : à ce corps-là, la fonte pose ses capitales
- *    un pixel au-dessus du milieu de sa boîte. Mesuré, pas supposé —
- *    sans cette compensation on lisait 7 au-dessus des capitales pour 9
- *    sous la ligne de base. C'est L'AIR qu'on égalise, jamais la boîte ;
- *  · GAUCHE — 10 px plus le trait font 12 au doigt (la première lettre
- *    laisse un pixel de flanc) ; 12 plus le trait font 14 au web. LE WEB
- *    EN A UN CRAN DE PLUS parce que le propriétaire le dit (« au web,
- *    pas assez d'air gauche/droite »), et parce que son texte est d'un
- *    cran plus grand : 12 px autour d'un corps de 16 se lit plus serré
- *    que 12 autour d'un corps de 15 ;
- *  · DROITE — le même nombre que gauche, sur la même déclaration. Ce qui
- *    rattrape le vide propre au dessin de la croix se règle SUR LA CROIX
- *    (voir `CROIX_BADGE`), pas ici : le badge du compte, lui, n'a pas de
- *    croix et veut bien ses 12 (ou 14) à droite de sa dernière lettre.
- * LA HAUTEUR SUIT : 8 + 10 + 8 = 26 au doigt, 8 + 12 + 8 = 28 au web
- * (contre 44 et 46 à la nº 848). Le squelette d'attente les reprend.
- *
- * ⚠️ UNE SEULE ÉCRITURE POUR LES TROIS BADGES, c'est la consigne : cette
- * constante est lue par le compte comme par les filtres.
- * ⚠️ AUCUNE PROPRIÉTÉ N'EST ÉCRITE DEUX FOIS (piège nº 389) : chaque
- * appareil pose son air dans sa propre variante, et les deux s'excluent
- * (règle nº 60 : c'est l'APPAREIL qui tranche, jamais une largeur).
- *
- * ██ nº 851 — ET AU DOIGT, CE N'EST PLUS CE CALCUL-LÀ QUI DÉCIDE ██
- * Le propriétaire veut sur smartphone les mesures EXACTES du badge du
- * type (`BadgeTypeDeFiche`) : sa hauteur minimale de trente pixels, son
- * air latéral de quatorze, et rien en haut ni en bas — sa boîte fait
- * trente parce qu'elle ne peut pas faire moins, et sa ligne de texte
- * (21 px) y est centrée. Les deux écritures sont donc les mêmes classes,
- * lues sur les deux badges ; le banc 851 les compare, mesure contre
- * mesure. TOUT CE QUI EST ÉCRIT PLUS HAUT VAUT DÉSORMAIS POUR LE WEB —
- * l'air visuel de 14 sur les côtés et 8 en haut et en bas, mesuré sur
- * les lettres à la nº 850, y est intact.
- */
-/**
- * ██ §4 (nº 853) — L'AIR AUSSI EST LE SIEN, AUX DEUX APPAREILS ██
- * La hauteur minimale de trente pixels et les quatorze pixels d'air
- * latéral du badge du type (`BadgeTypeDeFiche`), sans rien en haut ni
- * en bas : c'est la boîte qui fait la hauteur, et la ligne de texte y
- * est centrée. Le web perd donc son air visuel calculé à la nº 850
- * (14 sur les côtés, 8 en haut et en bas) — le propriétaire préfère
- * l'identité avec les badges des cartes à la proportion mesurée, et
- * c'est sa page.
- */
-const AIR_BADGE = "min-h-[30px] px-3.5";
 
 /**
  * ██ §3 (nº 850) — LA CROIX : SA CIBLE RESTE GRANDE, SON AIR EST CELUI

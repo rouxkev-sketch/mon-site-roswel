@@ -201,10 +201,13 @@ for (const mode of ["doigt", "web"]) {
     verif("tous les badges de la rangée ont la MÊME hauteur",
       tous.every((b) => b.hauteur === tous[0].hauteur),
       tous.map((b) => b.hauteur).join(" | "));
-    //  §4 (nº 853) — TRENTE AUX DEUX APPAREILS : les badges prennent
-    //  la boîte du badge du TYPE, au web comme au doigt.
+    //  §4 (nº 853) — LA MÊME BOÎTE QUE LE BADGE DU TYPE, aux deux
+    //  appareils. §2 (nº 855) — et elle vaut désormais QUARANTE : l'air
+    //  monte à quinze pixels jusqu'à l'encre, en haut comme à gauche,
+    //  et la hauteur s'en déduit (15 + 10 + 15). Le pourquoi est écrit
+    //  dans config/tatouage ; l'air lui-même se mesure au banc 855.
     verif("… et c'est celle que le squelette d'attente promet",
-      tous[0].hauteur === 30, `${tous[0].hauteur} px (attendu 30)`);
+      tous[0].hauteur === 40, `${tous[0].hauteur} px (attendu 40)`);
 
     /*  ██ §3c — LE TEXTE ET LA CROIX, AU WEB ██
         « un cran de plus qu'à la nº 847 » : le corps y valait 15 px sur
@@ -344,8 +347,11 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1200);
     const vrai = await page.evaluate((R) => new Function("return " + R)()(), RANGEE);
 
-    //  nº 850 — les deux hauteurs que l'air visuel appelle désormais.
-    const attendue = 30;
+    //  nº 850 — la hauteur que l'air visuel appelle. §2 (nº 855) : elle
+    //  vaut quarante depuis que l'air monte à quinze pixels jusqu'à
+    //  l'encre, en haut comme à gauche (15 + 10 + 15). La source est
+    //  `AIR_BADGE`, dans config/tatouage ; le banc 855 mesure l'air.
+    const attendue = 40;
     verif("les badges gris ont la hauteur des vrais badges",
       gris.hauteurs.every((h) => h === attendue),
       `${gris.hauteurs.join(" | ")} pour ${attendue} attendus`);

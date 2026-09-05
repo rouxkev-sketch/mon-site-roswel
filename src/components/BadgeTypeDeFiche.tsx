@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { BOITE_BADGE, COULEURS_SOMBRE, libelleTypeFiche } from "@/config/tatouage";
+import {
+  AIR_BADGE,
+  BOITE_BADGE,
+  COULEURS_SOMBRE,
+  ECRITURE_BADGE,
+  libelleTypeFiche,
+} from "@/config/tatouage";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 
 /**
@@ -80,11 +86,12 @@ export function BadgeTypeDeFiche({
           (BoutonSuivre) et non réinventés : `bg-sombre-texte` (le blanc
           de la charte) avec le texte au fond de page, et la même
           descente d'un dixième au survol et à l'appui.
-          ⚠️ SA BOÎTE NE BOUGE PAS D'UN PIXEL : `BOITE_BADGE` est
-          l'écriture partagée (config/tatouage), et la hauteur, l'air et
-          la typographie restent ceux que la nº 851 a fait copier aux
-          badges de la rangée de recherche — le banc 851 les compare
-          encore, mesure contre mesure.
+          ⚠️ SA BOÎTE EST CELLE DE LA CHARTE — `BOITE_BADGE` pour la
+          forme, `AIR_BADGE` et `ECRITURE_BADGE` pour la hauteur, l'air
+          et la typographie (config/tatouage). Les badges de la rangée
+          de recherche lisent les mêmes : la nº 851 leur avait fait
+          COPIER ces mesures, la nº 855 les leur fait PARTAGER. Le banc
+          851 les compare toujours, mesure contre mesure.
           ⚠️ ET IL N'A PLUS DE CONTOUR DU TOUT : c'est écrit dans la
           consigne. Sa hauteur ne bouge pas pour autant — la hauteur
           minimale se compte sur la boîte entière, contour compris. */
@@ -105,8 +112,16 @@ export function BadgeTypeDeFiche({
           serait donc muette. L'opacité est l'autre écriture du site
           pour ce cas (elle sert déjà dans l'administration). */
       style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
-      className={`${BOITE_BADGE} min-h-[30px] px-3.5 text-[14px] font-semibold
-                 text-sombre-texte transition-opacity
+      /*  ██ §2 (nº 855) — SA BOÎTE EST CELLE DE LA CHARTE, LUE ██
+          Il écrivait sa hauteur, son air et sa typographie à la lettre,
+          et les badges de la rangée de recherche les recopiaient chez
+          eux. Le propriétaire veut UNE écriture (« les badges type des
+          cartes partagent cette écriture : ils suivent ») : elle vit
+          désormais dans config/tatouage, et ce badge la LIT. Sa hauteur
+          passe donc de trente à quarante avec elle — c'est l'air neuf,
+          quinze pixels jusqu'à l'encre des trois côtés. */
+      className={`${BOITE_BADGE} ${AIR_BADGE} ${ECRITURE_BADGE}
+                 transition-opacity
                  hover:opacity-90 active:opacity-90
                  focus-visible:outline-2 focus-visible:outline-offset-2
                  focus-visible:outline-primaire`}

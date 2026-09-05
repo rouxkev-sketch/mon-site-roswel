@@ -158,16 +158,24 @@ const RESULTATS = `${BASE}/search?style=blackwork&nature=tatouage`;
       return {
         texte: bloc.textContent.trim(),
         dessin: Math.round(r(bloc.querySelector("svg")).width),
-        aGaucheDeSignaler: signaler ? r(bloc).right <= r(signaler).left + 1 : false,
-        surLaMarge: Math.round(r(bloc).left - r(pied).left),
+        aDroiteDeSignaler: signaler ? r(bloc).left >= r(signaler).right - 1 : false,
       };
     });
-    verif("le pied montre le nombre, puis l'icône statistiques",
+    /*  ██ nº 855 — LA MOITIÉ DE CETTE MESURE A ÉTÉ RETOURNÉE ██
+        Ce banc lisait « le NOMBRE puis l'icône statistiques, à GAUCHE
+        du signalement, sur la marge de la page ». Le propriétaire a
+        tout retourné à la nº 855 : le bloc passe à DROITE du
+        signalement, le DESSIN ouvre et le nombre suit, et c'est un ŒIL
+        en blanc. Ce qui reste vrai ici, et qui appartient encore à la
+        nº 853, c'est que LE NOMBRE ARRIVE : « 28 », avec un dessin de
+        vingt pixels. La place, l'ordre, le dessin et la couleur se
+        mesurent au banc 855 — deux bancs ne diront pas deux vérités
+        sur le même sujet. */
+    verif("le pied montre le nombre, avec son dessin de 20 px",
       vu && vu.texte === "28" && vu.dessin === 20,
       vu ? `« ${vu.texte} » · dessin ${vu.dessin} px` : "bloc absent");
-    verif("… à GAUCHE du signalement, et sur la marge de la page",
-      vu && vu.aGaucheDeSignaler && vu.surLaMarge === 8,
-      vu ? `à gauche ${vu.aGaucheDeSignaler} · marge ${vu.surLaMarge} px` : "bloc absent");
+    verif("… et il est du côté du signalement (nº 855 : à sa droite)",
+      vu && vu.aDroiteDeSignaler, vu ? `à droite ${vu.aDroiteDeSignaler}` : "bloc absent");
   } catch (e) {
     verif("déroulement du banc 853 (le nombre à l'écran)", false, String(e).slice(0, 400));
   } finally { await n2.close(); }

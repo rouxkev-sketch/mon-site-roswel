@@ -97,7 +97,14 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     verif("la robe de « Suivre » : un aplat plein, sans contour (nº 852-§6)",
       m.fond !== "rgba(0, 0, 0, 0)" && parseFloat(m.contour) === 0,
       `${m.contour} · fond ${m.fond}`);
-    verif("hauteur d'un badge (30 px), texte insécable", m.hauteur === 30 && m.insecable === "nowrap", `${m.hauteur} px · ${m.insecable}`);
+    /*  §2 (nº 855) — LA HAUTEUR D'UN BADGE VAUT QUARANTE. Elle valait
+        trente ; l'air des badges monte à quinze pixels jusqu'à l'encre,
+        en haut comme à gauche, et la hauteur s'en déduit (15 + 10 + 15).
+        Ce badge PARTAGE cette écriture avec la rangée de recherche
+        (`AIR_BADGE`, config/tatouage) — c'est la consigne du
+        propriétaire, « ils suivent » ; l'air lui-même se mesure sur
+        l'encre au banc 855. */
+    verif("hauteur d'un badge (40 px), texte insécable", m.hauteur === 40 && m.insecable === "nowrap", `${m.hauteur} px · ${m.insecable}`);
     verif("il est à droite, face à l'avatar", m.aDroite === 16 && m.faceALAvatar, `${m.aDroite} px du bord`);
     verif("PLUS AUCUN « Follow » dans le fil", m.suivreDansLeFil === 0, `${m.suivreDansLeFil} trouvé(s)`);
     verif("le titre est le NOM SEUL, la ville seule dessous", m.titre === "Banc 843" && m.sousTitre === "Lyon, FR", `${m.titre} / ${m.sousTitre}`);
