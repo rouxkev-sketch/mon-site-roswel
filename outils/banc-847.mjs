@@ -214,9 +214,16 @@ for (const mode of ["doigt", "web"]) {
         banc 848 ; ici on garde ce que la nº 847 avait posé et qui
         SURVIT : la rangée est homogène, et la croix suit le texte. */
     const tous = [m.compte, ...m.badges];
-    const CORPS = mode === "doigt" ? "15px" : "16px";
-    verif(`TOUS les badges portent la même écriture : corps ${CORPS}, graisse moyenne (nº 848-§3c/§5)`,
-      tous.every((b) => b.corps === CORPS && b.graisse === "500"),
+    /*  nº 851 — LE DOIGT A PRIS L'ÉCRITURE DU BADGE DU TYPE (corps 14,
+        demi-gras), sur décision du propriétaire ; le web garde celle de
+        la nº 848 (corps 16, graisse moyenne). Ce banc dit donc les deux,
+        et le banc 851 vérifie que celle du doigt est bien, au pixel,
+        celle du badge du type. */
+    const ECRITURE = mode === "doigt"
+      ? { corps: "14px", graisse: "600" }
+      : { corps: "16px", graisse: "500" };
+    verif(`TOUS les badges portent la même écriture : corps ${ECRITURE.corps}, graisse ${ECRITURE.graisse}`,
+      tous.every((b) => b.corps === ECRITURE.corps && b.graisse === ECRITURE.graisse),
       tous.map((b) => `${b.corps}/${b.graisse}`).join(" | "));
     verif("la croix suit le texte : elle prend la boîte de la ligne, son dessin monte au web (nº 848)",
       m.badges.every((b) =>

@@ -18,8 +18,16 @@ import { imageDuPng, airsVisuels } from "./mesure-air.mjs";
 /*  LES DEUX PROPORTIONS VOULUES. Le web en a un cran de plus sur les
     côtés : son texte est d'un cran plus grand, et le propriétaire l'a
     demandé en toutes lettres (« au web, pas assez d'air gauche/droite »). */
+/*  ⚠️ nº 851 — LE DOIGT A QUITTÉ CETTE RÈGLE. Le propriétaire a demandé
+    que les badges de la rangée prennent, sur smartphone, les mesures
+    EXACTES du badge du type des cartes du fil : sa hauteur de trente
+    pixels, son air latéral de quatorze, sa typographie. Cet air-là ne se
+    mesure donc plus ici mais AU BANC 851, badge contre badge — deux
+    bancs ne diront pas deux vérités sur le même sujet. Ce qui suit vaut
+    pour le WEB, où la règle de la nº 850 est intacte ; la hauteur du
+    doigt reste écrite ici, parce que le squelette la promet. */
 const VOULU = {
-  doigt: { cotes: 12, vertical: 8, hauteur: 26 },
+  doigt: { hauteur: 30 },
   web: { cotes: 14, vertical: 8, hauteur: 28 },
 };
 /*  UNE TOLÉRANCE D'UN PIXEL, ET ELLE EST HONNÊTE : une boîte peut tomber
@@ -63,7 +71,7 @@ async function airsDuBadge(page, position) {
   return { ...a, ...b };
 }
 
-for (const mode of ["doigt", "web"]) {
+for (const mode of ["web"]) {
   const { nav, page } = await ouvrir(mode);
   try {
     titre(`850 · ${mode} — les quatre airs, mesurés sur les lettres`);

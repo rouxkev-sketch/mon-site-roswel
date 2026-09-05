@@ -460,9 +460,12 @@ export function CorpsSquelette({
                et 26 au doigt / 28 au web depuis que l'air se mesure sur
                les LETTRES et non sur la boîte de ligne (`FiltresActifs`,
                nº 850). Un squelette qui promettrait l'ancienne hauteur
-               ferait sauter toute la page à l'arrivée des cartes — de
-               dix-huit pixels cette fois. Ces deux nombres-là sont
-               mesurés au banc, jamais déduits.
+               ferait sauter toute la page à l'arrivée des cartes. Ces
+               deux nombres-là sont mesurés au banc, jamais déduits.
+               ██ nº 851 — LE DOIGT REPASSE À TRENTE ██ : sur smartphone,
+               les badges prennent désormais les mesures exactes du badge
+               du TYPE des cartes du fil (décision du propriétaire), dont
+               la hauteur minimale vaut trente pixels. Le web garde 28.
                ⚠️ ET LA MARGE COPIÉE S'EN VA AVEC ELLE : elle était posée
                ici par largeur de fenêtre (640 px) là où la rangée la
                posait par APPAREIL (règle nº 60) — deux pixels de saut sur
@@ -473,12 +476,12 @@ export function CorpsSquelette({
                Leurs largeurs ne décident de rien (la rangée est une ligne
                de flexion, sa hauteur ne dépend pas d'elles) ; elles sont
                prises sur les libellés les plus courants et MESURÉES à
-               l'écran, au milieu des deux appareils : « 35 portfolios »
-               fait 114 px au doigt et 125 au web, « Blackwork » 120 et
-               131. D'où 120 et 126 (nº 850). */}
+               l'écran, au milieu des deux appareils : « 14 portfolios »
+               fait 117 px au doigt et 122 au web, « Blackwork » 127 et
+               131. D'où 120 et 129 (nº 851). */}
           <div data-squelette-badges="" className="flex items-center gap-2">
-            <div className="mobile:h-[26px] not-mobile:h-[28px] w-[120px] rounded-lg bg-sombre-eleve" />
-            <div className="mobile:h-[26px] not-mobile:h-[28px] w-[126px] rounded-lg bg-sombre-eleve" />
+            <div className="mobile:h-[30px] not-mobile:h-[28px] w-[120px] rounded-lg bg-sombre-eleve" />
+            <div className="mobile:h-[30px] not-mobile:h-[28px] w-[129px] rounded-lg bg-sombre-eleve" />
           </div>
         </div>
       ) : (

@@ -117,10 +117,30 @@ import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * de capitale à la ligne de base » —, et c'est ce que fait tout badge
  * bien composé : sinon un mot avec jambage serait plus haut qu'un autre.
  */
+/**
+ * ██ nº 851 — AU DOIGT, LA RANGÉE PREND L'ÉCRITURE DU BADGE DU TYPE ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : sur smartphone, ces badges prennent
+ * EXACTEMENT les mesures du badge TYPE des cartes du fil (celui qui est
+ * à droite de l'avatar, `BadgeTypeDeFiche`) — même hauteur, même air
+ * intérieur, même typographie, même corps. Le web ne bouge pas.
+ * CE QUE CELA CHANGE ICI, ET RIEN D'AUTRE : le corps passe de 15 à 14,
+ * la graisse de moyenne à demi-grasse, et LA BOÎTE DE LIGNE N'EST PLUS
+ * FORCÉE — le badge du type n'en impose aucune, sa ligne vaut donc la
+ * hauteur naturelle de la fonte (21 px pour un corps de 14, mesuré).
+ * ⚠️ LA GRAISSE REVIENT DONC EN ARRIÈRE AU DOIGT SEULEMENT : la nº 848
+ * l'avait descendue à 500 sur les deux appareils (« le demi-gras paraît
+ * trop lourd »). Le propriétaire demande aujourd'hui la typographie du
+ * badge du type, qui est demi-grasse — c'est écrit, et c'est appliqué à
+ * la lettre. LE WEB GARDE SES 500 : il n'est pas concerné.
+ * ⚠️ DEUX VARIANTES QUI S'EXCLUENT, jamais deux classes en concurrence
+ * (piège nº 389) : `mobile:` est l'APPAREIL (règle nº 60), `not-mobile:`
+ * son exact complément.
+ */
 const ECRITURE_BADGE =
-  "mobile:text-[15px] not-mobile:text-[16px] " +
-  "mobile:leading-[10px] not-mobile:leading-[12px] " +
-  "font-medium text-sombre-texte";
+  "mobile:text-[14px] not-mobile:text-[16px] " +
+  "not-mobile:leading-[12px] " +
+  "mobile:font-semibold not-mobile:font-medium text-sombre-texte";
 
 /**
  * ██ §1-§2-§3 (nº 850) — L'AIR VISUEL : DOUZE SUR LES CÔTÉS, HUIT EN
@@ -164,15 +184,24 @@ const ECRITURE_BADGE =
  *
  * ⚠️ UNE SEULE ÉCRITURE POUR LES TROIS BADGES, c'est la consigne : cette
  * constante est lue par le compte comme par les filtres.
- * ⚠️ AUCUNE PROPRIÉTÉ N'EST ÉCRITE DEUX FOIS (piège nº 389) : le doigt
- * pose son haut et son bas d'un seul geste, le web les pose séparément —
- * et les deux variantes s'excluent (règle nº 60 : c'est l'APPAREIL qui
- * tranche, jamais une largeur), il n'y a donc jamais deux classes en
- * concurrence sur le même rembourrage.
+ * ⚠️ AUCUNE PROPRIÉTÉ N'EST ÉCRITE DEUX FOIS (piège nº 389) : chaque
+ * appareil pose son air dans sa propre variante, et les deux s'excluent
+ * (règle nº 60 : c'est l'APPAREIL qui tranche, jamais une largeur).
+ *
+ * ██ nº 851 — ET AU DOIGT, CE N'EST PLUS CE CALCUL-LÀ QUI DÉCIDE ██
+ * Le propriétaire veut sur smartphone les mesures EXACTES du badge du
+ * type (`BadgeTypeDeFiche`) : sa hauteur minimale de trente pixels, son
+ * air latéral de quatorze, et rien en haut ni en bas — sa boîte fait
+ * trente parce qu'elle ne peut pas faire moins, et sa ligne de texte
+ * (21 px) y est centrée. Les deux écritures sont donc les mêmes classes,
+ * lues sur les deux badges ; le banc 851 les compare, mesure contre
+ * mesure. TOUT CE QUI EST ÉCRIT PLUS HAUT VAUT DÉSORMAIS POUR LE WEB —
+ * l'air visuel de 14 sur les côtés et 8 en haut et en bas, mesuré sur
+ * les lettres à la nº 850, y est intact.
  */
 const AIR_BADGE =
-  "mobile:py-[7px] not-mobile:pt-[8px] not-mobile:pb-[6px] " +
-  "mobile:px-[10px] not-mobile:px-[12px]";
+  "mobile:min-h-[30px] mobile:px-3.5 " +
+  "not-mobile:pt-[8px] not-mobile:pb-[6px] not-mobile:px-[12px]";
 
 /**
  * ██ §3 (nº 850) — LA CROIX : SA CIBLE RESTE GRANDE, SON AIR EST CELUI

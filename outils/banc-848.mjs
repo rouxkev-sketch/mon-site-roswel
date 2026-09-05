@@ -201,18 +201,21 @@ for (const mode of ["doigt", "web"]) {
     verif("tous les badges de la rangée ont la MÊME hauteur",
       tous.every((b) => b.hauteur === tous[0].hauteur),
       tous.map((b) => b.hauteur).join(" | "));
-    verif("… et c'est celle que le squelette d'attente promet (nº 850)",
-      tous[0].hauteur === (doigt ? 26 : 28),
-      `${tous[0].hauteur} px (attendu ${doigt ? 26 : 28})`);
+    verif("… et c'est celle que le squelette d'attente promet",
+      tous[0].hauteur === (doigt ? 30 : 28),
+      `${tous[0].hauteur} px (attendu ${doigt ? 30 : 28})`);
 
     /*  ██ §3c — LE TEXTE ET LA CROIX, AU WEB ██
         « un cran de plus qu'à la nº 847 » : le corps y valait 15 px sur
         les deux appareils, le dessin de la croix 16. Le doigt ne bouge
         pas, le web monte. */
+    /*  nº 851 — AU DOIGT, LE CORPS EST CELUI DU BADGE DU TYPE (14 px) :
+        le propriétaire a demandé les mesures exactes de ce badge-là sur
+        smartphone. Le web garde le cran gagné à la nº 848. */
     verif(doigt
-      ? "au doigt, le corps ne bouge pas : 15 px, comme à la nº 847"
+      ? "au doigt, le corps est celui du badge du type : 14 px (nº 851)"
       : "au web, le corps monte d'un cran : 16 px contre 15 à la nº 847",
-      tous.every((b) => b.corps === (doigt ? "15px" : "16px")),
+      tous.every((b) => b.corps === (doigt ? "14px" : "16px")),
       tous.map((b) => b.corps).join(" | "));
     verif(doigt
       ? "au doigt, le dessin de la croix ne bouge pas : 16 px"
@@ -223,8 +226,13 @@ for (const mode of ["doigt", "web"]) {
     /*  ██ §5 — LA GRAISSE ██
         « passer de 600 à 500 (medium) — le demi-gras paraît trop
         lourd ». Tous les badges, les deux robes. */
-    verif("tous les badges sont en graisse MOYENNE (500), et plus en demi-gras",
-      tous.every((b) => b.graisse === "500"), tous.map((b) => b.graisse).join(" | "));
+    /*  nº 851 — LA GRAISSE SUIT LE MÊME PARTAGE : demi-grasse au doigt
+        (celle du badge du type), moyenne au web (nº 848-§5). */
+    verif(doigt
+      ? "au doigt, la graisse est celle du badge du type (600)"
+      : "au web, les badges sont en graisse MOYENNE (500)",
+      tous.every((b) => b.graisse === (doigt ? "600" : "500")),
+      tous.map((b) => b.graisse).join(" | "));
 
     /*  ██ §4 — LE SÉPARATEUR DU BADGE DE LOCALITÉ ██
         « le gros point est trop grand ; utiliser le point médian fin
@@ -273,9 +281,14 @@ for (const mode of ["doigt", "web"]) {
       texte est plus grand. Ce qui reste vrai, et qu'on garde : le badge
       du web est PLUS HAUT que celui du doigt, parce que ses lettres le
       sont. Le détail des quatre airs se mesure au banc 850. */
-  verif("et la hauteur du badge suit celle des lettres",
-    d && w && w.compte.hauteur > d.compte.hauteur,
-    d && w ? `${d.compte.hauteur} → ${w.compte.hauteur} px` : "relevé manquant");
+  /*  nº 851 — LES DEUX HAUTEURS NE SE COMPARENT PLUS : le doigt suit le
+      badge du type (30 px), le web suit l'air visuel de la nº 850 (28).
+      Chacune est vérifiée là où sa règle est écrite — bancs 851 et 850.
+      Ce qui reste vrai des deux côtés : la rangée est homogène. */
+  verif("chaque appareil garde une rangée homogène",
+    d && w && d.filtres.every((b) => b.hauteur === d.compte.hauteur) &&
+    w.filtres.every((b) => b.hauteur === w.compte.hauteur),
+    d && w ? `doigt ${d.compte.hauteur} px · web ${w.compte.hauteur} px` : "relevé manquant");
 }
 
 //  ══ 3 · LE SQUELETTE D'ATTENTE PROMET LA MÊME RANGÉE ═════════════════
@@ -332,7 +345,7 @@ for (const mode of ["doigt", "web"]) {
     const vrai = await page.evaluate((R) => new Function("return " + R)()(), RANGEE);
 
     //  nº 850 — les deux hauteurs que l'air visuel appelle désormais.
-    const attendue = mode === "doigt" ? 26 : 28;
+    const attendue = mode === "doigt" ? 30 : 28;
     verif("les badges gris ont la hauteur des vrais badges",
       gris.hauteurs.every((h) => h === attendue),
       `${gris.hauteurs.join(" | ")} pour ${attendue} attendus`);
