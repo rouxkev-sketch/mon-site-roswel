@@ -33,6 +33,25 @@
 export const ADRESSE_RECHERCHE = "/search";
 
 /**
+ * ██ §1 (nº 860) — LES DEUX ADRESSES DE L'ACCUEIL ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : l'accueil Tattoo et l'accueil Flash ne
+ * sont plus UNE page avec un interrupteur, mais DEUX PAGES — comme
+ * « Favoris » et « Portfolios » dans « Ma sélection ». Le va-et-vient
+ * de la barre devient un LIEN de l'une à l'autre.
+ * POURQUOI, ET C'EST LE DÉFAUT QU'ON FERME : avec un interrupteur en
+ * mémoire (nº 857), les deux vues partagent UNE page, donc UNE position
+ * de défilement — aller dans Flash remontait la page, et la nº 859 avait
+ * dû retenir les positions à la main. Deux adresses, et c'est la
+ * MÉMOIRE DE POSITION DU SITE qui s'en charge, comme pour toutes les
+ * autres pages : rien à écrire, rien à défaire.
+ * ⚠️ ÉCRITES ICI, ET NULLE PART AILLEURS (piège nº 378) : la page, le
+ * va-et-vient et les bancs lisent ces deux constantes.
+ */
+export const ADRESSE_ACCUEIL = "/";
+export const ADRESSE_ACCUEIL_FLASH = "/flash";
+
+/**
  * ██ §1 (nº 656) — ON NE PRÉPARE JAMAIS LA RECHERCHE À L'AVANCE ██
  * ==================================================================
  * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET INSTRUIT À LA BOÎTE NOIRE

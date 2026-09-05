@@ -131,8 +131,15 @@ for (const mode of ["doigt", "web"]) {
       page.evaluate(() => {
         const rangee = document.querySelector("[data-rangee-moteur]");
         //  LA PILULE DU DOIGT : le seul bouton VISIBLE de la rangée.
-        const pilule = [...rangee.querySelectorAll("button")]
-          .find((b) => b.getBoundingClientRect().height > 0);
+        /*  §1 (nº 860) — L'ONGLET ACTIF DU VA-ET-VIENT : depuis que les
+            deux accueils sont deux PAGES, c'est un LIEN qui se dit
+            « page courante » — plus un bouton. La sonde accepte les deux
+            formes, celle-ci et celle des radios. */
+        const pilule = [...rangee.querySelectorAll("a[href], button, [role='radio']")]
+          .find((b) => b.getBoundingClientRect().height > 0
+            && (b.getAttribute("aria-current") === "page"
+              || b.getAttribute("aria-checked") === "true"
+              || b.tagName === "BUTTON"));
         const reserve = document.querySelector("[data-reserve-barre]");
         return {
           texte: pilule?.textContent?.trim() ?? null,

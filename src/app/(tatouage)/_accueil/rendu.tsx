@@ -26,6 +26,7 @@ import { IndexTatoueurs } from "@/components/IndexTatoueurs";
 //  §1 (nº 621) — la lecture de la nº 620 : une carte par style, pour
 //  l'accueil au repos et lui seul (voir plus bas).
 import { cataloguesDesStyles } from "@/lib/catalogue-styles";
+import { NATURE_PAR_DEFAUT, type SlugNature } from "@/lib/photos-tatoueur";
 
 /**
  * L'ACCUEIL DE YOKOFOLIO
@@ -291,7 +292,11 @@ function requeteNormalisee(params: ParametresAccueil): string {
  */
 export async function metadonneesAccueil(
   params: ParametresAccueil,
-  taillePage: number
+  taillePage: number,
+  /*  §1 (nº 860) — L'ADRESSE CANONIQUE DE CETTE PAGE-CI. Deux pages,
+      deux canoniques : sans cela « /flash » se déclarerait comme étant
+      l'accueil, et un moteur n'en garderait qu'une. */
+  chemin: string = ""
 ): Promise<Metadata> {
   const recherche = porteUneRecherche(params);
   const { resultat } = await chargerAccueil(
@@ -304,7 +309,9 @@ export async function metadonneesAccueil(
     // (« yokofolio — Les portfolios des tatoueurs, par style ») : sur
     // la page d'accueil, le nom de la marque doit venir en premier.
     description: TEXTES_TATOUAGE.descriptionSite,
-    alternates: recherche ? undefined : { canonical: adresseDuSite() },
+    alternates: recherche
+      ? undefined
+      : { canonical: `${adresseDuSite()}${chemin}` },
     robots:
       // Une recherche dans l'adresse, ou des fiches de DÉMONSTRATION à
       // l'écran : dans les deux cas, rien à indexer.
@@ -352,9 +359,22 @@ export async function RenduAccueil({
   taillePage,
   phototequeSansTexte,
   mosaiqueNue,
+  natureDuCatalogue = NATURE_PAR_DEFAUT,
 }: {
   params: ParametresAccueil;
   taillePage: number;
+  /**
+   * ██ §1 (nº 860) — LA NATURE QUE CETTE PAGE MONTRE ██
+   * L'accueil (« / ») montre les tattoos, « /flash » les flashs : deux
+   * PAGES, plus un interrupteur (nº 857-859). C'est donc la page qui
+   * dit sa nature, une fois, au rendu — et non plus un magasin lu par
+   * le navigateur.
+   * ⚠️ CE N'EST PAS `params.nature` : celui-là veut dire « une
+   * RECHERCHE de cette nature » (la mosaïque de tous les flashs, servie
+   * par le jumeau) et il éteindrait le catalogue. Ici c'est l'accueil
+   * au repos, dans sa nature.
+   */
+  natureDuCatalogue?: SlugNature;
   /** La vue photothèque quand l'adresse ne dit rien (cookie côté
       jumeau, valeur de repli côté page prérendue). */
   phototequeSansTexte: boolean;
@@ -396,10 +416,14 @@ export async function RenduAccueil({
       l'autre au choix du va-et-vient, et la page étant prérendue, les
       deux doivent être écrits dedans. « Avec catalogue » reste jugé sur
       les tattoos, comme avant : c'est la garde de l'accueil au repos. */
+  /*  §1 (nº 860) — UNE SEULE LECTURE, ET LA PAGE PREND SA NATURE. La
+      fonction bâtit les deux listes sur la même matière (nº 857) : en
+      demander une n'épargnerait aucune lecture, et deux pages qui
+      partagent la même lecture ne peuvent pas se contredire. */
   const catalogues = surLeCatalogue
     ? await cataloguesDesStyles()
     : { tatouage: [], flash: [] };
-  const catalogue = catalogues.tatouage;
+  const catalogue = catalogues[natureDuCatalogue];
   const avecCatalogue = catalogue.length > 0;
 
   return (
@@ -407,7 +431,7 @@ export async function RenduAccueil({
     <IndexTatoueurs
       premiers={avecCatalogue ? [] : resultat.tatoueurs}
       catalogue={catalogue}
-      catalogueFlash={catalogues.flash}
+      natureDuCatalogue={natureDuCatalogue}
       total={avecCatalogue ? 0 : resultat.total}
       page={page}
       //  §2 (nº 425) — le jour du mélange de CE rendu : le lien

@@ -26,6 +26,7 @@
  * `radiogroup` + `radio`/`aria-checked` — les mêmes lecteurs d'écran,
  * et les mêmes tests, y retrouvent exactement la même chose.
  */
+import Link from "next/link";
 import { TRAIT_SEPARATION_FOND } from "@/config/tatouage";
 
 export function OngletsLigne({
@@ -55,10 +56,31 @@ export function OngletsLigne({
      * appelants portent des mots, qui se lisent d'eux-mêmes.
      */
     nom?: string;
+    /**
+     * ██ §1 (nº 860) — UN ONGLET QUI EST UNE ADRESSE ██
+     * Le va-et-vient de l'accueil relie DEUX PAGES (« / » et
+     * « /flash ») : ses onglets sont des LIENS, pas des interrupteurs.
+     * Quand cette valeur est là, le va-et-vient entier change de
+     * nature — voir la note du rendu, plus bas : il devient une
+     * navigation, et l'onglet actif se dit « page courante » au lieu
+     * de « coché ». Le dessin, lui, ne bouge pas d'un pixel.
+     * ⚠️ TOUT OU RIEN : si un onglet porte une adresse, tous doivent en
+     * porter une — un demi-va-et-vient n'aurait aucun sens pour
+     * personne, et surtout pas pour un lecteur d'écran.
+     */
+    href?: string;
+    /** §2 (nº 860) — CE QU'IL FAUT DÉCLARER AVANT DE PARTIR. Le
+        va-et-vient de l'accueil s'en sert pour demander au site de
+        rendre la place de la page visée (les deux accueils sont des
+        pages jumelles, pas des destinations neuves). N'a de sens
+        qu'avec une adresse. */
+    surClic?: () => void;
   }>;
   /** La clé de l'onglet actif — `null` tant que rien n'est choisi. */
   cleActive: string | null;
-  surChoix: (cle: string) => void;
+  /** Le choix, quand les onglets sont des interrupteurs. Une navigation
+      (onglets à adresse, nº 860) n'en a pas : c'est le lien qui agit. */
+  surChoix?: (cle: string) => void;
   ariaLabel: string;
   /** Choix verrouillé (bloc 1 confirmé) : lisible, plus cliquable. */
   fige?: boolean;
@@ -151,6 +173,21 @@ export function OngletsLigne({
   largeurInactive?: string;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
+  /*  ██ §1 (nº 860) — DEUX NATURES POUR UN MÊME DESSIN ██
+      SANS ADRESSES, c'est ce que ce composant a toujours été : un
+      groupe de BOUTONS RADIO — on choisit une valeur, la page ne change
+      pas (Favoris | Portfolios, Réalisation | Flash du moteur, les cinq
+      autres appelants).
+      AVEC ADRESSES, c'est une NAVIGATION : deux pages, et l'onglet actif
+      est la page où l'on est. Les rôles suivent la vérité — `nav` et
+      `aria-current="page"` au lieu de `radiogroup` et `aria-checked` —
+      parce qu'annoncer « coché » pour un lien tromperait, et parce que
+      les liens apportent ce qu'un bouton n'a pas : l'ouverture dans un
+      onglet, le clic du milieu, et une adresse qu'un moteur peut suivre.
+      LE DESSIN EST LE MÊME, ET C'EST LE POINT : mêmes classes, même
+      grille, même ligne, même trait rose. Une seule écriture pour les
+      deux (piège nº 378). */
+  const enLiens = options.some((option) => option.href);
   /*  §1 (nº 858) — LES COLONNES, ET LE TRAIT QUI LES SUIT. Une seule
       source (`largeurInactive`) décide des trois expressions : sans
       elle, ce sont exactement celles d'avant. */
@@ -166,9 +203,10 @@ export function OngletsLigne({
     ? `calc(${index} * ${largeurInactive})`
     : `${index * 100}%`;
 
+  const Enveloppe = enLiens ? "nav" : "div";
   return (
-    <div
-      role="radiogroup"
+    <Enveloppe
+      {...(enLiens ? {} : { role: "radiogroup" })}
       aria-label={ariaLabel}
       className={fige ? "opacity-60" : ""}
     >
@@ -187,23 +225,37 @@ export function OngletsLigne({
       >
         {options.map((option) => {
           const actif = option.cle === cleActive;
-          return (
-            <button
-              key={option.cle}
-              type="button"
-              role="radio"
-              aria-checked={actif}
-              disabled={fige && !actif}
-              onClick={() => surChoix(option.cle)}
-              aria-label={option.nom}
-              className={`flex items-center justify-center ${classeOnglet}
+          //  L'ÉCRITURE EST COMMUNE AUX DEUX NATURES : elle est calculée
+          //  une fois, et portée par le bouton comme par le lien.
+          const ecriture = `flex items-center justify-center ${classeOnglet}
                          ${taillePolice} font-semibold transition-colors ${
                            actif
                              ? "text-white"
                              : fige
                                ? "text-sombre-texte-doux cursor-not-allowed"
                                : "text-sombre-texte-doux hover:text-sombre-texte"
-                         }`}
+                         }`;
+          return option.href ? (
+            <Link
+              key={option.cle}
+              href={option.href}
+              onClick={option.surClic}
+              aria-current={actif ? "page" : undefined}
+              aria-label={option.nom}
+              className={ecriture}
+            >
+              {option.label}
+            </Link>
+          ) : (
+            <button
+              key={option.cle}
+              type="button"
+              role="radio"
+              aria-checked={actif}
+              disabled={fige && !actif}
+              onClick={() => surChoix?.(option.cle)}
+              aria-label={option.nom}
+              className={ecriture}
             >
               {option.label}
             </button>
@@ -237,6 +289,6 @@ export function OngletsLigne({
           />
         )}
       </div>
-    </div>
+    </Enveloppe>
   );
 }

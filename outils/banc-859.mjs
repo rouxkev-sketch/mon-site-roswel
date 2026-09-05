@@ -22,8 +22,8 @@ const SONDE = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
     return { y: +x.top.toFixed(1), bas: +x.bottom.toFixed(1), h: +x.height.toFixed(1), l: Math.round(x.width) }; };
   const barre = document.querySelector("[data-barre-fixe]");
-  const groupe = document.querySelector("[data-rangee-moteur] [role='radiogroup']");
-  const boutons = groupe ? [...groupe.querySelectorAll("[role='radio']")] : [];
+  const groupe = document.querySelector("[data-rangee-moteur] nav, [data-rangee-moteur] [role='radiogroup']");
+  const boutons = groupe ? [...groupe.querySelectorAll("a[href], [role='radio']")] : [];
   const boite = groupe ? [...groupe.children].find((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3) : null;
   const air = document.querySelector("[data-air-sous-barre]");
   const main = document.querySelector("main");
@@ -36,7 +36,7 @@ const SONDE = `() => {
     air: air ? +air.getBoundingClientRect().height.toFixed(1) : null,
     contenu: r(contenu), y: Math.round(window.scrollY),
     onglets: boutons.map((b) => ({ nom: b.getAttribute("aria-label"),
-      actif: b.getAttribute("aria-checked") === "true", texte: b.textContent.trim(),
+      actif: (b.getAttribute("aria-checked") === "true" || b.getAttribute("aria-current") === "page"), texte: b.textContent.trim(),
       dessin: Boolean(b.querySelector("svg")), ...r(b) })),
   };
 }`;
@@ -104,36 +104,18 @@ for (const [nom, url, session] of [
     verif("… et la phrase n'est pas coupée (elle demande 210 px)",
       tattoo && tattoo.l >= 210, `${tattoo?.l} px`);
 
-    titre("859 · §3 — les défilements Tattoo et Flash sont indépendants");
-    /*  ⚠️ LA CIBLE EST BORNÉE PAR LA PAGE : le propriétaire dit 800 px,
-        et c'est la bonne demande sur son téléphone ; l'atelier n'a que
-        quelques styles, sa page est plus courte. On défile donc AUSSI
-        LOIN QUE LA PAGE LE PERMET, et l'on vérifie que CE nombre-là
-        revient — la règle est l'indépendance, pas un chiffre. */
-    const bas = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-    const cible = Math.min(800, bas);
-    await page.evaluate((c) => window.scrollTo(0, c), cible);
-    await page.waitForTimeout(600);
-    const surTattoo = await page.evaluate(() => Math.round(window.scrollY));
-    verif("on descend dans Tattoo", surTattoo > 100, `${surTattoo} px (page défilable sur ${bas})`);
-    const basculer = async (rang) => {
-      await page.locator("[data-va-et-vient-nature] [role='radio']").nth(rang).tap();
-      await page.waitForTimeout(900);
-      return page.evaluate(() => Math.round(window.scrollY));
-    };
-    const arriveeFlash = await basculer(1);
-    verif("basculer vers Flash N'EMPORTE PAS la position de Tattoo : on arrive en haut",
-      arriveeFlash === 0, `${arriveeFlash} px`);
-    await page.evaluate(() => window.scrollTo(0, 300));
-    await page.waitForTimeout(500);
-    const retourTattoo = await basculer(0);
-    verif("revenir à Tattoo rend SA position, pas celle de Flash",
-      retourTattoo === surTattoo, `${retourTattoo} px (laissé à ${surTattoo})`);
-    const retourFlash = await basculer(1);
-    verif("et revenir à Flash rend la sienne",
-      retourFlash === 300, `${retourFlash} px (laissé à 300)`);
+    /*  ██ nº 860 — LE §3 A CHANGÉ DE MÉCANIQUE, ET DE BANC ██
+        La nº 859 gardait les deux positions à la main, dans un magasin
+        de session : un seul écran, deux places retenues. Le propriétaire
+        a tranché autrement à la nº 860 — DEUX PAGES (« / » et
+        « /flash »), et c'est la mémoire de position du site qui s'en
+        charge, comme pour toutes les autres adresses. Le magasin n'existe
+        plus, les taps de ce banc-ci non plus : le scénario complet
+        (Tattoo au fond → Flash en haut → Flash à 300 → retour Tattoo à
+        sa place → retour du navigateur) se mesure au banc 860. Deux
+        bancs ne diront pas deux vérités sur le même sujet. */
   } catch (e) {
-    verif("déroulement du banc 859 (§2-§3)", false, String(e).slice(0, 400));
+    verif("déroulement du banc 859 (§2)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
 }
 

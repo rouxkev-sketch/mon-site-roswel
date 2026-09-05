@@ -25,8 +25,8 @@ const SONDE = `() => {
   const st = (n, ...p) => { if (!n) return null; const c = getComputedStyle(n); return Object.fromEntries(p.map((k) => [k, c[k]])); };
   const barre = document.querySelector("[data-barre-fixe]");
   const reserve = document.querySelector("[data-reserve-barre]");
-  const groupe = document.querySelector("[data-rangee-moteur] [role='radiogroup']");
-  const boutons = groupe ? [...groupe.querySelectorAll("[role='radio']")] : [];
+  const groupe = document.querySelector("[data-rangee-moteur] nav, [data-rangee-moteur] [role='radiogroup']");
+  const boutons = groupe ? [...groupe.querySelectorAll("a[href], [role='radio']")] : [];
   const boiteLigne = groupe ? [...groupe.children].find((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3) : null;
   const grise = boiteLigne?.querySelector("span:first-child");
   const rose = boiteLigne?.querySelector("span:last-child");
@@ -37,7 +37,7 @@ const SONDE = `() => {
     groupe: r(groupe), boiteLigne: r(boiteLigne), grise: r(grise), rose: r(rose),
     roseStyle: st(rose, "backgroundColor", "borderRadius"),
     onglet: { ...r(boutons[0]), ...st(boutons[0], "fontSize", "fontWeight", "minHeight", "paddingLeft", "paddingRight") },
-    boutons: boutons.map((b) => ({ nom: b.getAttribute("aria-label"), actif: b.getAttribute("aria-checked") === "true",
+    boutons: boutons.map((b) => ({ nom: b.getAttribute("aria-label"), actif: (b.getAttribute("aria-checked") === "true" || b.getAttribute("aria-current") === "page"),
       texte: b.textContent.trim(), dessin: Boolean(b.querySelector("svg")), ...r(b) })),
     premier: premier ? r(premier) : null,
     largeurEcran: window.innerWidth,

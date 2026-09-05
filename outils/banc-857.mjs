@@ -22,7 +22,11 @@ const RELEVE_ACCUEIL = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
     return { y: Math.round(x.top), bas: Math.round(x.bottom), x: Math.round(x.left), droite: Math.round(x.right), h: Math.round(x.height), l: Math.round(x.width) }; };
   const vv = document.querySelector("[data-va-et-vient-nature]");
-  const boutons = vv ? [...vv.querySelectorAll("[role='radio']")] : [];
+  //  §1 (nº 860) — LES ONGLETS DE L'ACCUEIL SONT DES LIENS : le
+  //  va-et-vient relie deux PAGES (« / » et « /flash »), il n'est plus
+  //  un groupe de boutons. La sonde accepte les deux formes — celle de
+  //  « Ma sélection » (radios) et celle-ci (liens).
+  const boutons = vv ? [...vv.querySelectorAll("a[href], [role='radio']")] : [];
   const grille = document.querySelector("[data-catalogue-styles]");
   const loupe = document.querySelector("[data-loupe-barre]");
   const reserve = document.querySelector("[data-reserve-barre]");
@@ -35,11 +39,11 @@ const RELEVE_ACCUEIL = `() => {
     //  lit dans leur ORDRE (tattoo, puis flash) et par leur NOM
     //  accessible, qui est le vrai contrat de cet onglet-là.
     positions: boutons.map((b, rang) => ({ nature: rang === 0 ? "tatouage" : "flash",
-      active: b.getAttribute("aria-checked") === "true",
+      active: b.getAttribute("aria-checked") === "true" || b.getAttribute("aria-current") === "page",
       texte: b.textContent.trim(), nom: b.getAttribute("aria-label"), dessin: Boolean(b.querySelector("svg")), ...r(b) })),
     //  §1 (nº 858) — LA LIGNE EST CELLE DU COMPOSANT DU SITE : la boîte
     //  de trois pixels sous la piste, et le trait gris qu'elle porte.
-    ligne: r([...(vv?.querySelector("[role='radiogroup']")?.children ?? [])]
+    ligne: r([...(vv?.querySelector("nav, [role='radiogroup']")?.children ?? [])]
       .filter((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3)
       .map((n) => n.querySelector("span"))[0]),
     loupe: loupe ? { opacite: Number(getComputedStyle(loupe).opacity), visibilite: getComputedStyle(loupe).visibility, affichage: getComputedStyle(loupe).display } : null,
@@ -102,7 +106,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     await page.waitForTimeout(400);
 
     //  4 · UN TAP BASCULE : l'accueil FLASH.
-    await page.locator("[data-va-et-vient-nature] [role='radio']").nth(1).tap();
+    await page.locator("[data-va-et-vient-nature] a[href], [data-va-et-vient-nature] [role='radio']").nth(1).tap();
     await page.waitForTimeout(900);
     const f = await releve(page);
     const [tattoo2, flash2] = f.positions;
@@ -124,7 +128,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     verif("la position Flash tient au rechargement (mémoire de session)",
       r2.positions.find((p) => p.active)?.nature === "flash" && r2.grille?.nature === "flash",
       `active ${r2.positions.find((p) => p.active)?.nature} · grille ${r2.grille?.nature}`);
-    await page.locator("[data-va-et-vient-nature] [role='radio']").nth(0).tap();
+    await page.locator("[data-va-et-vient-nature] a[href], [data-va-et-vient-nature] [role='radio']").nth(0).tap();
     await page.waitForTimeout(700);
     const t = await releve(page);
     verif("un second tap ramène Tattoo",

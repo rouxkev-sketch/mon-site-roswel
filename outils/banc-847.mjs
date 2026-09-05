@@ -140,8 +140,12 @@ for (const mode of ["doigt", "web"]) {
     const vu = await page.evaluate(() => {
       const bloc = document.querySelector("[data-titre-mosaique]");
       const rangee = document.querySelector("[data-rangee-moteur]");
-      const pilule = [...(rangee?.querySelectorAll("button") ?? [])]
-        .find((b) => b.getBoundingClientRect().height > 0);
+      //  §1 (nº 860) — l'onglet actif est un LIEN (deux pages).
+      const pilule = [...(rangee?.querySelectorAll("a[href], button, [role='radio']") ?? [])]
+        .find((b) => b.getBoundingClientRect().height > 0
+          && (b.getAttribute("aria-current") === "page"
+            || b.getAttribute("aria-checked") === "true"
+            || b.tagName === "BUTTON"));
       return {
         //  RENDU dans le document (le web et le doigt partagent le HTML),
         //  mais MONTRÉ ou non selon l'appareil — la bascule du site.
