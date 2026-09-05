@@ -369,7 +369,47 @@ export function RetourGaranti() {
         l'appui suivant armera ; le journal le dit UNE fois
         (« EN ATTENTE »), pour que le relevé montre la distinction. */
     const SEUIL_APPUI_PX = 10;
-    let debut: { id: number; x: number; y: number } | null = null;
+    let debut: { id: number; x: number; y: number; sansCran: boolean } | null =
+      null;
+
+    /**
+     * ██ §1 (nº 868) — LES GESTES QUI NE POSENT PAS LE CRAN ██
+     * ==================================================================
+     * LA RÉGRESSION DU PROPRIÉTAIRE, sur son iPhone : sur un profil,
+     * depuis n'importe quelle page, un appui sur « Follow » ou
+     * « Unfollow » puis le retour, et l'on se retrouvait sur l'ACCUEIL.
+     * LE MÉCANISME, MESURÉ : ce bouton est, le plus souvent, LE PREMIER
+     * APPUI FRANC de la page — c'est donc lui qui déclenchait la pose du
+     * cran (§1 nº 350, juste au-dessus). Le cran s'empilait à l'adresse
+     * du profil ; le retour suivant atterrissait sur l'entrée jumelle,
+     * SANS la marque et À CETTE MÊME ADRESSE, ce qui est exactement la
+     * signature que le rattrapage attend — et il remplaçait la page par
+     * l'accueil. Il suffisait pour cela que la question « rien derrière
+     * moi ? » réponde oui, ce qu'elle fait dès qu'une page arrive en
+     * NAVIGATION DE DOCUMENT (Safari le fait là où Chromium garde une
+     * navigation douce) : le plancher est alors relevé à la hauteur de
+     * la pile du moment.
+     * LA RÈGLE DU PROPRIÉTAIRE, À LA LETTRE : « un clic Follow/Unfollow
+     * ne doit JAMAIS modifier l'historique ni déclencher le filet ».
+     * ELLE SE DIT ICI EN UNE LIGNE, et elle vaut plus largement : UN
+     * GESTE QUI NE NAVIGUE PAS N'ÉCRIT RIEN DANS L'HISTORIQUE. Le cran
+     * est une entrée d'historique posée au nom du visiteur ; on ne la
+     * pose pas sur un bouton qui ne fait que changer un état.
+     * COMMENT : le bouton se NOMME (`data-sans-cran`, chez lui), et cet
+     * écouteur ne lit pas les gestes qui commencent ou finissent
+     * dedans. Le composant ne connaît ni le bouton ni sa forme — il ne
+     * connaît que le marqueur ; tout autre geste sans navigation le
+     * posera de la même façon, le jour où il faudra.
+     * ⚠️ LES DÉCLENCHEURS RESTENT EN PLACE : le geste est IGNORÉ, pas
+     * consommé. L'appui SUIVANT — un lien, un onglet, une vraie
+     * intention de navigation — pose le cran comme avant, et le filet
+     * garde entier son rôle (un onglet neuf, un lien partagé : le
+     * retour ne doit pas sortir du site).
+     * ⚠️ ET LE CRÉDIT D'ACTIVATION N'EST PAS PERDU pour autant : c'est
+     * le geste suivant qui le porte, et il en porte un aussi (nº 350).
+     */
+    const gesteSansCran = (cible: EventTarget | null): boolean =>
+      cible instanceof Element && cible.closest("[data-sans-cran]") !== null;
 
     const poserSurCeGeste = () => {
       retirerLesDeclencheurs();
@@ -381,6 +421,7 @@ export function RetourGaranti() {
         id: evenement.pointerId,
         x: evenement.clientX,
         y: evenement.clientY,
+        sansCran: gesteSansCran(evenement.target),
       };
     };
     const surAbandon = (evenement: PointerEvent) => {
@@ -392,7 +433,11 @@ export function RetourGaranti() {
       if (!debut || evenement.pointerId !== debut.id) return;
       const dx = evenement.clientX - debut.x;
       const dy = evenement.clientY - debut.y;
+      //  §1 (nº 868) — un geste né OU fini dans un bouton qui ne navigue
+      //  pas ne pose rien, et n'use pas les déclencheurs.
+      const sansCran = debut.sansCran || gesteSansCran(evenement.target);
       debut = null;
+      if (sansCran) return;
       if (Math.hypot(dx, dy) > SEUIL_APPUI_PX) {
         /*  §4 (nº 352) — LA LIGNE NE SORT QUE SI ELLE EST VRAIE : cran
             pas encore posé dans CE document, et une seule fois. Le
@@ -410,13 +455,22 @@ export function RetourGaranti() {
       if (["Escape", "Shift", "Control", "Alt", "Meta"].includes(evenement.key)) {
         return;
       }
+      //  §1 (nº 868) — au clavier comme au doigt : une frappe DANS un
+      //  bouton qui ne navigue pas (« Follow » activé par Entrée) ne
+      //  pose pas le cran.
+      if (gesteSansCran(evenement.target)) return;
       poserSurCeGeste();
     };
     //  Filet des navigateurs sans événements de pointeur : un clic est
     //  un appui franc par définition (le navigateur l'a déjà distingué
     //  d'un défilement). Sur le chemin normal, `pointerup` a posé et
     //  retiré cet écouteur avant que le clic n'arrive.
-    const surClic = () => poserSurCeGeste();
+    const surClic = (evenement: MouseEvent) => {
+      //  §1 (nº 868) — même garde ici, pour les navigateurs sans
+      //  événements de pointeur.
+      if (gesteSansCran(evenement.target)) return;
+      poserSurCeGeste();
+    };
 
     const retirerLesDeclencheurs = () => {
       window.removeEventListener("pointerdown", surAppui, true);

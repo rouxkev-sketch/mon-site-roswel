@@ -160,6 +160,16 @@ export function BoutonSuivre({
       type="button"
       onClick={basculer}
       aria-pressed={suivi}
+      /*  ██ §1 (nº 868) — CE GESTE N'ÉCRIT RIEN DANS L'HISTORIQUE ██
+          Suivre ou ne plus suivre CHANGE UN ÉTAT, cela ne navigue pas.
+          Le filet du retour (RetourGaranti) posait son cran — une
+          entrée d'historique — au premier appui franc de la page, et
+          c'était presque toujours celui-ci : le retour suivant tombait
+          alors sur l'entrée jumelle et le rattrapage renvoyait à
+          l'accueil (la régression relevée par le propriétaire sur son
+          iPhone après la nº 867). Ce marqueur dit au filet de ne pas
+          lire ce geste ; la note entière vit chez lui. */
+      data-sans-cran=""
       aria-label={
         suivi ? `Unfollow ${nomTatoueur}` : `Follow ${nomTatoueur}`
       }

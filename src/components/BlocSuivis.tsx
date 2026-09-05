@@ -450,9 +450,21 @@ function BlocDUnSuivi({
                ⚠️ LE NOM, LUI, GARDE SA LIGNE UNIQUE : il s'abrège
                devant la capsule, il ne se replie pas. Un nom sur deux
                lignes se lirait comme deux noms. */}
+          {/*  ██ §4 (nº 868) — AU DOIGT, ELLE TIENT SUR UNE SEULE LIGNE ██
+               Décision du propriétaire : sur « Ma sélection »
+               > Portfolios, un portfolio à plusieurs villes faisait
+               passer cette ligne sur DEUX lignes avant les points de
+               suspension. Elle en garde UNE, coupée par « … » si elle
+               déborde — la règle des cartes de favoris (nº 865 : le nom
+               et la ville, une ligne chacun).
+               ⚠️ LE WEB GARDE SES DEUX LIGNES (la nº 586 les lui avait
+               données pour trois villes dans deux pays) : c'est
+               l'appareil qui tranche, jamais une largeur (règle nº 60),
+               et les deux variantes s'excluent — une seule déclaration
+               par écran (piège nº 389). */}
           <span
             data-info-suivi=""
-            className="line-clamp-2 text-[14px] lg:text-[16px] leading-relaxed text-sombre-texte-doux"
+            className="mobile:line-clamp-1 not-mobile:line-clamp-2 text-[14px] lg:text-[16px] leading-relaxed text-sombre-texte-doux"
           >
             {identite}
           </span>

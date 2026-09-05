@@ -108,11 +108,6 @@ export type BasDeLaPile = {
 
 /** La naissance de CE document — la même valeur que le script d'avant
     peinture calcule de son côté, arrondie pareil. */
-import {
-  CLE_ONGLET,
-  DEPART_ONGLET_FRAIS_MS,
-} from "@/lib/navigation-session";
-
 const NAISSANCE =
   typeof performance === "undefined" ? 0 : Math.round(performance.timeOrigin || 0);
 
@@ -182,53 +177,24 @@ function referentEtranger(): boolean {
  * Le script d'avant peinture reste le meilleur endroit quand il
  * s'exécute : il précède même l'hydratation. Il n'est plus le seul.
  */
-/**
- * ██ §5 (nº 867) — VENONS-NOUS D'UNE PAGE DU SITE, DANS CET ONGLET ? ██
- * ==================================================================
- * LE DÉFAUT DU PROPRIÉTAIRE, sur son iPhone : « Ma sélection >
- * Portfolio → un profil → se désabonner → retour » le posait sur
- * L'ACCUEIL au lieu de la page d'avant.
- * LA CAUSE, MESURÉE (banc 867-§5) : quand une page du site s'ouvre par
- * une NAVIGATION DE DOCUMENT — et non par la navigation douce du
- * routeur —, le relevé ci-dessous repartait de zéro et posait le
- * plancher À LA HAUTEUR DE LA PILE DU MOMENT. La question « y a-t-il
- * une vraie page derrière moi ? » répondait alors NON alors que la
- * pile en portait quatre : le filet (RetourGaranti) posait son cran au
- * premier appui franc — le bouton « Unfollow », par exemple —, et le
- * retour suivant, atterrissant sous le cran, était rattrapé vers
- * l'accueil. Relevé au banc : plancher 5 pour une pile de 5, alors
- * qu'il valait 2 depuis l'arrivée dans l'onglet.
- * POURQUOI SAFARI ET PAS CHROMIUM : le mécanisme n'est celui d'aucun
- * moteur en particulier — il suffit qu'une page arrive en document
- * plutôt qu'en navigation douce. Safari le fait là où Chromium ne le
- * fait pas (une page qu'il refuse de garder en cache de retour, un
- * document repris après une pression mémoire) ; le banc 867 le
- * reproduit dans Chromium en ouvrant le profil en document, ce qui
- * suffit à faire tomber le défaut et à prouver la correction.
- * LE REMÈDE : le plancher NE SE REPREND PAS quand le document qu'on
- * vient de quitter était une page du site, dans cet onglet, à
- * l'instant. La mémoire d'onglet le dit déjà — elle note l'adresse
- * quittée et l'heure du départ (`noterDepartOnglet`, nº 428) ; on ne
- * mesure rien de neuf, on lit ce qui est écrit.
- * ⚠️ LA BORNE DE LA nº 332 RESTE ENTIÈRE : un visiteur arrivé
- * d'Instagram, d'un signet ou d'une adresse tapée n'a aucun départ
- * frais dans cet onglet — son plancher se reprend comme avant, et son
- * retour le rend au monde extérieur.
- * ⚠️ ÉCRITE DEUX FOIS, ET IL LE FAUT : ici pour le module, et dans le
- * texte du script d'avant peinture (plus bas) — les deux relevés
- * doivent dire la même chose, et le script ne peut rien importer.
- */
-function ongletVientDeQuitterUnePage(): boolean {
-  try {
-    const brut = JSON.parse(
-      sessionStorage.getItem(CLE_ONGLET) ?? "null"
-    ) as { derniere?: string | null; quand?: number } | null;
-    if (!brut?.derniere || typeof brut.quand !== "number") return false;
-    return Date.now() - brut.quand < DEPART_ONGLET_FRAIS_MS;
-  } catch {
-    return false;
-  }
-}
+/*  ██ §1 (nº 868) — LA RÈGLE DE LA nº 867 EST ANNULÉE, SUR ORDRE ██
+    ------------------------------------------------------------------
+    CE QU'ELLE FAISAIT : le plancher de la pile ne se reprenait pas
+    quand le document naissait d'une page du site quittée à l'instant
+    (mémoire d'onglet). Elle visait un vrai défaut — le plancher relevé
+    à la hauteur du moment fait répondre « rien derrière moi » à tort.
+    POURQUOI ELLE PART : le propriétaire a mesuré sur son iPhone une
+    RÉGRESSION GRAVE après la nº 867 — Follow ou Unfollow, depuis
+    n'importe quelle page, puis retour, et l'on se retrouvait sur
+    l'accueil. Elle est donc retirée ENTIÈREMENT, module ET script
+    d'avant peinture, et le relevé redevient celui d'avant : une
+    arrivée « navigate » d'une vie neuve reprend le plancher.
+    LA CAUSE, ELLE, EST TRAITÉE À SA RACINE, ET AILLEURS (nº 868-§1) :
+    un appui sur « Follow » ou « Unfollow » ne pose plus le cran du
+    filet (RetourGaranti) — un geste qui ne navigue pas n'a rien à
+    écrire dans l'historique. Voir la note de ce composant.
+    ⚠️ NE PAS LA REMETTRE SANS LE PROPRIÉTAIRE : deux passes s'y sont
+    essayées, la seconde a coûté une régression sur son téléphone. */
 
 const RELEVE_AU_CHARGEMENT: BasDeLaPile | null =
   typeof window === "undefined"
@@ -270,14 +236,7 @@ if (typeof window !== "undefined" && RELEVE_AU_CHARGEMENT) {
       sessionStorage.getItem(CLE_BAS) ?? "null"
     ) as Partial<BasDeLaPile> | null;
     const memeVie = Boolean(brut && brut.ne === NAISSANCE);
-    //  §5 (nº 867) — … ET PAS SI L'ON VIENT D'UNE PAGE DU SITE : voir
-    //  la note de `ongletVientDeQuitterUnePage`, juste au-dessus.
-    if (
-      !brut ||
-      (typeDArrivee() === "navigate" &&
-        !memeVie &&
-        !ongletVientDeQuitterUnePage())
-    ) {
+    if (!brut || (typeDArrivee() === "navigate" && !memeVie)) {
       sessionStorage.setItem(CLE_BAS, JSON.stringify(RELEVE_AU_CHARGEMENT));
     }
   } catch {
@@ -399,19 +358,12 @@ export function releveDuBasPourLeScript(): string {
   //  d'une visite morte ne comptent plus comme « du site ») ; `reload`
   //  et `back_forward` gardent le relevé de leur vie. Même règle que
   //  le secours du module, mêmes champs, même arrondi de naissance.
-  //  §5 (nº 867) — LA MÊME EXCEPTION QUE LE MODULE : un document né
-  //  d'une page du site, dans cet onglet, à l'instant, ne reprend PAS le
-  //  plancher (voir `ongletVientDeQuitterUnePage`, plus haut — c'est la
-  //  même règle, écrite dans la langue du script).
-  const cleOnglet = JSON.stringify(CLE_ONGLET);
   return `(function(){
 var ne=Math.round(performance.timeOrigin||0);
 var t="navigate";
 try{t=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate"}catch(x){}
 var brut=null;try{brut=JSON.parse(sessionStorage.getItem(${cle})||"null")}catch(x){}
-var o=null;try{o=JSON.parse(sessionStorage.getItem(${cleOnglet})||"null")}catch(x){}
-var duSite=!!(o&&o.derniere&&typeof o.quand==="number"&&Date.now()-o.quand<${DEPART_ONGLET_FRAIS_MS});
-if(brut&&(t!=="navigate"||brut.ne===ne||duSite))return;
+if(brut&&(t!=="navigate"||brut.ne===ne))return;
 var e=false;
 try{e=!!document.referrer&&new URL(document.referrer).origin!==location.origin}catch(x){}
 sessionStorage.setItem(${cle},JSON.stringify({profondeur:history.length,etranger:e,origine:"before paint",ne:ne}));

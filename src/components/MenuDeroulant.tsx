@@ -1208,6 +1208,26 @@ export function MenuDeroulant({
              banc 865 (§3) lit le rembourrage calculé et tombe si la
              règle manque à nouveau.
 
+             ██ §2 (nº 868) — L'AIR DES DEUX FEUILLES EST LE MÊME ██
+             Le propriétaire compare la feuille à DEUX MENUS (deux
+             titres cliquables) et celle à UN SEUL (pas de titres, les
+             options tout de suite) : l'air du HAUT et celui du BAS
+             doivent être identiques. MESURÉ à la nº 868 : en haut, 24 px
+             sous le trait de préhension dans les deux cas — rien à
+             faire ; en bas, 20 px sous la dernière option de la feuille
+             SANS titres contre 28 sous le dernier titre de celle-ci.
+             CE BLOC PREND DONC L'AIR DE L'AUTRE, ET PAR SA COMPOSITION,
+             PAS PAR SON NOMBRE : là-bas, huit pixels viennent du
+             rembourrage bas de la liste et le reste de la réserve de la
+             plaque (`max(0.75rem, barre d'accueil)`) ; ici, le bloc est
+             seul et porte les deux — d'où la somme écrite en toutes
+             lettres dans sa classe. Sur un téléphone sans barre
+             d'accueil cela fait 20 px comme là-bas ; avec une barre de
+             34, 42 px comme là-bas. Les deux feuilles ne peuvent plus
+             diverger d'un pixel, quel que soit l'appareil.
+             ⚠️ LES TITRES NE BOUGENT PAS : leurs rembourrages (12/4 pour
+             le premier, 8/4 pour les suivants, nº 867) sont intacts.
+
              ██ §4 (nº 867) — TRENTE-DEUX, C'ÉTAIT TROP : VINGT-HUIT ██
              Le propriétaire a regardé les 32 px de la nº 865 sur son
              téléphone et les trouve trop grands. Le plancher descend
@@ -1220,7 +1240,7 @@ export function MenuDeroulant({
              iPhone récents, qui l'emportent alors comme avant). */
         className={`shrink-0 ${
           enBas
-            ? `border-t pb-[max(1.75rem,env(safe-area-inset-bottom))] ${
+            ? `border-t pb-[calc(0.5rem_+_max(0.75rem,env(safe-area-inset-bottom)))] ${
                 /*  ██ §1 (nº 584) — L'AIR SOUS LE TRAIT, MESURÉ EN ENCRE
                      ET NON PLUS EN BOÎTES ██
                      LE DÉFAUT : une section ouverte, l'air entre le

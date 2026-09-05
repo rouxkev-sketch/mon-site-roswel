@@ -180,66 +180,13 @@ export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
-/**
- * ██ LE DIAMANT, POUR LA LIGNE DES STYLES ██
- * ==================================================================
- * Il REMPLACE `IconeMachineATatouer` (la machine de la nº 406, qui
- * remplaçait elle-même la goutte d'encre de la nº 387). Le diamant
- * facetté est un motif du tatouage traditionnel, et il a sur la
- * machine l'avantage d'être une FORME SIMPLE : une silhouette fermée,
- * là où la machine demandait un corps, une bande et une aiguille.
- * Aucun fichier n'est ajouté au dépôt : c'est un tracé, comme toutes
- * ses voisines.
- *
- * MÊME TRAITEMENT QUE SES VOISINES, sans rien choisir : `fill="none"`,
- * trait de 1,8 sur la grille de 24, jonctions et extrémités arrondies,
- * `currentColor` (aucune couleur déclarée — celle du texte de sa
- * ligne), 20 px dans la boîte de 22 px des lignes de profil.
- *
- * ██ DEUX TRACÉS, ET C'EST TOUT — LE COMPTE DE FACETTES MINIMUM ██
- * LA SILHOUETTE est un hexagone : la TABLE en haut (le méplat), deux
- * ÉPAULES qui s'ouvrent jusqu'à la CEINTURE (la ligne la plus large),
- * puis deux FLANCS qui descendent vers la POINTE.
- * LA CEINTURE est le seul trait intérieur. C'est lui qui fait lire un
- * diamant TAILLÉ plutôt qu'un simple hexagone : il sépare la couronne
- * du pavillon. Il court d'un coin à l'autre, comme la vraie ceinture
- * d'une pierre.
- * ⚠️ CE QUI A ÉTÉ ESSAYÉ PUIS ÉCARTÉ, sur le rendu réel à 20 px et non
- * à l'estime :
- *  · LES FACETTES DE COURONNE (deux traits des coins de table vers la
- *    ceinture) — la couronne ne fait que 2,67 px de haut, ces traits
- *    la remplissaient ;
- *  · LES FACETTES DE PAVILLON (deux traits des coins de table vers la
- *    pointe) — les trois lignes se rejoignent au même endroit et
- *    l'encre s'y agglutine : la pointe devenait un pâté. C'est
- *    exactement le piège des facettes serrées.
- * Restent la table et les flancs, qui suffisent.
- *
- * ██ LES ANGLES SONT CALCULÉS, PAS DESSINÉS À VUE ██
- * Table de (8 ; 4) à (16 ; 4), ceinture de (3,8 ; 9) à (20,2 ; 9),
- * pointe en (12 ; 20). Il en découle :
- *  · la POINTE ouvre à 73,4°, très au-dessus des ~30° en dessous
- *    desquels un sommet arrondi se bouche à cette taille ;
- *  · les COINS DE CEINTURE font 103,3°, ceux de la TABLE 130° — aucun
- *    angle vif, donc aucune accumulation d'encre dans un coin ;
- *  · l'encre occupe x ∈ [2,9 ; 21,1] et y ∈ [3,1 ; 20,9], centrée sur
- *    la boîte ; la marge vaut 2,9 contre 2,5 à Instagram.
- */
-export function IconeDiamant({ taille = 20 }: ProprietesIconeLien) {
-  return (
-    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      {/*  LA SILHOUETTE — table, épaules, ceinture, flancs, pointe. */}
-      <path
-        d="M8 4h8l4.2 5-8.2 11L3.8 9Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      {/*  LA CEINTURE — le seul trait intérieur, d'un coin à l'autre. */}
-      <path d="M3.8 9h16.4" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
+/*  ⛔ §6 (nº 868) — LE DIAMANT A QUITTÉ LE DÉPÔT. Il ouvrait la ligne
+    des TECHNIQUES d'un profil depuis la nº 489 ; le propriétaire y met
+    désormais l'ÉTOILE (et la GOUTTE sur les styles). Son unique lecteur
+    parti, le dessin s'en va avec lui — une écriture sans lecteur est un
+    piège pour la passe suivante (règle nº 386). Il est dans git si le
+    jour vient de le rappeler. */
+
 
 /**
  * §3 (nº 388) — LA LOCALISATION, POUR LA LIGNE DE L'ADRESSE.

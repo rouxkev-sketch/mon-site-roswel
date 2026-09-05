@@ -125,21 +125,26 @@ for (const largeur of [390, 360]) {
     //  nº 867-§4 — le propriétaire a trouvé les 32 px trop grands : 28.
     //  Ce que ce banc défend reste le même — la règle est PEINTE, elle
     //  ne vaut plus zéro comme avant la nº 865.
-    verif("le rembourrage bas du bloc est PEINT : 28 px calculés depuis la nº 867 (zéro avant la nº 865)", v.bloc?.padBas === "28px", v.bloc?.padBas);
-    verif("vingt-huit pixels entre la boîte du dernier titre et le bord (trente-deux avant la nº 867)", v.boiteDessous === 28, `${v.boiteDessous} px`);
+    //  nº 868-§2 — vingt : l'air de la feuille sans titres, repris par
+    //  composition. Ce que ce banc défend reste que la règle est PEINTE.
+    verif("le rembourrage bas du bloc est PEINT : 20 px calculés depuis la nº 868 (zéro avant la nº 865)", v.bloc?.padBas === "20px", v.bloc?.padBas);
+    verif("vingt pixels entre la boîte du dernier titre et le bord (vingt-huit à la nº 867)", v.boiteDessous === 20, `${v.boiteDessous} px`);
     /*  nº 867-§4 — L'ÉGALITÉ DE LA nº 865 EST LEVÉE, SUR CONSIGNE : le
         propriétaire veut MOINS d'air sous le dernier titre qu'au-dessus
         du premier. On mesure donc l'écart voulu (quatre pixels), pas
         l'égalité. */
-    verif("en encre, l'air sous le dernier titre vaut quatre pixels de moins qu'au-dessus du premier (nº 867)",
-      Math.abs(v.dessus - v.dessous - 2.5) <= 1.5 && v.dessous >= 38, `dessus ${v.dessus} px, dessous ${v.dessous} px`);
+    /*  nº 868-§2 — l'air du bas est celui de la feuille SANS titres ; il
+        est donc plus court que celui du haut, et l'écart n'est plus une
+        promesse de cette passe-là. On mesure qu'il reste franc. */
+    verif("en encre, l'air sous le dernier titre reste franc (plus court que celui du haut depuis la nº 868)",
+      v.dessous >= 28 && v.dessous < v.dessus, `dessus ${v.dessus} px, dessous ${v.dessous} px`);
     verif("la plaque touche le bas de l'écran", v.plaque.bas === v.ecran, `${v.plaque.bas} / ${v.ecran}`);
     //  UNE SECTION OUVERTE : le bas ne bouge pas, seul le haut du bloc gagne son air (nº 584).
     await page.locator("button", { hasText: /^Styles$/ }).first().evaluate((b) => b.click());
     await page.waitForTimeout(600);
     const o = await mesurer();
-    verif("section ouverte : le rembourrage bas reste à 28 px et la plaque au bas de l'écran",
-      o.bloc?.padBas === "28px" && o.plaque.bas === o.ecran && o.boiteDessous === 28, JSON.stringify({ padBas: o.bloc?.padBas, boiteDessous: o.boiteDessous }));
+    verif("section ouverte : le rembourrage bas reste à 20 px et la plaque au bas de l'écran",
+      o.bloc?.padBas === "20px" && o.plaque.bas === o.ecran && o.boiteDessous === 20, JSON.stringify({ padBas: o.bloc?.padBas, boiteDessous: o.boiteDessous }));
   } catch (e) {
     verif("déroulement du banc 865 (§3)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

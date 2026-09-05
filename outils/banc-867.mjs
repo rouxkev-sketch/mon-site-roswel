@@ -286,13 +286,16 @@ for (const mode of ["doigt", "web"]) {
       const v = await mesurer(page);
       if (cas.startsWith("avec")) {
         verif("le bloc des deux titres est là", !v.absente && v.titres.length === 2, JSON.stringify(v.titres?.map((t) => t.texte)));
-        verif("son rembourrage bas vaut VINGT-HUIT (trente-deux avant la nº 867)", v.bloc?.padBas === "28px", v.bloc?.padBas);
+        //  nº 868-§2 — le bloc prend l'air de la feuille SANS titres :
+        //  huit pixels de liste plus la réserve de la plaque, soit vingt
+        //  sur un écran sans barre d'accueil.
+        verif("son rembourrage bas vaut VINGT depuis la nº 868 (l'air de la feuille sans titres)", v.bloc?.padBas === "20px", v.bloc?.padBas);
         //  SOUS LE DERNIER TITRE : 28 px de sa boîte au bord de la
         //  feuille (32 avant la nº 867), soit 39,7 px depuis l'encre de
         //  ses capitales (43,7 avant) — la réserve du téléphone
         //  l'emporte toujours quand elle est plus grande.
-        verif("vingt-huit pixels sous la BOÎTE du dernier titre (trente-deux avant la nº 867)",
-          v.sousLeDernier === 28 && Math.abs(v.sousLEncre - 39.7) <= 1, `boîte ${v.sousLeDernier} · encre ${v.sousLEncre}`);
+        verif("vingt pixels sous la BOÎTE du dernier titre (vingt-huit à la nº 867, trente-deux avant)",
+          v.sousLeDernier === 20 && Math.abs(v.sousLEncre - 31.7) <= 1, `boîte ${v.sousLeDernier} · encre ${v.sousLEncre}`);
         //  ENTRE LES DEUX TITRES : leurs boîtes se touchent, l'air vit
         //  dans les rembourrages — 4 sous le premier, 8 sur le second
         //  (12 avant), soit DOUZE au lieu de seize ; 25 px d'encre à
@@ -353,8 +356,14 @@ for (const mode of ["doigt", "web"]) {
       await page.waitForTimeout(1800);
       const surLeProfil = await page.evaluate(() => ({ url: location.pathname + location.search, len: history.length,
         plancher: JSON.parse(sessionStorage.getItem("yokofolio:bas-de-la-pile") ?? "null")?.profondeur ?? null }));
-      verif("LE PLANCHER DE LA PILE N'A PAS ÉTÉ REPRIS : il reste sous la pile du moment",
-        surLeProfil.plancher !== null && surLeProfil.plancher < surLeProfil.len,
+      /*  ⛔ nº 868 — LA RÈGLE DE LA nº 867 §5 EST ANNULÉE (elle a coûté
+          une régression sur l'iPhone du propriétaire) : le plancher se
+          reprend de nouveau à chaque document, et ce n'est plus ce qui
+          protège le retour. CE QUI LE PROTÈGE MAINTENANT : le bouton
+          « Follow » ne pose plus le cran du filet (nº 868-§1, banc 868).
+          On relève donc l'état sans en faire une promesse. */
+      verif("l'état de la pile est relevé (le plancher n'est plus ce qui décide, nº 868)",
+        surLeProfil.plancher !== null,
         `plancher ${surLeProfil.plancher} · pile ${surLeProfil.len} (au départ ${depart.plancher}/${depart.len})`);
       await page.locator('[aria-label^="Unfollow"]').first().tap();
       await page.waitForTimeout(2000);

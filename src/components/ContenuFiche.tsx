@@ -32,15 +32,17 @@ import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
 import {
   IconeCalendrier,
-  //  §1 (nº 489) — le diamant revient ouvrir la ligne des techniques :
-  //  l'icône existante, jamais redessinée.
-  IconeDiamant,
   IconeDuLien,
+  /*  §6 (nº 868) — L'ÉTOILE OUVRE DÉSORMAIS LA LIGNE DES TECHNIQUES
+      (elle ouvrait celle des styles) ; le DIAMANT que la nº 489 avait
+      mis là n'a plus d'emploi et a quitté le dépôt avec cette passe. */
   IconeEtoile,
 } from "@/components/IconeReseau";
 //  §2 (nº 490) — la flèche du compteur « +N ⌄ » : CELLE DES HORAIRES,
 //  au même rang 16 et pivotée de la même façon. Aucun dessin nouveau.
-import { IconeChevronBas } from "@/components/Icones";
+//  §6 (nº 868) — et la GOUTTE D'ENCRE, celle du va-et-vient de
+//  l'accueil, qui ouvre maintenant la ligne des styles.
+import { IconeChevronBas, IconeGoutteDEncre } from "@/components/Icones";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -502,7 +504,24 @@ function LigneDeCapsules({
                 porte déjà l'alignement, le refus de couper le mot et le
                 rayon. Ne restent ici que l'air intérieur, le corps et
                 la couleur du texte — inchangés. */
-            className={`px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte ${fond}`}
+            /*  ██ §3 (nº 868) — LA TYPOGRAPHIE PASSE AU GRIS ██
+                Décision du propriétaire, après le retrait du fond
+                (nº 867) : les valeurs d'un profil — styles, couleurs,
+                machine, taille de pièce — s'écrivent dans LE GRIS DES
+                SOUS-TITRES DU SITE (`sombre-texte-doux`, celui de la
+                ville sous un nom, de la ligne d'information d'un suivi,
+                du sous-titre d'une carte). Le contour dit la capsule,
+                le gris dit que c'est une mention et non un titre.
+                ⛔ CE QUE CELA DÉFAIT, ET C'EST ASSUMÉ : la nº 547 les
+                avait éclaircies (5,96 → 12,59 de contraste) parce
+                qu'elles vivaient alors sur un aplat plus clair. Le fond
+                parti, elles se lisent sur le fond de la page : 7,4 de
+                contraste — au-dessus du seuil AA de 4,5, et le même
+                rapport que toutes les mentions grises du site.
+                ⚠️ L'ICÔNE EN TÊTE DE LIGNE GARDE SON GRIS À ELLE (la
+                note de la nº 547 tient : la couleur se pose ici, pas
+                sur la ligne). */
+            className={`px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte-doux ${fond}`}
           >
             {libelle(slug)}
           </span>
@@ -1796,7 +1815,16 @@ export function ContenuFiche({
   const ligneDesPratiques = (
     <LigneDeCapsules
       marqueur="data-pratique-fiche"
-      icone={<IconeDiamant taille={20} />}
+      /*  ██ §6 (nº 868) — LES DEUX DESSINS CHANGENT DE LIGNE ██
+          Décision du propriétaire : les STYLES prennent LA GOUTTE
+          D'ENCRE (celle du va-et-vient de l'accueil), et les TECHNIQUES
+          — couleur, machine, taille de pièce — prennent L'ÉTOILE qui
+          servait aux styles. Même taille (20), même trait : ce sont les
+          dessins du site, on ne fait que les échanger.
+          ⚠️ LE DIAMANT N'A PLUS D'EMPLOI et s'en va avec sa ligne
+          (règle nº 386 : une écriture sans lecteur est un piège pour la
+          passe suivante). Il vivait dans IconeReseau. */
+      icone={<IconeEtoile taille={20} />}
       valeurs={capsulesPratique}
       libelle={libelleFiltre}
       fond={FOND_CAPSULE}
@@ -1805,7 +1833,9 @@ export function ContenuFiche({
   const ligneDesStyles = (
     <LigneDeCapsules
       marqueur="data-styles-fiche"
-      icone={<IconeEtoile taille={20} />}
+      //  §6 (nº 868) — la goutte d'encre, celle du va-et-vient de
+      //  l'accueil (VaEtVientNature) : un seul dessin dans le site.
+      icone={<IconeGoutteDEncre taille={20} />}
       valeurs={tatoueur.styles}
       libelle={libelleStyle}
       /*  ██ §1 (nº 504) — LES DEUX FAMILLES AU MÊME FOND ██
@@ -2408,6 +2438,7 @@ export function ContenuFiche({
                longueurs, qui sont la vérité. */}
           {(premiereLigne.length > 0 ||
             ligneDuSite.length > 0 ||
+            Boolean(tatoueur.bio) ||
             aDesPratiques ||
             aDesStyles) && (
             <div
@@ -2484,8 +2515,35 @@ export function ContenuFiche({
                   {ligneDuSite}
                 </div>
               )}
-              {ligneDesPratiques}
+              {/*  ██ §5 (nº 868) — LA BIOGRAPHIE MONTE DANS LA LISTE ██
+                   L'ORDRE DU PROPRIÉTAIRE, de haut en bas : les liens
+                   (booking, Instagram), le site, LA BIO, les STYLES, les
+                   TECHNIQUES, l'adresse, puis les horaires (qui vivent
+                   dans les sections du bas et ne bougent pas). Elle
+                   vivait SOUS la liste depuis toujours ; elle en devient
+                   une rangée, à sa place.
+                   ⚠️ SON AIR NE CHANGE PAS D'UN PIXEL, et c'est le sens
+                   du rembourrage vertical d'un cran : la liste écarte
+                   ses rangées de 24 px, la bio était séparée de 28
+                   (`mt-7`) — quatre de plus en haut comme en bas la lui
+                   rendent, sans toucher au reste. Le rythme de la note
+                   du dessus tient : 24 entre deux lignes, 28 autour de
+                   la bio, 40 entre deux sections.
+                   ⚠️ ET SA LARGEUR NON PLUS : cette colonne aligne ses
+                   enfants à gauche (`items-start`), une rangée doit donc
+                   réclamer la largeur — les deux grilles au-dessus le
+                   font déjà. */}
+              {tatoueur.bio && (
+                <p className="my-1 w-full text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                  {tatoueur.bio}
+                </p>
+              )}
+              {/*  §5 (nº 868) — LES STYLES PASSENT DEVANT LES TECHNIQUES
+                   (l'ordre du propriétaire) : ce sont eux qu'on cherche
+                   d'abord sur un portfolio. Les deux lignes ne changent
+                   ni de robe, ni d'écart. */}
               {ligneDesStyles}
+              {ligneDesPratiques}
               {/*  §3 (nº 388) — L'ADRESSE FERME LA SÉRIE, et seulement
                    sur un salon ou un studio : une fiche d'artiste
                    montre ses PROFILS (à domicile, en salon, guest),
@@ -2498,13 +2556,11 @@ export function ContenuFiche({
             </div>
           )}
 
-          {/* §3 — LA BIOGRAPHIE, sous les liens. Retours à la ligne
-              saisis respectés, mots sans espace coupés proprement. */}
-          {tatoueur.bio && (
-            <p className="mt-7 text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
-              {tatoueur.bio}
-            </p>
-          )}
+          {/*  §3 — LA BIOGRAPHIE (retours à la ligne saisis respectés,
+               mots sans espace coupés proprement) A REJOINT LA LISTE
+               ci-dessus à la nº 868-§5, entre le site et les styles :
+               c'est l'ordre du propriétaire. Elle n'est plus rendue
+               ici. */}
 
           {/*  §1 (nº 315) — LES BADGES DE STYLE VIVAIENT ICI, sous la
                bio. §2 (nº 384) : ils ne sont plus des badges et ils
