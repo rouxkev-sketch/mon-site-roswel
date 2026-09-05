@@ -162,7 +162,12 @@ export function BoutonPartageFiche({
       ⚠️ L'HABILLAGE « icone » RESTE : le pied des cartes du doigt
       (PiedDeFil) le lit toujours — la flèche nue de 40 px. Le profil,
       lui, ne l'appelle plus : « à gauche de Suivre » est de l'histoire
-      (nº 458 → nº 868), les deux gestes vivent dans la rangée. */
+      (nº 458 → nº 868), les deux gestes vivent dans la rangée.
+      ██ §4 (nº 870) — LE CARRÉ DE LA nº 869 DEVIENT UN BADGE ██
+      Icône seule, sans mot, à la hauteur des deux grands badges. Le
+      changement vit tout entier chez `ActionDeFiche` : ici, seule la
+      taille du glyphe descend d'un cran (24 → 20, la mesure des icônes
+      qui accompagnent un texte de quatorze). */
   /** §2 (nº 459) — LA TAILLE DU GLYPHE de la variante « icone » (les
       autres habillages ne la lisent pas). 22 par défaut (le profil, à
       gauche de « Suivre ») ; la vue photo du doigt demande 28 — la
@@ -591,22 +596,30 @@ export function BoutonPartageFiche({
 
   if (variante === "rangee") {
     return (
-      <div className="relative min-w-0">
+      /*  ██ §4 (nº 870) — LE PETIT BADGE QUI COMPLÈTE LA RANGÉE ██
+           ICÔNE SEULE, carré, à la MÊME HAUTEUR que les deux grands
+           (`ActionDeFiche` la porte pour les trois) : c'est le seul des
+           trois qui ne prend pas de part de largeur — il garde la
+           sienne, et les deux autres se partagent le reste.
+           ⚠️ POURQUOI SANS MOT : la consigne le dit, et le nom est déjà
+           là pour qui ne voit pas l'icône — `aria-label` porte
+           « Share <nom>'s portfolio », inchangé depuis la nº 458. */
+      <div className="relative shrink-0">
         <ActionDeFiche
           cle="share"
           ref={declencheur}
           onClick={partager}
           ariaHaspopup={avecFenetre ? "dialog" : undefined}
           ariaLabel={`Share ${nomArtisan}'s ${objet}`}
-          icone={<IconePartageIOS taille={24} />}
-          mot="Share"
+          icone={<IconePartageIOS taille={20} />}
         />
         {copie && (
-          /*  « Link copied! » sous le carré, centré sur lui — la bulle
-              des autres habillages, posée là où l'œil est. */
+          /*  « Link copied! » sous le badge, aligné à droite comme dans
+              les autres habillages — la rangée finit sur la marge, une
+              bulle centrée sortirait de la colonne. */
           <span
             role="status"
-            className="absolute top-14 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-encre px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+            className="absolute top-12 right-0 z-20 whitespace-nowrap rounded-full bg-encre px-3 py-1.5 text-xs font-medium text-white shadow-lg"
           >
             Link copied!
           </span>

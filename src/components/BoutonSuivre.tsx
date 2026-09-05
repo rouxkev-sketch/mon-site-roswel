@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 //  §1 (nº 396) — l'invitation à créer un compte : la MÊME fenêtre
 //  que le fanion, écrite une seule fois.
 import { FenetreInvitationCompte } from "@/components/FenetreInvitationCompte";
-//  §3 (nº 869) — LA CIBLE CARRÉE ET LE MOT DESSOUS : l'écriture unique
-//  des quatre actions de la rangée d'un profil, et ses deux dessins.
+//  §4 (nº 870) — LE BADGE DE LA RANGÉE (icône à gauche du mot) :
+//  l'écriture unique des trois actions d'un profil, et ses deux dessins.
 import { ActionDeFiche } from "@/components/ActionDeFiche";
 import { IconeSuivi, IconeSuivre } from "@/components/Icones";
 import { useUtilisateur } from "@/lib/use-utilisateur";
@@ -27,22 +27,22 @@ import {
  * UN SEUL BOUTON, DEUX ÉTATS, et le libellé dit lequel : « Follow »
  * tant qu'on ne suit pas, « Following » une fois que c'est fait.
  *
- * ██ §3 (nº 869) — IL VIT DANS LA RANGÉE D'ACTIONS DU PROFIL ██
+ * ██ §3 (nº 869, REFAIT PAR LA nº 870-§4) — IL VIT DANS LA RANGÉE
+ * D'ACTIONS DU PROFIL ██
  * ==================================================================
  * SON HABILLAGE N'EST PLUS LE SIEN : il est celui de la rangée —
- * `ActionDeFiche`, la cible carrée à coins arrondis avec le mot
- * centré dessous, le patron Google Maps — partagé avec « Instagram »,
- * « Website » et « Share ». Ce fichier ne dessine plus rien : il ne
- * garde que L'ÉTAT et LE GESTE, qui n'ont pas changé d'une ligne.
- *  · « Follow » — le carré au repos, le personnage avec un « + » ;
- *  · « Following » — le carré REMPLI du gris des plaques (l'état
- *    « fait » de la nº 504, transposé), le personnage avec une coche.
+ * `ActionDeFiche`, LE BADGE à angles arrondis, l'icône à gauche du mot
+ * — partagé avec « Instagram » et « Share ». Ce fichier ne dessine
+ * plus rien : il ne garde que L'ÉTAT et LE GESTE, qui n'ont pas changé
+ * d'une ligne depuis la nº 208.
+ *  · « Follow » — le personnage avec un « + » ;
+ *  · « Following » — le même personnage avec une COCHE.
  * ⛔ DE L'HISTOIRE : la capsule (nº 206 → nº 528, blanc plein pour
- * « Suivre », gris plein pour « Suivi ») et ses deux réglages de boîte
- * (`pleineLargeur`, `classeBoite`, nº 589) sont partis avec cette
- * passe — ils n'avaient plus de lecteur (règle nº 386). Le blanc de la
- * nº 528 n'est pas repris : sur le patron, les quatre actions sont
- * identiques au repos, et c'est l'état REMPLI qui se distingue.
+ * « Suivre », gris plein pour « Suivi »), ses deux réglages de boîte
+ * (`pleineLargeur`, `classeBoite`, nº 589) et le carré de la nº 869
+ * sont partis — ils n'ont plus de lecteur (règle nº 386).
+ * ⚠️ LES DEUX ÉTATS PORTENT LA MÊME ROBE (nº 870) : c'est l'icône et le
+ * mot qui les séparent, la note du badge le dit et le pourquoi est là.
  *
  * PAS CONNECTÉ ? Même règle que le cœur : on mène à la connexion en
  * gardant la page (`?suite=`) ET le geste, rejoué au retour.
@@ -139,6 +139,8 @@ export function BoutonSuivre({
     <>
       <ActionDeFiche
         cle="follow"
+        //  §4 (nº 870) — l'un des deux badges à part égale de la rangée.
+        large
         onClick={basculer}
         ariaPressed={suivi}
         /*  ██ §1 (nº 868) — CE GESTE N'ÉCRIT RIEN DANS L'HISTORIQUE ██
@@ -156,20 +158,24 @@ export function BoutonSuivre({
         }
         /*  ██ §2 (nº 506) — L'ATTENTE NE DIT RIEN ██
             Tant que l'état n'est pas connu, le bouton ne peut annoncer
-            NI « Follow » NI « Following » : il garde SA BOÎTE — le carré
-            au repos, la robe neutre des quatre actions, qui ne promet
-            rien — et se tait, icône et mot invisibles. Il est aussi
-            sans effet pendant ce moment (voir `basculer`). Le carré ne
-            se remplit qu'une fois l'état connu ET suivi. */
+            NI « Follow » NI « Following » : il garde SA BOÎTE — le badge
+            et sa robe, la même dans les deux états, qui ne promet donc
+            rien — et se tait, icône et mot invisibles. Il est aussi sans
+            effet pendant ce moment (voir `basculer`). */
         muet={!etatConnu}
-        rempli={etatConnu && suivi}
-        icone={suivi ? <IconeSuivi taille={24} /> : <IconeSuivre taille={24} />}
+        /*  §4 (nº 870) — VINGT PIXELS, l'icône d'une ligne du site, à
+            gauche d'un mot de quatorze : la mesure des icônes qui
+            accompagnent un texte (les liens d'un profil, le booking). */
+        icone={suivi ? <IconeSuivi taille={20} /> : <IconeSuivre taille={20} />}
         mot={
           /*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :
                ils sont posés dans la même case de grille, le plus long
                réservant la place. Le mot ne change donc pas d'un pixel
-               entre « Follow » et « Following » — rien ne peut bouger
-               autour, quel que soit l'instant où l'état est connu. */
+               entre « Follow » et « Following ».
+               §4 (nº 870) — LA BOÎTE N'EN DÉPEND PLUS (c'est la rangée
+               qui donne au badge sa part de largeur), MAIS L'INTÉRIEUR
+               SI : sans cette réserve, l'icône et le mot, centrés
+               ensemble, se décaleraient à chaque bascule. */
           <span className="grid text-center">
             <span className="col-start-1 row-start-1">
               {suivi ? "Following" : "Follow"}

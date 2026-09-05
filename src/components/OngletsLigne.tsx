@@ -203,6 +203,16 @@ export function OngletsLigne({
     ? `calc(${index} * ${largeurInactive})`
     : `${index * 100}%`;
 
+  /*  ██ §1 (nº 870) — LA TYPOGRAPHIE D'UN ONGLET, ÉCRITE UNE FOIS ██
+      Elle était posée dans la classe du bouton et nulle part ailleurs.
+      Le trait rose en a besoin LUI AUSSI depuis cette passe : c'est une
+      COPIE INVISIBLE du libellé actif qui lui donne sa largeur (voir la
+      note du trait, plus bas), et une copie qui n'aurait pas le même
+      corps ni la même graisse serait d'une autre largeur que le mot.
+      Les deux la lisent donc ici (piège nº 378) : le mot et sa mesure ne
+      peuvent plus diverger. */
+  const ECRITURE_ONGLET = `${taillePolice} font-semibold`;
+
   const Enveloppe = enLiens ? "nav" : "div";
   return (
     <Enveloppe
@@ -228,7 +238,7 @@ export function OngletsLigne({
           //  L'ÉCRITURE EST COMMUNE AUX DEUX NATURES : elle est calculée
           //  une fois, et portée par le bouton comme par le lien.
           const ecriture = `flex items-center justify-center ${classeOnglet}
-                         ${taillePolice} font-semibold transition-colors ${
+                         ${ECRITURE_ONGLET} transition-colors ${
                            actif
                              ? "text-white"
                              : fige
@@ -278,15 +288,61 @@ export function OngletsLigne({
           />
         )}
         {index >= 0 && (
+          /**
+           * ██ §1 (nº 870) — LE TRAIT SE RACCOURCIT À LA LARGEUR DU MOT ██
+           * ==============================================================
+           * CE QUE LE PROPRIÉTAIRE VOIT : sur un va-et-vient à deux
+           * onglets, le trait courait sur TOUTE la moitié — 179 px au
+           * doigt pour un mot de 50. « Trop étalé pour un seul mot. »
+           * CE QU'IL DEVIENT : la largeur du MOT, centré sous lui, plus
+           * HUIT PIXELS de débord de chaque côté — assez pour que le
+           * trait ne paraisse pas coupé aux lettres extrêmes, trop peu
+           * pour qu'il redevienne une barre de segment.
+           *
+           * COMMENT LA LARGEUR EST OBTENUE, ET POURQUOI SANS MESURE :
+           * le trait CONTIENT une copie invisible du libellé actif, dans
+           * la typographie des onglets (`ECRITURE_ONGLET`). Sa largeur
+           * est donc celle du mot, calculée par le navigateur — au rendu
+           * du serveur comme au premier pixel peint, sans `useEffect`,
+           * sans mesure, sans le clignotement d'un trait large qui se
+           * rétrécirait à l'hydratation. Le rembourrage horizontal ajoute
+           * le débord, et `overflow-hidden` referme les trois pixels sur
+           * une copie haute de vingt : elle ne se peint pas (`invisible`),
+           * elle ne fait que mesurer.
+           *
+           * LE GLISSEMENT NE BOUGE PAS D'UNE COURBE : c'est la BOÎTE
+           * EXTÉRIEURE qui garde la largeur d'un segment, la
+           * transformation et sa transition (nº 112, reprise nº 858) ; le
+           * trait ne fait que se centrer dedans. Ce qui change de segment
+           * change donc encore de place en glissant.
+           * ⚠️ SA LARGEUR, ELLE, NE GLISSE PAS : elle est celle du
+           * contenu, donc elle prend sa nouvelle valeur d'un coup au
+           * changement d'onglet. Animer aussi la largeur demanderait de
+           * la mesurer en JavaScript — ce que cette écriture évite
+           * précisément.
+           * ⚠️ ET IL NE DÉBORDE JAMAIS DE SON SEGMENT (`max-w-full`) :
+           * un libellé qui se replie sur deux lignes rendrait une copie
+           * plus large que la colonne ; le trait s'arrête à la colonne,
+           * comme avant cette passe.
+           * ⚠️ LA COPIE NE SE LIT PAS : la rangée entière est
+           * `aria-hidden` (elle l'était déjà), et le libellé reste
+           * annoncé une seule fois, par son onglet.
+           */
           <span
-            className="absolute bottom-0 left-0 h-[3px] rounded-full bg-primaire
+            className="absolute bottom-0 left-0 flex h-[3px] justify-center
                        transition-transform duration-300
                        ease-[cubic-bezier(0.32,0.72,0,1)]"
             style={{
               width: largeurDuTrait,
               transform: `translateX(${decalageDuTrait})`,
             }}
-          />
+          >
+            <span className="h-[3px] max-w-full overflow-hidden rounded-full bg-primaire px-2">
+              <span className={`invisible block whitespace-nowrap ${ECRITURE_ONGLET}`}>
+                {options[index].label}
+              </span>
+            </span>
+          </span>
         )}
       </div>
     </Enveloppe>

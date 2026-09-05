@@ -215,11 +215,12 @@ const etat = (page) => page.evaluate(() => ({
         couleur: capsule ? getComputedStyle(capsule).color : null,
         fond: capsule ? getComputedStyle(capsule).backgroundColor : null }; };
     const bio = [...document.querySelectorAll("p")].find((p) => /6 artistes/.test(p.textContent));
-    //  nº 869 — les deux liens vivent dans la rangée d'actions : c'est
-    //  le haut de la RANGÉE qu'on relève pour l'ordre.
+    //  nº 869 — Instagram vit dans la rangée d'actions : c'est le haut de
+    //  la RANGÉE qu'on relève pour lui. nº 870 — LE SITE, lui, a retrouvé
+    //  sa ligne, sous la bio : on relève la ligne elle-même.
     const rangee = document.querySelector("[data-rangee-actions]");
     const instagram = rangee && [...rangee.querySelectorAll("a")].find((a) => /instagram\\.com/.test(a.href)) ? rangee : null;
-    const site = rangee && [...rangee.querySelectorAll("a")].find((a) => /exemple\\.test/.test(a.href)) ? rangee : null;
+    const site = [...document.querySelectorAll("a")].find((a) => /exemple\\.test/.test(a.href));
     const adresse = [...document.querySelectorAll("a, p, span")].reverse().find((n) => /Lyon/.test(n.textContent) && n.children.length === 0);
     return { instagram: haut(instagram), site: haut(site), bio: haut(bio),
       styles: ligne("data-styles-fiche"), pratiques: ligne("data-pratique-fiche"), adresse: haut(adresse) }; }`;
@@ -238,9 +239,9 @@ const etat = (page) => page.evaluate(() => ({
           de badges n'ont plus d'icône (§1). L'ordre se lit donc à
           partir de la rangée, et les deux dessins ne sont plus là — le
           banc 869 mesure le nouvel en-tête ; celui-ci garde le gris. */
-      verif("§5 — l'ordre (nº 869) : la rangée d'actions (Instagram, le site), la bio, les styles, les techniques, l'adresse",
+      verif("§5 — l'ordre (nº 870) : la rangée d'actions (Instagram), la bio, LE SITE, les styles, les techniques, l'adresse",
         v.instagram !== null && v.site !== null && v.bio !== null && v.adresse !== null &&
-        v.instagram === v.site && v.site < v.bio && v.bio < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
+        v.instagram < v.bio && v.bio < v.site && v.site < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
         JSON.stringify({ instagram: v.instagram, site: v.site, bio: v.bio, styles: v.styles.y, techniques: v.pratiques.y, adresse: v.adresse }));
       verif("§6 (repris nº 869-§1) — plus aucun dessin en tête des deux lignes",
         v.styles.chemin === null && v.pratiques.chemin === null && v.styles.taille === null && v.pratiques.taille === null,

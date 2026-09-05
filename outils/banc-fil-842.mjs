@@ -58,11 +58,14 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     const badge = page.locator('button[aria-label*="ollow Banc 842"]').first();
     const etat = () => page.evaluate(() => {
       const b = [...document.querySelectorAll("button")].find((x) => /ollow Banc 842/.test(x.getAttribute("aria-label") ?? ""));
-      //  nº 869-§3 — le bouton est une cible de la rangée d'actions : le
-      //  fond qui change avec l'état est celui du CARRÉ (son premier
-      //  enfant), le bouton lui-même n'en a pas.
-      const s = getComputedStyle(b.firstElementChild);
-      return { libelle: b.getAttribute("aria-label"), presse: b.getAttribute("aria-pressed"), fond: s.backgroundColor };
+      //  nº 870-§4 — le bouton est un BADGE de la rangée d'actions, et sa
+      //  robe est la même dans les deux états (c'est voulu) : ce qui
+      //  change, c'est le mot et le DESSIN. On relève donc le tracé de
+      //  l'icône, qui distingue « Follow » (un plus) de « Following »
+      //  (une coche), plutôt qu'une couleur de fond qui ne bouge plus.
+      const s = getComputedStyle(b);
+      const chemins = [...b.querySelectorAll("svg path")].map((n) => n.getAttribute("d")).join(" ");
+      return { libelle: b.getAttribute("aria-label"), presse: b.getAttribute("aria-pressed"), fond: s.backgroundColor, dessin: chemins };
     });
     const avant = await etat();
     verif("au départ : « Follow », non pressé", avant.libelle === "Follow Banc 842" && avant.presse === "false", JSON.stringify(avant));
@@ -70,7 +73,7 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     await page.waitForTimeout(1500);
     const suivi = await etat();
     const enBase = await lire("tatoueurs_suivis", `utilisateur_id=eq.${U.id}`);
-    verif("un toucher SUIT : le badge passe à « Unfollow », pressé, et le fond change", suivi.libelle === "Unfollow Banc 842" && suivi.presse === "true" && suivi.fond !== avant.fond, JSON.stringify(suivi));
+    verif("un toucher SUIT : le badge passe à « Unfollow », pressé, et le DESSIN change (nº 870)", suivi.libelle === "Unfollow Banc 842" && suivi.presse === "true" && suivi.dessin !== avant.dessin, JSON.stringify({ libelle: suivi.libelle, presse: suivi.presse, memeDessin: suivi.dessin === avant.dessin }));
     verif("EN BASE : le portfolio est suivi", enBase.length === 1 && enBase[0].tatoueur_id === ID, JSON.stringify(enBase));
     verif("aucune réponse d'erreur des routes de favoris", echecs.length === 0, echecs.join(" · ") || "aucune");
     await badge.tap();

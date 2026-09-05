@@ -30,12 +30,17 @@ const SONDE = `() => {
   const boutons = groupe ? [...groupe.querySelectorAll("a[href], [role='radio']")] : [];
   const boiteLigne = groupe ? [...groupe.children].find((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3) : null;
   const grise = boiteLigne?.querySelector("span:first-child");
-  const rose = boiteLigne?.querySelector("span:last-child");
+  /*  §1 (nº 870) — LE TRAIT ROSE EST MAINTENANT DANS UNE BOÎTE : le
+      dernier enfant de la ligne est LE SEGMENT (transparent, la largeur
+      d'un onglet, c'est lui qui glisse) et le trait PEINT est son enfant
+      — la largeur du mot plus son débord. On relève les deux. */
+  const segment = boiteLigne?.lastElementChild;
+  const rose = segment?.firstElementChild;
   const main = document.querySelector("main");
   const premier = main ? [...main.children].find((n) => n.getBoundingClientRect().height > 0) : null;
   return {
     barre: r(barre), reserve: reserve ? Number(reserve.dataset.reservePosee) : null,
-    groupe: r(groupe), boiteLigne: r(boiteLigne), grise: r(grise), rose: r(rose),
+    groupe: r(groupe), boiteLigne: r(boiteLigne), grise: r(grise), rose: r(rose), segment: r(segment),
     roseStyle: st(rose, "backgroundColor", "borderRadius"),
     onglet: { ...r(boutons[0]), ...st(boutons[0], "fontSize", "fontWeight", "minHeight", "paddingLeft", "paddingRight") },
     boutons: boutons.map((b) => ({ nom: b.getAttribute("aria-label"), actif: (b.getAttribute("aria-checked") === "true" || b.getAttribute("aria-current") === "page"),

@@ -102,11 +102,50 @@ export function IconeTikTok({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
-/*  ⛔ LE CALENDRIER DU BOOKING (nº 273-§1 → nº 868) N'EST PLUS ICI :
-    l'état des carnets vit dans le bloc du nom depuis la nº 869-§2 — un
-    point de couleur et le mot, sans icône. Le dessin n'avait plus de
-    lecteur (le calendrier des fiches artisans est celui d'Icones.tsx),
-    il est parti avec sa ligne (règle nº 386). */
+/**
+ * LE CALENDRIER DU BOOKING (nº 273-§1) — l'état des carnets parle de
+ * TEMPS, pas de feu de circulation : les trois ronds de la nº 270
+ * (vert, gris clair, gris foncé) sont partis. À leur place, CETTE
+ * icône — LA MÊME pour les trois états, sans variante : c'est le MOT
+ * qui dit l'état (« Books open », « Books open • 5-month wait »,
+ * « Books closed »), l'icône dit seulement de quoi on parle — la
+ * disponibilité, ce que le mot seul ne dit pas à l'œil qui balaie.
+ * Même écriture que ses voisines : trait 1,8 sur la grille de 24,
+ * `currentColor` — elle prend le gris doux du libellé à côté duquel
+ * elle vit, sans un seul réglage. Tout en CONTOUR : les icônes de la
+ * liste des liens n'ont ni aplat ni fond.
+ *
+ * ██ §2 (nº 870) — ELLE REVIENT, ET AVEC ELLE LA LIGNE D'AVANT ██
+ * La nº 869 l'avait remplacée par un POINT de couleur dans le bloc du
+ * nom, et retirée du dépôt faute de lecteur. Le propriétaire tranche :
+ * plus de point, l'icône revient — au même dessin, au pixel, celui que
+ * la nº 868 servait encore (repris de son fichier tel quel).
+ */
+export function IconeCalendrier({ taille = 20 }: ProprietesIconeLien) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
+      {/*  Le corps, en contour — mêmes proportions qu'Instagram. */}
+      <rect
+        x="3.4"
+        y="5"
+        width="17.2"
+        height="15.6"
+        rx="2.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      {/*  Les deux anneaux, au-dessus du corps. */}
+      <path
+        d="M8.2 3v3.4M15.8 3v3.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      {/*  La ligne du bandeau — le trait qui fait lire « calendrier ». */}
+      <path d="M3.4 10h17.2" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
 
 /*  ⛔ L'ÉTOILE (nº 488 → nº 868) N'EST PLUS ICI : les lignes de badges
     d'un profil (styles, techniques) n'ouvrent plus sur une icône depuis

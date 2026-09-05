@@ -582,3 +582,25 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > désormais seul sur sa ligne, chaque onglet la moitié), les noms
 > accessibles « Follow <nom> » / « Unfollow <nom> », et les badges de
 > styles et de techniques — texte seul, sans icône en tête de ligne.
+
+---
+
+## Passe nº 870 — l'en-tête d'un profil, corrigé
+
+| avant (nº 869) | après | où |
+| --- | --- | --- |
+| **Waitlist** (point gris) — le nombre de mois n'était plus écrit | **Books open • 5-month wait** — l'icône de calendrier, le mot, la puce du site et le délai chiffré | `etatDesCarnets`, ContenuFiche |
+| **Books open** (point vert) / **Books closed** (point gris) | **Books open** / **Books closed** — mêmes mots, le calendrier à la place du point | idem |
+| **Website** — un badge de la rangée d'actions | le TITRE que l'artiste a choisi (ou le domaine de son site) — une ligne à part, en bleu, sous la bio | `ligneDuSite`, ContenuFiche |
+| **Share** — le mot sous une grande icône | le mot disparaît : petit badge, icône seule ; le nom lu reste **Share <nom>'s portfolio** | `BoutonPartageFiche`, habillage « rangee » |
+| **Follow** / **Following** — le mot sous une grande icône | mêmes mots, l'icône passe À GAUCHE du mot dans un badge | `BoutonSuivre` |
+
+> **Le délai revient en toutes lettres** : « Waitlist » (nº 869) est
+> remplacé par le couple d'avant — « Books open » ET le nombre de mois,
+> joints par la puce du site (`SEPARATEUR_GALERIE`, celle des styles et
+> de « DM • Instagram »), sur UNE seule ligne au lieu des deux de la
+> nº 408. Un délai sans mois se tait, comme avant la nº 869.
+> **Ce qui n'a PAS changé** : « Profile » / « Portfolio », « Instagram »,
+> les noms accessibles (« Follow <nom> », « Unfollow <nom> »,
+> « Share <nom>'s portfolio »), et les badges de styles et de
+> techniques (texte seul, sans icône).

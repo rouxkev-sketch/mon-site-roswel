@@ -27,17 +27,21 @@ import { villeAffichee } from "@/lib/adresse";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
 //  §3 (nº 869) — le partage du PROFIL est UNE DES QUATRE cibles de la
 //  rangée d'actions : le MÊME bouton que partout (l'action existante),
-//  en habillage « rangee » — le carré et le mot « Share » dessous.
+//  en habillage « rangee » — le petit badge, icône seule (nº 870-§4).
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
-//  §3 (nº 869) — l'icône d'Instagram, celle du pied de page (nº 240) ;
-//  la ligne de liens qui la portait a cédé la place à la rangée.
-import { IconeInstagram } from "@/components/IconeReseau";
+//  §4 (nº 870) — l'icône d'Instagram, celle du pied de page (nº 240),
+//  dans le badge de la rangée ; §2 — LE CALENDRIER revient avec la
+//  ligne du booking ; §3 — `IconeDuLien` rouvre la ligne du site.
+import {
+  IconeCalendrier,
+  IconeDuLien,
+  IconeInstagram,
+} from "@/components/IconeReseau";
 //  §2 (nº 490) — la flèche du compteur « +N ⌄ » : CELLE DES HORAIRES,
 //  au même rang 16 et pivotée de la même façon. Aucun dessin nouveau.
-//  §3 (nº 869) — et le GLOBE (celui du sélecteur de langue) pour
-//  « Website » : le mot dit le site, le globe le montre — c'est le
-//  dessin du patron. Le maillon de la nº 240 n'est plus lu ici.
-import { IconeChevronBas, IconeMonde } from "@/components/Icones";
+//  §3 (nº 870) — le GLOBE de la nº 869 n'a plus de lecteur : le site
+//  retrouve sa ligne et son maillon (`IconeDuLien`, nº 240).
+import { IconeChevronBas } from "@/components/Icones";
 //  §3 (nº 869) — la cible carrée et le mot dessous : l'écriture unique
 //  des quatre actions de la rangée (Follow et Share la lisent chez eux).
 import { ActionDeFiche } from "@/components/ActionDeFiche";
@@ -52,11 +56,22 @@ import { capsulesPratiques } from "@/lib/pratique-fiche";
 //  §3 (nº 388) — l'écriture d'une ligne de profil a déménagé dans un
 //  module sans dépendance : l'adresse se dessine dans BlocLieux, et un
 //  cercle d'imports se paie cher (voir lignes-profil).
-//  §1 et §3 (nº 869) — les deux boîtes d'icône (`BOITE_ICONE_LIGNE`,
-//  `FORME_BOITE_ICONE`) ne sont plus lues ici : les lignes de badges
-//  n'ont plus d'icône en tête, et la liste des liens n'existe plus.
-//  L'adresse (BlocLieux) lit toujours la première.
-import { ECRITURE_LIGNE_FICHE, LIGNE_GRISE } from "@/components/lignes-profil";
+//  §1 (nº 869) — `FORME_BOITE_ICONE` n'est plus lue ici : les lignes de
+//  badges n'ont plus d'icône en tête. `BOITE_ICONE_LIGNE`, elle, revient
+//  à la nº 870 — la ligne du booking et celle du site la portent, comme
+//  l'adresse (BlocLieux) ne l'a jamais quittée.
+import {
+  BOITE_ICONE_LIGNE,
+  ECRITURE_LIGNE_FICHE,
+  LIGNE_GRISE,
+} from "@/components/lignes-profil";
+//  §3 (nº 870) — le libellé de repli d'un lien de site (son domaine),
+//  quand l'artiste n'a pas donné de titre.
+import { libelleDuLien } from "@/lib/liens-fiche";
+//  §2 (nº 870) — LA PUCE DU SITE, une seule dans tout yokofolio : elle
+//  joint « Books open » et le délai comme elle joint un style et son
+//  rendu (nº 393).
+import { SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { sousLeNom } from "@/components/BlocsFiche";
@@ -1216,48 +1231,140 @@ export function ContenuFiche({
   );
 
   /**
-   * ██ §2 (nº 869) — L'ÉTAT DES CARNETS, DANS LE BLOC DU NOM ██
+   * ██ §2 (nº 869) — L'ÉTAT DES CARNETS QUITTE LA LIGNE DES LIENS ██
    * ==================================================================
-   * Il quitte la ligne « Books open · Instagram » (nº 270 → nº 868) :
-   * il se pose SOUS LE TYPE, à droite de l'avatar — UN POINT ET LE
-   * MOT, comme l'« Open » d'une fiche Google Maps :
-   *  · booking OUVERT — point VERT (`sombre-succes`, le vert de la
-   *    pastille du site), « Books open » ;
-   *  · booking à DÉLAI — point GRIS, « Waitlist » ;
-   *  · booking FERMÉ — point GRIS, « Books closed ».
-   * Le point est le SEUL porteur de couleur : le mot reste dans le
-   * gris des sous-titres, sous le type qui l'est aussi — le point se
-   * lit de loin, le mot précise.
-   * ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ (acquis nº 273) : le site ne devine
-   * pas l'état des carnets de quelqu'un ; une fiche sans booking n'a
-   * pas cette ligne.
-   * ⛔ CE QUI PART AVEC LA LIGNE D'AVANT, ET JE LE DIS : le chiffre du
-   * délai (« 3-month wait », nº 408) n'est plus écrit — « Waitlist »
-   * est LE mot demandé, sans nombre. La donnée reste en base et dans
-   * le formulaire ; un « delai » sans mois, muet jusqu'ici, dit donc
-   * « Waitlist » comme les autres. Le calendrier (nº 273), les deux
-   * lignes du délai (nº 408) et leur compensation optique (nº 409)
-   * sont partis avec leur ligne (règle nº 386).
+   * Il vivait en tête de la ligne « Books open · Instagram » (nº 270 →
+   * nº 868) ; il se pose depuis SOUS LE TYPE, à droite de l'avatar —
+   * c'est la seule chose que la nº 869 lui a faite et qui reste.
+   * ⛔ CE QU'ELLE AVAIT FAIT D'AUTRE, ET QUE LA nº 870 ANNULE : un
+   * POINT de couleur (vert ouvert, gris sinon) à la place du
+   * calendrier, et « Waitlist » à la place du délai chiffré. La note
+   * de la nº 870, juste en dessous, dit ce qui les remplace et
+   * pourquoi.
    */
+  /*  ██ §2 (nº 870) — PLUS DE POINT, LE CALENDRIER REVIENT ██
+      ==================================================================
+      CE QUE LA nº 869 AVAIT FAIT, ET QUE LE PROPRIÉTAIRE ANNULE : un
+      point de couleur (vert ouvert, gris sinon) et un mot — « Waitlist »
+      pour un délai, sans son chiffre.
+      CE QUE C'EST REDEVENU, la ligne d'avant la nº 869 : L'ICÔNE DE
+      CALENDRIER (IconeReseau, revenue avec elle) puis LE TEXTE, sur une
+      seule ligne :
+            Books open • 5-month wait     (un délai, avec ses mois)
+            Books open                    (ouvert, sans délai)
+            Books closed                  (fermé)
+      LE DÉLAI EST UN CARNET OUVERT (acquis nº 408) : le premier mot le
+      dit, la seconde moitié le chiffre — la puce du site les joint
+      (`SEPARATEUR_GALERIE`, celle des styles et de « DM • Instagram »),
+      au lieu des deux lignes empilées de la nº 408 et de leur
+      compensation optique (nº 409), qui n'ont plus lieu d'être.
+      ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ (acquis nº 273) : le site ne devine
+      pas l'état des carnets de quelqu'un.
+      ⚠️ ET UN « delai » SANS MOIS SE TAIT, comme avant la nº 869 : sans
+      chiffre, la ligne dirait « Books open » là où l'artiste a déclaré
+      une attente — ce serait lui faire dire autre chose que ce qu'il a
+      coché. */
+  const libelleBooking =
+    tatoueur.booking === "ouvert" || tatoueur.booking === "delai"
+      ? "Books open"
+      : tatoueur.booking === "ferme"
+        ? "Books closed"
+        : null;
+  const attenteBooking =
+    tatoueur.booking === "delai" && tatoueur.booking_mois
+      ? `${tatoueur.booking_mois}-month wait`
+      : null;
+  const bookingLisible =
+    tatoueur.booking === "delai" ? Boolean(attenteBooking) : true;
   const etatDesCarnets =
-    tatoueur.booking === "ouvert"
-      ? { ouvert: true, mot: "Books open" }
-      : tatoueur.booking === "delai"
-        ? { ouvert: false, mot: "Waitlist" }
-        : tatoueur.booking === "ferme"
-          ? { ouvert: false, mot: "Books closed" }
-          : null;
+    libelleBooking && bookingLisible
+      ? [libelleBooking, attenteBooking].filter(Boolean).join(SEPARATEUR_GALERIE)
+      : null;
 
   /**
-   * ██ §3 (nº 869) — LA RANGÉE D'ACTIONS ██
+   * ██ §3 (nº 870) — LA LIGNE DU SITE REVIENT, SOUS LA BIO ██
    * ==================================================================
-   * Elle REMPLACE la ligne « Books open · Instagram » ET la ligne du
-   * site (nº 222-§2 → nº 868) : « Follow » · « Instagram » (si
-   * renseigné) · « Website » (si renseigné) · « Share » — dans cet
-   * ordre, chacun une grande icône dans une cible carrée à coins
-   * arrondis, le mot centré dessous (`ActionDeFiche`, l'écriture
-   * unique des quatre ; le patron est la rangée d'une fiche Google
-   * Maps).
+   * Elle avait quitté la liste pour la rangée d'actions (nº 869-§3),
+   * où elle était une cible parmi quatre, sous le mot « Website ». Le
+   * propriétaire la rappelle À SA FORME D'AVANT : sa propre ligne, son
+   * MAILLON à gauche (`IconeDuLien`, nº 240), le titre que l'artiste a
+   * choisi — ou le domaine, à défaut (`libelleDuLien`) — et LE BLEU de
+   * ce qui sort du site (nº 388/405, le cinquième argument de
+   * `lienEnLigne`). Seule sa place change : sous la BIO, et non plus
+   * au-dessus d'elle.
+   * ⚠️ L'ICÔNE RESTE GRISE quand le mot est bleu : son gris vit sur SA
+   * boîte, un autre élément (nº 392) — la note entière est chez
+   * `lienEnLigne`.
+   * ⚠️ LA PAGE DE LIENS NE REVIENT PAS : le formulaire ne l'écrit plus
+   * depuis la nº 270, la consigne ne parle que du SITE WEB, et une
+   * ligne que rien ne peut plus remplir est du code mort (nº 386).
+   */
+  const lienEnLigne = (
+    cle: string,
+    href: string,
+    libelle: string,
+    icone: React.ReactNode,
+    sortDuSite = false
+  ) => (
+    <a
+      key={cle}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      /*  §1 (nº 389) — UNE SEULE CLASSE DE COULEUR : `ECRITURE_LIGNE_FICHE`
+           n'en porte aucune (voir lignes-profil), le bleu et le gris ne se
+           disputent donc pas l'ordre de la feuille.
+           §3 (nº 391) — `max-w-full` BORNE LA CASE À SA COLONNE : sans lui,
+           le `white-space: nowrap` du `truncate` rend le contenu
+           incompressible et la case part à droite, hors de la colonne, où
+           un `overflow` la tranche au milieu d'une lettre. */
+      className={`group flex max-w-full items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
+        sortDuSite
+          ? "text-sombre-lien hover:text-sombre-lien-clair"
+          : `${LIGNE_GRISE} hover:text-sombre-texte`
+      } transition-colors`}
+    >
+      {/*  §1 (nº 392) — L'ICÔNE EST GRISE, SANS CONDITION : son gris vit
+           sur SA boîte, un AUTRE élément que le lien qui porte le bleu —
+           un héritage recouvert, pas une dispute d'ordre alphabétique
+           (piège nº 389). */}
+      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
+        {icone}
+      </span>
+      <span className="min-w-0 truncate">{libelle}</span>
+    </a>
+  );
+  const ligneDuSite = tatoueur.site_web && (
+    lienEnLigne(
+      "site",
+      tatoueur.site_web,
+      tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
+      //  §1 (nº 240) — LE MAILLON EST DESSINÉ DANS LE CODE, comme toutes
+      //  les icônes de lien du site (IconeReseau) : monochrome, en
+      //  `currentColor`. Un seul appelant depuis la nº 870 — le site —,
+      //  donc l'aiguillage à deux branches de la nº 240 n'est plus
+      //  écrit ici : on nomme le dessin qu'on veut (règle nº 386).
+      <IconeDuLien reseau="site" taille={20} />,
+      true
+    )
+  );
+
+  /**
+   * ██ §3 (nº 869), REFAIT PAR LA §4 (nº 870) — LA RANGÉE D'ACTIONS ██
+   * ==================================================================
+   * TROIS BADGES à angles arrondis qui occupent ENSEMBLE toute la
+   * largeur (`ActionDeFiche`, l'écriture unique des trois) :
+   *  · « Follow » / « Following » et « Instagram » (si renseigné) —
+   *    l'icône à GAUCHE du mot, et LA MÊME LARGEUR pour les deux : ils
+   *    se partagent à parts égales ce que le partage laisse (`large`,
+   *    une part de rangée, jamais une largeur écrite) ;
+   *  · LE PARTAGE — petit badge carré, icône seule, qui complète la
+   *    largeur.
+   * Même hauteur pour les trois (44 px, la mesure tactile du site), et
+   * la robe des badges d'action — la note est chez `ActionDeFiche`.
+   * ⛔ LES CARRÉS DE LA nº 869 (48 px, le mot dessous, le patron Google
+   * Maps) SONT PARTIS, et « Website » avec eux : il a retrouvé sa ligne
+   * sous la bio (§3).
    * FOLLOW ET SHARE SONT TOUJOURS LÀ : la rangée n'a jamais une icône
    * seule — au minimum ces deux-là. Follow garde exactement son état
    * et son geste (BoutonSuivre : même écriture en base, même retour
@@ -1267,19 +1374,19 @@ export function ContenuFiche({
    * LES COLONNES SONT ÉGALES : quatre, trois ou deux actions se
    * partagent la largeur de la colonne, chacune centrée dans la
    * sienne — c'est la grille, pas un calcul.
-   * ⚠️ INSTAGRAM ET WEBSITE SORTENT DU SITE dans un nouvel onglet,
-   * comme les liens qu'ils remplacent. Ils ne sont plus BLEUS
-   * (nº 388, 405) : sur le patron, les quatre cibles sont identiques
-   * au repos, et c'est le mot qui dit où l'on va. Le bleu de ce qui
-   * sort du site reste à l'adresse (BlocLieux).
+   * ⚠️ INSTAGRAM SORT DU SITE dans un nouvel onglet, comme la ligne
+   * qu'il remplace. Il n'est plus BLEU (nº 388) : dans un badge, le
+   * bleu du lien se battrait avec l'aplat qui le porte — c'est le mot
+   * qui dit où l'on va. Le bleu de ce qui sort du site reste aux
+   * LIGNES : le site (§3, nº 870) et l'adresse (BlocLieux).
    * ⛔ CE QUI N'EST PLUS ÉCRIT, ET JE LE DIS : la mention « DM »
-   * d'Instagram (nº 408-409), le titre choisi du site
-   * (`titre_site_web` — le mot est « Website ») et la PAGE DE LIENS
-   * (`page_de_liens`, nº 227 — le formulaire ne l'écrit plus depuis la
-   * nº 270, et la rangée demandée n'a pas de cible pour elle). Les
-   * données restent en base, on ne les lit plus : le traitement de
-   * TikTok (nº 387). `lienEnLigne`, ses icônes de colonne (nº 240) et
-   * les deux grilles de liens sont partis avec (règle nº 386).
+   * d'Instagram (nº 408-409) — un badge porte un mot, pas une phrase —
+   * et la PAGE DE LIENS (`page_de_liens`, nº 227 : le formulaire ne
+   * l'écrit plus depuis la nº 270, et la consigne de la nº 870 ne parle
+   * que du site web). Les données restent en base, on ne les lit plus :
+   * le traitement de TikTok (nº 387).
+   * ⚠️ LE TITRE CHOISI DU SITE, LUI, EST REVENU avec sa ligne
+   * (`titre_site_web`, §3 nº 870).
    * ⚠️ UNE FICHE DE DÉMONSTRATION n'a pas de « Follow » (on ne suit
    * pas ce qui n'existe pas en base, BoutonSuivre) : sa rangée
    * commence à Instagram.
@@ -1287,11 +1394,21 @@ export function ContenuFiche({
   const rangeeDActions = (
     <div
       data-rangee-actions=""
-      /*  Trente-deux pixels sous le bloc du nom (un cran sous les 40 qui
-          séparent les sections, nº 241 : la rangée appartient à
-          l'en-tête, elle n'est pas une section) ; la liste garde ses
-          40 px sous elle. */
-      className="mt-8 grid w-full auto-cols-fr grid-flow-col"
+      /*  ██ §5 (nº 870) — LES DEUX AIRS DE LA RANGÉE, MESURÉS ██
+          (a) AU-DESSUS — QUARANTE PIXELS sous le bas de l'avatar, et ce
+          n'est pas une valeur choisie : c'est EXACTEMENT l'air qui
+          sépare le va-et-vient du haut de l'avatar (le `mt-10` du bloc
+          du nom, nº 241). L'en-tête est donc encadré par deux airs
+          égaux, au-dessus et au-dessous de la photo. La rangée touche
+          le bas de l'avatar parce que la colonne du nom ne dépasse pas
+          ses 92 px (`min-h`, nº 241-§2) : nom, type et booking y tiennent.
+          (b) EN DESSOUS — l'air standard entre deux blocs du profil, et
+          il est écrit UNE SEULE FOIS, sur la liste qui suit (son `mt-6`,
+          la valeur de son propre `gap-y-6`) : rien ici (piège nº 378).
+          ⚠️ L'ÉCART ENTRE LES TROIS BADGES (8 px) N'EST PAS UN AIR DE
+          BLOC : c'est la couture d'une rangée, elle n'a pas à suivre les
+          deux valeurs ci-dessus. */
+      className="mt-10 flex w-full items-stretch gap-2"
     >
       <BoutonSuivre
         tatoueurId={tatoueur.id}
@@ -1301,19 +1418,12 @@ export function ContenuFiche({
       {tatoueur.lien_instagram && (
         <ActionDeFiche
           cle="instagram"
+          //  §4 (nº 870) — le second badge à part égale (voir Follow).
+          large
           href={tatoueur.lien_instagram}
           ariaLabel={`${tatoueur.nom} on Instagram`}
-          icone={<IconeInstagram taille={24} />}
+          icone={<IconeInstagram taille={20} />}
           mot="Instagram"
-        />
-      )}
-      {tatoueur.site_web && (
-        <ActionDeFiche
-          cle="website"
-          href={tatoueur.site_web}
-          ariaLabel={`${tatoueur.nom}'s website`}
-          icone={<IconeMonde taille={24} />}
-          mot="Website"
         />
       )}
       <BoutonPartageFiche
@@ -2023,55 +2133,64 @@ export function ContenuFiche({
               <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
-              {/*  §2 (nº 869) — L'ÉTAT DES CARNETS, sous le type : le point
-                   et le mot (voir `etatDesCarnets`). Un point de 8 px, le
-                   mot au corps du type mais en graisse normale et sans
-                   capitales — c'est une mention, pas un titre. Le bloc
-                   reste centré sur l'avatar tant qu'il est moins haut que
-                   lui (nº 241-§2), et trois lignes le sont encore. */}
+              {/*  ██ §2 (nº 870) — L'ÉTAT DES CARNETS, SOUS LE TYPE ██
+                   L'ICÔNE ET LE TEXTE, la ligne d'avant la nº 869 (voir
+                   `etatDesCarnets`) : le point de couleur s'en va, le
+                   calendrier revient. Elle garde la place que la nº 869
+                   lui a donnée — dans le bloc du nom, à droite de
+                   l'avatar — et retrouve l'écriture des lignes d'un
+                   profil : la colonne de 22 px pour le glyphe, gris
+                   (nº 392), et le texte en BLANC (nº 552-§1) ; c'est la
+                   RANGÉE qui porte le gris, donc l'icône le prend et le
+                   mot le recouvre — une seule classe de couleur par
+                   élément (piège nº 389).
+                   ⚠️ LE BLOC RESTE CENTRÉ SUR L'AVATAR tant qu'il est
+                   moins haut que lui (nº 241-§2) : nom, type et cette
+                   ligne tiennent dans ses 92 px. */}
               {etatDesCarnets && (
                 <p
                   data-booking-fiche={tatoueur.booking}
-                  className="mt-2 flex items-center gap-2 text-[14px] leading-[20px] text-sombre-texte-doux"
+                  className={`mt-2 flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`h-2 w-2 shrink-0 rounded-full ${
-                      etatDesCarnets.ouvert
-                        ? "bg-sombre-succes"
-                        : "bg-sombre-texte-doux"
-                    }`}
-                  />
-                  {etatDesCarnets.mot}
+                  <span className={BOITE_ICONE_LIGNE}>
+                    <IconeCalendrier taille={20} />
+                  </span>
+                  <span className="min-w-0 text-sombre-texte">
+                    {etatDesCarnets}
+                  </span>
                 </p>
               )}
             </div>
           </div>
 
           {/* ==========================================================
-              §2 (nº 869) — LA RANGÉE D'ACTIONS, SOUS LE BLOC DU NOM
+              §4 (nº 870) — LA RANGÉE D'ACTIONS, SOUS LE BLOC DU NOM
               ==========================================================
-              Follow · Instagram · Website · Share (voir `rangeeDActions`).
-              Elle prend la place des deux lignes de liens (nº 222-§2 →
-              nº 868). */}
+              Trois badges : Follow, Instagram (si renseigné) et le
+              partage (voir `rangeeDActions`). Ses deux airs sont dits
+              chez elle et sur la liste qui suit (§5). */}
           {rangeeDActions}
 
           {/* ==========================================================
               LA LISTE — la bio, les styles, les techniques, l'adresse
               ==========================================================
-              §5 (nº 869) — L'ORDRE DU PROPRIÉTAIRE, de haut en bas : le
-              bloc du nom (avatar, nom, type, état des carnets), la rangée
-              d'actions, LA BIO, LES STYLES, LES TECHNIQUES, l'adresse,
-              puis les horaires (qui vivent dans les sections du bas et ne
-              bougent pas). Les deux grilles de liens qui ouvraient cette
-              liste (nº 233-§5, 384, 407, 408) sont parties avec la rangée
-              d'actions.
+              §5 (nº 869), REPRIS PAR LA §3 (nº 870) — L'ORDRE DU
+              PROPRIÉTAIRE, de haut en bas : le bloc du nom (avatar, nom,
+              type, état des carnets), la rangée d'actions, LA BIO, LE
+              SITE, LES STYLES, LES TECHNIQUES, l'adresse, puis les
+              horaires (qui vivent dans les sections du bas et ne bougent
+              pas). Les deux GRILLES de liens qui ouvraient cette liste
+              (nº 233-§5, 384, 407, 408) ne sont pas revenues : le site
+              est seul de sa ligne, il n'a pas de colonne voisine.
               §2 (nº 490) — LA GARDE INTERROGE LES LISTES, PLUS LES
               ÉLÉMENTS : `LigneDeCapsules` est un composant, son élément
               JSX existe même vide — on teste les longueurs, qui sont la
               vérité (une fiche sans bio, sans technique et sans style
               n'ouvre pas ce conteneur pour rien). */}
-          {(Boolean(tatoueur.bio) || aDesPratiques || aDesStyles) && (
+          {(Boolean(tatoueur.bio) ||
+            Boolean(ligneDuSite) ||
+            aDesPratiques ||
+            aDesStyles) && (
             <div
               /*  §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ : 16 px
                    à la nº 389, 20 puis VINGT-QUATRE depuis la nº 538. C'est
@@ -2079,11 +2198,21 @@ export function ContenuFiche({
                    sur les lignes elles-mêmes ; c'est la LISTE qui commande,
                    et une ligne absente ne laisse donc aucun vide. Le rythme
                    tient : 24 entre deux lignes, 28 autour de la bio
-                   (nº 868), 40 entre deux sections — et 40 entre la rangée
-                   d'actions et cette liste, le `mt-10` qui MESURE la marge
-                   basse de l'en-tête (nº 241). Les plaques et leurs
-                   mentions (nº 496-497) ne sont pas dans cette liste. */
-              className="mt-10 flex w-full flex-col items-start gap-y-6"
+                   (nº 868). Les plaques et leurs mentions (nº 496-497) ne
+                   sont pas dans cette liste.
+                   ██ §5-b (nº 870) — L'AIR SOUS LA RANGÉE D'ACTIONS ██
+                   Il valait 40 (la marge basse d'un en-tête, nº 241) ; le
+                   propriétaire le veut ÉGAL À L'AIR STANDARD ENTRE LES
+                   BLOCS DU PROFIL — celui que cette liste écarte
+                   elle-même entre la bio, le site, les styles et
+                   l'adresse. C'est donc la MÊME VALEUR QUE SON PROPRE
+                   `gap-y-6`, VINGT-QUATRE, et elle est écrite ici, une
+                   fois, à côté de lui : les deux ne peuvent plus
+                   diverger (piège nº 378). Mesuré à l'écran, la première
+                   ligne tombe donc à 24 de la rangée — 28 quand c'est la
+                   bio, qui ajoute ses 4 px de part et d'autre comme
+                   partout ailleurs dans la liste. */
+              className="mt-6 flex w-full flex-col items-start gap-y-6"
             >
               {/*  ██ §5 (nº 868) — LA BIOGRAPHIE MONTE DANS LA LISTE ██
                    L'ORDRE DU PROPRIÉTAIRE, de haut en bas : les liens
@@ -2108,6 +2237,15 @@ export function ContenuFiche({
                   {tatoueur.bio}
                 </p>
               )}
+              {/*  ██ §3 (nº 870) — LE SITE, SOUS LA BIO ██
+                   Sa ligne d'avant la nº 869 (voir `ligneDuSite`), à la
+                   place que le propriétaire lui donne : entre la bio et
+                   les styles. Elle est UNE RANGÉE DE LA LISTE comme les
+                   autres — donc séparée d'elles par le seul `gap-y-6` du
+                   conteneur, et sans grille : un lien seul n'a pas de
+                   colonne voisine, et sa case se borne d'elle-même
+                   (`max-w-full` + `truncate`, nº 391/407). */}
+              {ligneDuSite}
               {/*  §5 (nº 868) — LES STYLES PASSENT DEVANT LES TECHNIQUES
                    (l'ordre du propriétaire) : ce sont eux qu'on cherche
                    d'abord sur un portfolio. Les deux lignes ne changent
