@@ -179,6 +179,18 @@ export type Tatoueur = {
       'ouvert', 'delai' ou 'ferme' — DÉCLARÉ par l'artiste, jamais
       deviné. NULL tant qu'une fiche n'a pas été réenregistrée : sa
       page publique n'affiche alors RIEN à cette place. */
+  /**
+   * ██ §6 (nº 853) — LE NOMBRE DE VUES DU PORTFOLIO ██
+   * La colonne du SQL nº 852 (`docs/SQL-852-VUES.md`), passée en base
+   * par le propriétaire. Elle n'est écrite QUE par la fonction
+   * `compter_vue_portfolio` (jamais un `update` depuis le navigateur) et
+   * lue ici comme n'importe quelle autre colonne publique.
+   * ⚠️ FACULTATIVE, ET IL LE FAUT : une base où le SQL n'est pas passé
+   * répond « colonne inconnue », et la lecture la retire d'elle-même
+   * (`lireEnRetirantLInconnu`, plus bas) — le site continue sans le
+   * nombre, il ne s'arrête pas.
+   */
+  vues?: number | null;
   booking?: "ouvert" | "delai" | "ferme" | null;
   /** Le nombre de mois d'attente (1 à 12) — n'a de sens qu'avec
       l'état 'delai' (« Booking · 3 mois »). NULL sinon. */
@@ -429,7 +441,7 @@ const COLONNES: string =
   `adresse, code_postal, bio, site_web, titre_site_web, titre_page_de_liens, ` +
   `filtres_technique, filtres_composition, filtres_besoins, region, pays, code_pays, lieu_id, ` +
   `type_fiche, etablissement, mode_exercice, rayon_zone_km, villes, photo_profil, ancien_slug, supprime_le, ` +
-  `user_id, booking, booking_mois, dm_instagram`;
+  `user_id, booking, booking_mois, dm_instagram, vues`;
 
 /**
  * LA MIGRATION N'EST PAS ENCORE PASSÉE ?
@@ -530,6 +542,9 @@ function normaliser(ligne: Tatoueur): Tatoueur {
     lien_tiktok: ligne.lien_tiktok ?? null,
     lien_youtube: ligne.lien_youtube ?? null,
     page_de_liens: ligne.page_de_liens ?? null,
+    //  §6 (nº 853) — absente d'une base sans le SQL nº 852 : elle vaut
+    //  alors `null`, et le pied de carte ne montre rien.
+    vues: ligne.vues ?? null,
     booking: ligne.booking ?? null,
     booking_mois: ligne.booking_mois ?? null,
     adresse: ligne.adresse ?? null,

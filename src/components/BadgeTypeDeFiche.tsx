@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BOITE_BADGE, libelleTypeFiche } from "@/config/tatouage";
+import { BOITE_BADGE, COULEURS_SOMBRE, libelleTypeFiche } from "@/config/tatouage";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 
 /**
@@ -88,9 +88,26 @@ export function BadgeTypeDeFiche({
           ⚠️ ET IL N'A PLUS DE CONTOUR DU TOUT : c'est écrit dans la
           consigne. Sa hauteur ne bouge pas pour autant — la hauteur
           minimale se compte sur la boîte entière, contour compris. */
+      /*  ██ §3 (nº 853) — LE CONTRASTE S'INVERSE ██
+          LE PROPRIÉTAIRE : le badge blanc à texte noir de la nº 852 est
+          trop fort ; il prend LE FOND DES BADGES DE RECHERCHE À CROIX
+          (#20262D, le barreau `carteClair` de la nº 848) et
+          L'ÉCRITURE DE « FOLLOWING » — le texte clair de la charte.
+          Ce qui reste de la nº 852-§6 : c'est un APLAT, sans contour,
+          parce que c'est un lien.
+          ⚠️ LE FOND VOYAGE DANS LE MARQUAGE, comme celui des badges de
+          la rangée depuis la nº 849 : une classe neuve n'existe que
+          dans une feuille neuve, et un fond que la feuille ignore ne se
+          peint pas du tout. La valeur reste celle de la charte, lue au
+          même endroit — c'est le CHEMIN qui change, pas la source.
+          ⚠️ D'OÙ LE SURVOL EN OPACITÉ, et non en couleur : un style en
+          ligne l'emporte sur toute classe, une variante `hover:bg-…`
+          serait donc muette. L'opacité est l'autre écriture du site
+          pour ce cas (elle sert déjà dans l'administration). */
+      style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
       className={`${BOITE_BADGE} min-h-[30px] px-3.5 text-[14px] font-semibold
-                 bg-sombre-texte text-sombre-fond transition-colors
-                 hover:bg-sombre-texte/90 active:bg-sombre-texte/90
+                 text-sombre-texte transition-opacity
+                 hover:opacity-90 active:opacity-90
                  focus-visible:outline-2 focus-visible:outline-offset-2
                  focus-visible:outline-primaire`}
     >

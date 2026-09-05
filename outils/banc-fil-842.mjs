@@ -221,7 +221,16 @@ const mesureTitre = `(bloc) => {
         aDroite: gestes.filter((x) => milieu(x) > r.left + (2 * r.width) / 3).map((x) => x.getAttribute("aria-label").split(" ")[0]),
         pointsCentres: frise ? Math.abs((frise.g + frise.d) / 2 - (r.left + r.width / 2)) < 2 : false,
         cibles: gestes.map((x) => Math.round(x.getBoundingClientRect().width)),
-        bordGauche: Math.round(Math.min(...gestes.map((x) => x.getBoundingClientRect().left)) - r.left),
+        /*  §6 (nº 853) — LE BORD GAUCHE EST CELUI DU GROUPE, et non
+            du premier GESTE : depuis que le nombre de vues ouvre le
+            pied (nº 852-§7, alimenté depuis la nº 853), c'est LUI qui
+            touche la marge, et le signalement le suit. Ce qu'on
+            vérifie n'a pas changé — le pied commence sur la marge de la
+            page — c'est ce qui l'occupe qui a changé. */
+        bordGauche: Math.round(
+          (document.querySelector("[data-pied-de-fil] > div") ?? gestes[0])
+            .getBoundingClientRect().left - r.left
+        ),
         bordDroit: Math.round(r.right - Math.max(...gestes.map((x) => x.getBoundingClientRect().right))),
       };
     }, CARTE);

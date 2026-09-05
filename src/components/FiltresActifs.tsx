@@ -137,10 +137,21 @@ import { COULEURS_SOMBRE, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
  * (piège nº 389) : `mobile:` est l'APPAREIL (règle nº 60), `not-mobile:`
  * son exact complément.
  */
-const ECRITURE_BADGE =
-  "mobile:text-[14px] not-mobile:text-[16px] " +
-  "not-mobile:leading-[12px] " +
-  "mobile:font-semibold not-mobile:font-medium text-sombre-texte";
+/**
+ * ██ §4 (nº 853) — LE WEB REJOINT LE DOIGT : UNE SEULE ÉCRITURE ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : au web comme au doigt, ces badges prennent
+ * les mesures du badge du TYPE des cartes (`BadgeTypeDeFiche`) —
+ * hauteur, corps, air. C'est ce que la nº 851 avait fait pour le seul
+ * smartphone ; le web suit aujourd'hui.
+ * CE QUE CELA SIMPLIFIE, ET C'EST LE POINT : il n'y a plus de variante
+ * d'appareil du tout ici. Corps 14, demi-gras, et la boîte de ligne
+ * naturelle de la fonte (21 px) — les trois mêmes valeurs partout,
+ * lues sur un seul badge. Les quatre écritures que les nº 848 à 851
+ * avaient empilées (deux corps, deux graisses, une interligne forcée)
+ * s'en vont ensemble.
+ */
+const ECRITURE_BADGE = "text-[14px] font-semibold text-sombre-texte";
 
 /**
  * ██ §1-§2-§3 (nº 850) — L'AIR VISUEL : DOUZE SUR LES CÔTÉS, HUIT EN
@@ -199,9 +210,17 @@ const ECRITURE_BADGE =
  * l'air visuel de 14 sur les côtés et 8 en haut et en bas, mesuré sur
  * les lettres à la nº 850, y est intact.
  */
-const AIR_BADGE =
-  "mobile:min-h-[30px] mobile:px-3.5 " +
-  "not-mobile:pt-[8px] not-mobile:pb-[6px] not-mobile:px-[12px]";
+/**
+ * ██ §4 (nº 853) — L'AIR AUSSI EST LE SIEN, AUX DEUX APPAREILS ██
+ * La hauteur minimale de trente pixels et les quatorze pixels d'air
+ * latéral du badge du type (`BadgeTypeDeFiche`), sans rien en haut ni
+ * en bas : c'est la boîte qui fait la hauteur, et la ligne de texte y
+ * est centrée. Le web perd donc son air visuel calculé à la nº 850
+ * (14 sur les côtés, 8 en haut et en bas) — le propriétaire préfère
+ * l'identité avec les badges des cartes à la proportion mesurée, et
+ * c'est sa page.
+ */
+const AIR_BADGE = "min-h-[30px] px-3.5";
 
 /**
  * ██ §3 (nº 850) — LA CROIX : SA CIBLE RESTE GRANDE, SON AIR EST CELUI

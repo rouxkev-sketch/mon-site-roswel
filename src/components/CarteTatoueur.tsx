@@ -100,7 +100,6 @@ function CarteTatoueurNue({
   phototheque = false,
   fanion = false,
   pastilleDEmblee = false,
-  avecLigneDesStyles = false,
   fil = false,
   approchee = false,
   surOuverture,
@@ -169,24 +168,6 @@ function CarteTatoueurNue({
    * vit — comme pour le fanion, juste au-dessus.
    */
   pastilleDEmblee?: boolean;
-  /**
-   * ██ §8 ET §9 (nº 852) — LA LIGNE DES STYLES, AU WEB ██
-   * DÉCISIONS DU PROPRIÉTAIRE, et elles se répondent :
-   *  · sur les cartes de RECHERCHE, la ligne « Fine Line • Black &
-   *    gray » est SUPPRIMÉE — la carte montre une photo, un badge de
-   *    type, un nom et une ville, et c'est tout ;
-   *  · sur les cartes de « MA SÉLECTION », elle est GARDÉE : on y
-   *    retrouve ce qu'on a mis de côté, et le style est ce qui le
-   *    distingue.
-   * ⚠️ UN RÉGLAGE EXPLICITE, comme le fanion et la pastille : la carte
-   * est rendue par deux grilles, et c'est la grille qui sait où elle
-   * vit. « Ma sélection » le passe, la grille des résultats non.
-   * ⚠️ ET AU DOIGT, RIEN NE CHANGE : la consigne dit « WEB ». La
-   * vignette du doigt garde sa ligne de style dans les deux cas — elle
-   * n'a ni badge, ni nom, ni rond de profil, et cette ligne est presque
-   * tout ce qu'elle dit.
-   */
-  avecLigneDesStyles?: boolean;
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -1153,18 +1134,17 @@ function CarteTatoueurNue({
                 pixels au web, seize au doigt côte à côte, vingt en
                 pleine largeur — voir la note de la hauteur, sur la
                 ligne du nom. */
-            /*  ██ §8 (nº 852) — ELLE QUITTE LES CARTES DE RECHERCHE, AU
-                WEB SEULEMENT ██
-                `not-mobile:hidden` quand la grille ne demande pas les
-                styles : le web des résultats ne la montre plus, « Ma
-                sélection » la garde (elle passe le réglage), et le
-                doigt la garde partout — voir `avecLigneDesStyles`.
-                ⚠️ C'EST UNE BASCULE DE FEUILLE, pas un rendu
-                conditionnel : le serveur écrit la même chose pour tout
-                le monde, donc aucun écart d'hydratation. */
+            /*  ██ §5 (nº 853) — ELLE REVIENT SUR TOUTES LES CARTES ██
+                La nº 852-§8 l'avait retirée des cartes de RECHERCHE au
+                web ; le propriétaire annule ce point-là (et lui seul :
+                le badge du type et le sous-titre-localité, eux, restent
+                comme la nº 852 les a posés). La ligne « Old School •
+                Color » se lit donc de nouveau partout, comme dans « Ma
+                sélection ».
+                ⚠️ LE RÉGLAGE QUI LA GOUVERNAIT S'EN VA AVEC : plus
+                personne ne la masque, et un paramètre qui ne change
+                plus rien est un piège pour la passe suivante. */
             className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-1 text-[15px] text-sombre-texte ${
-              avecLigneDesStyles ? "" : "not-mobile:hidden"
-            } ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1483,6 +1463,10 @@ function CarteTatoueurNue({
             surRang={setIndiceDoigt}
             cheminAPartager={adresseFiche}
             metier={libelleStyle(photoEnregistrable?.style ?? styleRecherche)}
+            //  §6 (nº 853) — LE NOMBRE DE VUES arrive de la base avec la
+            //  fiche (colonne `vues`, SQL nº 852) et n'est calculé nulle
+            //  part : le pied l'affiche s'il existe, et rien sinon.
+            vues={tatoueur.vues}
           />
         </>
       )}

@@ -196,9 +196,31 @@ function ZoneDroite({
         <RondGris />
       </span>
       <span data-squelette-deconnecte="" className="contents">
+        {/*  ██ §2 (nº 853) — LA ZONE DÉCONNECTÉE PROMET LA VRAIE, AU
+             PIXEL ██
+             -------------------------------------------------------
+             DEUX DÉFAUTS DITS PAR LE PROPRIÉTAIRE, et ils n'en font
+             qu'un : les trois ronds COMPRIMAIENT le logo, et ils
+             étaient DÉCALÉS par rapport aux icônes qui les remplacent.
+             LA CAUSE, MESURÉE AU DOIGT : la vraie zone fait 148 px —
+             la loupe (46) + douze + le globe (46) + douze + « Join »,
+             qui est un rond de QUARANTE ramené de huit sur la marge
+             (46 + 12 + 46 + 12 + 40 − 8 = 148). Le squelette en
+             promettait 162 : trois cibles de 46, sans le retrait. Ces
+             quatorze pixels de trop rognaient le logo (176 au lieu de
+             185) et poussaient les trois centres de quatorze pixels
+             (235-293-351 au lieu de 249-307-362).
+             LE TROISIÈME ROND PREND DONC LA BOÎTE DE « JOIN » : quarante
+             pixels, et le même retrait. Les deux zones font alors la
+             même largeur, les trois centres tombent ensemble, et le
+             logo ne bouge plus d'un pixel entre le squelette et la
+             page — c'est le banc qui le dit.
+             ⚠️ LE WEB N'EST PAS CONCERNÉ : ce rond y est retiré de
+             l'affichage (`lg:hidden`), et c'est la plaque de 133 px
+             qui promet le bouton. */}
         <RondGris geste classe="lg:hidden" />
         <RondGris geste />
-        <RondGris geste classe="lg:hidden" />
+        <RondGris classe="lg:hidden -mr-2" />
         <span
           aria-hidden="true"
           className="hidden lg:block h-10 w-[133px] shrink-0 rounded-[12px] bg-sombre-eleve"
@@ -487,10 +509,12 @@ export function CorpsSquelette({
                nº 850). Un squelette qui promettrait l'ancienne hauteur
                ferait sauter toute la page à l'arrivée des cartes. Ces
                deux nombres-là sont mesurés au banc, jamais déduits.
-               ██ nº 851 — LE DOIGT REPASSE À TRENTE ██ : sur smartphone,
-               les badges prennent désormais les mesures exactes du badge
-               du TYPE des cartes du fil (décision du propriétaire), dont
-               la hauteur minimale vaut trente pixels. Le web garde 28.
+               ██ nº 851, PUIS nº 853-§4 — TRENTE PARTOUT ██ : les badges
+               prennent les mesures exactes du badge du TYPE des cartes
+               (décision du propriétaire), dont la hauteur minimale vaut
+               trente pixels — au doigt depuis la nº 851, AU WEB AUSSI
+               depuis la nº 853. Il n'y a donc plus qu'un nombre, et plus
+               aucune variante d'appareil ici.
                ⚠️ ET LA MARGE COPIÉE S'EN VA AVEC ELLE : elle était posée
                ici par largeur de fenêtre (640 px) là où la rangée la
                posait par APPAREIL (règle nº 60) — deux pixels de saut sur
@@ -501,12 +525,13 @@ export function CorpsSquelette({
                Leurs largeurs ne décident de rien (la rangée est une ligne
                de flexion, sa hauteur ne dépend pas d'elles) ; elles sont
                prises sur les libellés les plus courants et MESURÉES à
-               l'écran, au milieu des deux appareils : « 14 portfolios »
-               fait 117 px au doigt et 122 au web, « Blackwork » 127 et
-               131. D'où 120 et 129 (nº 851). */}
+               l'écran : « 27 portfolios » fait 118 px aux deux appareils
+               depuis que leur écriture est la même (nº 853-§4), et
+               « Blackwork » 127 au doigt pour 129 au web — d'où 118 et
+               128. */}
           <div data-squelette-badges="" className="flex items-center gap-2">
-            <div className="mobile:h-[30px] not-mobile:h-[28px] w-[120px] rounded-lg bg-sombre-eleve" />
-            <div className="mobile:h-[30px] not-mobile:h-[28px] w-[129px] rounded-lg bg-sombre-eleve" />
+            <div className="h-[30px] w-[118px] rounded-lg bg-sombre-eleve" />
+            <div className="h-[30px] w-[128px] rounded-lg bg-sombre-eleve" />
           </div>
         </div>
       ) : (

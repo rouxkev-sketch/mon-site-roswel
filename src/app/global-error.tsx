@@ -36,7 +36,13 @@ export default function ErreurGlobale({
   reset: () => void;
 }) {
   return (
-    <html lang="en">
+    //  §1 (nº 853) — LA MÊME INTERDICTION QUE PARTOUT : cette page-ci
+    //  remplace la mise en page racine, elle doit donc porter les deux
+    //  écritures elle-même (le pourquoi est écrit dans app/layout).
+    <html lang="en" className="notranslate">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body
         style={{
           margin: 0,

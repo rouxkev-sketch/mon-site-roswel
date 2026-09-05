@@ -196,9 +196,13 @@ export function PiedDeFil({
    * compteur est livré avec la passe (`docs/SQL-852-VUES.md`), à coller
    * à la main comme toujours ; le jour où la colonne existe et voyage
    * jusqu'ici, le bloc s'affiche tout seul.
-   * ⚠️ RIEN N'EST INVENTÉ EN ATTENDANT : sans nombre, le bloc ne se
-   * rend pas du tout. Un « 28 » de démonstration serait un chiffre
-   * public faux — le pire des deux maux.
+   * ⚠️ RIEN N'EST INVENTÉ : sans nombre, le bloc ne se rend pas du tout.
+   * ██ nº 853 — LE SQL EST PASSÉ, ET LE NOMBRE ARRIVE ██
+   * Le propriétaire a exécuté le SQL nº 852 : la colonne `vues` existe,
+   * la fonction `compter_vue_portfolio` aussi. Le nombre voyage
+   * désormais de la base (colonne `vues`, lue avec la fiche) jusqu'ici,
+   * et une vue est comptée à l'ouverture d'un profil (une par
+   * portfolio et par session/heure — lib/vue-portfolio).
    */
   vues?: number | null;
 }) {
@@ -233,7 +237,10 @@ export function PiedDeFil({
            autour du glyphe, (40 − 22) / 2 = 9, arrondi au cran de
            l'échelle (8 px). */}
       <div className="relative flex shrink-0 items-center -ml-2">
-        {typeof vues === "number" && (
+        {/*  §6 (nº 853) — À PARTIR D'UNE VUE, PAS DE ZÉRO : un « 0 »
+             sur chaque carte d'une base neuve ne dit rien et fait du
+             bruit. Le bloc paraît avec la première vue comptée. */}
+        {typeof vues === "number" && vues > 0 && (
           <span
             data-vues-de-fil=""
             className="flex items-center gap-1.5 pl-2 pr-1 text-[13px]

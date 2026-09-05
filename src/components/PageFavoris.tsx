@@ -743,11 +743,6 @@ export function PageFavoris({
                     //  possible. La mosaïque du moteur ne passe pas ce
                     //  drapeau et reste nue.
                     fanion
-                    /*  §9 (nº 852) — « MA SÉLECTION » GARDE SA LIGNE DE
-                        STYLES au web, là où les cartes de recherche la
-                        perdent (§8). Un réglage explicite : c'est la
-                        grille qui sait où elle vit. */
-                    avecLigneDesStyles
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
                     natureRecherche={natureConnue(photo.nature)}

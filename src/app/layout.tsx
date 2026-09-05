@@ -119,11 +119,38 @@ export default function RootLayout({
     // navigations, comme avant ; les ancres gardent leur douceur.
     <html
       lang="en"
-      className={`${geistSans.variable} h-full antialiased`}
+      /*  ██ §1 (nº 853) — LA TRADUCTION AUTOMATIQUE EST INTERDITE ██
+          SIXIÈME SIGNALEMENT du propriétaire : le bandeau « traduire
+          cette page » de Chrome revient à chaque aller-retour entre
+          fiches, au doigt. La nº 852 avait fermé le trou du `lang`
+          manquant (la page d'erreur de Next) ; le bandeau, lui, reste —
+          Chrome ne juge pas seulement sur le `lang` déclaré, il LIT la
+          page, et un portfolio plein de noms de villes et de styles
+          français lui suffit à proposer sa traduction.
+          LE PROPRIÉTAIRE TRANCHE : on l'interdit. Deux écritures, et
+          les deux sont les écritures officielles de Chrome :
+           · `notranslate` SUR LA RACINE — la classe que le moteur de
+             traduction lit avant tout le reste ;
+           · la balise `<meta name="google" content="notranslate">`,
+             juste en dessous, dans l'en-tête de TOUTES les pages (elle
+             vit dans la mise en page racine, il n'y en a pas deux).
+          ⚠️ RIEN NE PEUT L'EFFACER AU RENDU CLIENT : aucune ligne du
+          site n'écrit `className` ni `classList` sur `<html>` (vérifié
+          — le script d'avant peinture n'y pose que des ATTRIBUTS de
+          données et un style), et React ne réécrit pas une classe qu'il
+          a lui-même rendue. La page d'erreur globale, elle, porte les
+          deux à son tour (app/global-error).
+          ⚠️ CE N'EST PAS UNE PERTE POUR LE VISITEUR ÉTRANGER : le menu
+          « Traduire » du navigateur reste accessible à la main ; c'est
+          la PROPOSITION automatique qui s'arrête. */
+      className={`notranslate ${geistSans.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
+        {/*  §1 (nº 853) — L'INTERDICTION, EN TOUTES LETTRES (voir la
+             note de la racine, juste au-dessus). */}
+        <meta name="google" content="notranslate" />
         {/* Injecte les couleurs du fichier de réglages central dans la
             page. L'identifiant est NEUTRE : cette feuille sert les
             trois produits (artisans, agence, yokofolio) — un nom de

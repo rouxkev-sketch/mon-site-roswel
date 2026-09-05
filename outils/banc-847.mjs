@@ -219,9 +219,10 @@ for (const mode of ["doigt", "web"]) {
         la nº 848 (corps 16, graisse moyenne). Ce banc dit donc les deux,
         et le banc 851 vérifie que celle du doigt est bien, au pixel,
         celle du badge du type. */
-    const ECRITURE = mode === "doigt"
-      ? { corps: "14px", graisse: "600" }
-      : { corps: "16px", graisse: "500" };
+    /*  §4 (nº 853) — LE WEB REJOINT LE DOIGT : les deux prennent
+        l'écriture du badge du TYPE des cartes (corps 14, demi-gras).
+        Il n'y a plus qu'une seule valeur à dire. */
+    const ECRITURE = { corps: "14px", graisse: "600" };
     verif(`TOUS les badges portent la même écriture : corps ${ECRITURE.corps}, graisse ${ECRITURE.graisse}`,
       tous.every((b) => b.corps === ECRITURE.corps && b.graisse === ECRITURE.graisse),
       tous.map((b) => `${b.corps}/${b.graisse}`).join(" | "));

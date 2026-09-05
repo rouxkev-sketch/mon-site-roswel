@@ -34,10 +34,15 @@ const MESURES = `(n) => {
   };
 }`;
 
-{
-  const { nav, page } = await ouvrir("doigt");
+/*  §4 (nº 853) — ET LE WEB REJOINT LE DOIGT : le propriétaire demande
+    les mêmes mesures aux DEUX appareils. La comparaison est la même,
+    jouée deux fois — et c'est tout ce qu'il y avait à changer, puisque
+    ce banc ne récite aucun nombre : il lit le badge du type et exige
+    que les autres lui ressemblent. */
+for (const mode of ["doigt", "web"]) {
+  const { nav, page } = await ouvrir(mode);
   try {
-    titre("851 · doigt — la rangée et la carte, mesure contre mesure");
+    titre(`851 · ${mode} — la rangée et la carte, mesure contre mesure`);
     await page.goto(RECHERCHE, { waitUntil: "domcontentloaded" });
     await page.waitForSelector("[data-badge-type]", { state: "visible", timeout: 20000 });
     await page.waitForSelector("[data-filtre-actif]", { state: "visible", timeout: 20000 });
@@ -70,7 +75,7 @@ const MESURES = `(n) => {
       memes("graisse") && memes("interligne") && memes("fonte"),
       `graisse ${dit("graisse")} · interligne ${dit("interligne")}`);
   } catch (e) {
-    verif("déroulement du banc 851", false, String(e).slice(0, 400));
+    verif(`déroulement du banc 851 (${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }
 }
 

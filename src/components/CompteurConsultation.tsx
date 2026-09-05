@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { signalerConsultation } from "@/lib/balise-popularite";
+import { signalerVue } from "@/lib/vue-portfolio";
 
 /**
  * UNE FICHE OUVERTE EST UNE FICHE CONSULTÉE (passe nº 220-§1)
@@ -36,6 +37,18 @@ export function CompteurConsultation({ slug }: { slug: string }) {
     //  tient le verrou : la carte et cette page-ci se rejoignent sur le
     //  même parcours, et n’envoyaient qu’un doublon (lib/balise-popularite).
     signalerConsultation(slug);
+    /*  ██ §6 (nº 853) — ET LA VUE DU PORTFOLIO, au même instant ██
+        Deux compteurs, deux métiers, et il faut les distinguer :
+         · LA CONSULTATION nourrit le CLASSEMENT (popularité). Elle est
+           dédoublonnée en base, par visiteur et par jour, et personne
+           ne la voit ;
+         · LA VUE est le nombre AFFICHÉ au pied des cartes du fil. Elle
+           est dédoublonnée par session et par heure, dans le
+           navigateur (le garde-fou demandé), et elle se montre.
+        Les deux partent d'ici parce que le fait est le même — une fiche
+        ouverte —, et parce que ce composant est déjà posé sur la seule
+        page qui compte : la fiche publique. */
+    signalerVue(slug);
   }, [slug]);
 
   return null;

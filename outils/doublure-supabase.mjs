@@ -464,7 +464,7 @@ const TATOUEURS = STYLES.flatMap((style, s) =>
   photo_profil: `/images-demo/tatouage/${style}-1.svg`,
   ancien_slug: null, supprime_le: null, purge_le: null,
   styles: [style], cree_le: "2026-01-01T00:00:00Z",
-  maj_le: "2026-01-01T00:00:00Z", score: 10, bio: null,
+  maj_le: "2026-01-01T00:00:00Z", score: 10, vues: 0, bio: null,
   lien_instagram: null, telephone: null, email: null,
     });
   })
@@ -1611,6 +1611,21 @@ function repondre(req, res, u, brut) {
     corps = (TABLES.tatoueurs ?? []).filter(
       (l) => l.purge_le && Date.parse(l.purge_le) <= maintenant
     );
+  }
+  /*  §6 (nº 853) — LA FONCTION DE COMPTAGE DES VUES (SQL nº 852).
+      La vraie incrémente `tatoueurs.vues` pour un slug publié ; la
+      doublure fait exactement cela, sur sa table en mémoire — c'est ce
+      qui permet au banc de vérifier « deux ouvertures, une seule vue ».
+      Elle rend, comme la vraie, un corps vide. */
+  if (table === "rpc/compter_vue_portfolio") {
+    let params = {};
+    try { params = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
+    const fiche = (TABLES.tatoueurs ?? []).find(
+      (l) => l.slug === params.p_slug && l.publie && !l.supprime_le
+    );
+    if (fiche) fiche.vues = (fiche.vues ?? 0) + 1;
+    envoyer(res, null);
+    return;
   }
   if (table === "rpc/rechercher_tatoueurs") {
     let params = {};
