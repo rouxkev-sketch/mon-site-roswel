@@ -204,8 +204,9 @@ export function BlocSuivis({
            titres de groupe. L'air se pose ICI, sur le `gap` de la
            liste — L'ÉLÉMENT DE SÉPARATION, jamais un bloc ni un
            conteneur partagé : l'air INTERNE d'un suivi (le `mt-5` de
-           sa bande, nº 325) et l'air de bas de page (le `pb-16` du
-           <main> de PageFavoris) ne bougent pas d'un pixel. */}
+           sa bande, nº 325 — douze au doigt depuis la nº 865) et l'air
+           de bas de page (le `pb-16` du <main> de PageFavoris) ne
+           bougent pas d'un pixel. */}
       <ul className="grid gap-[26px] lg:gap-[47px] grid-cols-[minmax(0,1fr)]">
         {liste.map((suivi) => (
           <li key={suivi.id}>
@@ -627,9 +628,19 @@ function RangeeDeVignettes({
         aux DEUX largeurs — celle posée à la nº 254 pour le web et
         rejointe par le doigt à la nº 264-§4.
         ⚠️ AUCUNE PASSE FUTURE NE DOIT « RÉTABLIR » LES 36 px en
-        croyant réparer un oubli : ils ont été retirés sur demande. */
+        croyant réparer un oubli : ils ont été retirés sur demande.
+        ██ §2 (nº 865) — DOUZE PIXELS AU DOIGT, ET C'EST DIT ██
+        Le propriétaire trouve « trop d'air entre le bloc avatar et la
+        galerie d'images en dessous » sur le téléphone : les vingt
+        pixels tombent à DOUZE (`mobile:mt-3`) — l'air que la carte du
+        fil met entre sa rangée d'avatar et son image (`pb-3`,
+        RANGEE_EN_TETE_DE_FIL) : la même relation, une rangée d'identité
+        au-dessus d'une bande d'images, le même air. Le web garde ses
+        vingt (nº 325) : la consigne est mobile, et deux variantes qui
+        s'excluent (règle nº 60) font une seule déclaration par écran
+        (piège nº 389). */
     <GalerieQuiDefile
-      classeEnveloppe="mt-5"
+      classeEnveloppe="not-mobile:mt-5 mobile:mt-3"
       classeRangee="-mx-4 px-4 sm:-mx-6 sm:px-6"
       ecart="gap-[3px] lg:gap-1.5"
       cleDuContenu={bande.photos.length}

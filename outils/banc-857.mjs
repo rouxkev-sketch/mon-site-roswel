@@ -60,7 +60,7 @@ const RELEVE_ACCUEIL = `() => {
 }`;
 const releve = (page) => page.evaluate((R) => new Function("return " + R)()(), RELEVE_ACCUEIL);
 //  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
-const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
+const TATTOO = "Tattoo styles", FLASH = "Flash styles";
 
 //  ══ 1-2-3-4 · L'ACCUEIL AU DOIGT ═════════════════════════════════════
 {

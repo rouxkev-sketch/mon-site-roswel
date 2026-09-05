@@ -100,6 +100,7 @@ function CarteTatoueurNue({
   prioritaire = false,
   phototheque = false,
   fanion = false,
+  nomEtVilleAuDoigt = false,
   pastilleDEmblee = false,
   fil = false,
   approchee = false,
@@ -157,6 +158,31 @@ function CarteTatoueurNue({
    * comportement (règle 137 : son état se charge côté navigateur).
    */
   fanion?: boolean;
+  /**
+   * ██ §4 (nº 865) — AU DOIGT, LE TITRE EST LE NOM ET LE SOUS-TITRE LA
+   * VILLE (« Ma sélection » > Favoris) ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : sur les cartes de « Ma sélection » au
+   * doigt (deux colonnes), le texte sous la photo dit LE NOM (blanc,
+   * demi-gras — la ligne du nom telle qu'elle est) et LA VILLE SEULE
+   * (gris fin — la ligne de localité telle qu'elle est) ; le style et
+   * le type n'y paraissent plus. Une ligne chacun, coupés par des
+   * points de suspension. Le web ne change pas.
+   * UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE D'ADRESSE (nº 365) :
+   * PageFavoris le passe, à côté de `fanion`. Ce n'est pas `fanion` qui
+   * le dit — un drapeau qui décide de deux choses en dit une de trop
+   * pour la passe suivante.
+   * ⚠️ UNE BASCULE DE FEUILLE DE STYLE, pas un rendu conditionnel
+   * d'appareil : la ligne du style se retire au doigt (`mobile:hidden`),
+   * le nom, masqué au doigt depuis la nº 486, s'y remontre ; la ville
+   * seule prend la place de « Type · Ville » dans le seul `<span>` du
+   * doigt. Le serveur écrit la même chose pour tout le monde (règle
+   * nº 60), une seule déclaration d'affichage par écran (piège nº 389).
+   * ⚠️ LES DEUX DISPOSITIONS DU DOIGT sont concernées — côte à côte et
+   * pleine largeur : c'est la même page et la même carte, seul le corps
+   * du texte change avec la disposition, comme avant.
+   */
+  nomEtVilleAuDoigt?: boolean;
   /**
    * ██ §4 (nº 852) — LA PASTILLE « 7/20 » S'ALLUME D'EMBLÉE ██
    * DÉCISION DU PROPRIÉTAIRE : au doigt, SUR UNE PAGE DE RÉSULTATS
@@ -1264,12 +1290,16 @@ function CarteTatoueurNue({
                 césure. La ligne elle-même ne garde que celle du doigt,
                 où rien ne change — une seule déclaration de marge par
                 appareil (piège nº 389). */
+            /*  §4 (nº 865) — SUR « MA SÉLECTION », CETTE LIGNE NE
+                S'ÉCRIT PAS AU DOIGT : le titre y est le nom. Le web la
+                garde, avec son fanion (nº 862). Même motif que le nom,
+                juste en dessous, dans l'autre sens. */
             className={`font-normal leading-[18px] line-clamp-1 mobile:mb-1 text-[15px] text-sombre-texte
                         not-mobile:min-w-0 not-mobile:flex-1 ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
-            }`}
+            }${nomEtVilleAuDoigt ? " mobile:hidden" : ""}`}
           >
             {partiesDuTitre.style}
             {/*  §1 (nº 486) — LE RENDU NE S'ÉCRIT PLUS AU DOIGT. Sur une
@@ -1406,11 +1436,18 @@ function CarteTatoueurNue({
               rond de profil avec lui (18 + 4 + 18 = 40, nº 485) : la
               carte retrouve exactement la géométrie d'avant la
               nº 842. */
-          className={`font-semibold leading-[18px] line-clamp-1 mobile:hidden text-[15px] text-sombre-texte ${
+          /*  ██ §4 (nº 865) — ET IL SE REMONTRE AU DOIGT SUR « MA
+              SÉLECTION » ██ La nº 486 l'avait retiré des cartes du
+              doigt ; le propriétaire en fait LE TITRE des cartes de
+              « Ma sélection » — blanc, demi-gras, une ligne coupée par
+              des points de suspension : exactement cette écriture, aux
+              corps du doigt (14 côte à côte, 17 en pleine largeur).
+              Ailleurs (moteur, vitrines), rien ne change. */
+          className={`font-semibold leading-[18px] line-clamp-1 text-[15px] text-sombre-texte ${
             uneColonne
               ? "mobile:text-[17px] mobile:leading-[20px]"
               : "mobile:leading-[16px] mobile:text-[14px]"
-          }`}
+          }${nomEtVilleAuDoigt ? "" : " mobile:hidden"}`}
         >
           {/*  §1 (nº 517) — LE NOM N'EST PLUS UN LIEN, ET N'EN A PLUS
                BESOIN : c'est LA CARTE ENTIÈRE qui est le lien depuis
@@ -1497,8 +1534,14 @@ function CarteTatoueurNue({
                trois d'un seul geste. */}
           {/*  §8-§9 (nº 852) — deux écritures qui s'excluent : le doigt
                garde « Type · Ville », le web ne dit que la ville. */}
+          {/*  §4 (nº 865) — « MA SÉLECTION » : LA VILLE SEULE au doigt,
+               l'écriture du web et du fil (`ligneDeLieuDeCarte`) ; le
+               type ne s'y dit plus (ni ici, ni dans un badge — la
+               vignette n'en a pas la place, nº 852). */}
           <span className="not-mobile:hidden">
-            {sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
+            {nomEtVilleAuDoigt
+              ? ligneDeLieuDeCarte(lieuDeLaCarte)
+              : sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
           </span>
           <span className="mobile:hidden">
             {ligneDeLieuDeCarte(lieuDeLaCarte)}

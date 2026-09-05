@@ -16,7 +16,7 @@
 //  L'ATELIER : voir l'en-tête de `banc-socle.mjs`.
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger, rest, effacer } from "./banc-socle.mjs";
 
-const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
+const TATTOO = "Tattoo styles", FLASH = "Flash styles";
 const AIR = 16;
 const SLUG = `banc863-${Date.now()}`;
 const PHOTO = (i) => `4800000${i.toString(16)}-0000-4000-8000-${String(i).padStart(12, "0")}`;

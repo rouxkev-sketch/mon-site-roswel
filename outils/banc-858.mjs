@@ -14,7 +14,7 @@
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger, rest, effacer } from "./banc-socle.mjs";
 
 //  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
-const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
+const TATTOO = "Tattoo styles", FLASH = "Flash styles";
 
 /*  ⚠️ LA BOÎTE DE LA LIGNE SE CHERCHE PAR SA FORME, pas par le premier
     `aria-hidden` venu : les icônes de l'accueil en sont aussi (ce sont

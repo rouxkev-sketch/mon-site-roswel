@@ -517,3 +517,19 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > clé, pour une autre surface ; le nom du groupe pour les lecteurs
 > d'écran (« Tattoo or flash ») ; les onglets « Tattoo | Flash » de la
 > page de recherche.
+
+---
+
+## Passe nº 865 — les deux titres du va-et-vient, sur une ligne
+
+| avant | après | où |
+| --- | --- | --- |
+| **Explore tattoo styles** (nº 863) | **Tattoo styles** — entier, sur une ligne, aux deux positions | `TEXTES_TATOUAGE.titreVaEtVientTattoo` |
+| **Explore flash styles** (nº 863) | **Flash styles** | `TEXTES_TATOUAGE.titreVaEtVientFlash` |
+
+> **L'arbitrage du propriétaire** après la mesure de la nº 863 : les
+> deux titres d'alors ne tenaient pas côte à côte au corps de la
+> charte ; « Explore » s'en va et tout tient (106 et 96 px d'encre,
+> 142 et 132 avec l'icône, pour des colonnes de 179 à 390 px, 164 à
+> 360). Rien d'autre ne change : ni le nom du groupe, ni les onglets
+> de la page de recherche.

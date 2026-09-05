@@ -156,9 +156,12 @@ for (const mode of ["doigt", "web"]) {
     /*  §1 (nº 847) — L'INVITE REDEVIENT « Find your tattoo style… ».
         La nº 846 l'avait changée parce qu'elle redisait le titre posé
         au-dessus des cartes ; la nº 847 retire ce titre AU DOIGT, et la
-        pilule ne vit que là — le doublon n'existe plus. */
-    verif("la position active du va-et-vient porte l'invite de l'accueil",
-      avant.texte === "Find your tattoo style…", avant.texte);
+        pilule ne vit que là — le doublon n'existe plus.
+        PUIS LA PILULE EST DEVENUE UN VA-ET-VIENT (nº 857), dont la
+        position active dit « Explore tattoo styles » (nº 863) puis
+        « Tattoo styles » (nº 865) : le banc lit le titre du jour. */
+    verif("la position active du va-et-vient porte le titre de l'accueil (« Tattoo styles », nº 865)",
+      avant.texte === "Tattoo styles", avant.texte);
     verif("elle est là, à la hauteur de la piste (43 px, + la ligne de 3 = 46)",
       avant.hauteur === 43 && avant.haut !== null, `${avant.hauteur} px @ ${avant.haut}`);
     verif("et la loupe de la barre est ALLUMÉE (nº 857-§3 : le champ n'est plus là)",

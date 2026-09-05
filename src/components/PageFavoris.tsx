@@ -768,6 +768,10 @@ export function PageFavoris({
                     //  possible. La mosaïque du moteur ne passe pas ce
                     //  drapeau et reste nue.
                     fanion
+                    //  §4 (nº 865) — au doigt, le titre est le nom et le
+                    //  sous-titre la ville : la carte le sait par ce
+                    //  réglage, pas par son adresse.
+                    nomEtVilleAuDoigt
                     styleRecherche={photo.style}
                     renduRecherche={photo.rendu ?? ""}
                     natureRecherche={natureConnue(photo.nature)}

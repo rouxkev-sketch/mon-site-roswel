@@ -1169,10 +1169,47 @@ export function MenuDeroulant({
              fait commencer sa première entrée juste sous le trait.
              L'air sous le trait vaut désormais 24 px DANS LES DEUX
              CAS ; ce qui reste, ce sont les rembourrages propres de ce
-             qui suit — 12 px pour un titre, 10 pour une entrée. */
+             qui suit — 12 px pour un titre, 10 pour une entrée.
+
+             ██ §3 (nº 865) — LES 20 PX N'ONT JAMAIS ATTEINT L'ÉCRAN ; LE
+             PLANCHER PASSE À 32 ██
+             LE DÉFAUT (le propriétaire, sur son téléphone) : le titre du
+             BAS touche presque le bord de la feuille — 4 px de boîte,
+             moins de 10 px d'encre.
+             LA CAUSE, ET ELLE EST DE MON FAIT DEPUIS LA nº 583 : ce
+             jour-là la classe du rembourrage bas est entrée dans un
+             gabarit de chaîne, COLLÉE au dollar de l'interpolation qui
+             la suit. Or le balayeur de Tailwind ne retient une classe
+             que bornée (blanc, guillemet, chevron…) : collée au dollar,
+             elle n'existe pas — la règle était ABSENTE de la feuille
+             de styles bâtie (vérifié au grep sur la feuille, et par le
+             rembourrage calculé : zéro). Les 16 px de la nº 582 puis
+             les 20 de la nº 584, pourtant « mesurés en encre », n'ont
+             jamais été peints : la réserve de la plaque avait été
+             retirée à la nº 581 au profit du bloc, et le bloc ne
+             peignait rien. (Cousin du piège nº 472 : là-bas un mot de
+             commentaire fabrique une règle, ici un dollar en supprime
+             une.)
+             LE REMÈDE : un blanc avant l'interpolation, et la classe
+             conditionnelle perd son blanc de tête — même résultat,
+             classe extraite. ET LA VALEUR, cohérente avec l'air
+             au-dessus du premier titre, comme le demande le
+             propriétaire : au-dessus, 24 px sous le trait de préhension
+             + 1 px de bordure (transparente) du bloc + 12 du titre
+             = 37 px jusqu'à sa ligne de texte ; en dessous, 4 px du
+             titre + 32 du bloc = 36 px jusqu'au bord. En encre : 42,25
+             au-dessus (le trait est un bâton, sans blanc propre) contre
+             41,75 en dessous — le demi-pixel restant est celui des
+             demi-interlignes du titre, inégaux entre haut et bas. Sur un téléphone à barre
+             d'accueil, « le plus grand des deux » tient toujours (34 px
+             sur les iPhone récents, contre 32 ici) : le principe des
+             nº 581-584 ne change pas, seul le plancher monte.
+             ⚠️ NE JAMAIS RECOLLER L'INTERPOLATION À LA CLASSE : le
+             banc 865 (§3) lit le rembourrage calculé et tombe si la
+             règle manque à nouveau. */
         className={`shrink-0 ${
           enBas
-            ? `border-t pb-[max(1.25rem,env(safe-area-inset-bottom))]${
+            ? `border-t pb-[max(2rem,env(safe-area-inset-bottom))] ${
                 /*  ██ §1 (nº 584) — L'AIR SOUS LE TRAIT, MESURÉ EN ENCRE
                      ET NON PLUS EN BOÎTES ██
                      LE DÉFAUT : une section ouverte, l'air entre le
@@ -1220,7 +1257,7 @@ export function MenuDeroulant({
                      ⚠️ ET RIEN AU WEB : là-bas le bloc est en haut, son
                      rembourrage de tête ne dépend d'aucun état, et le
                      trait qu'il porte est en dessous de lui (nº 574). */
-                groupeDeplie ? " pt-2" : ""
+                groupeDeplie ? "pt-2" : ""
               }`
             : "border-b pt-1 pb-3"
         } ${aplatDeLaSurface} ${

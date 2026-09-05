@@ -2141,9 +2141,15 @@ export const TEXTES_TATOUAGE = {
    * ⚠️ LA CASSE EST CELLE DU PROPRIÉTAIRE : « flash » en minuscule ici,
    * là où la nº 857 écrivait « Flash » (le nom de la catégorie). Les
    * deux mots sont ses mots, pris à la lettre dans chaque consigne.
+   * ██ §1 (nº 865) — « Tattoo styles » / « Flash styles » ██
+   * La nº 863 avait mesuré que les deux titres d'alors ne tenaient pas
+   * côte à côte sur une ligne au corps de la charte ; le propriétaire
+   * tranche en retirant « Explore ». Mesuré : 106 et 96 px d'encre,
+   * 142 et 132 avec l'icône — pour des colonnes de 179 (390 px), 172
+   * (375) et 164 (360). Entiers, sur UNE ligne, partout.
    */
-  titreVaEtVientTattoo: "Explore tattoo styles",
-  titreVaEtVientFlash: "Explore flash styles",
+  titreVaEtVientTattoo: "Tattoo styles",
+  titreVaEtVientFlash: "Flash styles",
   /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
       « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
       sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de

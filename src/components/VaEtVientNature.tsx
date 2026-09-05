@@ -82,17 +82,22 @@ import { demanderRestaurationPosition } from "@/lib/navigation-session";
  * et sa colonne de 88 px partent donc, code compris : les deux colonnes
  * redeviennent égales, comme celles de « Ma sélection » (le défaut du
  * composant partagé, sans `largeurInactive`).
- * CE QUE LA MESURE DIT, ET QU'IL FAUT DIRE : au corps de la charte
- * (15 px demi-gras), « Explore tattoo styles » fait 159 px d'encre ;
- * avec l'icône (20), son écart (8) et le rembourrage (4 de chaque
- * côté), une position demande 195 px. Les deux côte à côte : 390 —
- * sur une grille qui en offre 358 à 390 px de large (la page pose ses
- * marges), 343 à 375, 328 à 360. LES DEUX TITRES NE TIENNENT DONC PAS
- * SUR UNE LIGNE À CE CORPS, sur aucun téléphone courant. La consigne
- * pour ce cas est « le dire et proposer, ne pas abréger » : rien n'est
- * abrégé, rien n'est réduit — le titre PASSE À LA LIGNE dans sa
- * colonne (plus de `truncate`), et la page reste lisible en attendant
- * l'arbitrage du propriétaire (voir le compte rendu de la passe).
+ * CE QUE LA MESURE DISAIT À LA nº 863, ET QU'IL FALLAIT DIRE : au corps
+ * de la charte (15 px demi-gras), « Explore tattoo styles » faisait
+ * 159 px d'encre — 195 avec l'icône, son écart et le rembourrage — pour
+ * des colonnes de 179 px à 390, 164 à 360 : les deux titres ne tenaient
+ * pas sur une ligne, et passaient à la ligne dans leur colonne, entiers.
+ *
+ * ██ §1 (nº 865) — L'ARBITRAGE DU PROPRIÉTAIRE : « Tattoo styles » ET
+ * « Flash styles » ██
+ * ------------------------------------------------------------------
+ * « Explore » s'en va, et tout tient : 106 et 96 px d'encre, 142 et 132
+ * avec l'icône, pour les mêmes colonnes. Entiers, sur UNE ligne, aux
+ * deux positions, sur tous les téléphones courants — mesuré au banc
+ * 864. Ce que la nº 863 avait posé pour le cas des deux lignes
+ * (l'interligne de vingt, l'alignement à gauche) n'a plus d'objet et
+ * repart avec lui : le titre porte l'écriture nue de l'onglet, comme
+ * les mots de « Ma sélection ».
  */
 
 const POSITIONS: ReadonlyArray<{
@@ -141,25 +146,18 @@ export function VaEtVientNature() {
           surClic: () => demanderRestaurationPosition(adresse),
           /*  §1 (nº 863) — LES DEUX POSITIONS PORTENT LEUR ICÔNE ET LEUR
               TITRE ENTIER, actives ou non : rien ne change à la bascule
-              que la couleur et le trait. Le titre n'est plus coupé
-              (`truncate` est parti) : là où la colonne est trop étroite
-              pour lui, il passe à la ligne — jamais abrégé, c'est la
-              consigne. `text-left` : un titre sur deux lignes se lit
-              aligné sur son icône, pas centré ligne par ligne.
-              ⚠️ `leading-5` — ET LA BARRE NE GRANDIT PAS D'UN PIXEL :
-              deux lignes à l'interligne courant (22,5 px) font 45, soit
-              deux de plus que l'onglet (43) ; la ligne du va-et-vient
-              descendait d'autant, sous la réserve que la page garde à
-              la barre (116, lib/reserve-barre), et le premier contenu
-              se retrouvait à quatorze de la ligne au lieu de seize
-              (mesuré au banc 863). À vingt pixels d'interligne, les
-              deux lignes font quarante et tiennent dans l'onglet : la
-              barre, sa réserve et le script d'avant peinture ne bougent
-              pas. Un seul interligne sur ce texte (piège nº 389). */
+              que la couleur et le trait. Le titre n'est pas coupé
+              (`truncate` est parti à la nº 863) : jamais abrégé, c'est
+              la consigne.
+              §1 (nº 865) — ET IL TIENT SUR UNE LIGNE (« Tattoo styles »,
+              « Flash styles ») : l'interligne de vingt et l'alignement à
+              gauche que la nº 863 avait posés pour deux lignes n'ont
+              plus d'objet — une classe qui ne dit plus rien est un piège
+              pour la passe suivante, elles partent. */
           label: (
             <span className="flex min-w-0 items-center gap-2">
               <Icone taille={20} classe="shrink-0" />
-              <span className="min-w-0 text-left leading-5">{texte}</span>
+              <span className="min-w-0">{texte}</span>
             </span>
           ),
         }))}

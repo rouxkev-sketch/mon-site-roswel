@@ -16,7 +16,7 @@
 import { BASE, ouvrir, verif, titre, bilan } from "./banc-socle.mjs";
 
 //  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
-const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
+const TATTOO = "Tattoo styles", FLASH = "Flash styles";
 
 const SONDE = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
