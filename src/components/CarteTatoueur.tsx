@@ -1090,7 +1090,25 @@ function CarteTatoueurNue({
              ⚠️ LA MARGE LATÉRALE, ELLE, RESTE SÉPARÉE : deux pixels au
              web, huit au doigt (nº 481) — la photo y touche les bords
              de l'écran, le texte ne peut pas partir du même endroit. */
-        className="pt-2 px-0.5 mobile:px-2"
+        /*  ██ §4 (nº 859) — LA LIGNE DES STYLES SE RAPPROCHE DE LA
+            PHOTO, AU WEB ██
+            -------------------------------------------------------------
+            LE PROPRIÉTAIRE : « la nº 856 l'a trop abaissée ». Elle avait
+            fait de cette ligne une RANGÉE de quarante pixels — la cible
+            du fanion — posée à huit de la photo : le texte, centré
+            dedans, tombait donc à 8 + 11 = 19 px sous elle, contre 8
+            avant. On rend quatre de ces onze.
+            LE PLANCHER EST GÉOMÉTRIQUE, ET C'EST LUI QU'ON DIT : le
+            fanion ne doit pas toucher la photo, sa boîte fait quarante,
+            et le texte est centré dedans — le texte ne peut donc pas
+            remonter plus haut que 11 px sous la photo (0 d'écart, fanion
+            collé). On garde quatre pixels d'écart, le premier cran de
+            l'échelle : la ligne passe à 15, et le fanion respire.
+            ⚠️ AU DOIGT, RIEN : cette rangée n'existe qu'au web (la carte
+            du fil a son propre pied), et l'écart y reste celui de
+            toujours — deux variantes qui s'excluent (règle nº 60), une
+            seule déclaration par écran (piège nº 389). */
+        className="mobile:pt-2 not-mobile:pt-1 px-0.5 mobile:px-2"
       >
         {/*  ██ §1 (nº 480) — LA LIGNE 1 : LE STYLE ET LE RENDU ██
              ------------------------------------------------------
@@ -1641,7 +1659,12 @@ function CarteTatoueurNue({
           data-fanion-de-ligne=""
           className={`pointer-events-none absolute inset-x-0 top-0 hidden not-mobile:block ${CADRE_PHOTO_PORTFOLIO}`}
         >
-          <div className="pointer-events-auto absolute top-full right-0 mt-2 mr-0.5 z-10">
+          {/*  §4 (nº 859) — LE MÊME ÉCART QUE LA RANGÉE, quatre pixels :
+               les deux lisent le bas de la photo et s'en écartent
+               d'autant, sans qu'aucun nombre soit recopié d'un endroit à
+               l'autre — ils tombent l'un sur l'autre parce qu'ils disent
+               la même chose. */}
+          <div className="pointer-events-auto absolute top-full right-0 mt-1 mr-0.5 z-10">
             <BoutonCoeurPhoto
               key={photoRegardee}
               photoId={photoRegardee}

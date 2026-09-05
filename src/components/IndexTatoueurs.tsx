@@ -1310,16 +1310,25 @@ export function IndexTatoueurs({
             //  l'air, comme avant — rien n'y est ajouté.
             return (
               <>
-              {/*  ██ §2 (nº 858) — L'AIR SOUS LA BARRE S'EN VA (LE DOIGT) ██
-                   Quatorze pixels séparaient la barre du premier contenu
-                   de l'accueil ; ils s'ajoutaient à la bande noire que le
-                   propriétaire veut supprimer. Le contenu commence
-                   désormais PILE sous la ligne du va-et-vient, comme sur
-                   « Ma sélection » depuis la nº 857-§5.
-                   ⚠️ AU WEB, RIEN N'EST TOUCHÉ : cet air n'existait qu'au
-                   doigt (`hidden mobile:block`) — l'élément entier s'en
-                   va, plutôt qu'une hauteur mise à zéro (règle nº 386 :
-                   rien d'orphelin). */}
+              {/*  ██ §1 (nº 859) — L'AIR REVIENT, ET IL APPARTIENT AU
+                   CONTENU ██
+                   La nº 858 avait retiré ces quatorze pixels avec la
+                   bande noire ; le propriétaire dit que c'est faux. Au
+                   REPOS il faut cet air entre la ligne du va-et-vient et
+                   la première carte ; au DÉFILEMENT le contenu doit
+                   passer sous la ligne sans bande. Les deux tiennent
+                   parce que ce bloc DÉFILE : il vit dans le corps de la
+                   page, pas dans la barre fixe — la nº 858 avait raison
+                   d'ôter le rembourrage DE LA BARRE, qui lui ne défile
+                   pas, tort d'emporter celui-ci.
+                   ⚠️ AU DOIGT SEULEMENT, et sur l'accueil sans recherche
+                   (là où le titre est masqué) : c'est l'écriture de la
+                   nº 445, rendue au pixel. */}
+              <div
+                aria-hidden="true"
+                data-air-sous-barre=""
+                className="h-3.5 hidden mobile:block"
+              />
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}
                 /*  ██ §1 (nº 507) — PLUS DE SOUS-TITRE, ET PAS UN PIXEL

@@ -47,17 +47,37 @@ import type { SlugNature } from "@/lib/photos-tatoueur";
  * cette nature — c'est le §4 de la nº 857.
  */
 
-/** La largeur d'un onglet réduit à son icône : la hauteur de la piste,
-    pour que le dessin y tienne dans un carré. */
-const LARGEUR_ICONE_SEULE = "43px";
+/**
+ * ██ §2 (nº 859) — LA LARGEUR D'UNE POSITION INACTIVE, MESURÉE ██
+ * La nº 857 la réduisait à son icône (43 px) ; le propriétaire veut
+ * qu'elle montre aussi son MOT COURT. Le calcul, aux mesures de
+ * l'atelier (corps 15 demi-gras) : « Tattoo », le plus long des deux,
+ * fait 49 px ; l'icône 20 ; leur écart 8 ; le rembourrage de l'onglet
+ * 4 de chaque côté. Soit 85 — on prend 88, le cran de l'échelle
+ * au-dessus, pour que « Tattoo » ne frôle jamais son bord.
+ * CE QU'IL RESTE À LA POSITION ACTIVE : 358 − 88 = 270 px, pour une
+ * phrase qui en demande 210 (« Find your tattoo style… », 174, plus
+ * l'icône et les écarts). Elle n'est donc pas coupée — c'est la même
+ * vérification qu'à la nº 858, refaite avec les nouvelles largeurs.
+ */
+const LARGEUR_MOT_COURT = "88px";
 
 const POSITIONS: ReadonlyArray<{
   nature: SlugNature;
+  /** La phrase entière — la position active, et le nom accessible des
+      deux (l'œil lit un mot, un lecteur d'écran entend la phrase). */
   texte: string;
+  /** ██ §2 (nº 859) — LE MOT COURT DE LA POSITION INACTIVE ██
+      « Tattoo » et « Flash » : les titres des deux catégories du
+      catalogue (`CATEGORIES_EXPLORER`, config/tatouage), et les mots
+      mêmes des deux onglets de la page de recherche (nº 447). Aucun
+      vocabulaire neuf — le site n'en a pas d'autre pour ces deux
+      choses-là. */
+  mot: string;
   Icone: typeof IconeGoutteDEncre;
 }> = [
-  { nature: "tatouage", texte: TEXTES_TATOUAGE.invitePilule, Icone: IconeGoutteDEncre },
-  { nature: "flash", texte: TEXTES_TATOUAGE.inviteFlash, Icone: IconeEclair },
+  { nature: "tatouage", texte: TEXTES_TATOUAGE.invitePilule, mot: "Tattoo", Icone: IconeGoutteDEncre },
+  { nature: "flash", texte: TEXTES_TATOUAGE.inviteFlash, mot: "Flash", Icone: IconeEclair },
 ];
 
 export function VaEtVientNature() {
@@ -70,19 +90,23 @@ export function VaEtVientNature() {
         surChoix={(cle) => poserNatureAccueil(cle as SlugNature)}
         classeOnglet="px-1 min-h-[43px]"
         classeLigne={LIGNE_BORD_A_BORD_DOIGT}
-        largeurInactive={LARGEUR_ICONE_SEULE}
-        options={POSITIONS.map(({ nature, texte, Icone }) => ({
+        largeurInactive={LARGEUR_MOT_COURT}
+        options={POSITIONS.map(({ nature, texte, mot, Icone }) => ({
           cle: nature,
           nom: texte,
-          label:
-            nature === active ? (
-              <span className="flex min-w-0 items-center gap-2">
-                <Icone taille={20} classe="shrink-0" />
-                <span className="min-w-0 truncate">{texte}</span>
-              </span>
-            ) : (
+          /*  §2 (nº 859) — LES DEUX POSITIONS PORTENT LEUR ICÔNE ET UN
+              TEXTE ; seul ce texte change — la phrase entière quand
+              l'onglet est actif, le mot court sinon. L'écriture est la
+              même des deux côtés, et c'est ce qui fait que la bascule
+              se lit comme un dépliement et non comme un échange. */
+          label: (
+            <span className="flex min-w-0 items-center gap-2">
               <Icone taille={20} classe="shrink-0" />
-            ),
+              <span className="min-w-0 truncate">
+                {nature === active ? texte : mot}
+              </span>
+            </span>
+          ),
         }))}
       />
     </div>

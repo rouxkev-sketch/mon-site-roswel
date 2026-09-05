@@ -656,18 +656,25 @@ export function PageFavoris({
            de tête des pages web portaient (LigneResultats), le jeton
            d'air des têtes de page, rien d'inventé. Posé sur CE
            séparateur, jamais sur un conteneur partagé. */}
-      {/*  ██ §5 (nº 857) — AU DOIGT, AUCUNE MARGE SOUS LA LIGNE DU
-           VA-ET-VIENT ██
-           Les 14 px de la nº 445 s'en vont : le contenu commence PILE
-           sous la ligne de séparation de la barre (fixe, désormais), et
-           défile dessous. Le web garde son air, valeur par valeur — 14
-           sous 1024, 32 au-delà — écrit par l'APPAREIL (règle nº 60),
-           et une seule hauteur par écran (piège nº 389). */}
-      <div
-        aria-hidden
-        data-air-sous-barre
-        className="mobile:h-0 not-mobile:h-3.5 not-mobile:lg:h-8"
-      />
+      {/*  ██ §1 (nº 859) — L'AIR REVIENT, ET IL APPARTIENT AU CONTENU ██
+           LA nº 857 L'AVAIT MIS À ZÉRO au doigt, la nº 858 avait retiré
+           le reste : le propriétaire dit que c'est FAUX, et il a raison.
+           SA RÈGLE, en deux temps :
+            · AU REPOS (page en haut), il faut de l'air entre la ligne du
+              va-et-vient et le premier contenu — celui d'avant la
+              nº 858, quatorze pixels ;
+            · AU DÉFILEMENT, le contenu passe SOUS la ligne, sans bande
+              noire derrière lui.
+           LES DEUX TIENNENT ENSEMBLE PARCE QUE CET AIR EST DU CONTENU :
+           ce bloc vit DANS le <main> qui défile, pas dans la barre fixe.
+           Il descend donc avec la liste et disparaît sous la barre au
+           premier geste. C'est exactement ce que la nº 858 aurait dû
+           corriger : elle avait raison d'ôter les douze pixels de
+           REMBOURRAGE DE LA BARRE (qui, eux, ne défilent pas et faisaient
+           la bande noire), tort d'ôter celui-ci avec.
+           ⚠️ VALEURS D'ORIGINE, AU PIXEL : 14 au doigt et sous 1024,
+           32 au-delà (nº 445, nº 463). */}
+      <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section

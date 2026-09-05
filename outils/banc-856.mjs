@@ -182,8 +182,12 @@ for (const mode of ["web", "doigt"]) {
           la ligne EST abaissée (elle commence là où elle commençait, mais
           fait la hauteur du fanion), et le fanion reste à huit pixels sous
           la photo — le rythme du web, inchangé. */
-      verif("… et il ne touche PAS la photo : huit pixels sous elle",
-        vu.fanion && vu.photo && vu.fanion.y - vu.photo.bas === 8,
+      /*  §4 (nº 859) — QUATRE PIXELS, ET PLUS HUIT : la ligne des styles
+          remonte de quatre (« la nº 856 l'a trop abaissée »), et le
+          fanion la suit — il garde le plus petit écart de l'échelle avec
+          la photo. Le détail se mesure au banc 859. */
+      verif("… et il ne touche PAS la photo : quatre pixels l'en séparent (nº 859-§4)",
+        vu.fanion && vu.photo && vu.fanion.y - vu.photo.bas === 4,
         vu.fanion ? `${vu.fanion.y - vu.photo.bas} px sous la photo` : "fanion absent");
     } else {
       verif("au doigt, la place du fanion sur la ligne des styles N'EXISTE PAS",

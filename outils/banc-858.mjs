@@ -102,12 +102,18 @@ const A = releves.accueil, S = releves.selection;
       colonnes de l'accueil sont inégales (icône seule / icône + phrase),
       celles de « Ma sélection » égales. C'est voulu, et c'est dit. */
   const [actif, inactif] = A?.boutons ?? [];
-  verif("… et la mécanique nº 857 tient : l'inactif est réduit à son icône, l'actif porte la phrase",
-    inactif?.l === 43 && !inactif?.texte && inactif?.dessin && inactif?.nom === FLASH
-      && actif?.actif && actif?.dessin && actif?.texte === TATTOO && actif.l > 200,
-    `inactif ${inactif?.l} px « ${inactif?.texte} » (nom « ${inactif?.nom} ») · actif ${actif?.l} px « ${actif?.texte} »`);
+  /*  ██ nº 859-§2 — L'INACTIVE NE SE RÉDUIT PLUS À SON ICÔNE ██
+      Elle porte désormais son icône ET son mot court (« Tattoo » /
+      « Flash »), et les colonnes ont été remesurées : 88 px pour elle,
+      le reste à la phrase. Ce qui reste vrai ICI, et qui appartient
+      encore à la nº 858, c'est que les COLONNES SONT INÉGALES — la
+      mécanique que le composant partagé sait rendre. Le détail des
+      mots et des largeurs se mesure au banc 859. */
+  verif("… et les colonnes restent INÉGALES : l'active plus large que l'inactive",
+    inactif && actif?.actif && actif.l > inactif.l && inactif.nom === FLASH && actif.texte === TATTOO,
+    `inactive ${inactif?.l} px « ${inactif?.texte} » · active ${actif?.l} px « ${actif?.texte} »`);
   verif("… la phrase n'est PAS coupée : sa colonne est plus large que son contenu",
-    actif && actif.l >= 202, `${actif?.l} px pour 202 nécessaires`);
+    actif && actif.l >= 210, `${actif?.l} px pour 210 nécessaires`);
   verif("les deux onglets de « Ma sélection » gardent leurs colonnes ÉGALES",
     S?.boutons?.length === 2 && S.boutons[0].l === S.boutons[1].l,
     `${S?.boutons?.map((b) => b.l).join(" | ")}`);

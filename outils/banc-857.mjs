@@ -71,8 +71,10 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     const [tattoo, flash] = v.positions;
     verif("la position ACTIVE (tattoo) montre icône + texte",
       tattoo?.active && tattoo.dessin && tattoo.texte === TATTOO, `« ${tattoo?.texte} » · dessin ${tattoo?.dessin}`);
-    verif("la position INACTIVE (flash) montre l'icône SEULE, et garde son nom pour les lecteurs d'écran",
-      flash && !flash.active && flash.dessin && flash.texte === "" && flash.nom === FLASH && flash.l === 43,
+    //  §2 (nº 859) — ELLE NE SE RÉDUIT PLUS À SON ICÔNE : elle porte
+    //  aussi son mot court. Le nom entier reste le sien.
+    verif("la position INACTIVE (flash) porte son icône et son mot court, et garde son nom entier",
+      flash && !flash.active && flash.dessin && flash.texte === "Flash" && flash.nom === FLASH,
       `texte « ${flash?.texte} » · nom « ${flash?.nom} » · ${flash?.l} px`);
     verif("sa hauteur est celle du champ qu'il remplace (46 = 43 + la ligne de 3) ; la réserve dit la vraie barre (116, nº 858)",
       v.vv?.h === 46 && v.rangee?.h === 58 && v.reserve === 116, `va-et-vient ${v.vv?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve}`);
@@ -104,8 +106,8 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     await page.waitForTimeout(900);
     const f = await releve(page);
     const [tattoo2, flash2] = f.positions;
-    verif("un tap sur l'éclair BASCULE : Flash actif (icône + texte), Tattoo réduit à sa goutte",
-      flash2?.active && flash2.texte === FLASH && tattoo2 && !tattoo2.active && tattoo2.texte === "" && tattoo2.l === 43,
+    verif("un tap sur l'éclair BASCULE : Flash prend la phrase, Tattoo son mot court (nº 859-§2)",
+      flash2?.active && flash2.texte === FLASH && tattoo2 && !tattoo2.active && tattoo2.texte === "Tattoo",
       `flash « ${flash2?.texte} » · tattoo « ${tattoo2?.texte} » ${tattoo2?.l} px`);
     verif("l'accueil FLASH : mêmes cartes de style, adressées aux flashs",
       f.grille && f.grille.nature === "flash" && f.grille.cartes > 0 && f.grille.adresses.every((a) => a.includes("nature=flash")),
@@ -185,8 +187,15 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     const v = await lireSelection();
     verif("le va-et-vient Favoris | Portfolios est dans la rangée fixe de la barre",
       v.groupe && v.groupe.h === 46 && v.rangee?.h === 58 && v.reserve?.posee === 116, `groupe ${v.groupe?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve?.posee}`);
-    verif("AUCUNE marge sous sa ligne : le contenu commence pile au bas de la réserve",
-      v.air === 0 && v.premier && v.reserve && v.premier.y === v.reserve.bas,
+    /*  ██ nº 859-§1 — CETTE RÈGLE A ÉTÉ RETOURNÉE ██
+        La nº 857 avait mis l'air à zéro et la nº 858 avait retiré le
+        reste ; le propriétaire dit que c'est faux. AU REPOS il faut
+        quatorze pixels entre la ligne et le contenu ; c'est AU
+        DÉFILEMENT que rien ne doit rester. Les deux se mesurent au banc
+        859. Ce qui reste vrai ici : l'air appartient au CONTENU, donc
+        le contenu commence au bas de la réserve, et son air avec lui. */
+    verif("le contenu commence au bas de la réserve, son air compris (nº 859-§1)",
+      v.air === 14 && v.premier && v.reserve && v.premier.y === v.reserve.bas + v.air,
       `air ${v.air} px · contenu à ${v.premier?.y} pour une réserve finissant à ${v.reserve?.bas}`);
     await page.evaluate(() => window.scrollTo(0, 600));
     await page.waitForTimeout(800);

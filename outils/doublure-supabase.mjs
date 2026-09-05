@@ -492,9 +492,26 @@ const TATOUEURS = STYLES.flatMap((style, s) =>
     serait vide à l'atelier et rien ne pourrait se mesurer. Les trois
     photos d'avant ne bougent pas (les bancs qui les comptent non plus) ;
     la quatrième est un flash, une galerie à elle seule. */
+/*  ██ §4 (nº 859) — LES IDENTIFIANTS DE PHOTO SONT DES UUID, COMME EN
+    VRAI ██
+    Ils s'écrivaient `photo-<fiche>-<rang>` — lisibles, mais d'une forme
+    que la vraie base n'a pas. Le site s'en sert : le cœur d'une photo
+    refuse de se rendre sur un identifiant qui n'est pas de la base
+    (`estIdentifiantDeBase`, lib/favoris-yokofolio), et le FANION des
+    cartes du web ne paraissait donc JAMAIS à l'atelier — la nº 856 l'a
+    posé sans que rien ne puisse le mesurer. C'est la leçon de la nº 854,
+    dans l'autre sens : une doublure moins fidèle que la vraie base cache
+    ce qu'elle devrait montrer.
+    ⚠️ AUCUN BANC NE LES ÉCRIT À LA MAIN (vérifié) : ils se lisent tous
+    par `lire("photos_tatoueur")`. */
+let rangDePhoto = 0;
+const uuidDePhoto = () => {
+  rangDePhoto += 1;
+  return `59000000-0000-4000-8000-${rangDePhoto.toString(16).padStart(12, "0")}`;
+};
 const PHOTOS = TATOUEURS.flatMap((t) =>
   [0, 1, 2, 3].map((n) => ({
-    id: `photo-${t.id}-${n}`, tatoueur_id: t.id, style: t.styles[0],
+    id: uuidDePhoto(), tatoueur_id: t.id, style: t.styles[0],
     rendu: "noir", nature: n === 3 ? "flash" : "tatouage",
     url: `/images-demo/tatouage/${t.styles[0]}-${n + 1}.svg`,
     miniature: `/images-demo/tatouage/${t.styles[0]}-${n + 1}.svg`,

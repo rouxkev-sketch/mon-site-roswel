@@ -61,8 +61,33 @@ export function lireNatureAccueilServeur(): SlugNature {
   return NATURE_PAR_DEFAUT;
 }
 
+/**
+ * ██ §3 (nº 859) — CHAQUE NATURE GARDE SA PROPRE POSITION DE PAGE ██
+ * ------------------------------------------------------------------
+ * DEMANDE DU PROPRIÉTAIRE : « les défilements Tattoo et Flash sont
+ * INDÉPENDANTS ». Basculer vers Flash ne doit pas hériter de la
+ * position où l'on avait laissé Tattoo, et le retour doit rendre
+ * celle-ci.
+ * COMMENT, ET POURQUOI ICI : la bascule est le SEUL moment où l'on
+ * quitte une nature — c'est donc le seul endroit qui sache quoi
+ * retenir, et quoi rendre. Rien n'est posé au montage de la page :
+ * l'arrivée sur l'accueil, le retour depuis un profil et la mémoire de
+ * position du site (MemoireNavigation) ne sont pas touchés.
+ * ⚠️ DEUX IMAGES D'ATTENTE avant de rendre la position, et il les faut :
+ * la grille de l'autre nature n'existe pas encore quand on repose le
+ * mot — la page serait trop courte, et le navigateur bornerait notre
+ * demande. C'est l'écriture du site pour ce cas (`rendreLEtatDeRangee`,
+ * lib/reserve-barre).
+ * ⚠️ MÉMOIRE DE MODULE, pas de session : une position n'a de sens que
+ * dans la page où on l'a laissée. Un rechargement rend la nature (la
+ * session la retient) mais repart du haut, comme n'importe quelle page.
+ */
+const positions: Record<SlugNature, number> = { tatouage: 0, flash: 0 };
+
 export function poserNatureAccueil(voulue: SlugNature): void {
-  if (voulue === lireNatureAccueil()) return;
+  const actuelle = lireNatureAccueil();
+  if (voulue === actuelle) return;
+  if (typeof window !== "undefined") positions[actuelle] = window.scrollY;
   nature = voulue;
   try {
     window.sessionStorage.setItem(CLE, voulue);
@@ -71,6 +96,19 @@ export function poserNatureAccueil(voulue: SlugNature): void {
         pour cette page, et c'est tout. */
   }
   for (const abonne of abonnes) abonne();
+  if (typeof window === "undefined") return;
+  const rendue = positions[voulue];
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, rendue);
+    });
+  });
+}
+
+/** La position retenue pour une nature — lue par le banc, qui vérifie
+    que les deux défilements ne se mélangent pas. */
+export function positionDeLaNature(nature: SlugNature): number {
+  return positions[nature];
 }
 
 export function souscrireNatureAccueil(abonne: () => void): () => void {

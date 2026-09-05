@@ -306,7 +306,7 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
                   doigt. Cotes mesurées (624 + 10 + 46 = 680 · 46 de
                   haut partout). */
               <div className="flex items-center gap-[10px] w-full max-w-[680px] mx-auto">
-                <div className="h-[46px] flex-1 rounded-full lg:rounded-[12px] bg-sombre-eleve" />
+                <div className="h-[46px] flex-1 rounded-full lg:rounded-[12px] not-mobile:bg-sombre-eleve" />
                 <span
                   aria-hidden="true"
                   className="hidden lg:block h-[46px] w-[46px] shrink-0 rounded-full bg-sombre-eleve"
@@ -316,7 +316,20 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
               /*  Le va-et-vient Favoris | Portfolios : UNE plaque à
                   angles arrondis (la robe rounded-xl de son encadré),
                   sans rond de filtre, aux deux appareils. */
-              <div className="h-[46px] w-full max-w-[680px] mx-auto rounded-[12px] bg-sombre-eleve" />
+              /*  ██ §5 (nº 859) — AU DOIGT, RIEN N'EST DESSINÉ À CETTE
+                  PLACE ██
+                  DEMANDE DU PROPRIÉTAIRE : le squelette peignait ici un
+                  bloc gris pleine largeur à la place du va-et-vient ; il
+                  n'en veut plus. « Rien à cet endroit pendant l'attente,
+                  la place reste réservée. »
+                  LA BOÎTE NE BOUGE DONC PAS D'UN PIXEL — c'est elle qui
+                  donne à la barre sa hauteur, et la réserve en dépend
+                  (nº 858) : seul le FOND s'en va, et par l'appareil
+                  (règle nº 60). Une seule déclaration de fond, posée au
+                  web seulement (piège nº 389) — au doigt il n'y en a
+                  aucune, plutôt qu'une seconde qui annulerait la
+                  première. */
+              <div className="h-[46px] w-full max-w-[680px] mx-auto rounded-[12px] not-mobile:bg-sombre-eleve" />
             )}
           </div>
         </div>
@@ -567,10 +580,12 @@ export function CorpsSquelette({
       ) : (
         /*  « Ma sélection » n'a ni titre ni sous-titre (nº 708) : la
             grille commence après le seul espacement du rythme. */
-        /*  §5 (nº 857) — AU DOIGT, PLUS AUCUN AIR : la vraie page n'en a
-            plus sous la ligne du va-et-vient (`data-air-sous-barre`,
-            PageFavoris). Le squelette promet la même chose — zéro. */
-        <div className="pt-6 sm:pt-8 mobile:pt-0" />
+        /*  §1 (nº 859) — L'AIR DU DOIGT EST DE RETOUR, et le squelette
+            promet EXACTEMENT le sien : quatorze pixels
+            (`data-air-sous-barre`, PageFavoris). Il en promettait douze
+            avant la nº 857 — deux de moins que la vraie page, un écart
+            que personne n'avait relevé ; il est corrigé du même geste. */
+        <div className="pt-6 sm:pt-8 mobile:pt-3.5" />
       )}
       {/*  §1 (nº 722) — DES RANGÉES ENTIÈRES, À CHAQUE LARGEUR. La
            nº 710 avait tranché HUIT cases ; le propriétaire RE-TRANCHE :
