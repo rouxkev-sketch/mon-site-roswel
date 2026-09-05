@@ -6,7 +6,8 @@
 //   2. LE BOOKING : plus de point, LE CALENDRIER et le texte —
 //      « Books open • 5-month wait », « Books open », « Books closed »,
 //      et rien du tout quand rien n'est déclaré. Il a quitté le bloc du
-//      nom (nº 871-§2) : c'est LA PREMIÈRE LIGNE D'INFORMATION.
+//      nom (nº 871-§2) et se pose ENTRE LUI ET LES BADGES (nº 872-§2),
+//      à l'air de l'en-tête.
 //   3. LE SITE : sa ligne, son icône, son BLEU — sous la bio.
 //   4. TROIS BADGES : Follow et Instagram de MÊME LARGEUR, icône à
 //      gauche du mot, puis le partage — petit, icône seule ; QUARANTE
@@ -14,7 +15,8 @@
 //   4 bis. LES ROBES (nº 871-§5) : « Follow » en BLANC, « Following » et
 //      les deux autres sur l'aplat d'action ; l'icône et le mot CENTRÉS
 //      ENSEMBLE dans les deux états. Les dessins sont le PLUS et la
-//      COCHE (nº 871-§6), plus aucun personnage.
+//      COCHE (nº 871-§6), plus aucun personnage — au trait de 2,2, un
+//      cran au-dessus de la famille (nº 872-§1).
 //   5. LES DEUX AIRS : au-dessus de la rangée, celui qui sépare le
 //      va-et-vient du haut de l'avatar ; en dessous, celui qui sépare
 //      deux blocs du profil.
@@ -37,6 +39,8 @@ const AIR_ENTETE = 40, AIR_BLOC = 24, DEBORD_TRAIT = 28, HAUTEUR_BADGE = 40;
 const BLANC_FOND = "rgb(242, 242, 244)", FOND_PAGE = "rgb(11, 15, 20)";
 //  §6 (nº 871) — les deux signes, lus à la source (Icones).
 const PLUS = "M12 5v14M5 12h14", COCHE = "M5 12.5 9.5 17 19 7.5";
+//  §1 (nº 872) — le cran au-dessus du trait de la famille (1,8).
+const TRAIT_SIGNE = "2.2";
 
 const U = { id: "30000000-0000-4000-8000-000000000870", email: "banc-870@yokofolio.test" };
 await rest("auth/v1/admin/users", { method: "POST", body: { id: U.id, email: U.email } }).catch(() => {});
@@ -96,7 +100,8 @@ const LIRE = `() => {
       ...B(a), fond: s.backgroundColor, trait: s.borderTopWidth, rayon: s.borderTopLeftRadius, corps: s.fontSize,
       couleur: s.color, icone: svg ? { taille: Math.round(svg.getBoundingClientRect().width),
         x: +svg.getBoundingClientRect().left.toFixed(1),
-        chemin: (svg.querySelector("path")?.getAttribute("d") ?? "").replace(/\\s+/g, " ").trim() } : null,
+        chemin: (svg.querySelector("path")?.getAttribute("d") ?? "").replace(/\\s+/g, " ").trim(),
+        trait: svg.querySelector("path")?.getAttribute("stroke-width") ?? null } : null,
       mot: mot ? mot.textContent.trim().replace(/^(Following|Follow)(Follow|Following)*$/, "$1") : null,
       motX: mot ? +mot.getBoundingClientRect().left.toFixed(1) : null,
       motD: mot ? +mot.getBoundingClientRect().right.toFixed(1) : null }; }) : null;
@@ -164,18 +169,18 @@ for (const mode of ["doigt", "web"]) {
     verif("§2 — l'icône est grise, le mot est blanc (l'écriture d'avant la nº 869)",
       v.booking?.couleurIcone === GRIS && v.booking?.couleurMot === BLANC,
       `${v.booking?.couleurIcone} · ${v.booking?.couleurMot}`);
-    verif("§2 (nº 871) — elle a QUITTÉ le bloc du nom : elle ouvre les lignes d'information, sous la rangée",
-      v.booking && v.type && v.booking.y >= v.rangee.bas && v.booking.bas <= v.site.y && v.booking.x < v.avatar.d,
-      JSON.stringify({ type: v.type?.bas, rangee: v.rangee?.bas, booking: v.booking?.y, site: v.site?.y }));
+    verif("§2 (nº 872) — la ligne du booking est SOUS LE BLOC DU NOM et AU-DESSUS des badges",
+      v.booking && v.type && v.booking.y >= v.avatar.bas && v.booking.bas <= v.rangee.y && v.booking.x < v.avatar.d,
+      JSON.stringify({ avatar: v.avatar?.bas, booking: v.booking?.y, rangee: v.rangee?.y }));
     verif("§2 (nº 871) — le bloc du nom n'a plus que le nom et le type",
       v.h1 && v.type && v.booking.y > v.h1.bas + 40, `nom ${v.h1?.bas} · booking ${v.booking?.y}`);
     //  §3 — LE SITE
     verif("§3 — le site a sa ligne, son icône et le titre choisi",
       v.site?.texte === "Mon site à moi" && v.site?.svg === 1 && v.site?.cible === "_blank", JSON.stringify(v.site && { texte: v.site.texte, svg: v.site.svg }));
     verif("§3 — son lien est BLEU (ce qui sort du site)", v.site?.couleur === BLEU, v.site?.couleur);
-    verif("§3 (nº 871) — il est SOUS LE BOOKING et AU-DESSUS DE LA BIO",
-      v.bio && v.site && v.booking && v.booking.bas <= v.site.y && v.site.bas <= v.bio.y,
-      JSON.stringify({ booking: v.booking?.bas, site: v.site?.y, bio: v.bio?.y }));
+    verif("§3 (nº 872) — le site ouvre les lignes, sous la rangée et au-dessus de la bio",
+      v.bio && v.site && v.rangee && v.rangee.bas <= v.site.y && v.site.bas <= v.bio.y,
+      JSON.stringify({ rangee: v.rangee?.bas, site: v.site?.y, bio: v.bio?.y }));
     verif("§3 — et il n'est plus un badge de la rangée",
       (v.actions ?? []).every((a) => a.cle !== "website"), (v.actions ?? []).map((a) => a.cle).join(" · "));
     //  §4 — LES TROIS BADGES
@@ -197,6 +202,8 @@ for (const mode of ["doigt", "web"]) {
       JSON.stringify([suivre, insta].map((a) => [+((a.icone.x + a.motD) / 2).toFixed(1), +((a.x + a.d) / 2).toFixed(1)])));
     verif("§6 (nº 871) — le dessin de « Follow » est LE PLUS, et il fait vingt pixels",
       suivre?.icone?.chemin === PLUS && suivre?.icone?.taille === 20, `${suivre?.icone?.chemin} (${suivre?.icone?.taille})`);
+    verif(`§1 (nº 872) — son trait est de ${TRAIT_SIGNE}, un cran au-dessus de la famille`,
+      suivre?.icone?.trait === TRAIT_SIGNE, `${suivre?.icone?.trait} (les deux autres badges : ${insta?.icone?.trait} · ${partage?.icone?.trait})`);
     verif("§4 — l'icône est À GAUCHE du mot dans les deux grands",
       suivre?.icone && insta?.icone && suivre.icone.x < suivre.motX && insta.icone.x < insta.motX,
       JSON.stringify([[suivre?.icone?.x, suivre?.motX], [insta?.icone?.x, insta?.motX]]));
@@ -208,16 +215,18 @@ for (const mode of ["doigt", "web"]) {
       suivre?.mot === "Follow" && insta?.balise === "A" && insta?.mot === "Instagram" && partage?.aria === "Share Banc 870's portfolio",
       JSON.stringify([suivre?.aria, suivre?.mot, insta?.mot, partage?.aria]));
     //  §5 — LES DEUX AIRS
-    verif("§5-a — l'air entre le bas de l'avatar et la rangée = celui du va-et-vient au haut de l'avatar",
-      proche(v.rangee?.y - v.avatar?.bas, AIR_ENTETE, 1) && proche(v.avatar?.y - v.groupe?.bas, AIR_ENTETE, 4),
-      `sous l'avatar ${(v.rangee?.y - v.avatar?.bas)?.toFixed?.(1)} · au-dessus ${(v.avatar?.y - v.groupe?.bas)?.toFixed?.(1)}`);
-    verif("§5-b — l'air sous la rangée = l'air standard entre deux blocs (la première ligne est le booking)",
-      proche(v.booking?.y - v.rangee?.bas, AIR_BLOC, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC, 1),
-      `sous la rangée ${(v.booking?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
-    verif("§3 (nº 871) — l'ordre : nom, rangée, booking, site, bio, styles, techniques, adresse",
-      v.h1.y < v.rangee.y && v.rangee.bas <= v.booking.y && v.booking.bas <= v.site.y && v.site.bas <= v.bio.y
+    verif("§2 (nº 872) — l'air entre le bas de l'avatar et LE BOOKING = celui du va-et-vient au haut de l'avatar",
+      proche(v.booking?.y - v.avatar?.bas, AIR_ENTETE, 1) && proche(v.avatar?.y - v.groupe?.bas, AIR_ENTETE, 4),
+      `sous l'avatar ${(v.booking?.y - v.avatar?.bas)?.toFixed?.(1)} · au-dessus ${(v.avatar?.y - v.groupe?.bas)?.toFixed?.(1)}`);
+    verif("§5-a — la rangée garde le même air, mesuré depuis le booking",
+      proche(v.rangee?.y - v.booking?.bas, AIR_ENTETE, 1), `${(v.rangee?.y - v.booking?.bas)?.toFixed?.(1)}`);
+    verif("§5-b — l'air sous la rangée = l'air standard entre deux blocs (la première ligne est le site)",
+      proche(v.site?.y - v.rangee?.bas, AIR_BLOC, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC, 1),
+      `sous la rangée ${(v.site?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
+    verif("§2 (nº 872) — l'ordre : nom, booking, rangée, site, bio, styles, techniques, adresse",
+      v.h1.y < v.booking.y && v.booking.bas <= v.rangee.y && v.rangee.bas <= v.site.y && v.site.bas <= v.bio.y
       && v.bio.bas <= v.styles.y && v.styles.bas <= v.pratiques.y && v.pratiques.bas <= v.adresse.y,
-      JSON.stringify({ nom: v.h1?.y, rangee: v.rangee?.y, booking: v.booking?.y, site: v.site?.y, bio: v.bio?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
+      JSON.stringify({ nom: v.h1?.y, booking: v.booking?.y, rangee: v.rangee?.y, site: v.site?.y, bio: v.bio?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
   } catch (e) {
     verif(`déroulement du banc 870 (§1-§5 ${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -246,8 +255,10 @@ for (const mode of ["doigt", "web"]) {
       proche(n.rangee?.w, n.largeurColonne, 2) && proche(n.actions[1].d, n.rangee.d, 1),
       `${(n.actions ?? []).map((a) => a.cle).join(" · ")} · rangée ${n.rangee?.w} / colonne ${n.largeurColonne}`);
     verif("§3 — sans site, aucune ligne de site n'apparaît", n.site === null || n.site === undefined, JSON.stringify(n.site));
-    verif("§5-b — sans site, c'est le booking qui ouvre la liste, à l'air standard sous la rangée",
-      proche(n.booking?.y - n.rangee?.bas, AIR_BLOC, 1), `${(n.booking?.y - n.rangee?.bas)?.toFixed?.(1)}`);
+    verif("§5-b — sans site, c'est la bio qui ouvre la liste (ses quatre pixels en plus, comme partout)",
+      proche(n.bio?.y - n.rangee?.bas, AIR_BLOC + 4, 1), `${(n.bio?.y - n.rangee?.bas)?.toFixed?.(1)}`);
+    verif("§2 (nº 872) — et le booking y est toujours au-dessus des badges",
+      n.booking && n.rangee && n.booking.bas <= n.rangee.y, JSON.stringify({ booking: n.booking?.y, rangee: n.rangee?.y }));
   } catch (e) {
     verif("déroulement du banc 870 (§2 états)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -321,6 +332,7 @@ for (const mode of ["doigt", "web"]) {
         && bascule?.fond === (suiviAuDepart ? BLANC_FOND : CARTE_CLAIR)
         && bascule?.icone?.chemin === (suiviAuDepart ? PLUS : COCHE),
         JSON.stringify(bascule && { mot: bascule.mot, fond: bascule.fond, chemin: bascule.icone?.chemin }));
+      verif(`… et LA COCHE porte le même trait que le plus (${TRAIT_SIGNE})`, bascule?.icone?.trait === TRAIT_SIGNE, String(bascule?.icone?.trait));
       verif("… et l'icône reste collée au mot, le couple centré", proche((bascule.icone.x + bascule.motD) / 2, (bascule.x + bascule.d) / 2, 1),
         `${((bascule.icone.x + bascule.motD) / 2).toFixed(1)} contre ${((bascule.x + bascule.d) / 2).toFixed(1)}`);
       verif("… et la largeur des deux grands badges n'a pas bougé", proche(bascule?.w, apres.actions[1]?.w, 0.6),

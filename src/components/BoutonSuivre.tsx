@@ -7,9 +7,33 @@ import { FenetreInvitationCompte } from "@/components/FenetreInvitationCompte";
 //  §4 (nº 870) — LE BADGE DE LA RANGÉE (icône à gauche du mot) :
 //  l'écriture unique des trois actions d'un profil, et ses deux dessins.
 import { ActionDeFiche } from "@/components/ActionDeFiche";
-//  §6 (nº 871) — LE PLUS ET LA COCHE, les deux signes du site (trait
-//  1,8 sur la grille de 24) : le personnage de la nº 869 s'en va.
+//  §6 (nº 871) — LE PLUS ET LA COCHE, les deux signes du site, sur la
+//  grille de 24 : le personnage de la nº 869 s'en va.
 import { IconeCocheListe, IconePlus } from "@/components/Icones";
+
+/**
+ * ██ §1 (nº 872) — UN CRAN AU-DESSUS DU TRAIT DE LA FAMILLE ██
+ * ==================================================================
+ * LE PROPRIÉTAIRE : le « + » de « Follow » est TROP FIN. Il l'est
+ * doublement, et les deux raisons se cumulent : le trait de la famille
+ * (1,8 sur la grille de 24) est réglé pour des glyphes de 20 à 24 px
+ * posés sur le fond de page, alors que celui-ci est SEUL au milieu
+ * d'un aplat blanc de 40 px — un signe nu, sans forme autour de lui
+ * pour le porter —, et l'encre sombre sur blanc paraît toujours plus
+ * mince que la même encre claire sur sombre.
+ * LA VALEUR : 2,2 — LE CRAN AU-DESSUS, et c'est le pas de la famille
+ * elle-même (elle va de 1,4 à 1,8 par quatre dixièmes). Un cinquième
+ * d'épaisseur en plus se voit à vingt pixels ; deux dixièmes de plus
+ * (2,4) auraient donné un signe gras, étranger au reste du site.
+ * ⚠️ LA COCHE SUIT, AU MÊME TRAIT, et c'est la consigne : les deux
+ * signes se répondent d'un état à l'autre, dans la même boîte. Une
+ * seule constante les sert (piège nº 378) — ils ne peuvent pas
+ * diverger.
+ * ⚠️ ELLE NE DÉBORDE PAS D'ICI : `IconePlus` et `IconeCocheListe`
+ * gardent 1,8 par défaut, et leurs autres appelants (le formulaire,
+ * les listes) ne passent rien. Aucun autre écran ne bouge.
+ */
+const TRAIT_SIGNE_SUIVI = 2.2;
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -185,7 +209,11 @@ export function BoutonSuivre({
             accompagnent un texte (les liens d'un profil, le booking).
             §6 (nº 871) — et le SIGNE seul : le plus, puis la coche. */
         icone={
-          suivi ? <IconeCocheListe taille={20} /> : <IconePlus taille={20} />
+          suivi ? (
+            <IconeCocheListe taille={20} trait={TRAIT_SIGNE_SUIVI} />
+          ) : (
+            <IconePlus taille={20} trait={TRAIT_SIGNE_SUIVI} />
+          )
         }
         /*  ██ §5 (nº 871) — L'ICÔNE ET LE MOT, CENTRÉS ENSEMBLE ██
             ==============================================================

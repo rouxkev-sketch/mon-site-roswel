@@ -1347,15 +1347,27 @@ export function ContenuFiche({
    * le texte en BLANC (nº 552-§1). Le gris vit sur la RANGÉE, donc
    * l'icône le prend et le mot le recouvre : une seule classe de
    * couleur par élément (piège nº 389).
-   * ⚠️ LA MARGE HAUTE S'EN VA (`mt-2`) : elle la séparait du type dans
-   * le bloc du nom ; dans la liste, c'est la LISTE qui écarte ses
-   * rangées (son `gap-y-6`), et une marge de plus se serait ajoutée à
-   * l'écart commun (piège nº 378/379).
+   * ██ §2 (nº 872) — ELLE REMONTE AU-DESSUS DES BADGES ██
+   * ==================================================================
+   * La nº 871 en avait fait la première ligne de la LISTE, sous la
+   * rangée d'actions. Le propriétaire la place JUSTE SOUS LE BLOC DU
+   * NOM, au-dessus des badges : l'état des carnets se lit avant qu'on
+   * décide de suivre — l'ordre devient bloc du nom, booking, badges,
+   * puis les lignes (site, bio, styles, techniques, adresse).
+   * SON AIR EST CELUI DE L'EN-TÊTE, et il est REPRIS DE LA RANGÉE (§5-a
+   * de la nº 870) : QUARANTE PIXELS sous le bas de l'avatar, la valeur
+   * exacte qui sépare le va-et-vient du HAUT de l'avatar (le `mt-10`
+   * du bloc du nom, nº 241). L'en-tête garde donc ses deux airs égaux
+   * au-dessus et au-dessous de la photo — c'est simplement le booking,
+   * et non plus la rangée, qui reçoit le second.
+   * ⚠️ ELLE PORTE SA MARGE ELLE-MÊME, et c'est possible parce qu'elle
+   * n'a QU'UNE SEULE place (piège nº 378/379) : hors de la liste, plus
+   * personne ne l'écarte pour elle.
    */
   const ligneDuBooking = etatDesCarnets && (
     <p
       data-booking-fiche={tatoueur.booking}
-      className={`flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} items-start gap-2.5`}
+      className={`mt-10 flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} items-start gap-2.5`}
     >
       <span className={BOITE_ICONE_LIGNE}>
         <IconeCalendrier taille={20} />
@@ -1424,14 +1436,15 @@ export function ContenuFiche({
   const rangeeDActions = (
     <div
       data-rangee-actions=""
-      /*  ██ §5 (nº 870) — LES DEUX AIRS DE LA RANGÉE, MESURÉS ██
-          (a) AU-DESSUS — QUARANTE PIXELS sous le bas de l'avatar, et ce
-          n'est pas une valeur choisie : c'est EXACTEMENT l'air qui
-          sépare le va-et-vient du haut de l'avatar (le `mt-10` du bloc
-          du nom, nº 241). L'en-tête est donc encadré par deux airs
-          égaux, au-dessus et au-dessous de la photo. La rangée touche
-          le bas de l'avatar parce que la colonne du nom ne dépasse pas
-          ses 92 px (`min-h`, nº 241-§2) : nom, type et booking y tiennent.
+      /*  ██ §5 (nº 870, REPRIS PAR LA nº 872) — LES DEUX AIRS ██
+          (a) AU-DESSUS — QUARANTE PIXELS, et ce n'est pas une valeur
+          choisie : c'est EXACTEMENT l'air qui sépare le va-et-vient du
+          haut de l'avatar (le `mt-10` du bloc du nom, nº 241).
+          ⚠️ CE QU'IL MESURE A CHANGÉ À LA nº 872, PAS SA VALEUR : la
+          ligne du booking s'est glissée entre l'avatar et la rangée, et
+          c'est ELLE qui reçoit désormais l'air de l'en-tête sous la
+          photo (sa note le dit). Cette marge-ci écarte donc la rangée
+          DU BOOKING, à la même valeur : l'en-tête garde son rythme.
           (b) EN DESSOUS — l'air standard entre deux blocs du profil, et
           il est écrit UNE SEULE FOIS, sur la liste qui suit (son `mt-6`,
           la valeur de son propre `gap-y-6`) : rien ici (piège nº 378).
@@ -2177,7 +2190,15 @@ export function ContenuFiche({
           </div>
 
           {/* ==========================================================
-              §4 (nº 870) — LA RANGÉE D'ACTIONS, SOUS LE BLOC DU NOM
+              §2 (nº 872) — L'ÉTAT DES CARNETS, SOUS LE BLOC DU NOM
+              ==========================================================
+              La ligne du booking (voir `ligneDuBooking`) : elle porte
+              son air d'en-tête — quarante pixels sous l'avatar, la
+              valeur qui sépare le va-et-vient du haut de la photo. */}
+          {ligneDuBooking}
+
+          {/* ==========================================================
+              §4 (nº 870) — LA RANGÉE D'ACTIONS
               ==========================================================
               Trois badges : Follow, Instagram (si renseigné) et le
               partage (voir `rangeeDActions`). Ses deux airs sont dits
@@ -2203,8 +2224,7 @@ export function ContenuFiche({
               JSX existe même vide — on teste les longueurs, qui sont la
               vérité (une fiche sans bio, sans technique et sans style
               n'ouvre pas ce conteneur pour rien). */}
-          {(Boolean(ligneDuBooking) ||
-            Boolean(ligneDuSite) ||
+          {(Boolean(ligneDuSite) ||
             Boolean(tatoueur.bio) ||
             aDesPratiques ||
             aDesStyles) && (
@@ -2231,13 +2251,6 @@ export function ContenuFiche({
                    partout ailleurs dans la liste. */
               className="mt-6 flex w-full flex-col items-start gap-y-6"
             >
-              {/*  ██ §2 et §3 (nº 871) — LE BOOKING OUVRE LA LISTE ██
-                   La ligne d'état des carnets (voir `ligneDuBooking`)
-                   descend du bloc du nom et devient la PREMIÈRE
-                   information du profil. Elle est une rangée comme les
-                   autres : aucun air propre, c'est le `gap-y-6` de la
-                   liste qui l'écarte de ce qui suit. */}
-              {ligneDuBooking}
               {/*  ██ §3 (nº 870, REPRIS PAR LA nº 871) — LE SITE ██
                    Sa ligne d'avant la nº 869 (voir `ligneDuSite`) : la
                    nº 870 l'avait posée sous la bio, la nº 871 la met

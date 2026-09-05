@@ -1550,13 +1550,22 @@ export function IconeCloche({ taille = 20, classe = "", trait = 1.8 }: Propriete
 }
 
 /** LE PLUS — « + Ajouter une fiche », au bas du sélecteur. */
-export function IconePlus({ taille = 18, classe = "" }: ProprietesIcone) {
+/*  §1 (nº 872) — L'ÉPAISSEUR DEVIENT RÉGLABLE, ET SON DÉFAUT NE CHANGE
+    RIEN : 1,8, le trait de la famille, celui que ce plus portait en dur
+    depuis toujours. Ses appelants d'avant (le formulaire, les listes)
+    ne passent rien et ne bougent donc pas d'un pixel. SEUL le badge
+    « Follow » demande un cran de plus (voir BoutonSuivre) : dans un
+    aplat blanc de 40 px, le trait de la famille se voyait maigre.
+    C'est le procédé de `IconeCocheListe`, `IconeHorloge` et des autres
+    icônes réglables — un paramètre, un défaut qui reproduit l'écriture
+    d'avant. */
+export function IconePlus({ taille = 18, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
       <path
         d="M12 5v14M5 12h14"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth={trait}
         strokeLinecap="round"
       />
     </svg>
