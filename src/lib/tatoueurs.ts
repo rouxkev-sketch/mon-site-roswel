@@ -543,7 +543,8 @@ function normaliser(ligne: Tatoueur): Tatoueur {
     lien_youtube: ligne.lien_youtube ?? null,
     page_de_liens: ligne.page_de_liens ?? null,
     //  §6 (nº 853) — absente d'une base sans le SQL nº 852 : elle vaut
-    //  alors `null`, et le pied de carte ne montre rien.
+    //  alors `null`, et le pied de carte lit ce `null` comme un zéro
+    //  (nº 854). Sur la recherche, `avecLesVues` la recolle ensuite.
     vues: ligne.vues ?? null,
     booking: ligne.booking ?? null,
     booking_mois: ligne.booking_mois ?? null,
@@ -2017,6 +2018,67 @@ function allumesDuGroupe(
 }
 
 /**
+ * ██ BOGUE Nº 853 — LE NOMBRE DE VUES N'ARRIVAIT PAS JUSQU'AUX CARTES ██
+ * ====================================================================
+ * CE QUE LE PROPRIÉTAIRE A VU : en production, aucune carte du fil ne
+ * montrait le bloc « vues + statistiques », profil ouvert ou non, cache
+ * expiré ou non.
+ * LA CAUSE, ET ELLE EST ENTIÈRE : la recherche ne lit pas des COLONNES,
+ * elle appelle la fonction `rechercher_tatoueurs`, qui fabrique une
+ * fiche RÉDUITE — un `jsonb_build_object` de trente-trois champs, écrit
+ * à la main dans la migration (`supabase/yokofolio-recherche-sans-
+ * masquage.sql`, nº 66). `vues` n'y est pas, et ne pouvait pas y être :
+ * la colonne est née après elle (SQL nº 852). La fiche arrivait donc
+ * SANS le champ, `normaliser` le posait à `null`, et le pied de carte
+ * n'avait rien à montrer. Ni droit de lecture en cause, ni cache : une
+ * SÉLECTION DE CHAMPS, dans la fonction de base.
+ * POURQUOI L'ATELIER NE L'AVAIT PAS VU : la doublure rend la LIGNE
+ * ENTIÈRE au lieu de la fiche réduite (sauf `FICHE_PARTIELLE=1`) — elle
+ * était plus généreuse que la vraie base, et le banc nº 853 mesurait
+ * donc un chemin que la production n'emprunte pas. Le banc nº 854
+ * mesure les deux.
+ * CE QU'ON FAIT ICI, ET POURQUOI PAS UNE MIGRATION : une lecture de
+ * plus, minuscule — deux colonnes pour les vingt-quatre fiches de la
+ * page — recolle le nombre sur les fiches rendues. Le site marche
+ * ALORS SANS RIEN DEMANDER À PERSONNE, avec le SQL nº 852 déjà passé et
+ * la fonction de recherche telle qu'elle est. C'est la règle de la
+ * maison : aucune version du site n'exige une migration pour
+ * fonctionner (le SQL qui mettrait `vues` dans la fonction est livré à
+ * part, `docs/SQL-854-VUES-DANS-LA-RECHERCHE.md`, et ne fera qu'épargner
+ * cette lecture-ci).
+ * ⚠️ ELLE NE PEUT RIEN CASSER : la moindre erreur — colonne absente
+ * (SQL nº 852 pas passé), table injoignable — rend les fiches TELLES
+ * QUELLES. On ne perd que le nombre, jamais les résultats.
+ */
+async function avecLesVues(
+  supabase: ReturnType<typeof creerClientSupabaseAnonyme>,
+  fiches: Tatoueur[]
+): Promise<Tatoueur[]> {
+  if (fiches.length === 0) return fiches;
+  try {
+    const { data, error } = await supabase
+      .from("tatoueurs")
+      .select("slug, vues")
+      .in(
+        "slug",
+        fiches.map((fiche) => fiche.slug)
+      );
+    if (error || !Array.isArray(data)) return fiches;
+    const parSlug = new Map(
+      (data as unknown as Array<{ slug: string; vues: number | null }>).map(
+        (ligne) => [ligne.slug, ligne.vues ?? null]
+      )
+    );
+    return fiches.map((fiche) => ({
+      ...fiche,
+      vues: parSlug.get(fiche.slug) ?? fiche.vues ?? null,
+    }));
+  } catch {
+    return fiches;
+  }
+}
+
+/**
  * LA RECHERCHE FAITE EN BASE — le chemin normal depuis la passe
  * « performance »
  * ================================================================
@@ -2116,7 +2178,10 @@ async function rechercheEnBase(
       total_resultats: number;
     }>;
     return {
-      tatoueurs: lignes.map((ligne) => normaliser(ligne.fiche)),
+      tatoueurs: await avecLesVues(
+        supabase,
+        lignes.map((ligne) => normaliser(ligne.fiche))
+      ),
       demonstration: false,
       message: null,
       ville,

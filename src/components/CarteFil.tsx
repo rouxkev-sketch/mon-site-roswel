@@ -196,13 +196,20 @@ export function PiedDeFil({
    * compteur est livré avec la passe (`docs/SQL-852-VUES.md`), à coller
    * à la main comme toujours ; le jour où la colonne existe et voyage
    * jusqu'ici, le bloc s'affiche tout seul.
-   * ⚠️ RIEN N'EST INVENTÉ : sans nombre, le bloc ne se rend pas du tout.
+   * ⚠️ RIEN N'EST INVENTÉ : le bloc ne montre que ce que la base
+   * compte — et « 0 » en est le premier état, pas une absence.
    * ██ nº 853 — LE SQL EST PASSÉ, ET LE NOMBRE ARRIVE ██
    * Le propriétaire a exécuté le SQL nº 852 : la colonne `vues` existe,
    * la fonction `compter_vue_portfolio` aussi. Le nombre voyage
    * désormais de la base (colonne `vues`, lue avec la fiche) jusqu'ici,
    * et une vue est comptée à l'ouverture d'un profil (une par
    * portfolio et par session/heure — lib/vue-portfolio).
+   * ██ BOGUE Nº 853 — POURQUOI IL N'ARRIVAIT PAS (corrigé nº 854) ██
+   * La recherche n'emprunte pas la lecture par colonnes mais la
+   * fonction `rechercher_tatoueurs`, qui fabrique une fiche RÉDUITE
+   * où `vues` ne figure pas (elle est plus vieille que la colonne).
+   * `lib/tatoueurs` recolle désormais le nombre sur les fiches
+   * rendues (`avecLesVues`) : voir la note complète là-bas.
    */
   vues?: number | null;
 }) {
@@ -229,27 +236,32 @@ export function PiedDeFil({
            ⚠️ CE N'EST PAS UN BOUTON : rien à toucher, rien à ouvrir. Un
            nombre et un dessin, en gris doux comme les autres icônes du
            pied, avec l'écart de la rangée entre eux.
-           ⚠️ SANS DONNÉE, RIEN : voir la note de `vues`, plus haut — le
-           site ne compte pas encore les vues, et un chiffre faux serait
-           pire que pas de chiffre.
+           ⚠️ IL PARAÎT TOUJOURS, ET « 0 » EST UN NOMBRE (nº 854). La
+           nº 853 le cachait tant que le compteur n'avait pas dépassé
+           un ; le propriétaire tranche : le bloc s'affiche sur chaque
+           carte, et un portfolio que personne n'a encore ouvert
+           annonce zéro. Une carte sans nombre du tout — base sans le
+           SQL nº 852 — dit zéro elle aussi : c'est la vérité de ce que
+           le site sait compter.
            SIGNALER garde sa place et son retrait : sa cible de 40 px
            ramenée sur la marge de la page — le retrait vaut le vide
            autour du glyphe, (40 − 22) / 2 = 9, arrondi au cran de
            l'échelle (8 px). */}
       <div className="relative flex shrink-0 items-center -ml-2">
-        {/*  §6 (nº 853) — À PARTIR D'UNE VUE, PAS DE ZÉRO : un « 0 »
-             sur chaque carte d'une base neuve ne dit rien et fait du
-             bruit. Le bloc paraît avec la première vue comptée. */}
-        {typeof vues === "number" && vues > 0 && (
-          <span
-            data-vues-de-fil=""
-            className="flex items-center gap-1.5 pl-2 pr-1 text-[13px]
-                       font-semibold text-sombre-texte-doux"
-          >
-            {vues}
-            <IconeStatistiques taille={20} />
-          </span>
-        )}
+        {/*  ██ BOGUE Nº 853, CORRIGÉ À LA nº 854 ██
+             La nº 853 écrivait ici `vues > 0` : « à partir d'une vue,
+             pas de zéro ». Le propriétaire le refuse — le bloc doit
+             PARAÎTRE, et montrer « 0 » quand le compteur est à zéro.
+             Aucune condition ne reste donc : un nombre absent (base
+             sans le SQL nº 852, fiche de démonstration) se lit zéro. */}
+        <span
+          data-vues-de-fil=""
+          className="flex items-center gap-1.5 pl-2 pr-1 text-[13px]
+                     font-semibold text-sombre-texte-doux"
+        >
+          {typeof vues === "number" ? vues : 0}
+          <IconeStatistiques taille={20} />
+        </span>
         <FenetreSignalement
           slug={tatoueur.slug}
           nom={tatoueur.nom}

@@ -1465,7 +1465,8 @@ function CarteTatoueurNue({
             metier={libelleStyle(photoEnregistrable?.style ?? styleRecherche)}
             //  §6 (nº 853) — LE NOMBRE DE VUES arrive de la base avec la
             //  fiche (colonne `vues`, SQL nº 852) et n'est calculé nulle
-            //  part : le pied l'affiche s'il existe, et rien sinon.
+            //  part. ⚠️ Nº 854 : le pied l'affiche TOUJOURS, et lit un
+            //  nombre absent comme un zéro.
             vues={tatoueur.vues}
           />
         </>

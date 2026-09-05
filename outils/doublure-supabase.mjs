@@ -238,7 +238,24 @@ const TRI = process.env.TRI === "1";
  *
  *      FICHE_PARTIELLE=1 npm run banc:doublure
  */
-const FICHE_PARTIELLE = process.env.FICHE_PARTIELLE === "1";
+/**
+ * ██ BOGUE Nº 853 — CE CRAN A LAISSÉ PASSER UN BOGUE (nº 854) ██
+ * ------------------------------------------------------------------
+ * Il était ÉTEINT par défaut, et personne ne l'allumait : la doublure
+ * rendait donc la ligne entière là où la vraie base rend trente-trois
+ * champs choisis. Le nombre de vues (`vues`, colonne née après la
+ * fonction de recherche) arrivait au banc et JAMAIS en production —
+ * le bogue nº 853 est né exactement là.
+ * IL SE RÈGLE DÉSORMAIS EN COURS DE ROUTE, sans redémarrer :
+ *
+ *      POST http://127.0.0.1:3222/__reglages  {"fichePartielle": true}
+ *
+ * Un banc peut ainsi mesurer LES DEUX formes dans la même exécution —
+ * la généreuse (l'atelier d'avant) et la vraie (la production). La
+ * variable d'environnement garde son rôle : elle donne l'état de
+ * départ.
+ */
+let FICHE_PARTIELLE = process.env.FICHE_PARTIELLE === "1";
 /** Les champs que la vraie fonction met dans `fiche` — la liste de
     `jsonb_build_object`, recopiée de la fonction SQL. */
 const CHAMPS_FICHE_MOTEUR = [
@@ -1893,5 +1910,23 @@ createServer((req, res) => {
   const u = new URL(req.url, "http://x");
   let brut = "";
   req.on("data", (m) => { brut += m; });
-  req.on("end", () => repondre(req, res, u, brut));
+  req.on("end", () => {
+    //  ██ LE RÉGLAGE EN COURS DE ROUTE (nº 854) ██ — voir la note de
+    //  `FICHE_PARTIELLE`. Une seule adresse, hors de tout ce que le
+    //  site appelle : elle ne peut rien changer au reste.
+    if (u.pathname === "/__reglages") {
+      if (brut) {
+        try {
+          const demande = JSON.parse(brut);
+          if (typeof demande.fichePartielle === "boolean") {
+            FICHE_PARTIELLE = demande.fichePartielle;
+          }
+        } catch { /*  corps illisible : on rend l'état, rien de plus. */ }
+      }
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ fichePartielle: FICHE_PARTIELLE }));
+      return;
+    }
+    repondre(req, res, u, brut);
+  });
 }).listen(3222, "127.0.0.1", () => console.log("doublure Supabase sur :3222"));
