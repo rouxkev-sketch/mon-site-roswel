@@ -221,7 +221,20 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
         la plaque y vit. Le constat est donc clos, et ce bloc mesure
         désormais l'état d'arrivée : la plaque À L'ÉCRAN, avec son
         écriture de la nº 843. */
-    titre("843 · la plaque du profil : son écriture, et sa place retrouvée (nº 845)");
+    /*  ██ ET LA PLAQUE A CÉDÉ LA PLACE À LA nº 862 ██
+        Le propriétaire fait prendre à la vue photo « exactement la
+        présentation des cartes du fil » : la plaque est REMPLACÉE par
+        l'EN-TÊTE DU FIL — même marque (`data-habillage-photo`, qui
+        nomme l'habillage de la photo au doigt depuis la nº 451), même
+        destination (le profil), écriture du fil.
+        CE QUE CE BLOC MESURE DÉSORMAIS, et c'est le retournement exact
+        du constat de la nº 843 : le badge du type qui n'avait PAS sa
+        place sur une plaque (« elle est déjà un lien, et porte son
+        chevron ») EST maintenant là — parce que ce n'est plus une
+        plaque mais une rangée de fil, où le badge est un second lien
+        voisin (nº 843-§1, la règle du fil, appliquée ici). Le chevron
+        part avec la plaque. */
+    titre("843 · l'en-tête du fil dans la vue photo : son écriture (nº 862)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
     const m = await page.evaluate(() => {
@@ -230,13 +243,13 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
       return {
         nom: bloc?.querySelector(":scope > span:first-child")?.textContent.trim(),
         sous: bloc?.querySelector(":scope > span:nth-child(2)")?.textContent.trim(),
-        badge: plaque?.querySelector("[data-badge-type]") !== null,
+        badge: plaque?.querySelector("[data-badge-type]") !== null && plaque?.querySelector("[data-badge-type]") !== undefined,
         montree: (plaque?.getBoundingClientRect().height ?? 0) > 0,
         chevron: plaque?.querySelector("a > span:last-child svg") !== null,
       };
     });
-    verif("son écriture dit le NOM SEUL, puis « Type · Ville »", m.nom === "Banc 843" && m.sous === "Private Studio · Lyon, FR", `${m.nom} / ${m.sous}`);
-    verif("elle ne porte pas de badge (elle est déjà un lien, et porte son chevron)", m.badge === false && m.chevron === true);
+    verif("son écriture dit le NOM SEUL, puis LA VILLE SEULE (nº 862)", m.nom === "Banc 843" && m.sous === "Lyon, FR", `${m.nom} / ${m.sous}`);
+    verif("elle porte LE BADGE DU TYPE, et plus de chevron (nº 862 : c'est une rangée de fil)", m.badge === true && m.chevron === false, `badge ${m.badge} · chevron ${m.chevron}`);
     verif("FIN DU CONSTAT nº 843 : elle est de nouveau montrée (nº 845)", m.montree === true);
   } catch (e) {
     verif("déroulement du banc 843 (plaque)", false, String(e).slice(0, 400));

@@ -57,12 +57,32 @@ import { adresseDeLienInterne } from "@/lib/lien-interne";
  */
 export function BadgeTypeDeFiche({
   tatoueur,
+  classeBoite = "",
 }: {
   tatoueur: {
     slug: string;
     type_fiche?: string | null;
     etablissement?: string | null;
   };
+  /**
+   * ██ §2 (nº 862) — CE QUI S'AJOUTE À SA BOÎTE, ET RIEN D'AUTRE ██
+   * ------------------------------------------------------------------
+   * SON SECOND PORTEUR : la liste des PORTFOLIOS SUIVIS de « Ma
+   * sélection », où ce badge remplace « Following » (BlocSuivis). Là-bas
+   * la rangée est à l'échelle du web depuis la nº 589 — rond de 72 px,
+   * nom de 20 — et la capsule qu'il remplace y montait à quarante
+   * pixels de haut pour ne pas disparaître à côté. Elle lui passe donc
+   * SES DEUX CLASSES, telles quelles.
+   * ⚠️ LA ROBE N'EST JAMAIS UN PARAMÈTRE : la couleur, le fond, la
+   * typographie et le rayon restent écrits ICI, une seule fois, pour
+   * tous les porteurs. Ce qui s'ajoute ne peut être qu'une MESURE de
+   * boîte, et elle arrive en dernier — la classe du porteur l'emporte
+   * sur la base, comme chez « Suivre » (BoutonSuivre, `classeBoite`),
+   * dont c'est le motif exact.
+   * ⚠️ ET LE FIL N'EN PASSE AUCUNE : la carte du doigt garde le badge
+   * de la charte, trente pixels, inchangé au pixel.
+   */
+  classeBoite?: string;
 }) {
   const type = libelleTypeFiche(tatoueur.type_fiche, tatoueur.etablissement);
   if (!type) return null;
@@ -129,7 +149,7 @@ export function BadgeTypeDeFiche({
                  transition-opacity
                  hover:opacity-90 active:opacity-90
                  focus-visible:outline-2 focus-visible:outline-offset-2
-                 focus-visible:outline-primaire`}
+                 focus-visible:outline-primaire ${classeBoite}`}
     >
       {type}
     </Link>

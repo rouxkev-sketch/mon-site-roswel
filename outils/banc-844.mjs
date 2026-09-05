@@ -242,7 +242,24 @@ const REPOS = 3400;
     await page.waitForTimeout(1800);
     //  DEUX SÉRIES = DEUX CARTES : la première, et elle seule.
     await page.locator(CARTE).first().scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
+    /*  ██ LA MESURE ATTENDAIT UN NOMBRE ANIMÉ (corrigé nº 862) ██
+        CE QUI SE PASSAIT : la règle de la nº 852-§4 allume la pastille à
+        l'arrivée sur une page de résultats et l'éteint TROIS SECONDES
+        après le dernier défilement. Ce bloc mesurait six cents
+        millisecondes après un `scrollIntoViewIfNeeded` qui, la carte
+        déjà visible, ne défile pas : le compte à rebours courait donc
+        depuis l'arrivée, et l'on tombait une fois sur deux au milieu du
+        FONDU — opacité 0,82 pour une vérification qui exige 1. Un banc
+        qui compare une valeur en train de changer ne mesure rien.
+        CE QU'ON FAIT MAINTENANT : on provoque un vrai défilement (d'un
+        pixel — c'est le geste, pas la distance, que la règle écoute),
+        puis on ATTEND que le fondu soit fini avant de lire. La règle
+        vérifiée ne bouge pas d'un iota : allumée, pleine, « 1/6 ». */
+    await page.evaluate(() => window.scrollBy(0, 1));
+    await page.waitForFunction(
+      (SEL) => getComputedStyle(document.querySelector(
+        SEL + ' [data-cadre-de-fil] [data-role="compteur"]')).opacity === "1",
+      CARTE, { timeout: 5000 });
     const auRepos = await page.evaluate(([SEL, M]) => {
       const f = new Function("return " + M)();
       const c = document.querySelector(SEL);
@@ -346,7 +363,9 @@ const REPOS = 3400;
       `${vue.pastille.texte} · opacité ${vue.pastille.opacite}`);
 
     //  LE CHEMIN DU RETOUR EST LA PLAQUE (nº 845).
-    await page.locator("[data-habillage-photo] a").tap();
+    //  nº 862 — l'habillage porte DEUX liens (le profil, le badge du
+    //  type) : on nomme celui qu'on touche.
+    await page.locator("[data-habillage-photo] [data-lien-profil-de-fil]").tap();
     await page.waitForTimeout(2500);
     const apresLaPlaque = await page.evaluate(() => ({
       url: location.pathname + location.search,

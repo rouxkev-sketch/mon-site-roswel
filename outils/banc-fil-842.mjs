@@ -294,7 +294,21 @@ const mesureTitre = `(bloc) => {
         `entree=lien`, celle d'un lien partagé) et non plus le profil,
         où la colonne entière est masquée. La mesure est donc plus forte
         qu'avant : elle porte sur une plaque à l'écran. */
-    titre("842 · la plaque du profil suit la même règle (vue photo, nº 845)");
+    /*  ██ ET ELLE A CÉDÉ LA PLACE À LA nº 862 ██
+        LA PLAQUE EST REMPLACÉE par l'EN-TÊTE DE LA CARTE DU FIL
+        (décision du propriétaire : « la vue photo prend exactement la
+        présentation des cartes du fil »). La marque
+        `data-habillage-photo` désigne toujours le même bloc — l'habillage
+        de la photo au doigt, qui mène au profil — mais son écriture est
+        désormais celle du fil :
+         · LE NOM SEUL en titre : la règle de la nº 843 tient, au
+           caractère près, et c'est bien la même chose qu'on mesure ;
+         · LA LIGNE DU DESSOUS ne dit plus « Type · Ville » mais LA VILLE
+           SEULE — le type est monté dans le BADGE, à droite de la rangée
+           (la nº 843 réservait le badge au fil ; la nº 862 fait de cette
+           vue un fil). Les deux vérifications suivantes disent donc la
+           nouvelle vérité, et le pourquoi est écrit ici. */
+    titre("842 · l'en-tête du fil suit la même règle de titre (vue photo, nº 862)");
     await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1800);
     const m = await page.evaluate((M) => {
@@ -304,11 +318,15 @@ const mesureTitre = `(bloc) => {
       const t = f(bloc.querySelector(":scope > span:first-child"));
       t.sousTitre = bloc.querySelector(":scope > span:nth-child(2)").textContent.trim();
       t.montree = plaque.getBoundingClientRect().height > 0;
+      //  nº 862 — le badge du type, voisin du lien dans l'en-tête.
+      t.badge = document.querySelector("[data-habillage-photo] [data-badge-type]")?.textContent.trim() ?? null;
       return t;
     }, mesureTitre);
-    //  §1 (nº 843) — nom seul en titre, « Type · Ville » dessous.
-    verif("la plaque dit le nom seul, demi-gras", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
-    verif("sa ligne du dessous porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
+    //  §1 (nº 843) — nom seul en titre ; §3 (nº 862) — la ville seule
+    //  dessous, le type dans le badge.
+    verif("l'en-tête dit le nom seul, demi-gras", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
+    verif("sa ligne du dessous porte LA VILLE SEULE (nº 862)", m.sousTitre === "Lyon, FR", m.sousTitre);
+    verif("… et le TYPE est dans le badge, à droite (nº 862)", m.badge === "Private Studio", String(m.badge));
     verif("et elle est BIEN À L'ÉCRAN depuis la nº 845", m.montree === true);
   } catch (e) {
     verif("déroulement du banc 842 (plaque)", false, String(e).slice(0, 400));

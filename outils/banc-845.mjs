@@ -259,8 +259,13 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
         photoMontree: (photo?.getBoundingClientRect().height ?? 0) > 0,
         plaqueMontree: (r?.height ?? 0) > 0,
-        //  ELLE EST SOUS LA PHOTO, et c'est sa place depuis la nº 454.
-        sousLaPhoto: r && photo ? r.top > photo.getBoundingClientRect().top : null,
+        /*  ██ SA PLACE A CHANGÉ À LA nº 862 ██ Elle était SOUS la photo
+            depuis la nº 454 ; l'EN-TÊTE DU FIL qui la remplace ouvre la
+            vue, AU-DESSUS de l'image — c'est le sens même de « prendre la
+            présentation des cartes du fil ». On mesure donc l'inverse, et
+            on le dit. La marque, elle, ne bouge pas : elle nomme
+            l'habillage de la photo au doigt depuis la nº 451. */
+        auDessusDeLaPhoto: r && photo ? r.top < (photo.querySelector("[data-photo-fiche]")?.getBoundingClientRect().top ?? Infinity) : null,
         href: lien?.getAttribute("href"),
         nom: bloc?.querySelector(":scope > span:first-child")?.textContent.trim(),
         sous: bloc?.querySelector(":scope > span:nth-child(2)")?.textContent.trim(),
@@ -273,22 +278,22 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
     verif("c'est la vue photo : photo montrée, colonne de lecture retirée",
       vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true,
       `vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree} · lecture ${vue.lectureMasquee}`);
-    verif("LA PLAQUE EST RÉTABLIE, montrée, sous la photo",
-      vue.plaqueMontree && vue.sousLaPhoto === true,
-      `montrée ${vue.plaqueMontree} · sous la photo ${vue.sousLaPhoto}`);
-    verif("elle dit le nom, puis « Type · Ville », avec son rond de 40",
-      vue.nom === "Banc 845" && vue.sous === "Private Studio · Lyon, FR" && vue.avatar === 40,
+    verif("L'HABILLAGE EST LÀ, montré, AU-DESSUS de la photo (nº 862)",
+      vue.plaqueMontree && vue.auDessusDeLaPhoto === true,
+      `montré ${vue.plaqueMontree} · au-dessus ${vue.auDessusDeLaPhoto}`);
+    verif("il dit le nom, puis LA VILLE SEULE (nº 862), avec son rond de 40",
+      vue.nom === "Banc 845" && vue.sous === "Lyon, FR" && vue.avatar === 40,
       `${vue.nom} / ${vue.sous} / rond ${vue.avatar}`);
-    verif("elle est un lien vers le profil", vue.href === `/artist/${T}?entree=lien`, vue.href);
+    verif("il est un lien vers le profil", vue.href === `/artist/${T}?entree=lien`, vue.href);
     verif("LA CROIX DE LA nº 844 N'EST PLUS LÀ (doublon avec la plaque)", vue.croix === false);
 
-    await page.locator("[data-habillage-photo] a").tap();
+    await page.locator("[data-habillage-photo] [data-lien-profil-de-fil]").tap();
     await page.waitForTimeout(2500);
     const apres = await page.evaluate(() => ({
       url: location.pathname + location.search,
       photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
     }));
-    verif("un toucher sur la plaque ouvre le profil",
+    verif("un toucher sur l'en-tête ouvre le profil",
       apres.url === `/artist/${T}?entree=lien` && !apres.photoMontree,
       `${apres.url} · photo ${apres.photoMontree}`);
 

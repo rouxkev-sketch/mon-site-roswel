@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+//  §3 (nº 862) — `Link` N'EST PLUS APPELÉ D'ICI : la plaque du profil,
+//  son dernier porteur dans ce fichier, a cédé la place à l'en-tête du
+//  fil, qui écrit son lien chez lui (components/CarteFil).
 //  §2 (nº 455) — `useRouter` : la vignette du Portfolio navigue vers
 //  la vue photo au doigt (une entrée, le retour rend le profil).
 import { useRouter } from "next/navigation";
@@ -19,13 +21,21 @@ import {
   //  la même géométrie qu'ici, sans recopie.
   LARGEUR_PHOTO_FICHE,
   libelleStyle,
-  //  §1 (nº 451) — le mot « Artiste / Salon / Studio » de la ligne
-  //  grise, la MÊME écriture que le sous-titre des cartes (nº 211-§2).
-  MARQUE_YOKOFOLIO,
 } from "@/config/tatouage";
-//  §1 (nº 451) — le lieu de la ligne grise : l'écriture du sous-titre
-//  MOBILE des cartes (nº 212-§6), jamais recomposée ici.
-import { ligneCarteMobile, villeAffichee } from "@/lib/adresse";
+/*  ██ §3 (nº 862) — QUATRE IMPORTS SONT PARTIS AVEC LA PLAQUE ET LA
+    RANGÉE D'ICÔNES DU DOIGT ██
+    ------------------------------------------------------------------
+    `MARQUE_YOKOFOLIO`, `villeAffichee` (le partage du doigt),
+    `ligneCarteMobile` et `sousTitreDeCarte` (la ligne grise de la
+    plaque) : la vue photo ne compose plus ni l'un ni l'autre — elle
+    MONTE L'EN-TÊTE ET LE PIED DU FIL, qui écrivent tout cela chez eux
+    (components/CarteFil). Un import qui ne sert plus est un piège pour
+    la passe suivante ; ils partent avec leurs appelants. Le WEB, lui,
+    ne perd rien : ces quatre-là ne servaient qu'au doigt. */
+//  §3 (nº 862) — le lieu que l'en-tête du fil écrit : sa forme est
+//  celle des cartes (`ligneDeLieuDeCarte`, chez lui), et c'est le type
+//  du site qui la nomme.
+import type { LieuAffichable } from "@/lib/adresse";
 //  §2 (nº 776) — la mesure de la photo de tête, partagée avec la
 //  silhouette d'attente (voir lib/mesure-photo-fiche).
 import { observerLargeurPhotoFiche } from "@/lib/mesure-photo-fiche";
@@ -37,29 +47,39 @@ import {
   photoDuCarrouselRetenue,
   retenirPhotoDuCarrousel,
 } from "@/lib/memoire-galeries";
-import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
+//  §3 (nº 862) — `BoutonPartageFiche` N'EST PLUS APPELÉ D'ICI : le
+//  partage du doigt vivait dans la rangée du titre, il est passé dans
+//  le PIED DU FIL (components/CarteFil), qui le monte lui-même. Le web
+//  n'en avait pas dans cette page.
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+/*  ██ §3 (nº 862) — L'EN-TÊTE ET LE PIED DE LA CARTE DU FIL ██
+    ------------------------------------------------------------------
+    DÉCISION DU PROPRIÉTAIRE : « la VUE PHOTO prend EXACTEMENT la
+    présentation des cartes du fil ». Ce ne sont donc pas deux blocs
+    ressemblants, c'est LE MÊME COMPOSANT, monté ici : au-dessus de
+    l'image l'en-tête (avatar, nom, ville, badge du type), sous elle le
+    pied (signaler, vues, points, fanion, partage). Aucune apparence
+    n'est recopiée — une seule écriture, celle de CarteFil. */
+import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
 import {
   CarrouselPortfolio,
   PointsDuCarrousel,
 } from "@/components/CarrouselPortfolio";
-//  §2 (nº 451) — `adresseDeLienInterne` : l'adresse de la vue profil
-//  (« ?entree=lien », sans photo en haut), l'écriture UNIQUE des liens
-//  internes — la PLAQUE du profil de la photo mobile la consomme (le
-//  badge « Profil » qui la portait jusqu'à la nº 502 a laissé sa place
-//  au chevron, mais la destination est la même).
-import {
-  adresseDeLienInterne,
-  ContenuFiche,
-  ENTREE_LIEN,
-} from "@/components/ContenuFiche";
+//  §3 (nº 862) — `adresseDeLienInterne` N'EST PLUS APPELÉ D'ICI : la
+//  plaque du profil, son seul porteur, a cédé la place à l'en-tête du
+//  fil — qui mène au profil PAR LA MÊME ADRESSE, écrite chez lui.
+import { ContenuFiche, ENTREE_LIEN } from "@/components/ContenuFiche";
 import { PileFiches } from "@/components/PileFiches";
 //  §1 (nº 502) — la rangée du profil de la vue photo devient une
 //  PLAQUE : l'écriture partagée (celle des membres d'équipe et des
 //  lieux) et le chevron qui dit le lien. Rien n'est recopié.
 //  §1 (nº 845) — RÉTABLIS avec la plaque (la nº 844 les avait retirés).
-import { ENCADRE_MEMBRE_CLIQUABLE } from "@/components/plaque";
-import { IconeChevronBas } from "@/components/Icones";
+//  ██ §3 (nº 862) — ET ILS REPARTENT AVEC ELLE ██ La plaque est
+//  REMPLACÉE par l'en-tête du fil (décision du propriétaire) :
+//  `ENCADRE_MEMBRE_CLIQUABLE` et `IconeChevronBas` n'ont plus
+//  d'appelant dans ce fichier. Les deux écritures restent vivantes
+//  ailleurs (les plaques d'équipe et de lieux, les volets d'horaires) —
+//  c'est ce fichier-ci qui cesse de les lire.
 //  §1 (nº 602) — `cheminDuCarrousel` reste, et lui seul : c'est
 //  l'adresse PARTAGEABLE d'un carrousel de fiche (nº 280-§3), rien à
 //  voir avec la fenêtre plein écran supprimée à cette passe.
@@ -70,7 +90,6 @@ import {
   ouvertureSurUnePhoto,
   serieDeLOuverture,
   serieMontree,
-  sousTitreDeCarte,
 } from "@/lib/photo-tatoueur";
 //  §3 (nº 304) — TROIS IMPORTS SONT PARTIS AVEC `surToucherDeLaPhoto`
 //  (`RENDU_PAR_DEFAUT`, `ensembleDeLaPhoto`, `natureConnue`), et
@@ -89,7 +108,8 @@ import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 //  §1 (nº 845) — RÉTABLI avec la plaque, son seul porteur ici.
-import { AvatarRond } from "@/components/AvatarRond";
+//  §3 (nº 862) — et reparti avec elle : le rond de la vue photo est
+//  désormais celui de l'EN-TÊTE DU FIL, qui l'appelle chez lui.
 /*  §1 (nº 602) — DEUX AUTRES IMPORTS SONT PARTIS AVEC LA FENÊTRE DE
     CARROUSEL : `positionSousLeGel` (la position de la page dessous, que
     la fenêtre gelait) et `annoncerRepriseDuSite` (sa fermeture passait
@@ -479,9 +499,41 @@ export function FicheTatoueur({
    * ⚠️ CALCULÉ AU RENDU, DONC DANS LE HTML PRÉRENDU : les deux
    * drapeaux ne sortent que des données de la fiche (règle 137 — le
    * fanion lui-même continue de juger sa photo côté navigateur).
+   * ██ §3 (nº 862) — IL N'Y A PLUS QUE LE TITRE DANS CETTE RANGÉE ██
+   * ------------------------------------------------------------------
+   * LE FANION L'A QUITTÉE : il est descendu dans LE PIED DU FIL, avec
+   * le partage, le signalement, les vues et les points — la vue photo
+   * prend la présentation des cartes du fil (décision du propriétaire).
+   * `fanionSousLaPhoto` n'a donc plus d'objet et part avec lui ; ce
+   * drapeau-ci ne dit plus qu'une chose, et il la dit en clair : cette
+   * fiche a-t-elle un titre de galerie à écrire ?
+   * ⚠️ CE QU'IL GOUVERNE ENCORE, ET C'EST TOUT : la ligne du titre
+   * elle-même, et le blanc réparti autour d'elle dans l'APERÇU
+   * (`mobile:gap-5` sur la grille — la seule vue du doigt où les deux
+   * colonnes se suivent, voir la note de la grille). Le pied, lui, ne
+   * dépend d'aucun titre : il porte le signalement et les vues, qui
+   * existent sans photo.
    */
-  const fanionSousLaPhoto = !apercu && Boolean(photoAffichee);
-  const rangeeSousLaPhoto = Boolean(partiesDuTitre) || fanionSousLaPhoto;
+  const rangeeSousLaPhoto = Boolean(partiesDuTitre);
+  /**
+   * §3 (nº 862) — LE LIEU QUE L'EN-TÊTE DU FIL ÉCRIT SOUS LE NOM.
+   * ------------------------------------------------------------------
+   * Les quatre champs que le site donne à lire à une écriture de lieu,
+   * ceux-là mêmes que la carte lui passe (`lieuDeLaCarte`,
+   * CarteTatoueur) : l'en-tête les rend par `ligneDeLieuDeCarte`, chez
+   * lui, et cette page ne compose plus rien.
+   * ⚠️ CE QUI CHANGE À L'ŒIL, ET JE LE DIS : la plaque écrivait
+   * « Artiste · Lyon, FR » (`sousTitreDeCarte` + `ligneCarteMobile`,
+   * qui abrège le pays quand une division s'écrit) ; l'en-tête écrit
+   * « Lyon, France » et met le TYPE dans son badge, à droite. C'est la
+   * présentation du fil, demandée telle quelle — pas un choix pris ici.
+   */
+  const lieuDeLaFiche: LieuAffichable = {
+    ville: tatoueur.ville_nom,
+    region: tatoueur.region,
+    pays: tatoueur.pays,
+    code_pays: tatoueur.code_pays,
+  };
   /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
       elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
@@ -818,7 +870,61 @@ export function FicheTatoueur({
                l'image — elle est descendue SOUS la ligne du titre, en
                dernier bloc de la colonne (voir plus bas). L'ordre de la
                vue photo au doigt : photo · titre + fanion · rangée du
-               profil, et rien après (la coupe nº 453 suit). */}
+               profil, et rien après (la coupe nº 453 suit).
+               ██ §3 (nº 862) — ET L'ORDRE REDEVIENT CELUI DU FIL ██
+               La rangée du profil REMONTE au-dessus de l'image, sous la
+               forme de l'EN-TÊTE DU FIL ; le titre et le pied la
+               suivent. La vue photo au doigt se lit donc :
+                 en-tête (avatar · nom · ville · badge du type)
+                 photo
+                 pied (signaler · vues · points · fanion · partage)
+                 titre de la galerie
+               — les trois premiers blocs étant, au pixel, ceux d'une
+               carte du fil (components/CarteFil). */}
+
+          {/*  ██ §3 (nº 862) — L'EN-TÊTE DU FIL, AU-DESSUS DE L'IMAGE ██
+               ==================================================
+               IL REMPLACE LA PLAQUE DU PROFIL (nº 845), qui vivait en
+               dernier bloc de la colonne : « la plaque du profil est
+               remplacée par ce bloc d'en-tête, qui mène au profil »,
+               décision du propriétaire. La destination ne change pas
+               (`adresseDeLienInterne`, écrite chez l'en-tête) : UNE
+               entrée, le retour rend la vue photo.
+               ⚠️ LA MARQUE `data-habillage-photo` RESTE, ET C'EST VOULU :
+               elle nomme l'habillage de la photo au doigt depuis la
+               nº 451 — les bancs 841 à 845 la lisent pour vérifier que
+               la vue photo mène au profil, et c'est toujours vrai de ce
+               bloc-ci. Renommer une marque qui désigne la même chose
+               ferait perdre cinq bancs sans rien gagner.
+               ⚠️ POURQUOI CETTE ENVELOPPE, ET CE QU'ELLE FAIT :
+                · `hidden mobile:block` — l'appareil décide (règle
+                  nº 60), comme la plaque avant elle ;
+                · `mobile:-mx-4` — LE MÊME DÉBORDEMENT QUE LA PHOTO
+                  (juste dessous) et que la grille du fil
+                  (`SOCLE_GRILLE_CARTES`, GrilleTatoueurs) : la page pose
+                  seize pixels de marge, l'en-tête les annule et remet
+                  les siens (`px-4`, chez lui). Sans cela il commencerait
+                  à trente-deux du bord et ne ressemblerait plus à une
+                  carte du fil ;
+                · `mobile:-mb-3` — LA COLONNE ÉCARTE SES ENFANTS DE
+                  DOUZE PIXELS (`gap-3`, plus haut) ; une carte du fil,
+                  elle, n'a aucun blanc entre son en-tête et son image —
+                  l'air vit DANS l'en-tête (`pb-3`). Cette marge rend
+                  exactement le gap de la colonne, et les deux blocs se
+                  touchent comme sur une carte. Le pied fait de même par
+                  le haut.
+               ⚠️ APERÇU (« Ma fiche ») : RIEN, comme la plaque — on ne
+               met pas un lien vers son propre profil au-dessus de sa
+               propre photo. La photo y garde donc sa place et son
+               collage à la barre. */}
+          {!apercu && (
+            <div
+              data-habillage-photo=""
+              className="hidden mobile:block mobile:-mx-4 mobile:-mb-3"
+            >
+              <EnTeteDeFil tatoueur={tatoueur} lieu={lieuDeLaFiche} />
+            </div>
+          )}
 
           {/* LA HAUTEUR DE LA PHOTO ÉPOUSE L'ÉCRAN (web) : la marge
               entre le BAS de l'image et le bas de la fenêtre doit être
@@ -963,8 +1069,34 @@ export function FicheTatoueur({
                 dans LARGEUR_PHOTO_FICHE (config/tattoo), partagées
                 avec la silhouette d'attente. Mêmes classes qu'avant, au
                 caractère près — seul le foyer change. */
+            /*  ██ §3 (nº 862) — LA REMONTÉE DU DOIGT N'A PLUS D'OBJET
+                SUR LA PAGE PUBLIQUE ██
+                --------------------------------------------------------
+                CE QU'ELLE FAISAIT, ET POURQUOI ELLE PART. Les passes
+                nº 472, 474, 476 et 483 ont réglé UNE SEULE QUESTION :
+                de combien la PHOTO, premier élément de la vue, devait
+                s'approcher de la barre fixe. La réponse s'était arrêtée
+                à un pixel : la racine pose seize pixels de rembourrage
+                haut, et la remontée du doigt en reprenait quinze (le
+                nom de cette classe n'est plus écrit nulle part, pas
+                même ici — Tailwind lit les commentaires, et une classe
+                citée dans un commentaire produit une règle vivante dans
+                la feuille, piège nº 472). LA PHOTO N'OUVRE PLUS LA VUE : l'EN-TÊTE la
+                précède désormais, et un rond de profil collé sous la
+                barre ne se lit pas comme le bord d'une image. La
+                question posée par ces quatre passes ne se pose donc
+                plus ; sa réponse s'en va avec elle, sans être remplacée
+                par un nombre choisi : la vue commence sur le
+                rembourrage que la page déclare pour tout le reste
+                (`pt-4`, seize pixels, sur la racine).
+                ⚠️ L'APERÇU GARDE TOUT : pas d'en-tête là-bas (voir
+                plus haut), donc la photo y ouvre toujours la vue et son
+                collage à la barre reste celui de la nº 452
+                (`mobile:-mt-4`, les seize pixels rendus).
+                ⚠️ LE WEB N'A JAMAIS ÉTÉ CONCERNÉ : les deux valeurs sont
+                des variantes du doigt (règle nº 60). */
             className={`${LARGEUR_PHOTO_FICHE} mobile:-mx-4 mobile:max-w-none ${
-              apercu ? "mobile:-mt-4" : "mobile:-mt-[15px]"
+              apercu ? "mobile:-mt-4" : ""
             }`}
           >
             <CarrouselPortfolio
@@ -1199,9 +1331,11 @@ export function FicheTatoueur({
                d'autre.
                ⚠️ LE POINT D'ÉQUERRE PHOTO/ÉCRAN DES nº 472-474 N'EST
                PAS TOUCHÉ : il se joue AU-DESSUS de la photo (la
-               remontée qui la fait toucher la barre fixe,
-               `mobile:-mt-[15px]`), et rien ici ne le concerne. Ce
-               qu'on ajoute est en dessous.
+               remontée du doigt qui la fait toucher la barre fixe), et
+               rien ici ne le concerne. Ce qu'on ajoute est en dessous.
+               ⚠️ nº 862 — CETTE REMONTÉE N'EXISTE PLUS SUR LA PAGE
+               PUBLIQUE : l'en-tête du fil ouvre la vue, la photo ne la
+               touche plus. L'aperçu garde la sienne.
                ⚠️ LA LIGNE DU TITRE NE BOUGE PAS D'UN PIXEL PAR
                RAPPORT À CE QUI LA SUIT : elle garde son écriture, ses
                deux icônes et son écart de 10 px. Elle descend de
@@ -1209,12 +1343,63 @@ export function FicheTatoueur({
                ⚠️ ET LE COMPTEUR RESTE (nº 483, nº 487) : il vit dans
                l'angle de la photo, il n'est pas concerné par cette
                ligne-ci. */}
-          {rangeeSousLaPhoto && photosDuCarrousel.length > 1 && (
-            <div className="hidden mobile:flex justify-center">
-              <PointsDuCarrousel
+          {/*  ██ §3 (nº 862) — LE PIED DU FIL, SOUS L'IMAGE ██
+               ==================================================
+               DÉCISION DU PROPRIÉTAIRE : « sous l'image le bloc des
+               icônes (signaler, vues, partage, fanion, points) — tout
+               pareil, une seule écriture (celle de CarteFil) ». C'est
+               donc LE MÊME COMPOSANT que la carte du fil, avec les
+               mêmes places (nº 842 et nº 855 : signaler puis les vues à
+               gauche, les points centrés sur toute la largeur, le fanion
+               puis le partage à droite) et les mêmes cibles.
+               CE QU'IL REMPLACE ICI, ET QUI PART AVEC LUI :
+                · LES POINTS de la nº 598, qui vivaient à cet endroit
+                  précis, seuls dans le flux — le pied les porte
+                  désormais, centrés en absolu sur toute la carte ;
+                · LE PARTAGE ET LE FANION de la ligne du titre
+                  (nº 458/483) — ils descendent d'un cran et changent de
+                  gabarit avec l'écriture du fil (le fanion passe de la
+                  variante « fiche-mobile » à « carte ») ;
+                · et LE SIGNALEMENT et LES VUES apparaissent, qui
+                  n'étaient pas dans cette vue : ils font partie du bloc
+                  demandé.
+               ⚠️ IL NE DÉPEND D'AUCUN TITRE ni d'aucune photo : le
+               signalement et les vues existent sans galerie. Seuls les
+               points (plus d'une photo) et le fanion (une photo en
+               base) se gardent eux-mêmes, chez lui.
+               ⚠️ LES DEUX ENVELOPPES SONT CELLES DE L'EN-TÊTE, pour la
+               même raison, et elles se répondent : `mobile:-mx-4` remet
+               le pied bord à bord (il pose ses seize pixels lui-même) et
+               `mobile:-mt-3` rend le gap de la colonne, pour qu'il
+               touche l'image comme sur une carte du fil.
+               ⚠️ APERÇU : RIEN — on ne se signale pas soi-même, et « Ma
+               fiche » n'a ni partage ni fanion depuis toujours. */}
+          {!apercu && (
+            <div className="hidden mobile:block mobile:-mx-4 mobile:-mt-3">
+              <PiedDeFil
+                tatoueur={tatoueur}
                 photos={photosDuCarrousel}
                 indice={indicePhoto}
                 surRang={setIndicePhoto}
+                /*  L'ADRESSE PARTAGÉE EST CELLE DU CARROUSEL OUVERT
+                    (`cheminDuCarrousel`, nº 280-§3) : exactement celle
+                    que la rangée du titre emportait avant cette passe —
+                    le lien partagé ne change pas d'un caractère. */
+                cheminAPartager={cheminDuCarrousel(
+                  tatoueur.slug,
+                  styleAffiche,
+                  serieEffective
+                )}
+                /*  LE STYLE QUI PRÉ-REMPLIT LE MESSAGE DE PARTAGE : le
+                    même qu'avant (`stylePrincipal`), et la chaîne vide
+                    quand la fiche n'en a aucun — le pied l'attend
+                    toujours écrit. */
+                metier={stylePrincipal?.label ?? ""}
+                /*  §6 (nº 853) — LE NOMBRE DE VUES arrive de la base
+                    avec la fiche (colonne `vues`, SQL nº 852). Le pied
+                    l'affiche TOUJOURS, et lit un nombre absent comme un
+                    zéro (nº 854). */
+                vues={tatoueur.vues}
               />
             </div>
           )}
@@ -1246,256 +1431,48 @@ export function FicheTatoueur({
                   </span>
                 )}
               </p>
-              {/*  ██ §1-d (nº 483) — LE FANION SE CALE SUR LA MARGE ██
-                   L'ÉCART, MESURÉ : la cible du fanion fait 48 px et son
-                   glyphe 30 — le dessin est donc centré, et il lui reste
-                   NEUF pixels de vide à droite. Le fanion paraissait
-                   rentré d'autant par rapport au bord de l'interface,
-                   alors que sa BOÎTE, elle, y touchait déjà. C'est le
-                   défaut exact de la silhouette « mon compte » à la
-                   nº 465, et le remède est le sien : on tire la boîte
-                   vers la droite d'exactement ce vide, pour que le
-                   GLYPHE tombe sur la marge. La cible ne change ni de
-                   taille ni de forme — elle déborde dans la marge, où
-                   rien d'autre ne vit.
-                   §1 (nº 487) — LA VALEUR EST RECALCULÉE avec le
-                   glyphe réduit : (48 − 26) / 2 = ONZE pixels, contre
-                   neuf quand il en faisait trente. Sans ce recalcul, le
-                   fanion se serait décalé de deux pixels vers
-                   l'intérieur en rapetissant.
-                   ⚠️ LES DEUX GESTES SONT GROUPÉS SANS ÉCART : leurs
-                   cibles se touchent, mais chaque glyphe garde son
-                   retrait interne — huit pixels pour la flèche (24 dans
-                   40), onze pour le fanion. À l'œil, dix-neuf pixels
-                   les séparent, et AUCUNE des deux cibles n'a rétréci :
-                   quarante et quarante-huit pixels, comme avant. */}
-              <div className="flex shrink-0 items-center -mr-[11px]">
-                {!apercu && (
-                  <BoutonPartageFiche
-                    nomArtisan={tatoueur.nom}
-                    cheminFiche={cheminDuCarrousel(
-                      tatoueur.slug,
-                      styleAffiche,
-                      serieEffective
-                    )}
-                    variante="icone"
-                    /*  §2 (nº 459), REVU nº 487 — LA FLÈCHE À 24 px.
-                        Elle était montée de 22 à 28 pour se tenir à
-                        l'échelle du fanion d'en face ; les deux
-                        descendent ensemble d'un même cran (28 → 24 ici,
-                        30 → 26 pour le fanion), donc l'équilibre entre
-                        elles est celui d'avant — le fanion reste plus
-                        gros de deux pixels, ni plus ni moins.
-                        ⚠️ LA CIBLE RESTE À 40 px (variante « icone »,
-                        nº 458) : le dessin rétrécit, pas la surface
-                        qu'on touche. */
-                    tailleIcone={24}
-                    avecFenetre
-                    sombre
-                    metier={stylePrincipal?.label}
-                    commune={villeAffichee(tatoueur.ville_nom)}
-                    marque={MARQUE_YOKOFOLIO.nom}
-                    objet="portfolio"
-                  />
-                )}
-                {!apercu && photoAffichee && (
-                  <BoutonCoeurPhoto
-                    photoId={photoAffichee.cle}
-                    variante="fiche-mobile"
-                  />
-                )}
-              </div>
+              {/*  ██ §3 (nº 862) — LES DEUX GESTES ONT QUITTÉ CETTE
+                   LIGNE ██
+                   Le PARTAGE (nº 458) et le FANION (nº 451, calé sur la
+                   marge à la nº 483/487) vivent désormais dans LE PIED
+                   DU FIL, juste au-dessus dans la page : la vue photo
+                   prend la présentation des cartes du fil, et ce bloc
+                   d'icônes en fait partie. La ligne ne garde que ce
+                   qu'elle nommait — LE TITRE DE LA GALERIE, seul, à
+                   gauche. Son air et son écriture ne bougent pas d'un
+                   pixel (`mobile:-mt-1`, nº 453).
+                   ⚠️ LES RÉGLAGES DE LA nº 483/487 NE SONT PAS PERDUS :
+                   ils vivent dans le pied du fil, qui a les siens depuis
+                   la nº 842 — et c'est le point de la consigne, une
+                   seule écriture pour ces icônes. */}
             </div>
           )}
 
-          {/*  ██ §1 (nº 845) — LA PLAQUE EST RÉTABLIE, TELLE QU'ELLE ÉTAIT ██
+          {/*  ██ §3 (nº 862) — LA PLAQUE DU PROFIL EST REMPLACÉE ██
                ==================================================
-               LA nº 844 L'AVAIT SUPPRIMÉE sur une consigne que le
-               propriétaire corrige à la nº 845 : elle revient, à
-               l'identique — le bloc ci-dessous est celui de la nº 843
-               (commit 84b7858), au caractère près, avec toutes ses
-               notes d'origine. Rien n'a été « amélioré » au passage :
-               une restitution qui retouche n'est plus une restitution.
-               ⚠️ ET LA CROIX DE RETOUR DE LA nº 844 S'EN VA — voir la
-               note de `RetourDeVuePhoto`, en fin de fichier, qui dit le
-               pourquoi et ce qui la remplace (rien : cette plaque). */}
-          {/*  ██ §1 (nº 454) — LA RANGÉE DU PROFIL, SOUS LA LIGNE DU
-               TITRE ██
-               ==================================================
-               Posée au-dessus de la photo à la nº 452, elle DESCEND en
-               dernier bloc de la colonne : photo · titre + fanion ·
-               cette rangée — et rien après (la coupe nº 453 retire la
-               colonne de lecture de la vue photo). Elle garde TOUT de
-               la nº 453 : avatar 40 px, nom blanc gras, ligne grise
-               13 px avec ses 4 px d'air sous le nom, jetons du site,
-               navigation inchangée (le badge « Profil » de 30 px et sa
-               cible tactile de 44 sont remplacés par le chevron à la
-               nº 502 : c'est la plaque entière qui se touche) (`adresseDeLienInterne`, UNE entrée, le retour
-               rend la vue photo). SEULE SA PLACE change — le
-               `mobile:-mt-2` de la nº 453 (l'air sous la barre) part
-               avec elle : sous le titre, l'air est le `gap-3` de la
-               colonne, 12 px.
-               ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:flex`, aperçu
-               exclu comme le partage. La garde d'avant peinture
-               (nº 359) couvre la COLONNE entière : une arrivée
-               `entree=lien` cache la rangée avec la photo. */}
-          {!apercu && (
-            <div data-habillage-photo="" className="hidden mobile:block">
-              {/*  §1 (nº 455) — TOUTE LA RANGÉE MÈNE AU PROFIL : le bloc
-                   avatar + nom + ligne est un `<Link>` vers
-                   `adresseDeLienInterne` — UNE entrée, le retour rend la
-                   vue photo ; un re-clic pendant l'attente est avalé par
-                   le signe (332-§1).
-                   LA TYPO GRANDIT : le nom passe de 13,5 à 15 px — LA
-                   taille du titre de la galerie sous la photo
-                   (nº 376) ; la ligne d'adresse suit en proportion,
-                   de 13 à 14,5 px (le corps du sous-titre des cartes en
-                   pleine largeur).
-                   ██ §1 (nº 502) — LA RANGÉE DEVIENT UNE PLAQUE ██
-                   ==============================================================
-                   Elle prend l'écriture PARTAGÉE des plaques
-                   (`components/plaque`), celle des membres d'équipe et
-                   des lieux : fond uni permanent, quatre coins à 12 px,
-                   douze pixels d'air sur les quatre côtés (nº 497),
-                   aucune bordure, arrêt aux marges. Pas une seconde
-                   écriture — la même, lue au même endroit : les trois
-                   blocs ne peuvent plus diverger.
-                   LE BADGE « Profil » DISPARAÎT, et le CHEVRON prend sa
-                   place à droite (nº 493) : la forme dit le lien, pas un
-                   mot. Ce qui règle du même coup le point délicat de la
-                   nº 455 — il n'y a plus DEUX liens vers une même
-                   destination côte à côte, mais UN SEUL, qui est la
-                   plaque entière.
-                   PAS DE MENTION GRISE AU-DESSUS, contrairement aux
-                   plaques d'équipe : ici il n'y a ni statut ni type de
-                   lieu à annoncer. La plaque commence directement.
-                   ⚠️ CE QUI CHANGE MALGRÉ MOI, ET JE LE DIS : l'écart
-                   entre l'avatar et son texte passe de 10 à 14 px — la
-                   valeur que l'écriture partagée porte depuis la nº 227.
-                   C'est la contrepartie de la réutilisation ; recopier
-                   l'écriture pour garder 10 px ferait exactement ce que
-                   cette passe cherche à éviter.
-                   ⚠️ WEB ET APERÇU : RIEN — `hidden mobile:block`,
-                   aperçu exclu comme le partage. */}
-              <Link
-                href={adresseDeLienInterne(tatoueur.slug)}
-                className={ENCADRE_MEMBRE_CLIQUABLE}
-              >
-                {/*  §1 (nº 502) — DEUX CRANS AU-DESSUS DE LA PLAQUE, et
-                     pas un : au repos elle vaut `bg-sombre-eleve`, au
-                     survol elle monte d'un cran. Un rond de repli posé
-                     sur ce cran-là disparaîtrait. C'est le défaut traité
-                     à la nº 492 sur `PhotoRonde`, ici sur le rond écrit
-                     à la main de la vue photo. Il ne concerne QUE le
-                     repli sans photo : une vraie photo couvre le rond
-                     entièrement. */}
-                {/*  §1 (nº 524) — le rond revient à sa valeur d'avant
-                     la nº 523, avec sa plaque (voir plaque.ts). */}
-                {/*  §1 (nº 841) — LE ROND EST L'ÉCRITURE PARTAGÉE
-                     (AvatarRond) depuis la carte du fil, son troisième
-                     porteur : le cran du dessus et l'initiale de 16 px
-                     sont LES SIENS, inchangés au pixel. Seules les
-                     dimensions déclarées de l'image passent au carré du
-                     site (PORTRAIT_ROND) : un format, pas une taille. */}
-                <AvatarRond
-                  photo={tatoueur.photo_profil}
-                  nom={tatoueur.nom}
-                  classeFond="bg-sombre-haut"
-                  classeInitiale="text-[16px] font-bold text-sombre-texte-doux"
-                />
-                <span className="min-w-0 flex-1">
-                  {/*  ██ §2 (nº 555) — CE NOM SUIT LES DEUX AUTRES ██
-                       LA QUESTION POSÉE : cette plaque doit-elle monter
-                       à 16 px avec celles des lieux et de l'équipe ?
-                       OUI, ET POUR LA RAISON QUI A CRÉÉ CE FICHIER À LA
-                       nº 502 : c'est LA MÊME PLAQUE, lue au même endroit
-                       (`ENCADRE_MEMBRE_CLIQUABLE`, components/plaque) —
-                       « les trois blocs ne peuvent plus diverger », dit
-                       la note du dessus. La laisser à 15 px rouvrirait
-                       exactement la divergence que le §1 de cette passe
-                       referme sur la graisse.
-                       ET C'EST LE NOM LE PLUS IMPORTANT DES TROIS : en
-                       vue photo au doigt, le `<h1>` de la fiche n'est
-                       pas à l'écran — cette plaque EST le seul endroit
-                       où le nom du tatoueur se lit.
-                       ⚠️ CELLE-CI GRANDIT, ET JE LE DIS : elle n'a pas
-                       de plancher (les deux autres ont `min-h-13`), sa
-                       hauteur suit son contenu. `leading-tight` (1,25) :
-                       la ligne passe de 18,75 à 20 px, le bloc de texte
-                       de 40,875 à 42,125, et la plaque — 24 px d'air
-                       compris — de 64,9 à 66,1 px. UN PIXEL ET QUART DE
-                       PLUS, une seule fois dans la page.
-                       ⚠️ LA COUPE NE CHANGE PAS DE NATURE : `truncate`
-                       garde le nom sur UNE ligne avec ses points de
-                       suspension — deux ou trois caractères de moins y
-                       tiennent, rien d'autre ne bouge. */}
-                  {/*  ██ §1 (nº 843) — LE NOM SEUL, SUR UNE LIGNE ██
-                       Le TYPE était monté ici à la nº 842 ; il redescend
-                       à la ligne du dessous. Cette plaque ne prend pas
-                       le badge du fil : elle EST DÉJÀ un lien vers le
-                       profil, tout entière, et elle porte son chevron —
-                       le pourquoi complet vit chez `sousTitreDeCarte`
-                       (lib/photo-tatoueur). Le rognage d'une ligne
-                       revient donc, et la plaque retrouve la hauteur
-                       qu'elle avait avant la nº 842. */}
-                  <span className="block truncate text-[16px] font-semibold leading-tight text-sombre-texte">
-                    {tatoueur.nom}
-                  </span>
-                  {/*  §1 (nº 613) — DEUX POINTS, ET PLUS UNE PUCE :
-                       « Artiste: Lyon, France ». C'était la règle du
-                       propriétaire, celle des cartes (CarteTatoueur) et
-                       des portfolios suivis (lib/selection-suivis).
-                       ██ §3 (nº 842) — IL N'EN RESTE QUE LA VILLE : le
-                       type était monté sur la ligne du titre.
-                       ██ §1 (nº 843) — ET IL REDESCEND ICI, devant la
-                       ville et séparé par le point médian — l'écriture
-                       partagée avec la carte du web
-                       (`sousTitreDeCarte`). Les PORTFOLIOS SUIVIS de
-                       « Ma sélection » gardent leurs deux-points
-                       (`APRES_LE_TYPE`) : ni la nº 842 ni la nº 843 ne
-                       les touchent, et elles le disent.
-                       ⚠️ LE LIEU GARDE SON ÉCRITURE À ELLE
-                       (`ligneCarteMobile`, nº 486) : elle abrège le pays
-                       quand une division s'écrit, ce que la ligne des
-                       cartes ne fait pas. Les deux disent « Lyon, FR »
-                       ici ; les confondre serait un choix graphique, pas
-                       un ménage.
-                       §1 (nº 455) : 14,5 px (13 à la nº 453), les 4 px
-                       d'air sous le nom restent. */}
-                  <span className="block truncate text-[14.5px] leading-tight text-sombre-texte-doux mt-1">
-                    {sousTitreDeCarte(
-                      tatoueur,
-                      ligneCarteMobile({
-                        ville: tatoueur.ville_nom,
-                        region: tatoueur.region,
-                        pays: tatoueur.pays,
-                        code_pays: tatoueur.code_pays,
-                      })
-                    )}
-                  </span>
-                </span>
-                {/*  §1 (nº 502) — LE CHEVRON REMPLACE LE BADGE
-                     « Profil » : la même icône que le volet des horaires,
-                     pivotée d'un quart de tour pour pointer à droite,
-                     dans le gris des textes secondaires — l'écriture
-                     exacte des plaques d'équipe (nº 493). Centré sur
-                     TOUTE la plaque par `self-center`, les rembourrages
-                     haut et bas étant égaux (nº 497).
-                     ⚠️ CE QUE LE BADGE PORTAIT ET QUI N'A PLUS D'OBJET :
-                     ses 30 px de haut, sa cible tactile de 44 px par
-                     ourlet, et son propre lien vers la même destination
-                     (nº 453/455). La plaque ENTIÈRE est la cible
-                     désormais — plus large que 44 px dans les deux
-                     sens —, et il n'y a plus qu'un seul lien. */}
-                <span
-                  aria-hidden="true"
-                  className="-rotate-90 self-center shrink-0 text-sombre-texte-doux"
-                >
-                  <IconeChevronBas taille={16} />
-                </span>
-              </Link>
-            </div>
-          )}
+               ELLE VIVAIT ICI, en dernier bloc de la colonne : avatar,
+               nom, ligne « Artiste · Lyon, FR » et chevron, le tout
+               dans l'écriture partagée des plaques
+               (`ENCADRE_MEMBRE_CLIQUABLE`, components/plaque) — posée à
+               la nº 451, devenue plaque à la nº 502, supprimée par
+               erreur à la nº 844 et rétablie à la nº 845.
+               CE QUI LA REMPLACE, ET C'EST LA CONSIGNE : « la plaque du
+               profil (845) est remplacée par ce bloc d'en-tête, qui
+               mène au profil ». L'EN-TÊTE DU FIL, en tête de colonne
+               (voir tout en haut de ce bloc) — même destination
+               (`adresseDeLienInterne`), même rond de profil
+               (`AvatarRond`), même nom sur une ligne ; le TYPE passe
+               dans un badge à droite, et la ligne grise garde la ville.
+               ⚠️ CE QUE LA PAGE PERD À L'ŒIL, ET IL FAUT LE DIRE : le
+               fond de plaque (le cran `bg-sombre-eleve` et ses douze
+               pixels d'air sur quatre côtés), le chevron qui disait le
+               lien, et la place — le bloc n'est plus sous la photo mais
+               au-dessus. C'est exactement ce que demande « prendre la
+               présentation des cartes du fil » : une carte du fil n'a
+               ni plaque ni chevron.
+               ⚠️ LES TROIS ÉCRITURES PARTAGÉES NE BOUGENT PAS : les
+               plaques d'équipe et de lieux gardent la leur, intacte —
+               c'est cette page-ci qui cesse de l'employer. */}
 
           {/*  L'AVERTISSEMENT DE DÉMONSTRATION a rejoint le contenu
                partagé (nº 199) : il s'affiche en tête de la colonne,

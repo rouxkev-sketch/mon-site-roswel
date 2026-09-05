@@ -17,7 +17,10 @@ import {
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 //  §2 (nº 586) — LA CAPSULE « SUIVI » DE LA FICHE, telle quelle : le
 //  même composant, donc la même apparence et la même bascule.
-import { BoutonSuivre } from "@/components/BoutonSuivre";
+//  ██ §2 (nº 862) — ELLE CÈDE LA PLACE AU BADGE DU TYPE ██
+//  `BoutonSuivre` n'est plus appelé d'ici (voir la rangée d'identité) ;
+//  c'est `BadgeTypeDeFiche` — celui du fil — qui prend son coin.
+import { BadgeTypeDeFiche } from "@/components/BadgeTypeDeFiche";
 //  §1 (nº 515) — « ce qui est surligné est ce qui est copié »
 //  (nº 514) : la même écriture que les plaques de la fiche.
 import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
@@ -463,39 +466,45 @@ function BlocDUnSuivi({
           )}
         </span>
       </Link>
-      {/*  ██ §2 (nº 586) — LA CAPSULE « SUIVI », À L'OPPOSÉ DE L'AVATAR ██
+      {/*  ██ §2 (nº 862) — LE BADGE DU TYPE, À LA PLACE DE « FOLLOWING » ██
            ----------------------------------------------------------
-           C'EST CELLE DES FICHES, SANS UNE LIGNE DE PLUS : le même
-           composant, donc le même gris des plaques, le même
-           assombrissement au survol et à l'appui (nº 504, nº 524), le
-           même mot et la même bascule. Aucune apparence n'est
-           recopiée ici — c'est tout l'intérêt de l'appeler.
-           ⚠️ ELLE NAÎT « SUIVI » : on est dans la liste des portfolios
-           suivis, l'état de départ est connu du serveur. Le bouton
-           n'attend donc pas la liste des favoris pour parler (nº 506).
-           ⚠️ LA LIGNE NE DISPARAÎT PAS QUAND ON SE DÉSABONNE (décision
-           du propriétaire, nº 586) : seul le mot bascule, comme sur une
-           fiche. La liste vient du serveur et n'est pas refaite ; elle
-           se videra de cette ligne au prochain chargement. C'est aussi
-           ce qui laisse revenir en arrière d'un second appui, sans
-           avoir rien perdu de vue.
-           ⚠️ `ml-auto` LA POUSSE AU BORD, `shrink-0` l'empêche de se
-           faire écraser par un nom trop long : c'est le nom qui
-           s'abrège, jamais la capsule. */}
+           DÉCISION DU PROPRIÉTAIRE : « le badge Following est REMPLACÉ
+           par le badge TYPE (« Tattoo Artist », robe de Follow, lien
+           vers le profil) ». C'est LE MÊME COMPOSANT QUE LE FIL
+           (`BadgeTypeDeFiche`, web et doigt) : sa robe — l'aplat de
+           « Suivre », le fond `carteClair` de la nº 853 et l'écriture
+           de « Following » —, son mot et sa destination sont écrits chez
+           lui, une seule fois. Rien n'est recopié ici.
+           ⚠️ CE QUE CETTE PAGE PERD, ET C'EST DIT : on ne se désabonne
+           plus depuis la liste. Le geste vit sur le PROFIL, où le badge
+           mène — la même règle que le fil depuis la nº 843 (« on décide
+           de suivre quelqu'un qu'on est venu voir »). La capsule de la
+           nº 586, son état de départ connu du serveur et sa bascule sur
+           place partent avec elle.
+           ⚠️ ET LA LIGNE DU DESSOUS PERD SON TYPE : deux endroits
+           diraient deux fois la même chose. C'est `ligneDIdentite`
+           (lib/selection-suivis) qui l'a retiré, à la source.
+           ⚠️ SA BOÎTE GARDE L'ÉCHELLE DU WEB DE LA nº 589, aux deux
+           classes près : la capsule montait à quarante pixels à côté
+           d'un rond de 72, et ce badge-ci prend exactement les siennes
+           (`classeBoite`, chez lui). Le doigt n'en voit rien — c'est un
+           cran `lg:`, comme le rond et les deux lignes de texte.
+           ⚠️ `ml-auto` LE POUSSE AU BORD, `shrink-0` (chez lui)
+           l'empêche de se faire écraser par un nom trop long : c'est le
+           nom qui s'abrège, jamais le badge. */}
       <div className="ml-auto shrink-0">
-        <BoutonSuivre
-          tatoueurId={suivi.id}
-          nomTatoueur={suivi.nom}
-          suiviAuDepart
-          /*  §1 (nº 589) — PLUS GRANDE AU WEB, ET LÀ SEULEMENT. Ses
-              30 px sont la mesure du doigt (nº 233) ; à côté d'un rond
-              de 72 px ils ne pèsent plus rien. La capsule monte donc à
-              40 px sur l'ordinateur, avec le rembourrage qui va avec —
-              et le cran `lg:` garantit que le doigt n'en voit rien,
-              comme le rond lui-même (`h-13 lg:h-18`) et comme les deux
-              lignes de texte juste à gauche. Le mot, lui, ne change pas
-              de taille : c'est la BOÎTE qui manquait de présence, pas
-              l'écriture. */
+        <BadgeTypeDeFiche
+          /*  LE BADGE LIT LES NOMS DE CHAMPS D'UNE FICHE
+              (`type_fiche`, `etablissement`) ; un portfolio suivi les
+              porte dans sa propre grammaire (`typeFiche`,
+              `etablissement`, lib/favoris-serveur). On les lui présente,
+              on ne les réécrit pas : le MOT reste celui de
+              `libelleTypeFiche`, lu chez lui. */
+          tatoueur={{
+            slug: suivi.slug,
+            type_fiche: suivi.typeFiche,
+            etablissement: suivi.etablissement,
+          }}
           classeBoite="lg:min-h-[40px] lg:px-5"
         />
       </div>

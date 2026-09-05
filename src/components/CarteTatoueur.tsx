@@ -485,11 +485,24 @@ function CarteTatoueurNue({
    * était pas du tout — la mosaïque du moteur restait nue depuis la
    * nº 452, alors que la carte du DOIGT porte le sien dans son pied
    * depuis la nº 841. Le web rattrape le doigt.
-   * ⚠️ ET « MA SÉLECTION » NE BOUGE PAS : elle a déjà son fanion, celui
-   * qui FLOTTE dans l'angle de la photo (le drapeau `fanion`, passé par
-   * PageFavoris, plus bas dans ce fichier). La consigne ne parle que des
-   * cartes de recherche ; les deux placements ne se rencontrent donc
-   * jamais sur une même carte, et c'est ce que cette condition dit.
+   * ██ §1 (nº 862) — ET « MA SÉLECTION » LE REJOINT, AU WEB ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : « le fanion sort de l'image ; il prend la
+   * place qu'il a sur les cartes de recherche ». La nº 856 avait écrit
+   * l'inverse (« Ma sélection ne bouge pas ») parce que la consigne
+   * d'alors ne parlait que des cartes de recherche ; celle-ci parle des
+   * deux. Le drapeau `fanion` NE DÉCIDE DONC PLUS DE LA PLACE — il ne
+   * dit plus que ceci : cette carte porte un fanion. C'est L'APPAREIL
+   * qui décide où il se pose (règle nº 60), et rien d'autre :
+   *  · au WEB, sur la ligne des styles, aligné à droite — l'écriture de
+   *    la nº 856, celle-là même, avec l'air de la nº 859 ;
+   *  · au DOIGT, dans l'angle bas droit de l'image, comme depuis la
+   *    nº 452 — la consigne ne parle que du web, et la vignette côte à
+   *    côte n'a de toute façon pas de ligne assez large pour un second.
+   * Les deux blocs se partagent l'appareil par des variantes qui
+   * s'excluent (`hidden mobile:block` / `hidden not-mobile:block`) :
+   * jamais deux fanions sur une même carte, et une seule déclaration
+   * d'affichage par écran (piège nº 389).
    * ⚠️ RIEN SANS PHOTO DE BASE : on n'enregistre pas une image qui
    * n'existe pas en base — et la garde est LA MÊME que celle du bouton
    * (`estIdentifiantDeBase`, chez lui), pas une approximation. Sans
@@ -497,8 +510,28 @@ function CarteTatoueurNue({
    * bouton refuserait de rendre : une fiche de démonstration, ou
    * d'avant le portfolio catalogué, garderait un creux à droite de sa
    * ligne de styles. Même condition des deux côtés, même résultat.
+   * ⚠️ ET RIEN SANS LIGNE DE STYLES — LA GARDE QUI MANQUAIT (nº 862) :
+   * ce fanion-ci se pose sur une RANGÉE, et cette rangée n'existe que
+   * si la ligne existe. Deux cas la font disparaître : une carte SANS
+   * STYLE CONNU (`partiesDuTitre` nul — une fiche d'avant le portfolio
+   * catalogué), et la VUE PHOTOTHÈQUE (`phototheque` : la carte n'est
+   * plus que sa photo, tout le bloc de texte est retiré). La nº 856 ne
+   * les regardait ni l'un ni l'autre : le fanion se posait alors sous
+   * une photo, dans le vide, à quatre pixels du bas de l'image. La
+   * condition les nomme désormais tous les deux — et le fanion FLOTTANT
+   * reprend l'image dans ces cas-là, aux deux appareils : c'est le seul
+   * endroit où il puisse encore se poser.
+   * ⚠️ LA PHOTOTHÈQUE NE S'ALLUME PLUS DEPUIS LA nº 443 (`lirePhototheque`
+   * répond faux quoi qu'il arrive, lib/vue-phototheque) : ce drapeau
+   * vaut donc toujours faux aujourd'hui. On le lit quand même, et c'est
+   * volontaire — la rangée qui réserve la place se rend sous la MÊME
+   * condition (`{!phototheque && …}`, plus bas) ; deux conditions qui
+   * doivent s'accorder ne peuvent pas être écrites différemment.
    */
-  const fanionSurLaLigne = !fanion && estIdentifiantDeBase(photoRegardee);
+  const fanionSurLaLigne =
+    Boolean(partiesDuTitre) &&
+    !phototheque &&
+    estIdentifiantDeBase(photoRegardee);
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -1595,6 +1628,14 @@ function CarteTatoueurNue({
         * ⚠️ ET IL N'EXISTE TOUJOURS QUE SUR « MA SÉLECTION » : le
         * drapeau vient de PageFavoris et de personne d'autre. La
         * mosaïque du moteur reste nue.
+        * ██ §1 (nº 862) — IL NE VIT PLUS QU'AU DOIGT (ou presque) ██
+        * Le propriétaire fait sortir le fanion de l'image AU WEB : il y
+        * prend la ligne des styles, comme sur les cartes de recherche
+        * (le bloc précédent). Ce bloc-ci garde le doigt, où la place
+        * n'a pas changé d'un pixel — et le web quand il n'y a AUCUNE
+        * ligne où se poser (vue photothèque, carte sans style) : c'est
+        * `fanionSurLaLigne` qui le dit, l'unique condition, lue des
+        * deux côtés. Les deux ne se rendent donc jamais ensemble.
         */}
       {/**
         * ██ §1 (nº 839) — LES COMMANDES DE LA GALERIE, VOISINES DU LIEN ██
@@ -1676,7 +1717,16 @@ function CarteTatoueurNue({
 
       {fanion && photoRegardee && (
         <div
-          className={`pointer-events-none absolute inset-x-0 top-0 ${CADRE_PHOTO_PORTFOLIO}`}
+          data-fanion-flottant=""
+          /*  §1 (nº 862) — L'APPAREIL DÉCIDE, ET LUI SEUL (règle nº 60) :
+              là où la ligne des styles reçoit le fanion, ce bloc-ci se
+              retire du web et ne reste qu'au doigt ; là où il n'y a pas
+              de ligne (photothèque, carte sans style), il reste des deux
+              côtés — l'image est alors le seul endroit possible. Une
+              seule déclaration d'affichage par cas (piège nº 389). */
+          className={`pointer-events-none absolute inset-x-0 top-0 ${
+            fanionSurLaLigne ? "hidden mobile:block " : ""
+          }${CADRE_PHOTO_PORTFOLIO}`}
         >
           <div
             className={`pointer-events-auto z-10 ${

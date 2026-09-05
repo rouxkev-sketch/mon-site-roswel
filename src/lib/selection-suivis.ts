@@ -14,11 +14,11 @@ import {
   nomPaysAffiche,
   type LieuAffichable,
 } from "@/lib/adresse";
-import {
-  libelleTypeFiche,
-  natureDeLaFiche,
-  valeurExplorer,
-} from "@/config/tatouage";
+//  §2 (nº 862) — `libelleTypeFiche` N'EST PLUS APPELÉ D'ICI : le type
+//  a quitté la ligne d'identité pour le badge de la rangée, qui le lit
+//  à la même source (BadgeTypeDeFiche). Un import qui ne sert plus est
+//  un piège pour la passe suivante ; il part avec l'appel.
+import { natureDeLaFiche, valeurExplorer } from "@/config/tatouage";
 import {
   cleDEnsemble,
   natureConnue,
@@ -45,9 +45,10 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * les vérifier sans ouvrir un navigateur.
  *
  * ⚠️ AUCUNE SECONDE SOURCE. Les dates de guest viennent des modes
- * d'exercice (migration nº 21) ; le TYPE de la ligne d'identité vient
- * de `libelleTypeFiche` et son LIEU de `ligneCarte` — rien n'est
- * réécrit ici.
+ * d'exercice (migration nº 21) et le LIEU de la ligne d'identité de
+ * `ligneCarte` — rien n'est réécrit ici. (Le TYPE en venait aussi, par
+ * `libelleTypeFiche` ; il a quitté cette ligne à la nº 862 pour le
+ * badge de la rangée, qui appelle la même fonction.)
  * ⚠️ `genreMode` A QUITTÉ CE FICHIER À LA nº 323 : il écrivait « En
  * salon », « À domicile », « Guest » sous le nom. Le mode d'exercice
  * ne s'affiche plus sur cette ligne (§3-a) — l'import partait donc
@@ -152,6 +153,13 @@ export function periodeDuGuest(mode: {
  *   · Studio:  Félines, France
  *   · Salon:   Austin, TX, USA
  *
+ * ██ §2 (nº 862) — IL N'EN RESTE QUE LE SECOND SEGMENT ██
+ * Le premier — le type et ses deux points — est monté dans le BADGE de
+ * la rangée (BlocSuivis). La ligne s'écrit donc « Paris, France »,
+ * « Félines · Paris, France », « Berlin, Allemagne | Paris, France ».
+ * Les exemples ci-dessus gardent leur type PARCE QU'ILS DISENT
+ * L'HISTOIRE de cette ligne ; la règle vivante est celle du dessous.
+ *
  * ⚠️ LA FORME DU SECOND SEGMENT A ÉTÉ REPRISE SIX FOIS DEPUIS, et la
  * règle des DEUX SEGMENTS n'a pas bougé une seule : la nº 585 a
  * supprimé le « +N » qui comptait les villes sans les nommer, la
@@ -178,11 +186,11 @@ export function periodeDuGuest(mode: {
  * alors que cette ligne ne les appelle plus. Ce n'est pas un oubli,
  * c'est une attente annoncée par le propriétaire.
  *
- * ⚠️ AUCUN MOT N'EST INVENTÉ ICI, et c'est le point : `libelleTypeFiche`
- * écrit déjà « Artiste », « Salon » et « Studio » pour les cartes de la
- * mosaïque et les têtes de fiche. On l'appelle — donc un artiste
- * s'appelle « Artiste » ICI EXACTEMENT COMME AILLEURS, et le jour où ce
- * mot changera il changera partout d'un coup. `ligneCarte` (nº 301)
+ * ⚠️ AUCUN MOT N'EST INVENTÉ ICI, et c'est le point. Le TYPE se lit
+ * chez `libelleTypeFiche` — « Artiste », « Salon », « Studio », les
+ * mots des cartes et des têtes de fiche —, et depuis la nº 862 c'est le
+ * BADGE de la rangée qui l'appelle, plus cette ligne : le mot est le
+ * même, il a seulement changé de place. `ligneCarte` (nº 301)
  * écrit le lieu, avec sa division quand le pays l'écrit (« Austin, TX,
  * États-Unis ») et sans quand il ne l'écrit pas (« Lyon, France ») ;
  * `lieuxEcrits` n'en reprend ensuite que la ponctuation entre la ville
@@ -371,29 +379,23 @@ export const LIEUX_AFFICHES = 3;
  * ville s'écrit seul aussi, sans virgule devant lui.
  */
 /**
- * ██ §1 (nº 613) — LES DEUX POINTS QUI ANNONCENT LE LIEU ██
+ * ██ §2 (nº 862) — LES DEUX POINTS N'ONT PLUS DE TYPE À ANNONCER ██
  * ------------------------------------------------------------------
- * LA RÈGLE DÉFINITIVE DU PROPRIÉTAIRE, qui remplace celles des nº 585
- * à nº 591 : « Artiste: Paris, France ». Les deux points disent ce
- * qu'aucune puce ne disait — que ce qui suit ÉNONCE le lieu de ce qui
- * précède. C'est une ponctuation de langue, pas un signe décoratif.
- * CE QUE LA PUCE FAISAIT (nº 589), et pourquoi elle part : elle était
- * choisie pour sa TAILLE, plus grosse et plus ronde que le point
- * médian des villes, afin que les trois séparateurs de la ligne se
- * distinguent à l'œil. Le raisonnement tenait, mais il demandait au
- * lecteur de connaître une hiérarchie de signes. Les deux points se
- * lisent sans rien savoir.
- * ⚠️ LA HIÉRARCHIE RESTE, ET ELLE EST PLUS CLAIRE : les deux points
- * annoncent le lieu, la virgule mène au pays, le point médian
- * énumère les villes d'un même pays, la barre verticale sépare deux
- * pays.
- * ⚠️ LA MÊME PONCTUATION SUR LES CARTES ET SUR LA FICHE : elles la
- * composent chacune chez elles (CarteTatoueur, FicheTatoueur — leur
- * lieu vient d'une autre écriture, `ligneLieuDeCarte`), et les trois
- * ont été alignées à cette passe. Ce sont les seuls endroits du site
- * où un type de profil est suivi de son lieu.
+ * `APRES_LE_TYPE` (« : ») EST SUPPRIMÉ, CODE COMPRIS. Il joignait le
+ * TYPE au LIEU sur la ligne des portfolios suivis — « Artiste: Paris,
+ * France », la règle de la nº 613. Le propriétaire fait monter le type
+ * dans un BADGE, à droite de la rangée (voir BlocSuivis), et la ligne
+ * « garde la ville seule » : il n'y a plus rien à annoncer, donc plus
+ * rien à ponctuer.
+ * ⚠️ CE QUE LA nº 613 DISAIT ET QUI RESTE VRAI AILLEURS : les cartes et
+ * la fiche composent leur « Type · Lieu » CHEZ ELLES (`sousTitreDeCarte`,
+ * lib/photo-tatoueur) avec le point médian de la nº 843 — cette
+ * ponctuation-ci n'était pas la leur, et sa disparition ne les touche
+ * pas. Les portfolios suivis étaient son seul porteur.
+ * ⚠️ LA HIÉRARCHIE DU LIEU NE BOUGE PAS D'UN CARACTÈRE : la virgule
+ * mène au pays, le point médian énumère les villes d'un même pays, la
+ * barre verticale sépare deux pays (les trois constantes ci-dessous).
  */
-const APRES_LE_TYPE = ": ";
 
 const SEPARATEUR_DE_PAYS = " | ";
 /**
@@ -522,8 +524,22 @@ function sujetDuLieu(lieu: LieuDuSuivi): string {
 }
 
 /**
- * LA LIGNE SOUS LE NOM — « Artiste: Félines · Paris, France ».
+ * LA LIGNE SOUS LE NOM — « Félines · Paris, France ».
  * ------------------------------------------------------------------
+ * ██ §2 (nº 862) — LE TYPE N'Y EST PLUS : LA LOCALITÉ SEULE ██
+ * DÉCISION DU PROPRIÉTAIRE : « le type disparaît de la ligne de la
+ * localité (elle garde la ville seule) » — il est monté dans le BADGE
+ * qui remplace « Following » à droite de la rangée (BlocSuivis,
+ * BadgeTypeDeFiche). Deux endroits diraient deux fois la même chose ;
+ * un seul le dit.
+ * ⚠️ CE QUI PART EXACTEMENT : l'appel à `libelleTypeFiche` et les deux
+ * points qui le suivaient (`APRES_LE_TYPE`, supprimé plus haut). LE
+ * LIEU NE CHANGE PAS D'UN CARACTÈRE : mêmes villes, même groupement
+ * par pays, même plafond — c'est `lieuxEcrits` qui l'écrit, et elle
+ * n'est pas touchée.
+ * ⚠️ ET LE MOT DU TYPE N'EST PAS PERDU : le badge le lit à la même
+ * source (`libelleTypeFiche`, config/tatouage), jamais une seconde
+ * table de mots.
  * ██ §1 (nº 585) — ON LIT DES VILLES, PLUS UN NOMBRE ██
  * §3-b et §3-c SONT ANNULÉS. La ligne écrivait la première ville en
  * entier puis COMPTAIT les autres — « Paris, France +1 ». Le
@@ -542,9 +558,7 @@ export function ligneDIdentite(
   suivi: TatoueurSuivi,
   aujourdhui = jourCivil()
 ): string {
-  const type = libelleTypeFiche(suivi.typeFiche, suivi.etablissement);
-  const ou = lieuxEcrits(lieuxDuSuivi(suivi, aujourdhui));
-  return [type, ou].filter(Boolean).join(APRES_LE_TYPE);
+  return lieuxEcrits(lieuxDuSuivi(suivi, aujourdhui));
 }
 
 /* ==================================================================
