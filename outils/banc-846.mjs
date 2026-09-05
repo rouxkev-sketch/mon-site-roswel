@@ -168,7 +168,10 @@ for (const mode of ["doigt", "web"]) {
       apres.rangee === avant.rangee && apres.opacite === 1,
       `haut ${avant.haut} → ${apres.haut} · rangée ${avant.rangee} → ${apres.rangee} · opacité ${apres.opacite}`);
     verif("la réserve de la barre ne change pas non plus",
-      apres.reserve === avant.reserve && avant.reserve === 122,
+      //  §2 (nº 858) — 116 : la réserve dit enfin la VRAIE hauteur de la
+      //  barre (elle en annonçait 122 pour 128 peints, d'où la bande
+      //  noire sous la ligne du va-et-vient).
+      apres.reserve === avant.reserve && avant.reserve === 116,
       `${avant.reserve} → ${apres.reserve}`);
     verif("et la loupe reste allumée", apres.loupe === 1, `opacité ${apres.loupe}`);
   } catch (e) {

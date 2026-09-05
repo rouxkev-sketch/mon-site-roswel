@@ -251,8 +251,14 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
     <>
       <header className="sticky top-0 z-50 mobile:fixed mobile:inset-x-0 bg-sombre-fond">
         <div
-          className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
-                     flex flex-wrap lg:flex-nowrap items-center gap-x-5 py-3"
+          /*  §2 (nº 858) — LA MÊME BARRE QUE LA VRAIE : plus de
+              rembourrage sous la ligne du va-et-vient au doigt, là où la
+              rangée existe (« Ma sélection »). Sur une page de résultats,
+              la rangée n'est pas là et le rembourrage reste. */
+          className={`mx-auto w-full max-w-[1760px] px-4 sm:px-6
+                     flex flex-wrap lg:flex-nowrap items-center gap-x-5 pt-3 ${
+                       centre === "recherche" ? "pb-3" : "mobile:pb-0 not-mobile:pb-3"
+                     }`}
         >
           <div className="min-w-0 basis-0 grow shrink order-1 lg:flex-none lg:basis-auto">
             <div className="block w-fit">
@@ -325,6 +331,16 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
            exactement le saut que les nº 707/708 ont supprimé. */}
       <div
         aria-hidden="true"
+        /*  §2 (nº 858) — UNE PRISE POUR LA MESURE, ET RIEN D'AUTRE.
+            Cette réserve promet la hauteur de la barre qui vient ; sans
+            repère, aucun banc ne pouvait la lire pendant le squelette —
+            celui de la nº 857 mesurait en réalité la page ARRIVÉE, et
+            ne disait donc rien. Le repère est DISTINCT de celui de la
+            vraie réserve (`data-reserve-barre`) exprès : ce dernier est
+            visé par des règles de globals.css, et un squelette n'a pas
+            à en hériter. Aucune classe, aucun pixel : un nom. */
+        data-reserve-squelette=""
+        data-reserve-posee={centre === "recherche" ? RESERVE_LOGO : RESERVE_RANGEE}
         style={{
           height: centre === "recherche" ? RESERVE_LOGO : RESERVE_RANGEE,
         }}

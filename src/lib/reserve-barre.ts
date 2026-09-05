@@ -64,12 +64,32 @@
  * LES DEUX HAUTEURS DE LA RÉSERVE, ÉCRITES ICI ET NULLE PART AILLEURS.
  * (nº 258-§1/§3 — elles étaient recopiées dans EnTeteTatouage, une fois
  * en attributs et une fois en classes.)
- *  · RANGÉE : 64 (la rangée du logo : 40 d'icônes + `py-3`) + 12
- *    (`max-lg:pt-3`) + 46 (les blocs descendus de 11 % : 52 × 0,89 =
- *    46,28 → 46 au pixel entier, la hauteur des cercles du web) ;
+ *  · RANGÉE : 12 (`pt-3`) + 46 (la rangée du logo : ses cibles font
+ *    46 px au doigt depuis la nº 821) + 12 (`max-lg:pt-3`, l'air
+ *    au-dessus de la rangée) + 46 (le va-et-vient : 43 de piste et
+ *    3 de ligne) = 116, et RIEN EN DESSOUS ;
  *  · LOGO SEUL : 64 — la rangée du logo, rien d'autre.
+ *
+ * ██ §2 (nº 858) — POURQUOI 116 ET PLUS 122 : LA SECONDE MOITIÉ DE LA
+ * BANDE NOIRE ██
+ * ------------------------------------------------------------------
+ * CE NOMBRE ÉTAIT FAUX, et il l'était depuis la nº 821 sans que
+ * personne le voie : il valait 122, calculé sur une rangée de logo de
+ * 64 px (40 d'icônes + `py-3`). Or les cibles de la barre sont passées
+ * à 46 px au doigt à la nº 821 — la rangée du logo en fait 58 avec son
+ * air, la barre 116 en tout. La réserve annonçait donc SIX PIXELS DE
+ * MOINS que la barre ne peint : le contenu commençait six pixels trop
+ * haut, sous elle. Ajoutés aux douze du rembourrage retiré à la nº 858
+ * (voir EnTeteTatouage), ce sont eux qu'on voyait en noir sous la
+ * ligne du va-et-vient.
+ * MESURÉ, PAS DÉDUIT (relevé nº 858, iPhone à 390 px) : barre 128,
+ * réserve 122, ligne à 116. Après : barre 116, réserve 116, ligne à
+ * 116 — le contenu commence PILE sous la ligne.
+ * ⚠️ LE SQUELETTE SUIT SANS QU'ON Y TOUCHE : il lit cette constante
+ * (SquelettesDePage), comme la barre. Une seule écriture (piège
+ * nº 378).
  */
-export const RESERVE_RANGEE = 122;
+export const RESERVE_RANGEE = 116;
 export const RESERVE_LOGO = 64;
 
 /**

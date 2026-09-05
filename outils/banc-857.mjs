@@ -22,7 +22,7 @@ const RELEVE_ACCUEIL = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
     return { y: Math.round(x.top), bas: Math.round(x.bottom), x: Math.round(x.left), droite: Math.round(x.right), h: Math.round(x.height), l: Math.round(x.width) }; };
   const vv = document.querySelector("[data-va-et-vient-nature]");
-  const boutons = vv ? [...vv.querySelectorAll("button")] : [];
+  const boutons = vv ? [...vv.querySelectorAll("[role='radio']")] : [];
   const grille = document.querySelector("[data-catalogue-styles]");
   const loupe = document.querySelector("[data-loupe-barre]");
   const reserve = document.querySelector("[data-reserve-barre]");
@@ -30,9 +30,18 @@ const RELEVE_ACCUEIL = `() => {
   return {
     affichage: vv ? getComputedStyle(vv).display : "absent",
     vv: r(vv), rangee: r(rangee),
-    positions: boutons.map((b) => ({ nature: b.dataset.positionNature, active: b.getAttribute("aria-checked") === "true",
+    //  §1 (nº 858) — LE VA-ET-VIENT EST DEVENU CELUI DU SITE
+    //  (OngletsLigne) : il n'émet plus d'attribut par position. On les
+    //  lit dans leur ORDRE (tattoo, puis flash) et par leur NOM
+    //  accessible, qui est le vrai contrat de cet onglet-là.
+    positions: boutons.map((b, rang) => ({ nature: rang === 0 ? "tatouage" : "flash",
+      active: b.getAttribute("aria-checked") === "true",
       texte: b.textContent.trim(), nom: b.getAttribute("aria-label"), dessin: Boolean(b.querySelector("svg")), ...r(b) })),
-    ligne: r(vv?.querySelector("[data-ligne-va-et-vient]")),
+    //  §1 (nº 858) — LA LIGNE EST CELLE DU COMPOSANT DU SITE : la boîte
+    //  de trois pixels sous la piste, et le trait gris qu'elle porte.
+    ligne: r([...(vv?.querySelector("[role='radiogroup']")?.children ?? [])]
+      .filter((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3)
+      .map((n) => n.querySelector("span"))[0]),
     loupe: loupe ? { opacite: Number(getComputedStyle(loupe).opacity), visibilite: getComputedStyle(loupe).visibility, affichage: getComputedStyle(loupe).display } : null,
     reserve: reserve ? Number(reserve.dataset.reservePosee) : null,
     grille: grille ? { nature: grille.dataset.nature, cartes: grille.children.length,
@@ -65,8 +74,8 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     verif("la position INACTIVE (flash) montre l'icône SEULE, et garde son nom pour les lecteurs d'écran",
       flash && !flash.active && flash.dessin && flash.texte === "" && flash.nom === FLASH && flash.l === 43,
       `texte « ${flash?.texte} » · nom « ${flash?.nom} » · ${flash?.l} px`);
-    verif("sa hauteur est celle du champ qu'il remplace (46 = 43 + la ligne de 3) : la réserve reste 122",
-      v.vv?.h === 46 && v.rangee?.h === 58 && v.reserve === 122, `va-et-vient ${v.vv?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve}`);
+    verif("sa hauteur est celle du champ qu'il remplace (46 = 43 + la ligne de 3) ; la réserve dit la vraie barre (116, nº 858)",
+      v.vv?.h === 46 && v.rangee?.h === 58 && v.reserve === 116, `va-et-vient ${v.vv?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve}`);
     verif("sa ligne de séparation court BORD À BORD",
       v.ligne && v.ligne.x === 0 && v.ligne.droite === v.largeur && v.ligne.h === 1, v.ligne ? `${v.ligne.x} → ${v.ligne.droite} sur ${v.largeur}` : "ligne absente");
     verif("la LOUPE est dans la barre, allumée (§3)",
@@ -81,13 +90,17 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     await page.waitForTimeout(800);
     const d = await releve(page);
     verif("APRÈS DÉFILEMENT, le va-et-vient n'a pas bougé d'un pixel — il est FIXE",
-      d.y >= 300 && d.vv?.y === v.vv?.y && d.ligne?.y === v.ligne?.y && d.reserve === 122,
+      //  ⚠️ LE SEUIL A BAISSÉ (nº 858) : la page raccourcit de vingt
+      //  pixels quand la bande noire s'en va, et l'accueil ne défile
+      //  plus jusqu'à 300. On demande donc qu'elle ait VRAIMENT bougé,
+      //  sans exiger un nombre qui dépend de la hauteur du contenu.
+      d.y >= 200 && d.vv?.y === v.vv?.y && d.ligne?.y === v.ligne?.y && d.reserve === 116,
       `page à ${d.y} · va-et-vient ${v.vv?.y} → ${d.vv?.y} · ligne ${v.ligne?.y} → ${d.ligne?.y}`);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(400);
 
     //  4 · UN TAP BASCULE : l'accueil FLASH.
-    await page.locator('[data-position-nature="flash"]').tap();
+    await page.locator("[data-va-et-vient-nature] [role='radio']").nth(1).tap();
     await page.waitForTimeout(900);
     const f = await releve(page);
     const [tattoo2, flash2] = f.positions;
@@ -100,7 +113,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     verif("… et le même titre « style + portfolios » sur chaque carte",
       f.grille && f.grille.textes.every((t) => /\d+ portfolios?$/.test(t)), f.grille ? `« ${f.grille.textes[0]} »` : "grille absente");
     verif("le va-et-vient n'a pas changé de hauteur en basculant (rien ne saute)",
-      f.vv?.h === 46 && f.vv?.y === v.vv?.y && f.reserve === 122, `${f.vv?.h} px @ ${f.vv?.y}`);
+      f.vv?.h === 46 && f.vv?.y === v.vv?.y && f.reserve === 116, `${f.vv?.h} px @ ${f.vv?.y}`);
 
     //  LA POSITION TIENT AU RECHARGEMENT (mémoire de session), puis on revient.
     await page.reload({ waitUntil: "networkidle" });
@@ -109,7 +122,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     verif("la position Flash tient au rechargement (mémoire de session)",
       r2.positions.find((p) => p.active)?.nature === "flash" && r2.grille?.nature === "flash",
       `active ${r2.positions.find((p) => p.active)?.nature} · grille ${r2.grille?.nature}`);
-    await page.locator('[data-position-nature="tatouage"]').tap();
+    await page.locator("[data-va-et-vient-nature] [role='radio']").nth(0).tap();
     await page.waitForTimeout(700);
     const t = await releve(page);
     verif("un second tap ramène Tattoo",
@@ -171,7 +184,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     await page.waitForTimeout(1500);
     const v = await lireSelection();
     verif("le va-et-vient Favoris | Portfolios est dans la rangée fixe de la barre",
-      v.groupe && v.groupe.h === 46 && v.rangee?.h === 58 && v.reserve?.posee === 122, `groupe ${v.groupe?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve?.posee}`);
+      v.groupe && v.groupe.h === 46 && v.rangee?.h === 58 && v.reserve?.posee === 116, `groupe ${v.groupe?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve?.posee}`);
     verif("AUCUNE marge sous sa ligne : le contenu commence pile au bas de la réserve",
       v.air === 0 && v.premier && v.reserve && v.premier.y === v.reserve.bas,
       `air ${v.air} px · contenu à ${v.premier?.y} pour une réserve finissant à ${v.reserve?.bas}`);
@@ -181,24 +194,14 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     verif("APRÈS DÉFILEMENT, le va-et-vient n'a pas bougé — il est FIXE lui aussi",
       d.y >= 400 && d.groupe?.y === v.groupe?.y && d.rangee?.y === v.rangee?.y, `page à ${d.y} · va-et-vient ${v.groupe?.y} → ${d.groupe?.y}`);
 
-    //  LE SQUELETTE PROMET LE MÊME DÉPART DE CONTENU (procédé nº 845).
-    let gris = null;
-    for (let essai = 0; essai < 3 && !gris; essai += 1) {
-      await page.goto(`${BASE}/my-favorites?t=${Date.now()}`, { waitUntil: "commit" });
-      for (let i = 0; i < 400 && !gris; i += 1) {
-        gris = await page.evaluate(() => {
-          const b = document.querySelector('[aria-busy="true"]');
-          const grille = b?.querySelector("[data-squelette-cartes], [data-grille-tatoueurs]");
-          return grille ? Math.round(grille.getBoundingClientRect().top) : null;
-        }).catch(() => null);
-        if (!gris) await page.waitForTimeout(5);
-      }
-    }
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await page.waitForTimeout(1000);
-    const vrai = await lireSelection();
-    verif("le squelette pose son contenu là où le vrai arrive — AUCUN SAUT",
-      gris !== null && vrai.premier && gris === vrai.premier.y, `squelette ${gris} · vrai ${vrai.premier?.y}`);
+    /*  ██ nº 858 — LE SQUELETTE SE MESURE AU BANC 858 ██
+        Ce banc croyait le mesurer et ne le mesurait pas : sur un
+        chargement complet, la doublure répond plus vite que le squelette
+        ne paraît, et la comparaison portait en réalité sur la page
+        ARRIVÉE — deux fois la même valeur, verte pour rien. La mesure
+        juste (navigation douce, et la RÉSERVE du squelette plutôt que
+        ses cartes, qu'une garde peut ne pas peindre) vit au banc 858 :
+        deux bancs ne diront pas deux vérités sur le même sujet. */
   } catch (e) {
     verif("déroulement du banc 857 (Ma sélection)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

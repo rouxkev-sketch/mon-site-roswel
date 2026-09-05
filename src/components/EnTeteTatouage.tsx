@@ -813,8 +813,30 @@ export function EnTeteTatouage({
         //  rangée du moteur vit DANS la rangée (`pt-3` de son
         //  enveloppe), pour disparaître AVEC elle quand elle se
         //  replie — un gap de grille, lui, serait resté.
-        className="mx-auto w-full max-w-[1760px] px-4 sm:px-6
-                   flex flex-wrap lg:flex-nowrap items-center gap-x-5 py-3"
+        /*  ██ §2 (nº 858) — LA BANDE NOIRE SOUS LA LIGNE ██
+            -------------------------------------------------------------
+            CE QUE LE PROPRIÉTAIRE VOIT : sur l'accueil et sur « Ma
+            sélection », une bande noire horizontale sépare la ligne du
+            va-et-vient du contenu qui défile dessous. Elle a deux
+            moitiés, et les voici toutes les deux.
+            LA PREMIÈRE EST ICI : ce rembourrage valait `py-3` — douze
+            pixels EN HAUT et EN BAS. En bas, ils s'ajoutent SOUS la
+            ligne de séparation, qui est pourtant le bord visuel de la
+            barre sur ces deux pages : douze pixels de barre peints après
+            elle. Là où la rangée existe, ils s'en vont AU DOIGT.
+            ⚠️ AILLEURS, RIEN NE CHANGE : sur une page de résultats ou
+            une fiche, la rangée n'existe pas, il n'y a pas de ligne, et
+            le contenu doit continuer de glisser sous le bord de la
+            barre — le rembourrage y reste, comme au web sur toutes les
+            pages.
+            ⚠️ UNE SEULE DÉCLARATION PAR ÉCRAN (piège nº 389) : le haut
+            est écrit une fois pour tous ; le bas l'est dans deux
+            variantes qui s'excluent (règle nº 60 — l'appareil tranche,
+            jamais une largeur). */
+        className={`mx-auto w-full max-w-[1760px] px-4 sm:px-6
+                   flex flex-wrap lg:flex-nowrap items-center gap-x-5 pt-3 ${
+                     rangeePresente ? "mobile:pb-0 not-mobile:pb-3" : "pb-3"
+                   }`}
       >
         {/* LOGO ET ACTIONS PRENNENT LA MÊME PLACE (`lg:flex-1` des deux
             côtés) : c'est ce qui met le moteur au milieu de la barre.

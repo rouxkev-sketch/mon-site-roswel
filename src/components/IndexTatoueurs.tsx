@@ -1310,11 +1310,16 @@ export function IndexTatoueurs({
             //  l'air, comme avant — rien n'y est ajouté.
             return (
               <>
-              <div
-                aria-hidden="true"
-                data-air-sous-barre=""
-                className="h-3.5 hidden mobile:block"
-              />
+              {/*  ██ §2 (nº 858) — L'AIR SOUS LA BARRE S'EN VA (LE DOIGT) ██
+                   Quatorze pixels séparaient la barre du premier contenu
+                   de l'accueil ; ils s'ajoutaient à la bande noire que le
+                   propriétaire veut supprimer. Le contenu commence
+                   désormais PILE sous la ligne du va-et-vient, comme sur
+                   « Ma sélection » depuis la nº 857-§5.
+                   ⚠️ AU WEB, RIEN N'EST TOUCHÉ : cet air n'existait qu'au
+                   doigt (`hidden mobile:block`) — l'élément entier s'en
+                   va, plutôt qu'une hauteur mise à zéro (règle nº 386 :
+                   rien d'orphelin). */}
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}
                 /*  ██ §1 (nº 507) — PLUS DE SOUS-TITRE, ET PAS UN PIXEL

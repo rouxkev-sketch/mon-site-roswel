@@ -1,59 +1,56 @@
 "use client";
 
 import { IconeEclair, IconeGoutteDEncre } from "@/components/Icones";
-import {
-  COULEURS_SOMBRE,
-  LIGNE_BORD_A_BORD_DOIGT,
-  TEXTES_TATOUAGE,
-  TRAIT_SEPARATION_FOND,
-} from "@/config/tatouage";
+import { OngletsLigne } from "@/components/OngletsLigne";
+import { LIGNE_BORD_A_BORD_DOIGT, TEXTES_TATOUAGE } from "@/config/tatouage";
 import { poserNatureAccueil, useNatureAccueil } from "@/lib/nature-accueil";
 import type { SlugNature } from "@/lib/photos-tatoueur";
 
 /**
- * ██ §1-§2 (nº 857) — LE VA-ET-VIENT TATTOO / FLASH DE L'ACCUEIL DU DOIGT ██
+ * ██ §1-§2 (nº 857, REFAIT §1 nº 858) — LE VA-ET-VIENT TATTOO / FLASH
+ * DE L'ACCUEIL DU DOIGT ██
  * ======================================================================
- * DÉCISION DU PROPRIÉTAIRE : le champ de recherche de l'accueil
+ * DÉCISION DU PROPRIÉTAIRE (nº 857) : le champ de recherche de l'accueil
  * DISPARAÎT (la loupe de la barre le remplace, comme sur les autres
- * pages) et, à sa place, un BOUTON DE VA-ET-VIENT à deux positions —
- * des onglets segmentés :
+ * pages) et, à sa place, un va-et-vient à deux positions —
  *  · « Find your tattoo style… », une GOUTTE D'ENCRE à sa gauche ;
  *  · « Find your Flash style… », un ÉCLAIR à sa gauche.
- * LE TEXTE EST TROP LONG POUR LES DEUX À LA FOIS, et c'est réglé comme
- * il l'a dit : la position ACTIVE montre icône + texte, la position
- * INACTIVE montre l'ICÔNE SEULE. Un tap bascule.
+ * LE TEXTE EST TROP LONG POUR LES DEUX À LA FOIS : la position ACTIVE
+ * montre icône + phrase, l'INACTIVE l'ICÔNE SEULE. Un tap bascule.
  *
- * LA ROBE, ET D'OÙ ELLE VIENT : une piste en pilule au fond des badges
- * de recherche (`carteClair`, le barreau de la nº 848), et dedans la
- * position active en pilule pleine d'un cran plus clair (`haut`), texte
- * et icône en blanc de la charte ; l'icône inactive en gris doux, dans
- * un rond de la hauteur de la piste. Les deux fonds VOYAGENT DANS LE
- * MARQUAGE (la leçon de la nº 849 : une classe neuve n'existe que dans
- * une feuille neuve — un fond que la feuille ignore ne se peint pas).
+ * ██ §1 (nº 858) — CE N'EST PLUS UN OBJET À PART : C'EST LE VA-ET-VIENT
+ * DU SITE ██
+ * ------------------------------------------------------------------
+ * CE QUE LA nº 857 AVAIT FAIT, ET QUE LE PROPRIÉTAIRE CORRIGE : elle
+ * dessinait ici une piste en pilule, ses deux fonds et sa ligne — un
+ * SECOND va-et-vient, qui ne ressemblait pas à celui de « Ma sélection ».
+ * « Il doit être LE MÊME COMPOSANT », à la lettre. Ce fichier ne dessine
+ * donc plus rien : il APPELLE `OngletsLigne`, comme « Ma sélection »
+ * (MenusSelection), avec les mêmes réglages —
+ *   · la même boîte d'onglet (`px-1 min-h-[43px]`) ;
+ *   · la même ligne grise, BORD À BORD au doigt (`LIGNE_BORD_A_BORD_DOIGT`,
+ *     la même constante) ;
+ *   · la même typographie (le défaut du composant, 15 px demi-gras) ;
+ *   · le même trait rose qui glisse sous l'onglet actif.
+ * Sa hauteur est donc celle de l'autre au pixel : 43 + 3 = 46.
  *
- * LA HAUTEUR EST CELLE DU CHAMP QU'IL REMPLACE, ET C'EST VOULU : 43 px
- * de piste + la boîte de 3 px de la ligne = 46 — l'arithmétique même du
- * va-et-vient de « Ma sélection » (OngletsLigne, 43 + 3). La rangée de
- * la barre garde donc ses 58 (12 d'air + 46), la réserve ses 122
- * (lib/reserve-barre), et le squelette n'a rien à apprendre.
+ * CE QU'ON GARDE DE LA nº 857, ET RIEN D'AUTRE : la MÉCANIQUE. L'onglet
+ * inactif se réduit à son icône, l'actif porte icône + phrase. Le
+ * composant sait le faire depuis la nº 858 (`largeurInactive`), sans
+ * quoi la phrase serait coupée — 179 px de colonne pour 202 de contenu,
+ * mesuré. Le nom entier reste celui de chaque onglet (`nom`) : l'œil
+ * voit un dessin, un lecteur d'écran entend la phrase.
  *
- * IL EST FIXE (§2) : il vit DANS LA BARRE FIXE, à la place de la pilule,
- * et la barre ne replie jamais sa rangée sur l'accueil (nº 846,
- * `rangeeFixe`). La page défile SOUS SA LIGNE DE SÉPARATION — la ligne
- * fine et grise qui court bord à bord sous la piste, la même que celle
- * de « Ma sélection » (`LIGNE_BORD_A_BORD_DOIGT`), et le contenu passe
- * dessous comme sous la barre.
- *
- * L'ARIA EST CELLE DES ONGLETS DU SITE : `radiogroup` + `radio` /
- * `aria-checked`, et la position à icône seule garde son NOM entier
- * (`aria-label`) — un lecteur d'écran entend les deux textes, l'œil n'en
- * voit qu'un.
- *
- * ⚠️ AU DOIGT SEULEMENT (règle nº 60, `mobile:`) : le web garde son champ.
+ * ⚠️ AU DOIGT SEULEMENT (règle nº 60) : le web garde son champ.
  * ⚠️ QUI L'ÉCOUTE : la page (IndexTatoueurs) lit la même nature dans le
  * même magasin (lib/nature-accueil) et montre les cartes de style de
- * cette nature — c'est le §4.
+ * cette nature — c'est le §4 de la nº 857.
  */
+
+/** La largeur d'un onglet réduit à son icône : la hauteur de la piste,
+    pour que le dessin y tienne dans un carré. */
+const LARGEUR_ICONE_SEULE = "43px";
+
 const POSITIONS: ReadonlyArray<{
   nature: SlugNature;
   texte: string;
@@ -67,50 +64,27 @@ export function VaEtVientNature() {
   const active = useNatureAccueil();
   return (
     <div data-va-et-vient-nature="" className="hidden mobile:block w-full">
-      <div
-        role="radiogroup"
-        aria-label="Tattoo or flash"
-        style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
-        className="flex min-h-[43px] items-center rounded-full"
-      >
-        {POSITIONS.map(({ nature, texte, Icone }) => {
-          const actif = nature === active;
-          return (
-            <button
-              key={nature}
-              type="button"
-              role="radio"
-              aria-checked={actif}
-              aria-label={texte}
-              data-position-nature={nature}
-              onClick={() => poserNatureAccueil(nature)}
-              style={actif ? { backgroundColor: COULEURS_SOMBRE.haut } : undefined}
-              className={`flex min-h-[43px] items-center justify-center gap-2 rounded-full
-                          transition-colors ${
-                            actif
-                              ? "min-w-0 flex-1 px-4 text-sombre-texte"
-                              : "w-[43px] shrink-0 text-sombre-texte-doux"
-                          }`}
-            >
+      <OngletsLigne
+        ariaLabel="Tattoo or flash"
+        cleActive={active}
+        surChoix={(cle) => poserNatureAccueil(cle as SlugNature)}
+        classeOnglet="px-1 min-h-[43px]"
+        classeLigne={LIGNE_BORD_A_BORD_DOIGT}
+        largeurInactive={LARGEUR_ICONE_SEULE}
+        options={POSITIONS.map(({ nature, texte, Icone }) => ({
+          cle: nature,
+          nom: texte,
+          label:
+            nature === active ? (
+              <span className="flex min-w-0 items-center gap-2">
+                <Icone taille={20} classe="shrink-0" />
+                <span className="min-w-0 truncate">{texte}</span>
+              </span>
+            ) : (
               <Icone taille={20} classe="shrink-0" />
-              {actif && (
-                <span className="min-w-0 truncate text-[15px] leading-tight font-semibold">
-                  {texte}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      {/*  LA LIGNE DE SÉPARATION — la boîte de 3 px des onglets du site,
-           et dedans le trait d'un pixel, gris de la charte, BORD À BORD :
-           c'est sous elle que la page défile. */}
-      <div className="relative h-[3px]" aria-hidden="true">
-        <span
-          data-ligne-va-et-vient=""
-          className={`absolute bottom-0 h-px ${TRAIT_SEPARATION_FOND} ${LIGNE_BORD_A_BORD_DOIGT}`}
-        />
-      </div>
+            ),
+        }))}
+      />
     </div>
   );
 }

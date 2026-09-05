@@ -38,11 +38,24 @@ export function OngletsLigne({
   avecLigneGrise = true,
   classeLigne = "",
   taillePolice = "text-[15px]",
+  largeurInactive,
 }: {
   /** §1 (nº 460) — le label devient un NŒUD : le va-et-vient de « Ma
       sélection » y pose « Favoris 10 ⌄ » (mot + nombre + chevron).
       Tous les appelants à chaînes restent valides tels quels. */
-  options: Array<{ cle: string; label: React.ReactNode }>;
+  options: Array<{
+    cle: string;
+    label: React.ReactNode;
+    /**
+     * §1 (nº 858) — LE NOM ACCESSIBLE D'UN ONGLET, quand son libellé
+     * n'est pas un mot. Le va-et-vient de l'accueil (VaEtVientNature)
+     * réduit ses onglets INACTIFS à leur seule icône : l'œil voit un
+     * dessin, un lecteur d'écran n'entendrait rien. Il pose donc ici la
+     * phrase entière. Sans ce nom, rien ne change — les sept autres
+     * appelants portent des mots, qui se lisent d'eux-mêmes.
+     */
+    nom?: string;
+  }>;
   /** La clé de l'onglet actif — `null` tant que rien n'est choisi. */
   cleActive: string | null;
   surChoix: (cle: string) => void;
@@ -116,8 +129,42 @@ export function OngletsLigne({
    * hauteur de ligne du texte à toutes les valeurs employées.
    */
   taillePolice?: string;
+  /**
+   * ██ §1 (nº 858) — DES ONGLETS DE LARGEURS INÉGALES ██
+   * ------------------------------------------------------------------
+   * LE BESOIN, ET IL EST MESURÉ : le va-et-vient de l'accueil du doigt
+   * (VaEtVientNature) montre l'onglet ACTIF avec sa phrase entière
+   * (« Find your tattoo style… ») et l'INACTIF réduit à son icône. En
+   * colonnes égales, l'actif n'aurait que 179 px pour un contenu qui en
+   * demande 202 (relevé nº 858, corps 15 demi-gras) : la phrase serait
+   * coupée. Cette valeur donne aux onglets inactifs UNE LARGEUR FIXE ;
+   * l'actif prend tout le reste.
+   * ⚠️ LE TRAIT ROSE SUIT LA MÊME ARITHMÉTIQUE, et c'est pour cela
+   * qu'il n'y a qu'un réglage et pas deux : sa largeur vaut « tout sauf
+   * les inactifs », son décalage « autant de largeurs fixes qu'il y a
+   * d'onglets avant lui ». Les deux s'écrivent en `calc`, donc il
+   * GLISSE encore — même transformation, même courbe qu'ailleurs.
+   * ⚠️ SANS ARGUMENT, RIEN NE CHANGE : les colonnes restent égales et
+   * les deux expressions redeviennent celles d'avant, au caractère près
+   * (les sept autres appelants ne passent rien).
+   */
+  largeurInactive?: string;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
+  /*  §1 (nº 858) — LES COLONNES, ET LE TRAIT QUI LES SUIT. Une seule
+      source (`largeurInactive`) décide des trois expressions : sans
+      elle, ce sont exactement celles d'avant. */
+  const colonnes = largeurInactive
+    ? options
+        .map((option) => (option.cle === cleActive ? "1fr" : largeurInactive))
+        .join(" ")
+    : `repeat(${options.length}, 1fr)`;
+  const largeurDuTrait = largeurInactive
+    ? `calc(100% - ${options.length - 1} * ${largeurInactive})`
+    : `${100 / options.length}%`;
+  const decalageDuTrait = largeurInactive
+    ? `calc(${index} * ${largeurInactive})`
+    : `${index * 100}%`;
 
   return (
     <div
@@ -126,8 +173,17 @@ export function OngletsLigne({
       className={fige ? "opacity-60" : ""}
     >
       <div
-        className="grid"
-        style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}
+        /*  §1 (nº 858) — LA GRILLE S'ANIME quand les colonnes sont
+            inégales : l'onglet qui s'ouvre pousse l'autre au lieu de
+            sauter, à la courbe du trait rose. Sans `largeurInactive`,
+            les colonnes ne changent jamais et cette transition ne
+            s'applique à rien. */
+        className={`grid${
+          largeurInactive
+            ? " transition-[grid-template-columns] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            : ""
+        }`}
+        style={{ gridTemplateColumns: colonnes }}
       >
         {options.map((option) => {
           const actif = option.cle === cleActive;
@@ -139,6 +195,7 @@ export function OngletsLigne({
               aria-checked={actif}
               disabled={fige && !actif}
               onClick={() => surChoix(option.cle)}
+              aria-label={option.nom}
               className={`flex items-center justify-center ${classeOnglet}
                          ${taillePolice} font-semibold transition-colors ${
                            actif
@@ -174,8 +231,8 @@ export function OngletsLigne({
                        transition-transform duration-300
                        ease-[cubic-bezier(0.32,0.72,0,1)]"
             style={{
-              width: `${100 / options.length}%`,
-              transform: `translateX(${index * 100}%)`,
+              width: largeurDuTrait,
+              transform: `translateX(${decalageDuTrait})`,
             }}
           />
         )}
