@@ -63,9 +63,11 @@ export const ENTREE_LIEN = "lien";
  * ------------------------------------------------------------------
  * Une vignette de l'ONGLET PORTFOLIO d'un profil, au doigt, ouvre la vue
  * photo AUTREMENT qu'une carte de « Ma sélection » ou qu'un lien
- * partagé (décision du propriétaire) : au-dessus de l'image le titre et
- * le sous-titre de la galerie, et TOUTES les photos de cette galerie
- * empilées, la vue ouverte sur celle qu'on a touchée (FilDeGalerie).
+ * partagé (décision du propriétaire) : LE FIL DE GALERIES — une carte
+ * par galerie du portfolio, chacune un carrousel coiffé du titre de sa
+ * galerie, la page ouverte sur la carte touchée et la carte sur la
+ * photo touchée (FilDeGalerie ; la nº 863 empilait une carte par photo,
+ * la nº 866-§1 l'a refait sur consigne).
  * C'est celui qui pose le lien qui sait d'où il vient (la règle de la
  * nº 365 : un réglage explicite, jamais une devinette d'adresse) — le
  * geste de l'onglet écrit donc cette consigne dans l'adresse, comme les

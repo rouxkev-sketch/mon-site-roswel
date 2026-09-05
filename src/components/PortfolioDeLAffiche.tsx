@@ -170,8 +170,10 @@ export function SelecteurOngletAffiche({
   );
 }
 
-/** Une série publiée — sa vignette dans la grille d'une section. */
-type SeriePubliee = {
+/** Une série publiée — sa vignette dans la grille d'une section.
+    §1 (nº 866) — EXPORTÉE : le fil de galeries (FilDeGalerie) fait une
+    carte de chacune. */
+export type SeriePubliee = {
   style: string;
   label: string;
   rendu: string;
@@ -218,6 +220,55 @@ function seriesDeLaCategorie(
     }
   }
   return series;
+}
+
+/** UNE GALERIE DU PORTFOLIO : sa série, la nature (« tatouage »,
+    « flash ») et le titre de sa catégorie (« Tattoos », « Flash »). */
+export type GalerieDuPortfolio = {
+  serie: SeriePubliee;
+  nature: string;
+  titre: string;
+};
+
+/**
+ * ██ §1 (nº 866) — LA LISTE DES GALERIES DU PORTFOLIO, ÉCRITE UNE FOIS ██
+ * ==================================================================
+ * Le panneau Portfolio la rendait pour lui seul ; LE FIL DE GALERIES
+ * (FilDeGalerie — une carte par galerie, décision du propriétaire) la
+ * lit désormais aussi : même ordre, mêmes séries, même titre de
+ * catégorie — six galeries sur le profil, six cartes dans le fil, par
+ * construction et non par accord. La règle est celle d'hier, mot pour
+ * mot :
+ *
+ * §2 (nº 375) — UNE SEULE SUITE DE GALERIES, CHACUNE PORTANT SA
+ * CATÉGORIE.
+ * ------------------------------------------------------------------
+ * On aplatit les sections dans l'ordre où elles arrivent : toutes les
+ * réalisations, puis tous les flashs — `CATEGORIES_EXPLORER` donne
+ * l'ordre, il ne change pas. Chaque galerie emporte le MOT de sa
+ * catégorie, qui s'écrira au-dessus de son titre.
+ * ⚠️ LE FILTRE FAIT DÉJÀ LE TRAVAIL DES CAS LIMITES : un tatoueur sans
+ * flash n'a qu'une section, donc aucune galerie ne porte « Flashs », et
+ * l'inverse est vrai aussi. Rien ne peut rester orphelin — il n'y a
+ * plus de titre qui existe indépendamment d'une galerie. UNE SECTION
+ * VIDE NE REND RIEN : ni titre, ni espace (nº 276-§3) ; une liste vide
+ * dit « No posts yet » (le panneau) ou ne dessine aucune carte (le fil).
+ */
+export function galeriesDuPortfolio(
+  groupes: StyleGalerie[]
+): GalerieDuPortfolio[] {
+  const sections = CATEGORIES_EXPLORER.map((categorie) => ({
+    nature: categorie.nature,
+    titre: categorie.titre,
+    series: seriesDeLaCategorie(groupes, categorie.nature),
+  })).filter((section) => section.series.length > 0);
+  return sections.flatMap((section) =>
+    section.series.map((serie) => ({
+      serie,
+      nature: section.nature,
+      titre: section.titre,
+    }))
+  );
 }
 
 /**
@@ -430,38 +481,12 @@ export function PanneauPortfolio({
   useEffect(() => {
     if (slugTatoueur) oublierLesAutresGaleries(slugTatoueur);
   }, [slugTatoueur]);
-  /*  LES DEUX SECTIONS — « Réalisations » puis « Flashs », les
-      libellés de CATEGORIES_EXPLORER. UNE SECTION VIDE NE REND RIEN :
-      ni titre, ni espace (nº 276-§3). */
-  const sections = CATEGORIES_EXPLORER.map((categorie) => ({
-    nature: categorie.nature,
-    titre: categorie.titre,
-    series: seriesDeLaCategorie(groupes, categorie.nature),
-  })).filter((section) => section.series.length > 0);
+  /*  LES GALERIES — « Réalisations » puis « Flashs », une seule suite,
+      chacune portant sa catégorie : l'écriture partagée avec le fil de
+      galeries, au module (nº 866 ; la règle est celle de la nº 375). */
+  const galeries = galeriesDuPortfolio(groupes);
 
-  /**
-   * §2 (nº 375) — UNE SEULE SUITE DE GALERIES, CHACUNE PORTANT SA
-   * CATÉGORIE.
-   * ------------------------------------------------------------------
-   * On aplatit les sections dans l'ordre où elles arrivent : toutes les
-   * réalisations, puis tous les flashs — `CATEGORIES_EXPLORER` donne
-   * l'ordre, il ne change pas. Chaque galerie emporte le MOT de sa
-   * catégorie, qui s'écrira au-dessus de son titre.
-   * ⚠️ LE FILTRE DU DESSUS FAIT DÉJÀ LE TRAVAIL DES CAS LIMITES : un
-   * tatoueur sans flash n'a qu'une section, donc aucune galerie ne porte
-   * « Flashs », et l'inverse est vrai aussi. Rien ne peut rester
-   * orphelin — il n'y a plus de titre qui existe indépendamment d'une
-   * galerie.
-   */
-  const galeries = sections.flatMap((section) =>
-    section.series.map((serie) => ({
-      serie,
-      nature: section.nature,
-      titre: section.titre,
-    }))
-  );
-
-  if (sections.length === 0) {
+  if (galeries.length === 0) {
     /*  §5 (nº 197) — LE TITRE SEUL, centré. Aucune phrase, aucune
         icône. */
     return (

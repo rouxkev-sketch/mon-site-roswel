@@ -215,18 +215,19 @@ const lireBande = (page) => page.evaluate((SEL) => {
         enTeteFil: Boolean(document.querySelector("[data-habillage-photo]")), ligneSousLePied: Boolean(document.querySelector("[data-titre-carrousel]")),
         photoDeTete: getComputedStyle(document.querySelector("[data-photo-fiche]")).display,
         lecture: getComputedStyle(document.querySelector("[data-colonne-lecture]")).display, vuePhoto: Boolean(document.querySelector("[data-vue-photo]")),
-        piedsDeFil: document.querySelectorAll("[data-pied-de-fil]").length };
+        piedsDeFil: document.querySelectorAll("[data-pied-de-fil]").length,
+        pastille: [...document.querySelectorAll("[data-carte-ouverte] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null };
     });
     verif("l'adresse porte la consigne « entree=portfolio » et la photo touchée",
       /entree=portfolio/.test(fil.url) && fil.url.includes(`photo=${PHOTO(8)}`), fil.url);
-    verif("le fil de la galerie est affiché, avec ses ONZE cartes — une par photo", fil.fil !== "none" && fil.cartes === 11, `${fil.fil} · ${fil.cartes} carte(s)`);
-    verif("la carte ouverte est la huitième", fil.ouverte === "7", String(fil.ouverte));
-    verif("LA VUE S'OUVRE POSITIONNÉE SUR ELLE : la page a défilé de la distance exacte qui la sépare de la première",
-      fil.y > 0 && fil.y === fil.distance, `page à ${fil.y} · distance ${fil.distance}`);
+    verif("le fil de galeries est affiché, avec UNE carte — une par galerie, et la fiche n'en a qu'une (nº 866)", fil.fil !== "none" && fil.cartes === 1, `${fil.fil} · ${fil.cartes} carte(s)`);
+    verif("la carte ouverte est la première (et seule), sur la huitième photo", fil.ouverte === "0" && fil.pastille === "8/11", `${fil.ouverte} · ${fil.pastille}`);
+    verif("LA VUE S'OUVRE EN HAUT : la carte touchée est la première, il n'y a rien à défiler (nº 866)",
+      fil.y === 0 && fil.distance === 0, `page à ${fil.y} · distance ${fil.distance}`);
     verif("plus d'en-tête avatar / badge, plus de ligne « Blackwork • Black » sous le pied, plus de photo de tête",
       !fil.enTeteFil && !fil.ligneSousLePied && fil.photoDeTete === "none", `en-tête ${fil.enTeteFil} · ligne ${fil.ligneSousLePied} · photo ${fil.photoDeTete}`);
     verif("c'est la vue photo : colonne de lecture retirée", fil.vuePhoto && fil.lecture === "none");
-    verif("chaque carte porte son pied (onze pieds)", fil.piedsDeFil === 11, String(fil.piedsDeFil));
+    verif("la carte porte son pied (un seul pied)", fil.piedsDeFil === 1, String(fil.piedsDeFil));
 
     const carte = await sonderCarte(page, "[data-carte-ouverte]");
     verif("au-dessus de l'image : le TITRE et le SOUS-TITRE de la galerie",
@@ -243,18 +244,12 @@ const lireBande = (page) => page.evaluate((SEL) => {
       carte.cadreAPied === 0 && carte.pied?.h === etalon.pied?.h
         && JSON.stringify(carte.icones.filter((i) => i.role !== "point")) === JSON.stringify(etalon.icones.filter((i) => i.role !== "point")),
       `pied ${carte.pied?.h} (${JSON.stringify(carte.icones)}) — étalon ${etalon.pied?.h} (${JSON.stringify(etalon.icones.filter((i) => i.role !== "point"))})`);
-    verif("… sans points : une carte n'a qu'une photo", carte.icones.every((i) => i.role !== "point"));
+    verif("… avec ses points : la carte glisse entre ses onze photos (nº 866)", carte.icones.some((i) => i.role === "point"));
     verif("… et les vues sont là", carte.vues !== null && carte.vues.h === 20);
 
-    //  N−1 ET N+1 : on défile (un vrai geste de roue, qui libère la garde
-    //  de position) et l'on trouve les voisines.
-    await page.mouse.move(195, 400);
-    await page.mouse.wheel(0, -640); await page.waitForTimeout(700);
-    const dessus = await page.evaluate(() => { const r = document.querySelector('[data-carte-de-galerie="6"]').getBoundingClientRect(); return r.bottom > 80 && r.top < innerHeight; });
-    verif("en remontant, la photo N−1 est là, au-dessus", dessus);
-    await page.mouse.wheel(0, 1300); await page.waitForTimeout(700);
-    const dessous = await page.evaluate(() => { const r = document.querySelector('[data-carte-de-galerie="8"]').getBoundingClientRect(); return r.bottom > 80 && r.top < innerHeight; });
-    verif("en descendant, la photo N+1 est là, en dessous", dessous);
+    //  nº 866 — N−1 ET N+1 ne sont plus des cartes voisines : les photos
+    //  d'une galerie glissent DANS sa carte (le banc 866 le mesure). On
+    //  ne glisse pas ici, pour que le §5 retrouve la bande à « 8/11 ».
 
     //  ══ 5 · LE RETOUR REND LA BANDE À « 8/11 », DEUX FOIS ══════════════
     titre("863 · §5 — 8/11 → ouvrir → retour → 8/11, deux fois de suite");

@@ -413,14 +413,15 @@ const REPOS = 3400;
         fil: getComputedStyle(document.querySelector("[data-fil-de-galerie]") ?? document.body).display,
         ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
         cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
+        pastille: [...document.querySelectorAll("[data-carte-ouverte] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null,
       };
     });
     verif("la vignette mène à la VUE PHOTO, pas au profil",
       vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true && !/entree=lien/.test(vue.url),
       `${vue.url} · vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree}`);
-    verif("elle est le FIL DE LA GALERIE (nº 863) : six cartes, ouvert sur LA photo touchée (la deuxième), sans plaque",
-      vue.fil !== "none" && vue.cartes === 6 && vue.ouverte === "1" && vue.plaque === false && /entree=portfolio/.test(vue.url),
-      `fil ${vue.fil} · ${vue.cartes} carte(s) · ouverte ${vue.ouverte} · plaque ${vue.plaque}`);
+    verif("elle est le FIL DE GALERIES (nº 863, refait nº 866) : DEUX cartes — une par galerie —, la première ouverte sur LA photo touchée (« 2/6 »), sans plaque",
+      vue.fil !== "none" && vue.cartes === 2 && vue.ouverte === "0" && vue.pastille === "2/6" && vue.plaque === false && /entree=portfolio/.test(vue.url),
+      `fil ${vue.fil} · ${vue.cartes} carte(s) · ouverte ${vue.ouverte} · pastille ${vue.pastille} · plaque ${vue.plaque}`);
     /*  L'ANCIENNE VÉRIFICATION, GARDÉE POUR MÉMOIRE ET NEUTRALISÉE : elle
         lisait la pastille d'un carrousel qui n'existe plus ici. */
     verif("(mémoire nº 844) l'ancienne vue photo du Portfolio ouvrait un carrousel — remplacé par le fil (nº 863)",

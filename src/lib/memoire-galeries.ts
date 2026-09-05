@@ -53,6 +53,40 @@ export function defilementGalerieRetenu(cle: string): number | undefined {
   return positions.get(cle);
 }
 
+/**
+ * ██ §1 (nº 866) — LA PHOTO REGARDÉE DANS LA CARTE D'UNE GALERIE ██
+ * ==================================================================
+ * LE FIL DE GALERIES (FilDeGalerie) montre chaque galerie du portfolio
+ * dans une carte qui GLISSE ; au retour sur le profil, la galerie doit
+ * être « sur la bonne photo » (décision du propriétaire) : celle qu'on
+ * regardait dans sa carte — la photo touchée si l'on n'a pas glissé,
+ * la dernière vue sinon.
+ * CE QU'ON RANGE ICI N'EST PAS UNE POSITION EN PIXELS, C'EST UN RANG :
+ * la carte ne connaît pas la géométrie de la bande du profil (largeur
+ * des cases, écart, rembourrage de débord), et c'est la bande qui, en
+ * se remontant, TRADUIT le rang en position (GalerieQuiDefile) — puis
+ * retient la sienne en pixels, comme avant. Une entrée est LUE UNE
+ * FOIS puis oubliée : la position en pixels (nº 459) reprend la main
+ * dès la pose faite.
+ * ⚠️ MÊME CLÉ QUE LA POSITION (`cleDeGalerie`), MÊME PURGE : une
+ * entrée meurt avec les galeries des autres fiches, plus bas.
+ * ⚠️ ÉCRITE AU GLISSEMENT SEULEMENT, jamais au montage de la carte :
+ * une carte qui n'a pas bougé ne dit rien, et la bande revient là où
+ * elle était — l'acquis de la nº 863-§5, intact.
+ */
+const photos = new Map<string, number>();
+
+export function retenirPhotoDeGalerie(cle: string, indice: number): void {
+  photos.set(cle, indice);
+}
+
+/** Le rang retenu, s'il y en a un — CONSOMMÉ par la lecture. */
+export function photoDeGalerieRetenue(cle: string): number | undefined {
+  const indice = photos.get(cle);
+  if (indice !== undefined) photos.delete(cle);
+  return indice;
+}
+
 /** §4 (nº 462) — LE PRÉFIXE RÉSERVÉ DE « MA SÉLECTION » : les bandes
     des suivis (BlocSuivis) mémorisent leur défilement sous ce
     préfixe. Il est ÉPARGNÉ par la purge des fiches ci-dessous — sans
@@ -133,5 +167,10 @@ export function oublierLesAutresGaleries(slug: string): void {
   for (const cle of positions.keys()) {
     if (epargnes.some((epargne) => cle.startsWith(epargne))) continue;
     if (!cle.startsWith(prefixe)) positions.delete(cle);
+  }
+  //  §1 (nº 866) — les rangs de photo suivent la même règle : ceux des
+  //  autres fiches meurent ici (ils n'ont aucun préfixe réservé).
+  for (const cle of photos.keys()) {
+    if (!cle.startsWith(prefixe)) photos.delete(cle);
   }
 }

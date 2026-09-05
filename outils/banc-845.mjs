@@ -323,13 +323,14 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         href: plaque?.querySelector("a")?.getAttribute("href"),
         ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
         cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
+        pastille: [...document.querySelectorAll("[data-carte-ouverte] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null,
         titre: document.querySelector("[data-carte-ouverte] [data-titre-galerie]")?.textContent.trim() ?? null,
       };
     });
-    verif("la vignette mène à la vue photo (pas au profil), sur LA photo touchée — la deuxième carte du fil",
+    verif("la vignette mène à la vue photo (pas au profil), sur LA photo touchée — la première des deux cartes du fil, ouverte sur « 2/6 » (nº 866)",
       vignette.vuePhoto && vignette.lectureMasquee === true && /entree=portfolio/.test(vignette.url) &&
-      vignette.cartes === 6 && vignette.ouverte === "1",
-      `${vignette.url} · ${vignette.cartes} carte(s) · ouverte ${vignette.ouverte}`);
+      vignette.cartes === 2 && vignette.ouverte === "0" && vignette.pastille === "2/6",
+      `${vignette.url} · ${vignette.cartes} carte(s) · ouverte ${vignette.ouverte} · pastille ${vignette.pastille}`);
     verif("et le titre de la galerie coiffe l'image, sans plaque (nº 863)",
       !vignette.plaqueMontree && vignette.titre === "Blackwork • Black",
       `plaque ${vignette.plaqueMontree} · « ${vignette.titre} »`);

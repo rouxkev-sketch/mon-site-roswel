@@ -70,8 +70,13 @@ const URL_RECHERCHE = `${BASE}/search?${RECHERCHE}`;
         `text-sombre-texte`, la couleur de texte du site. */
     verif("… et les deux sont en BLANC (le blanc de la charte)",
       vu?.couleur === "rgb(242, 242, 244)", vu ? vu.couleur : "pied absent");
-    verif("… l'œil est à neuf pixels du glyphe de signalement",
-      vu?.ecart === 9, vu ? `${vu.ecart} px` : "pied absent");
+    /*  ██ nº 866-§3 — NEUF PIXELS, C'ÉTAIT TROP SERRÉ ██ Le propriétaire
+        veut le même air qu'entre le fanion et le partage : SEIZE de
+        boîte à boîte (le bloc des vues a reçu sept pixels de marge). Et
+        l'œil est devenu un HISTOGRAMME (nº 866-§2) : la mesure ne change
+        pas de nature, seulement de valeur. */
+    verif("… l'histogramme est à seize pixels du glyphe de signalement (neuf avant la nº 866)",
+      vu?.ecart === 16, vu ? `${vu.ecart} px` : "pied absent");
 
     /*  ET L'ENCRE EST VRAIMENT BLANCHE À L'ÉCRAN : la couleur calculée
         peut être juste et le dessin peint autrement (la leçon de la

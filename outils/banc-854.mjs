@@ -116,6 +116,17 @@ const cranALArrivee = await fichePartielle(true);
   await ranger("tatoueurs", {
     ...gabarit, id: ID, slug: T, nom: "Banc 854", styles: ["blackwork"], vues: 0,
   });
+  //  nº 866 — UNE PHOTO, SANS QUOI LA FICHE N'EST PLUS DANS LES RÉSULTATS :
+  //  une page de résultats par style ne liste que les fiches qui ont une
+  //  photo de la nature demandée (la fiche forgée n'en avait aucune, et
+  //  ce banc n'avait pas été rejoué depuis). Le trajet mesuré ne change
+  //  pas : une visite, puis le nombre au pied de SA carte.
+  await ranger("photos_tatoueur", [{
+    id: `54000001-0000-4000-8000-${Date.now().toString(16).padStart(12, "0")}`,
+    tatoueur_id: ID, style: "blackwork", rendu: "black", nature: "tatouage",
+    url: "/images-demo/tatouage/blackwork-1.svg", miniature: "/images-demo/tatouage/blackwork-1.svg",
+    ordre: 1, cree_le: "2026-01-01T00:00:00Z",
+  }]);
   const { nav, page } = await ouvrir("doigt");
   try {
     titre("854 · d'une visite au pied de la carte");

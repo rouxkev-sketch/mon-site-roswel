@@ -1071,7 +1071,43 @@ export function IconeEclair({ taille = 20, classe = "", trait = 1.8 }: Propriete
  * ⚠️ ET IL N'Y A QU'UN ŒIL DANS LE SITE (piège nº 378) : on ne dessine
  * pas un second œil pour le second sens. L'histogramme de la nº 852,
  * lui, est parti avec son unique emploi.
+ * ⚠️ nº 866 — LE SECOND SENS (« vu ») A QUITTÉ L'ŒIL : les vues du pied
+ * des cartes portent l'histogramme redessiné juste au-dessus
+ * (`IconeHistogramme`) ; l'œil ne montre plus qu'un mot de passe.
  */
+/**
+ * ██ §2 (nº 866) — L'HISTOGRAMME DES VUES ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : dans le pied des cartes, le nombre de vues
+ * est précédé d'un HISTOGRAMME — des barres verticales, à la manière de
+ * l'icône des vues de X/Twitter — et non plus de l'œil (nº 855). Même
+ * famille que toutes les icônes du site : viewBox 24, trait de 1,8 aux
+ * bouts ronds, `currentColor` — il prend le blanc du nombre qu'il
+ * accompagne (CarteFil, `PiedDeFil`).
+ * LE DESSIN : trois barres qui montent de gauche à droite, posées sur
+ * la même ligne de base (19,5), à 6,4 / 12 / 17,6 — symétriques dans la
+ * boîte, l'encre des bouts ronds comprise (0,9 de chaque côté : 5,5 à
+ * 18,5). Les hauteurs 6, 10,5 et 15 se lisent comme une courbe qui
+ * grimpe, ce que « des vues » racontent.
+ * ⚠️ L'ŒIL RESTE : il montre un mot de passe (erreurs-formulaire) et
+ * n'a plus qu'un sens, celui-là. L'histogramme de la nº 852
+ * (`IconeStatistiques`, parti à la nº 855) n'est pas ressuscité tel
+ * quel : ses barres commençaient à 6,25 sans ligne de base commune —
+ * celui-ci est redessiné pour la boîte de 20 px du pied.
+ */
+export function IconeHistogramme({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M6.4 19.5v-6M12 19.5V9M17.6 19.5v-15"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function IconeOeil({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
   return (
     <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>

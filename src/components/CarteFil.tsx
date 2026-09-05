@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { AvatarRond } from "@/components/AvatarRond";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
-import { IconeOeil } from "@/components/Icones";
+import { IconeHistogramme } from "@/components/Icones";
 import { PointsDuCarrousel } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -263,7 +263,19 @@ export function PiedDeFil({
            entre le glyphe barré et l'œil très exactement les neuf
            pixels de vide que le signalement porte déjà à l'intérieur
            de sa propre cible. L'écart se lit donc régulier, sans
-           qu'aucun nombre ait été inventé pour lui. */}
+           qu'aucun nombre ait été inventé pour lui.
+           ██ §3 (nº 866) — CES NEUF PIXELS ÉTAIENT TROP SERRÉS ██
+           Le propriétaire compare les deux bouts de la rangée : entre
+           le FANION et le PARTAGE, les cibles de 40 px se touchent et
+           leurs glyphes de 24 laissent SEIZE pixels de boîte à boîte
+           (8 + 8) ; entre SIGNALER et le bloc des vues, il n'y en
+           avait que neuf. Les deux airs doivent être LE MÊME, et c'est
+           celui de droite qui fait la valeur : SEIZE. Le bloc des vues
+           reçoit donc sept pixels de marge à gauche (16 − 9, le vide
+           que la cible du signalement ne porte pas) — mesuré sur les
+           boîtes des dessins, 16 des deux côtés ; en encre, 23,7 des
+           deux côtés, l'histogramme ayant été dessiné pour cela (voir
+           IconeHistogramme). */}
       <div className="relative flex shrink-0 items-center -ml-2">
         <FenetreSignalement
           slug={tatoueur.slug}
@@ -282,13 +294,20 @@ export function PiedDeFil({
              et un champ de connexion ne vivent pas sur le même écran.
              Un seul œil dans le site, c'est la règle du dessin unique
              (piège nº 378) ; et l'histogramme qu'il remplace est parti
-             avec, faute d'emploi (nº 855). */}
+             avec, faute d'emploi (nº 855).
+             ██ §2 (nº 866) — L'HISTOGRAMME REVIENT, L'ŒIL S'EN VA ██
+             Décision du propriétaire : des barres verticales à la
+             manière de X/Twitter, trait fin de la famille, 20 px, BLANC
+             comme le nombre (`currentColor` sur le blanc du bloc). Le
+             dessin est neuf et unique (`IconeHistogramme`, Icones) ;
+             l'œil ne sert plus qu'au mot de passe. Partout où ce pied
+             paraît — résultats, vue photo, fil de galeries — c'est lui. */}
         <span
           data-vues-de-fil=""
-          className="flex items-center gap-1.5 text-[13px]
+          className="ml-[7px] flex items-center gap-1.5 text-[13px]
                      font-semibold text-sombre-texte"
         >
-          <IconeOeil taille={20} />
+          <IconeHistogramme taille={20} />
           {typeof vues === "number" ? vues : 0}
         </span>
       </div>

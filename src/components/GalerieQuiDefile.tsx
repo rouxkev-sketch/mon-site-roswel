@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 //  elle survit aux remontages (leçon nº 430), voir lib/memoire-galeries.
 import {
   defilementGalerieRetenu,
+  photoDeGalerieRetenue,
   retenirDefilementGalerie,
 } from "@/lib/memoire-galeries";
 
@@ -429,12 +430,54 @@ export function GalerieQuiDefile({
     const cadre = zone.current;
     if (!cadre) return;
     const retenue = defilementGalerieRetenu(cleMemoire);
+    /*  ██ §1 (nº 866) — LE RANG D'UNE PHOTO PASSE DEVANT LA POSITION ██
+        Le fil de galeries (FilDeGalerie) note LA PHOTO REGARDÉE dans la
+        carte de cette galerie (lib/memoire-galeries, `retenirPhotoDe
+        Galerie`) ; au remontage, la bande se pose SUR CETTE CASE — son
+        bord gauche au bord utile du cadre, là où l'accrochage
+        (`snap-start`, rembourrage de défilement compris) la poserait
+        lui-même. La position en pixels ne sert que s'il n'y a aucun
+        rang à honorer ; le rang est consommé à la lecture, et le
+        démontage suivant retient à nouveau des pixels, comme avant.
+        ⚠️ TRADUIT AU MOMENT DE LA POSE, jamais avant : la case n'a sa
+        place que mise en page, et la pose se répète tant que le cadre
+        n'a pas de largeur (l'image suivante, puis l'observateur de
+        taille, ci-dessous) — le rang se relit donc à chaque essai. */
+    const photo = photoDeGalerieRetenue(cleMemoire);
+    const cible = (): number | undefined => {
+      if (photo === undefined) return retenue;
+      const cases = cadre.querySelectorAll<HTMLElement>("[data-case-galerie]");
+      const visee = cases[Math.min(photo, cases.length - 1)];
+      if (!visee) return retenue;
+      const rembourrage = parseFloat(getComputedStyle(cadre).paddingLeft) || 0;
+      return Math.max(
+        0,
+        Math.round(
+          cadre.scrollLeft +
+            visee.getBoundingClientRect().left -
+            cadre.getBoundingClientRect().left -
+            rembourrage
+        )
+      );
+    };
     const aUneLargeur = () => cadre.scrollWidth > cadre.clientWidth;
-    let posee = retenue === undefined || retenue <= 0;
+    let posee = photo === undefined && (retenue === undefined || retenue <= 0);
     const poser = () => {
       if (posee || !aUneLargeur()) return;
-      cadre.scrollLeft = retenue as number;
-      posee = Math.abs(cadre.scrollLeft - (retenue as number)) <= 1;
+      const voulue = cible();
+      if (voulue === undefined || voulue <= 0) {
+        posee = true;
+        return;
+      }
+      /*  BORNÉE AU BOUT DE COURSE : une photo parmi les dernières ne
+          peut pas venir au bord (la bande ne défile pas plus loin que
+          sa fin) — elle est alors VISIBLE, la bande au plus près, et la
+          pose est tenue pour faite. Sans cette borne, la vérification
+          ci-dessous ne serait jamais satisfaite et l'observateur de
+          taille reposerait la même chose à chaque battement. */
+      const bornee = Math.min(voulue, cadre.scrollWidth - cadre.clientWidth);
+      cadre.scrollLeft = bornee;
+      posee = Math.abs(cadre.scrollLeft - bornee) <= 1;
     };
     poser();
     let image = 0;

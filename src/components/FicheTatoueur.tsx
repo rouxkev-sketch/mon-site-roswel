@@ -16,9 +16,6 @@ import { useRouter } from "next/navigation";
     mémoire de navigation, « Ma sélection », le moteur, la sonde de
     retour) : c'est ce fichier-ci qui cesse de la lire. */
 import {
-  //  §3 (nº 863) — le surtitre d'une galerie (« Tattoos », « Flash »),
-  //  les mots du catalogue, pour le fil de galerie.
-  CATEGORIES_EXPLORER,
   //  §2 (nº 776) — la largeur de la photo de tête (web) est une
   //  écriture unique : la silhouette d'attente (SqueletteFiche) dessine
   //  la même géométrie qu'ici, sans recopie.
@@ -107,9 +104,6 @@ import {
   NATURE_PAR_DEFAUT,
   partiesDeGalerie,
   SEPARATEUR_GALERIE,
-  //  §3 (nº 863) — le titre d'une galerie (« Blackwork • Black »), la
-  //  chaîne que le profil écrit au-dessus de chaque galerie.
-  titreDeGalerie,
 } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
@@ -551,8 +545,10 @@ export function FicheTatoueur({
    * DÉCISION DU PROPRIÉTAIRE : la vue photo ouverte DEPUIS L'ONGLET
    * PORTFOLIO d'un profil (au doigt) prend une autre présentation que
    * celle ouverte depuis « Ma sélection » ou un lien partagé (§4, qui
-   * garde la nº 862) — la galerie entière empilée, le titre de la
-   * galerie au-dessus de chaque image (FilDeGalerie).
+   * garde la nº 862) — LE FIL DE GALERIES : une carte-carrousel par
+   * galerie du portfolio, le titre de la galerie au-dessus de chaque
+   * image (FilDeGalerie ; nº 866-§1, sur consigne — la nº 863 empilait
+   * une carte par photo).
    * C'EST L'ADRESSE QUI LE DIT, et elle seule : le geste de l'onglet
    * écrit `entree=portfolio` (voir `surSerieChoisie`, plus bas), comme
    * les liens internes écrivent `entree=lien` — un réglage explicite,
@@ -566,14 +562,9 @@ export function FicheTatoueur({
    * rendue et montrée, le fil y est masqué (règle nº 60).
    */
   const consignePortfolio = entreeInitiale === ENTREE_PORTFOLIO;
-  /** Le surtitre du fil de galerie — le titre de la CATÉGORIE de la
-      série montrée (« Tattoos », « Flash »), les mots mêmes que le
-      profil pose au-dessus de chaque galerie (PanneauPortfolio). */
-  const natureDuFil =
-    serieEffective?.nature || photosDuCarrousel[0]?.nature || NATURE_PAR_DEFAUT;
-  const surtitreDuFil =
-    CATEGORIES_EXPLORER.find((categorie) => categorie.nature === natureDuFil)
-      ?.titre ?? "";
+  /*  nº 866 — le surtitre du fil (« Tattoos » / « Flash ») n'est plus
+      calculé ici : chaque carte du fil de galeries porte le sien, lu
+      dans la liste des galeries du profil (`galeriesDuPortfolio`). */
   /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
       elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
@@ -1456,23 +1447,23 @@ export function FicheTatoueur({
             </div>
           )}
 
-          {/*  ██ §3 (nº 863) — LE FIL DE LA GALERIE, DEPUIS L'ONGLET
-               PORTFOLIO ██
+          {/*  ██ §3 (nº 863, REFAIT PAR LA nº 866-§1) — LE FIL DE GALERIES,
+               DEPUIS L'ONGLET PORTFOLIO ██
                ==================================================
-               DÉCISION DU PROPRIÉTAIRE : au-dessus de l'image le titre et
-               le sous-titre de la galerie ; sous l'image le pied du fil ;
-               pas de ligne « Blackwork • Black » sous le pied ; et LES
-               AUTRES PHOTOS DE LA GALERIE, sous la même forme de carte,
-               empilées au-dessus et en dessous de celle qu'on a touchée
-               — la vue s'ouvre sur elle. Tout cela vit chez
-               `FilDeGalerie` ; ce qu'on lui donne, c'est ce que la vue
-               photo savait déjà : la série montrée
-               (`photosDuCarrousel`), le rang de la photo touchée
-               (`indicePhoto`, lu dans l'adresse), le titre de la galerie
-               (`titreDeGalerie` — la chaîne du profil), l'adresse de
-               partage (`cheminDuCarrousel`, avec la photo de chaque
-               carte), le style du message et le nombre de vues — les
-               mêmes que le pied de la nº 862.
+               DÉCISION DU PROPRIÉTAIRE : une carte PAR GALERIE du
+               portfolio (les styles de tattoos, puis ceux de flashs),
+               empilées ; dans chaque carte on glisse entre les photos de
+               cette galerie — le mécanisme des cartes de recherche
+               (encadré fixe, pastille, points) ; le titre de la galerie
+               au-dessus de l'image, le pied du fil en dessous ; la carte
+               touchée ouverte sur la photo touchée, la page ouverte sur
+               cette carte. Tout cela vit chez `FilDeGalerie` ; ce qu'on
+               lui donne : LE PORTFOLIO ENTIER (`groupes`, dont le
+               profil fait ses bandes), l'identité de la galerie touchée
+               (le style montré et sa série), le rang de la photo
+               touchée (`indicePhoto`, lu dans l'adresse), le style du
+               message de partage et le nombre de vues — les mêmes que
+               le pied de la nº 862.
                ⚠️ SEUL ENFANT VISIBLE DE LA COLONNE AU DOIGT dans ce
                mode : l'en-tête et le pied ne se rendent pas, la photo
                de tête est masquée — le gap de la colonne n'a donc rien
@@ -1481,19 +1472,17 @@ export function FicheTatoueur({
           {!apercu && consignePortfolio && (
             <FilDeGalerie
               tatoueur={tatoueur}
-              photos={photosDuCarrousel}
-              indiceOuvert={indicePhoto}
-              nature={surtitreDuFil}
-              titre={titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu)}
-              styleLabel={groupeAffiche?.label ?? ""}
-              cheminDe={(photo) =>
-                cheminDuCarrousel(
-                  tatoueur.slug,
-                  styleAffiche,
-                  serieEffective,
-                  photo.cle
-                )
+              groupes={groupes}
+              ouverte={
+                serieEffective
+                  ? {
+                      style: groupeAffiche?.slug ?? "",
+                      nature: serieEffective.nature,
+                      rendu: serieEffective.rendu,
+                    }
+                  : null
               }
+              indiceOuvert={indicePhoto}
               metier={stylePrincipal?.label ?? ""}
               vues={tatoueur.vues}
             />
