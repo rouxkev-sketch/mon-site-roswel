@@ -395,8 +395,14 @@ const REPOS = 3400;
       .locator('[data-case-galerie="1"] button').tap();
     await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
     await page.waitForTimeout(1500);
-    const vue = await page.evaluate(([M]) => {
-      const f = new Function("return " + M)();
+    /*  ██ nº 863-§3 — DEPUIS L'ONGLET PORTFOLIO, LA VUE PHOTO EST LE FIL
+        DE LA GALERIE ██ Plus de carrousel ni de plaque : la galerie
+        entière, empilée, chaque photo dans sa carte, la vue ouverte sur
+        la photo touchée (FilDeGalerie). Ce bloc mesure donc la nouvelle
+        vérité ; LA PASTILLE, elle, se mesure au bloc suivant sur la vue
+        photo d'un LIEN PARTAGÉ, qui garde son carrousel (nº 862, §4 de
+        la nº 863). */
+    const vue = await page.evaluate(() => {
       const lecture = document.querySelector("[data-colonne-lecture]");
       return {
         url: location.pathname + location.search,
@@ -404,18 +410,29 @@ const REPOS = 3400;
         lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
         photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
         plaque: document.querySelector("[data-habillage-photo]") !== null,
-        pastille: f(document.querySelector('[data-carrousel] [data-role="compteur"]')),
+        fil: getComputedStyle(document.querySelector("[data-fil-de-galerie]") ?? document.body).display,
+        ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
+        cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
       };
-    }, [PASTILLE]);
+    });
     verif("la vignette mène à la VUE PHOTO, pas au profil",
       vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true && !/entree=lien/.test(vue.url),
       `${vue.url} · vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree}`);
-    verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte, plaque présente",
+    verif("elle est le FIL DE LA GALERIE (nº 863) : six cartes, ouvert sur LA photo touchée (la deuxième), sans plaque",
+      vue.fil !== "none" && vue.cartes === 6 && vue.ouverte === "1" && vue.plaque === false && /entree=portfolio/.test(vue.url),
+      `fil ${vue.fil} · ${vue.cartes} carte(s) · ouverte ${vue.ouverte} · plaque ${vue.plaque}`);
+    /*  L'ANCIENNE VÉRIFICATION, GARDÉE POUR MÉMOIRE ET NEUTRALISÉE : elle
+        lisait la pastille d'un carrousel qui n'existe plus ici. */
+    verif("(mémoire nº 844) l'ancienne vue photo du Portfolio ouvrait un carrousel — remplacé par le fil (nº 863)",
+      true, "");
+    if (false) verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte, plaque présente",
       vue.pastille.texte === "2/6" && vue.pastille.opacite === 0 && vue.plaque,
       `${vue.pastille.texte} · opacité ${vue.pastille.opacite} · plaque ${vue.plaque}`);
 
     //  ET LA PASTILLE DE LA VUE PHOTO DU PORTFOLIO OBÉIT À LA MÊME RÈGLE.
-    titre("844 · la vue photo du Portfolio : la même pastille, la même règle");
+    titre("844 · la vue photo d'un lien partagé : la même pastille, la même règle (nº 863 : le carrousel vit là)");
+    await page.goto(`${BASE}/artist/${T}?style=blackwork&rendu=black&nature=tatouage&photo=${PHOTOS[1]}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
     await page.evaluate(() => {
       const z = document.querySelector('[data-carrousel] [data-role="cadre"]');
       z.scrollBy({ left: z.clientWidth, behavior: "smooth" });

@@ -309,18 +309,30 @@ function surtitre(titre: string) {
  * habillage ni support — les réunir demanderait de paramétrer les
  * deux, pour ne mettre en commun qu'une barre oblique.
  */
-function TeteDeGalerie({
+/**
+ * ██ §3 (nº 863) — LE TITRE D'UNE GALERIE, ÉCRIT UNE FOIS ██
+ * ------------------------------------------------------------------
+ * Le surtitre (« TATTOOS »), puis la ligne du titre (« Blackwork •
+ * Black ») et ce qu'on veut poser à son bout — le compteur « 1/20 »
+ * sur le profil, rien sur une carte du fil de galerie. La vue photo
+ * ouverte depuis l'onglet Portfolio (FilDeGalerie) doit porter ce
+ * titre « même couleur, même corps, même graisse que sur le profil »
+ * (décision du propriétaire) : c'est donc LE MÊME COMPOSANT qui
+ * l'écrit aux deux endroits, pas deux classes qu'on tiendrait d'accord.
+ * ⚠️ AU MODULE, comme `TeteDeGalerie` (nº 747) : un type stable, aucun
+ * remontage de la galerie voisine à chaque rendu.
+ */
+export function TitreDeGalerie({
   nature,
   titre,
-  total,
-  galerie,
+  compteur,
 }: {
   nature: string;
   titre: string;
-  total: number;
-  galerie: (surRang: (rang: number) => void) => React.ReactNode;
+  /** Ce qui s'assoit au bout de la ligne du titre — le compteur du
+      profil. Absent : la ligne s'arrête au titre. */
+  compteur?: React.ReactNode;
 }) {
-  const [rang, setRang] = useState(0);
   return (
     <>
       {surtitre(nature)}
@@ -338,26 +350,55 @@ function TeteDeGalerie({
         >
           {titre}
         </p>
-        {/*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
-             GRIS des textes secondaires (le jeton de la nº 466), et
-             la graisse NORMALE : il accompagne le style, il ne le
-             concurrence pas. */}
-        {/*  §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
-             accompagne la ligne du style, il ne la double pas — et
-             c'est la valeur que la ligne d'information d'une carte
-             porte déjà (nº 480), pas un nombre neuf. Le gris, la
-             graisse et la place ne bougent pas. */}
-        <p
-          data-compteur-galerie=""
-          className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
-        >
-          {rang + 1}/{total}
-        </p>
+        {compteur}
       </div>
+    </>
+  );
+}
+
+function TeteDeGalerie({
+  nature,
+  titre,
+  total,
+  galerie,
+}: {
+  nature: string;
+  titre: string;
+  total: number;
+  galerie: (surRang: (rang: number) => void) => React.ReactNode;
+}) {
+  const [rang, setRang] = useState(0);
+  return (
+    <>
+      {/*  §3 (nº 863) — le surtitre et la ligne du titre vivent chez
+           `TitreDeGalerie`, partagé avec le fil de galerie ; ce
+           composant-ci n'y ajoute que son compteur et sa galerie. */}
+      <TitreDeGalerie
+        nature={nature}
+        titre={titre}
+        compteur={
+          /*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
+              GRIS des textes secondaires (le jeton de la nº 466), et
+              la graisse NORMALE : il accompagne le style, il ne le
+              concurrence pas.
+              §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
+              accompagne la ligne du style, il ne la double pas — et
+              c'est la valeur que la ligne d'information d'une carte
+              porte déjà (nº 480), pas un nombre neuf. Le gris, la
+              graisse et la place ne bougent pas. */
+          <p
+            data-compteur-galerie=""
+            className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
+          >
+            {rang + 1}/{total}
+          </p>
+        }
+      />
       {galerie(setRang)}
     </>
   );
 }
+
 
 /**
  * LE PANNEAU « PORTFOLIO » — UNE SUITE DE GALERIES, sans plus aucun

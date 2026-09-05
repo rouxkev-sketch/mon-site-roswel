@@ -84,8 +84,14 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * (`mobile:`, règle nº 60), l'alignement, les écarts, les marges et la
  * hauteur minimale.
  */
+/*  §3 (nº 863) — LES MARGES DE L'EN-TÊTE, LISIBLES À PART : la carte
+    d'un fil de galerie (FilDeGalerie) n'a pas la rangée avatar / nom /
+    badge, mais elle pose son titre dans LA MÊME BOÎTE — seize pixels de
+    côté, douze au-dessus de l'image. Un troisième porteur, aucune valeur
+    recopiée (règle nº 276). */
+export const MARGES_EN_TETE_DE_FIL = "px-4 pb-3";
 export const RANGEE_EN_TETE_DE_FIL =
-  "hidden mobile:flex items-center gap-3 px-4 pb-3";
+  `hidden mobile:flex items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`;
 /*  ⚠️ `relative` PORTE LES POINTS EN ABSOLU (voir la note du pied) ;
     `min-h-10` est la hauteur des cibles tactiles, et c'est elle qui
     fixe la hauteur du pied — le squelette la reprend telle quelle. */

@@ -496,3 +496,24 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > écriture ; la page de recherche plein écran garde ses onglets
 > « Tattoo | Flash » ; les cartes de style disent toujours « Réalisme •
 > 12 portfolios », pour les flashs comme pour les tattoos.
+
+---
+
+## Passe nº 863 — les deux titres du va-et-vient de l'accueil du doigt
+
+| avant | après | où |
+| --- | --- | --- |
+| **Find your tattoo style…** (la position Tattoo, face à la goutte d'encre) | **Explore tattoo styles** — le titre entier, actif comme inactif | `TEXTES_TATOUAGE.titreVaEtVientTattoo` (config/tatouage), lue par `VaEtVientNature` — la clé `invitePilule` est renommée : ce n'est plus une invite, c'est le titre de la page « / » au doigt |
+| **Find your Flash style…** (la position Flash, face à l'éclair) | **Explore flash styles** — le titre entier, actif comme inactif | `TEXTES_TATOUAGE.titreVaEtVientFlash` — la clé `inviteFlash` est renommée de même ; « flash » en minuscule, à la lettre de la consigne |
+
+> **Plus jamais d'abréviation** : le mot court de la nº 859 (« Tattoo »
+> / « Flash », la position inactive) est supprimé, code compris. Les
+> deux titres restent entiers ; là où la colonne est trop étroite pour
+> le titre au corps de la charte, il passe à la ligne, il n'est ni
+> coupé ni abrégé.
+>
+> **Ce qui n'a PAS changé** : le titre de la mosaïque au web
+> (`titreMosaique`, « Find your tattoo style… ») — c'est une autre
+> clé, pour une autre surface ; le nom du groupe pour les lecteurs
+> d'écran (« Tattoo or flash ») ; les onglets « Tattoo | Flash » de la
+> page de recherche.

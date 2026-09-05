@@ -58,6 +58,25 @@ export const PARAM_ONGLET = "onglet";
  */
 export const PARAM_ENTREE = "entree";
 export const ENTREE_LIEN = "lien";
+/**
+ * ██ §3 (nº 863) — LA SECONDE CONSIGNE : « entree=portfolio » ██
+ * ------------------------------------------------------------------
+ * Une vignette de l'ONGLET PORTFOLIO d'un profil, au doigt, ouvre la vue
+ * photo AUTREMENT qu'une carte de « Ma sélection » ou qu'un lien
+ * partagé (décision du propriétaire) : au-dessus de l'image le titre et
+ * le sous-titre de la galerie, et TOUTES les photos de cette galerie
+ * empilées, la vue ouverte sur celle qu'on a touchée (FilDeGalerie).
+ * C'est celui qui pose le lien qui sait d'où il vient (la règle de la
+ * nº 365 : un réglage explicite, jamais une devinette d'adresse) — le
+ * geste de l'onglet écrit donc cette consigne dans l'adresse, comme les
+ * liens internes écrivent `entree=lien`, et la fiche la lit. Un retour,
+ * un pas en avant, un rechargement la retrouvent tout seuls : c'est le
+ * même motif, pour la même raison (nº 329).
+ * ⚠️ AUCUN LIEN PARTAGÉ NE LA PORTE : le partage écrit l'adresse d'une
+ * photo (`cheminDuCarrousel`), sans consigne — qui l'ouvre voit la vue
+ * photo de la nº 862 (avatar, photo, icônes), c'est le §4.
+ */
+export const ENTREE_PORTFOLIO = "portfolio";
 
 /**
  * §4 (nº 330) — LA CONSIGNE, POSÉE SUR N'IMPORTE QUELLE ADRESSE.

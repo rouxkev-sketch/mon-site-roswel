@@ -390,16 +390,72 @@ export function GalerieQuiDefile({
    * le composant ne fait que la lire et l'écrire aux deux bouts de sa
    * vie.
    */
+  /**
+   * ██ §5 (nº 863) — LA POSE SE VÉRIFIE, ET LA MÉMOIRE NE S'ÉCRASE PLUS ██
+   * ------------------------------------------------------------------
+   * LE DÉFAUT RAPPORTÉ PAR LE PROPRIÉTAIRE : depuis l'onglet Portfolio,
+   * ouvrir la photo 8/11 puis revenir → la galerie revient à 1. Elle
+   * devait rester sur 8 (la mémoire ci-dessus, nº 459).
+   * CE QUI A ÉTÉ MESURÉ À L'ATELIER, SUR LE BÂTI DE PRODUCTION (banc
+   * 863) : par le retour du navigateur comme par l'en-tête de la vue
+   * photo, un second aller-retour, un passage par l'onglet Profil, la
+   * galerie revient à sa place — 9/11, 1194 px. Le défaut n'y est pas
+   * reproductible, et aucun des fichiers de cette mémoire n'a bougé
+   * depuis la nº 852. Ce qui reste, c'est LA SEULE FAILLE QUE L'ON
+   * PUISSE CONSTRUIRE dans l'écriture d'avant, et elle est réelle :
+   *  · la pose était UNE écriture, faite une fois, sans regarder si
+   *    elle avait pris. Un cadre qui n'a pas encore sa largeur à cet
+   *    instant (un ancêtre pas encore affiché, une mise en page qui
+   *    arrive un battement plus tard) borne `scrollLeft` à zéro, et
+   *    rien ne revenait la poser ; un moteur qui « re-accroche » un
+   *    conteneur à accrochage juste après son insertion (le
+   *    comportement connu de WebKit sur `scroll-snap`) la défait
+   *    pareil ;
+   *  · et AU DÉMONTAGE, la position lue sur un cadre sans largeur
+   *    valait zéro — écrite par-dessus la vraie. La mémoire ne
+   *    contenait alors plus que ce zéro, et le retour suivant montrait
+   *    la première photo. C'est exactement le symptôme.
+   * CE QUI CHANGE : la pose REGARDE si elle a pris ; sinon elle se
+   * repose à l'image suivante, et encore dès que le cadre obtient sa
+   * largeur (un observateur de taille, retiré dès que c'est fait). Et
+   * le démontage n'écrit que ce qu'un cadre AYANT UNE LARGEUR a
+   * mesuré — un zéro voulu (galerie ramenée au début) s'écrit
+   * toujours, un zéro d'absence de mise en page jamais.
+   * ⚠️ RIEN NE CHANGE POUR QUI N'A PAS DE CLÉ (« Ma sélection », les
+   * suivis) : sans `cleMemoire`, cet effet ne fait rien, comme avant.
+   */
   useLayoutEffect(() => {
     if (!cleMemoire) return;
     const cadre = zone.current;
     if (!cadre) return;
     const retenue = defilementGalerieRetenu(cleMemoire);
-    if (retenue !== undefined && retenue > 0) {
-      cadre.scrollLeft = retenue;
+    const aUneLargeur = () => cadre.scrollWidth > cadre.clientWidth;
+    let posee = retenue === undefined || retenue <= 0;
+    const poser = () => {
+      if (posee || !aUneLargeur()) return;
+      cadre.scrollLeft = retenue as number;
+      posee = Math.abs(cadre.scrollLeft - (retenue as number)) <= 1;
+    };
+    poser();
+    let image = 0;
+    let observateur: ResizeObserver | null = null;
+    if (!posee) {
+      image = requestAnimationFrame(() => {
+        poser();
+        if (posee || typeof ResizeObserver === "undefined") return;
+        observateur = new ResizeObserver(() => {
+          poser();
+          if (posee) observateur?.disconnect();
+        });
+        observateur.observe(cadre);
+      });
     }
     return () => {
-      retenirDefilementGalerie(cleMemoire, cadre.scrollLeft);
+      cancelAnimationFrame(image);
+      observateur?.disconnect();
+      if (aUneLargeur()) {
+        retenirDefilementGalerie(cleMemoire, cadre.scrollLeft);
+      }
     };
   }, [cleMemoire]);
 

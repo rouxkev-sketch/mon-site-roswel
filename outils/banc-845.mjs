@@ -297,7 +297,12 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
       apres.url === `/artist/${T}?entree=lien` && !apres.photoMontree,
       `${apres.url} · photo ${apres.photoMontree}`);
 
-    titre("845 · une vignette du Portfolio ouvre la vue photo, elle aussi avec sa plaque");
+    /*  ██ nº 863-§3 — DEPUIS L'ONGLET PORTFOLIO, PLUS DE PLAQUE NI
+        D'EN-TÊTE : c'est LE FIL DE LA GALERIE (FilDeGalerie) — le titre
+        de la galerie au-dessus de chaque image, ouvert sur la photo
+        touchée. La plaque / l'en-tête de la nº 845/862 vit toujours sur
+        la vue photo d'un lien partagé (mesurée plus haut dans ce banc). */
+    titre("845 · une vignette du Portfolio ouvre le fil de la galerie, sur la photo touchée (nº 863)");
     await page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first().tap();
     await page.waitForFunction(
       () => document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]').length >= 2,
@@ -316,16 +321,18 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
         plaqueMontree: (plaque?.getBoundingClientRect().height ?? 0) > 0,
         href: plaque?.querySelector("a")?.getAttribute("href"),
-        compteur: document.querySelector('[data-carrousel] [data-role="compteur"]')?.textContent.trim(),
+        ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
+        cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
+        titre: document.querySelector("[data-carte-ouverte] [data-titre-galerie]")?.textContent.trim() ?? null,
       };
     });
-    verif("la vignette mène à la vue photo (pas au profil), sur LA photo touchée",
-      vignette.vuePhoto && vignette.lectureMasquee === true && !/entree=lien/.test(vignette.url) &&
-      vignette.compteur === "2/6",
-      `${vignette.url} · ${vignette.compteur}`);
-    verif("et la plaque y est aussi, vers le profil",
-      vignette.plaqueMontree && vignette.href === `/artist/${T}?entree=lien`,
-      `montrée ${vignette.plaqueMontree} · ${vignette.href}`);
+    verif("la vignette mène à la vue photo (pas au profil), sur LA photo touchée — la deuxième carte du fil",
+      vignette.vuePhoto && vignette.lectureMasquee === true && /entree=portfolio/.test(vignette.url) &&
+      vignette.cartes === 6 && vignette.ouverte === "1",
+      `${vignette.url} · ${vignette.cartes} carte(s) · ouverte ${vignette.ouverte}`);
+    verif("et le titre de la galerie coiffe l'image, sans plaque (nº 863)",
+      !vignette.plaqueMontree && vignette.titre === "Blackwork • Black",
+      `plaque ${vignette.plaqueMontree} · « ${vignette.titre} »`);
 
     titre("845 · la carte du fil, elle, mène toujours au profil direct");
     await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });

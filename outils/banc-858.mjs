@@ -13,7 +13,8 @@
 //  L'ATELIER : voir l'en-tête de `banc-socle.mjs`.
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger, rest, effacer } from "./banc-socle.mjs";
 
-const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
+//  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
+const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
 
 /*  ⚠️ LA BOÎTE DE LA LIGNE SE CHERCHE PAR SA FORME, pas par le premier
     `aria-hidden` venu : les icônes de l'accueil en sont aussi (ce sont
@@ -108,12 +109,19 @@ const A = releves.accueil, S = releves.selection;
       le reste à la phrase. Ce qui reste vrai ICI, et qui appartient
       encore à la nº 858, c'est que les COLONNES SONT INÉGALES — la
       mécanique que le composant partagé sait rendre. Le détail des
-      mots et des largeurs se mesure au banc 859. */
-  verif("… et les colonnes restent INÉGALES : l'active plus large que l'inactive",
-    inactif && actif?.actif && actif.l > inactif.l && inactif.nom === FLASH && actif.texte === TATTOO,
+      mots et des largeurs se mesure au banc 859.
+      ██ nº 863-§1 — ET LA RÈGLE SE RETOURNE ██ Plus de mot court : les
+      deux positions portent leur titre entier, et les colonnes
+      redeviennent ÉGALES — exactement celles de « Ma sélection ». Le
+      composant partagé n'a plus rien à faire différemment sur les deux
+      pages, et c'est ce qu'on mesure ici. Le titre n'est plus « coupé »
+      ni « non coupé » : il est entier, sur autant de lignes qu'il faut
+      (banc 863). */
+  verif("… et les colonnes sont ÉGALES, comme sur « Ma sélection » (nº 863 : plus de mot court)",
+    inactif && actif?.actif && actif.l === inactif.l && inactif.texte === FLASH && actif.texte === TATTOO,
     `inactive ${inactif?.l} px « ${inactif?.texte} » · active ${actif?.l} px « ${actif?.texte} »`);
-  verif("… la phrase n'est PAS coupée : sa colonne est plus large que son contenu",
-    actif && actif.l >= 210, `${actif?.l} px pour 210 nécessaires`);
+  verif("… et les deux titres sont ENTIERS, aux deux positions",
+    actif?.texte === TATTOO && inactif?.texte === FLASH, `« ${actif?.texte} » · « ${inactif?.texte} »`);
   verif("les deux onglets de « Ma sélection » gardent leurs colonnes ÉGALES",
     S?.boutons?.length === 2 && S.boutons[0].l === S.boutons[1].l,
     `${S?.boutons?.map((b) => b.l).join(" | ")}`);

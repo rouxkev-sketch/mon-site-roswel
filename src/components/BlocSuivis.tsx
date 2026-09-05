@@ -194,7 +194,8 @@ export function BlocSuivis({
            référence, MESURÉE dans le code, par affichage :
             · doigt : 12 px (le bas du `py-3` de la barre,
               EnTeteTatouage) + 14 px (le séparateur
-              `data-air-sous-barre h-3.5`, PageFavoris) = 26 px ;
+              `data-air-sous-barre`, PageFavoris — 16 depuis la
+              nº 863, 14 avant) = 28 px ;
             · web : 3 px (les 46 px du va-et-vient centrés dans le
               `min-h-[52px]` de sa rangée, MenusSelection) + 12 px (le
               bas du `py-3` de la barre) + 32 px (`lg:h-8` du même

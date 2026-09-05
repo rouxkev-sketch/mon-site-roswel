@@ -674,7 +674,14 @@ export function PageFavoris({
            la bande noire), tort d'ôter celui-ci avec.
            ⚠️ VALEURS D'ORIGINE, AU PIXEL : 14 au doigt et sous 1024,
            32 au-delà (nº 445, nº 463). */}
-      <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
+      {/*  ██ §2 (nº 863) — UN CRAN DE PLUS AU DOIGT : SEIZE PIXELS ██
+           Le propriétaire trouve les quatorze trop fins ; le cran suivant
+           de l'échelle est seize, la gouttière des cartes de cette page
+           (`gap-4`) — la première rangée est aussi loin de la ligne que
+           de la rangée suivante. L'accueil (IndexTatoueurs) et le
+           squelette (SquelettesDePage) suivent du même geste ; le web
+           garde ses trente-deux. */}
+      <div aria-hidden data-air-sous-barre className="h-4 lg:h-8" />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section

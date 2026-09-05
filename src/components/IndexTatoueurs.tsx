@@ -1325,11 +1325,21 @@ export function IndexTatoueurs({
                    pas, tort d'emporter celui-ci.
                    ⚠️ AU DOIGT SEULEMENT, et sur l'accueil sans recherche
                    (là où le titre est masqué) : c'est l'écriture de la
-                   nº 445, rendue au pixel. */}
+                   nº 445, rendue au pixel.
+                   ██ §2 (nº 863) — UN CRAN DE PLUS : SEIZE PIXELS ██
+                   Le propriétaire trouve les quatorze de la nº 445 trop
+                   fins. Le cran suivant de l'échelle est seize — et c'est
+                   aussi la gouttière des cartes du doigt (`gap-4`, la
+                   grille des cartes de style comme celle de « Ma
+                   sélection ») : la première carte est désormais aussi
+                   loin de la ligne du va-et-vient que de la carte
+                   suivante. Une seule valeur, celle du rythme de la page.
+                   « Ma sélection » (PageFavoris) et le squelette qui la
+                   promet (SquelettesDePage) suivent du même geste. */}
               <div
                 aria-hidden="true"
                 data-air-sous-barre=""
-                className="h-3.5 hidden mobile:block"
+                className="h-4 hidden mobile:block"
               />
               <LigneResultats
                 titre={TEXTES_TATOUAGE.titreMosaique}

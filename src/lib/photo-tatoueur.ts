@@ -374,13 +374,20 @@ export type SerieDemandee = { nature: string; rendu: string } | null;
 export function cheminDuCarrousel(
   slug: string,
   style: string,
-  serie: { nature: string; rendu: string } | null
+  serie: { nature: string; rendu: string } | null,
+  /** §3 (nº 863) — LA PHOTO PRÉCISE, quand l'adresse en désigne une :
+      chaque carte du fil de galerie (FilDeGalerie) partage SA photo, et
+      la fiche s'ouvre dessus (`ouvertureSurUnePhoto`, comme pour une
+      carte de « Ma sélection »). Vide : l'adresse du carrousel, comme
+      avant — aucun appelant d'hier ne change. */
+  photo = ""
 ): string {
-  if (!style && !serie) return `/artist/${slug}`;
+  if (!style && !serie && !photo) return `/artist/${slug}`;
   const suite = new URLSearchParams();
   if (style) suite.set("style", style);
   if (serie?.nature) suite.set("nature", serie.nature);
   if (serie?.rendu) suite.set("rendu", serie.rendu);
+  if (photo) suite.set("photo", photo);
   const requete = suite.toString();
   return requete ? `/artist/${slug}?${requete}` : `/artist/${slug}`;
 }

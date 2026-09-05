@@ -2128,18 +2128,22 @@ export const TEXTES_TATOUAGE = {
    * choses. Les fondre en une ferait suivre l'invite du champ à la
    * prochaine retouche du titre de la page, sans que personne ne l'ait
    * demandé.
+   *
+   * ██ §1 (nº 863) — LES DEUX POSITIONS DEVIENNENT DES TITRES ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : « Explore tattoo styles » (la goutte) et
+   * « Explore flash styles » (l'éclair), TOUJOURS ENTIERS, actif comme
+   * inactif — plus jamais d'abréviation. Ce ne sont plus des invites
+   * (« Find your… ») mais les titres des deux pages du doigt, « / » et
+   * « /flash » (nº 860) : les clés sont renommées pour le dire, et
+   * l'ancienne chaîne d'invite ne survit nulle part — le champ qu'elle
+   * invitait a quitté l'accueil du doigt à la nº 857.
+   * ⚠️ LA CASSE EST CELLE DU PROPRIÉTAIRE : « flash » en minuscule ici,
+   * là où la nº 857 écrivait « Flash » (le nom de la catégorie). Les
+   * deux mots sont ses mots, pris à la lettre dans chaque consigne.
    */
-  invitePilule: "Find your tattoo style…",
-  /**
-   * ██ §1 (nº 857) — LA SECONDE POSITION DU VA-ET-VIENT DE L'ACCUEIL ██
-   * Le champ de recherche de l'accueil du doigt DISPARAÎT ; à sa place,
-   * un va-et-vient à deux positions — « Find your tattoo style… » (la
-   * clé ci-dessus, qui garde son rôle) et celle-ci, « Find your Flash
-   * style… », posée face à un éclair. Les mots sont ceux du
-   * propriétaire, capitale comprise : « Flash » est le nom de la
-   * catégorie (CATEGORIES_EXPLORER), pas un adjectif.
-   */
-  inviteFlash: "Find your Flash style…",
+  titreVaEtVientTattoo: "Explore tattoo styles",
+  titreVaEtVientFlash: "Explore flash styles",
   /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
       « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
       sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de

@@ -584,8 +584,10 @@ export function CorpsSquelette({
             promet EXACTEMENT le sien : quatorze pixels
             (`data-air-sous-barre`, PageFavoris). Il en promettait douze
             avant la nº 857 — deux de moins que la vraie page, un écart
-            que personne n'avait relevé ; il est corrigé du même geste. */
-        <div className="pt-6 sm:pt-8 mobile:pt-3.5" />
+            que personne n'avait relevé ; il est corrigé du même geste.
+            §2 (nº 863) — SEIZE, avec la vraie page : le cran de plus
+            que le propriétaire demande, promis ici au pixel. */
+        <div className="pt-6 sm:pt-8 mobile:pt-4" />
       )}
       {/*  §1 (nº 722) — DES RANGÉES ENTIÈRES, À CHAQUE LARGEUR. La
            nº 710 avait tranché HUIT cases ; le propriétaire RE-TRANCHE :

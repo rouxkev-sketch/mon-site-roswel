@@ -15,8 +15,10 @@
 //  L'ATELIER : voir l'en-tête de `banc-socle.mjs`.
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger, rest, effacer } from "./banc-socle.mjs";
 
-const AIR_AU_REPOS = 14;
-const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
+//  nº 863-§2 — un cran de plus : seize (la gouttière des cartes du doigt).
+const AIR_AU_REPOS = 16;
+//  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
+const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
 
 const SONDE = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
@@ -88,21 +90,24 @@ for (const [nom, url, session] of [
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("859 · §2 — la position inactive porte son mot court");
+    /*  ██ nº 863-§1 — LE MOT COURT EST PARTI ██ Les deux positions
+        portent leur titre entier (« Explore tattoo styles » / « Explore
+        flash styles »), et les colonnes redeviennent égales. Ce bloc
+        mesure la nouvelle vérité ; le détail (lignes, hauteur) est au
+        banc 863. */
+    titre("859 · §2 — les deux positions portent leur titre entier (nº 863)");
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1400);
     const v = await sonder(page);
     const [tattoo, flash] = v.onglets;
-    verif("l'ACTIVE garde son icône et sa phrase entière",
+    verif("l'ACTIVE porte son icône et son titre entier",
       tattoo?.actif && tattoo.dessin && tattoo.texte === TATTOO,
       `« ${tattoo?.texte} » · dessin ${tattoo?.dessin} · ${tattoo?.l} px`);
-    verif("l'INACTIVE porte son icône ET son mot court — plus l'icône seule",
-      flash && !flash.actif && flash.dessin && flash.texte === "Flash" && flash.nom === FLASH,
+    verif("l'INACTIVE porte son icône ET son titre entier — ni icône seule, ni mot court",
+      flash && !flash.actif && flash.dessin && flash.texte === FLASH && flash.nom === FLASH,
       `« ${flash?.texte} » (nom « ${flash?.nom} ») · dessin ${flash?.dessin} · ${flash?.l} px`);
-    verif("les colonnes sont remesurées : 88 px pour le mot court, le reste à la phrase",
-      flash?.l === 88 && tattoo?.l === 270, `inactive ${flash?.l} · active ${tattoo?.l}`);
-    verif("… et la phrase n'est pas coupée (elle demande 210 px)",
-      tattoo && tattoo.l >= 210, `${tattoo?.l} px`);
+    verif("les colonnes sont ÉGALES (plus de 88 px réservés)",
+      flash?.l === tattoo?.l && flash?.l > 88, `inactive ${flash?.l} · active ${tattoo?.l}`);
 
     /*  ██ nº 860 — LE §3 A CHANGÉ DE MÉCANIQUE, ET DE BANC ██
         La nº 859 gardait les deux positions à la main, dans un magasin

@@ -16,12 +16,20 @@ import { useRouter } from "next/navigation";
     mémoire de navigation, « Ma sélection », le moteur, la sonde de
     retour) : c'est ce fichier-ci qui cesse de la lire. */
 import {
+  //  §3 (nº 863) — le surtitre d'une galerie (« Tattoos », « Flash »),
+  //  les mots du catalogue, pour le fil de galerie.
+  CATEGORIES_EXPLORER,
   //  §2 (nº 776) — la largeur de la photo de tête (web) est une
   //  écriture unique : la silhouette d'attente (SqueletteFiche) dessine
   //  la même géométrie qu'ici, sans recopie.
   LARGEUR_PHOTO_FICHE,
   libelleStyle,
 } from "@/config/tatouage";
+//  ██ §3 (nº 863) — LA CONSIGNE « entree=portfolio » ██ Écrite par le
+//  geste de l'onglet Portfolio (plus bas), lue ici : la vue photo
+//  devient alors LE FIL DE LA GALERIE (FilDeGalerie) — voir sa note.
+import { ENTREE_PORTFOLIO, PARAM_ENTREE } from "@/lib/lien-interne";
+import { FilDeGalerie } from "@/components/FilDeGalerie";
 /*  ██ §3 (nº 862) — QUATRE IMPORTS SONT PARTIS AVEC LA PLAQUE ET LA
     RANGÉE D'ICÔNES DU DOIGT ██
     ------------------------------------------------------------------
@@ -99,6 +107,9 @@ import {
   NATURE_PAR_DEFAUT,
   partiesDeGalerie,
   SEPARATEUR_GALERIE,
+  //  §3 (nº 863) — le titre d'une galerie (« Blackwork • Black »), la
+  //  chaîne que le profil écrit au-dessus de chaque galerie.
+  titreDeGalerie,
 } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
 //  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
@@ -534,6 +545,35 @@ export function FicheTatoueur({
     pays: tatoueur.pays,
     code_pays: tatoueur.code_pays,
   };
+  /**
+   * ██ §3 (nº 863) — D'OÙ VIENT-ON ? LA CONSIGNE « entree=portfolio » ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : la vue photo ouverte DEPUIS L'ONGLET
+   * PORTFOLIO d'un profil (au doigt) prend une autre présentation que
+   * celle ouverte depuis « Ma sélection » ou un lien partagé (§4, qui
+   * garde la nº 862) — la galerie entière empilée, le titre de la
+   * galerie au-dessus de chaque image (FilDeGalerie).
+   * C'EST L'ADRESSE QUI LE DIT, et elle seule : le geste de l'onglet
+   * écrit `entree=portfolio` (voir `surSerieChoisie`, plus bas), comme
+   * les liens internes écrivent `entree=lien` — un réglage explicite,
+   * jamais une devinette (nº 365). La fiche est resemée sur cette
+   * valeur (elle entre dans la clé de FicheSelonLAdresse) : un retour,
+   * un pas en avant, un rechargement retrouvent la même vue.
+   * ⚠️ CE QUE LA CONSIGNE COMMANDE, ET RIEN D'AUTRE : au doigt, le fil
+   * de galerie à la place de l'en-tête, de l'image et du pied de la
+   * nº 862 ; la ligne du titre sous le pied n'existe pas là (le titre
+   * est au-dessus). Le WEB n'est pas concerné : sa colonne photo reste
+   * rendue et montrée, le fil y est masqué (règle nº 60).
+   */
+  const consignePortfolio = entreeInitiale === ENTREE_PORTFOLIO;
+  /** Le surtitre du fil de galerie — le titre de la CATÉGORIE de la
+      série montrée (« Tattoos », « Flash »), les mots mêmes que le
+      profil pose au-dessus de chaque galerie (PanneauPortfolio). */
+  const natureDuFil =
+    serieEffective?.nature || photosDuCarrousel[0]?.nature || NATURE_PAR_DEFAUT;
+  const surtitreDuFil =
+    CATEGORIES_EXPLORER.find((categorie) => categorie.nature === natureDuFil)
+      ?.titre ?? "";
   /*  §3 (nº 302) — LA GALERIE AFFICHÉE N'EST PLUS CALCULÉE ICI, et
       elle n'a plus de lecteur : elle ne servait qu'au cœur, pour
       enregistrer TOUT le carrousel d'un geste (nº 208-§6). Cette règle
@@ -917,7 +957,10 @@ export function FicheTatoueur({
                met pas un lien vers son propre profil au-dessus de sa
                propre photo. La photo y garde donc sa place et son
                collage à la barre. */}
-          {!apercu && (
+          {/*  §3 (nº 863) — PAS D'EN-TÊTE AVATAR / BADGE depuis l'onglet
+               Portfolio : la carte du fil de galerie porte le titre de
+               la galerie à sa place (FilDeGalerie). */}
+          {!apercu && !consignePortfolio && (
             <div
               data-habillage-photo=""
               className="hidden mobile:block mobile:-mx-4 mobile:-mb-3"
@@ -1095,9 +1138,15 @@ export function FicheTatoueur({
                 (`mobile:-mt-4`, les seize pixels rendus).
                 ⚠️ LE WEB N'A JAMAIS ÉTÉ CONCERNÉ : les deux valeurs sont
                 des variantes du doigt (règle nº 60). */
+            /*  §3 (nº 863) — DEPUIS L'ONGLET PORTFOLIO, LA PHOTO DE TÊTE
+                S'EFFACE AU DOIGT : le fil de galerie montre toutes les
+                photos de la série, chacune dans sa carte — un carrousel
+                de plus dirait deux fois la même chose. Elle reste
+                rendue, et montrée au web (règle nº 60) ; une seule
+                déclaration d'affichage, par appareil (piège nº 389). */
             className={`${LARGEUR_PHOTO_FICHE} mobile:-mx-4 mobile:max-w-none ${
               apercu ? "mobile:-mt-4" : ""
-            }`}
+            }${consignePortfolio ? " mobile:hidden" : ""}`}
           >
             <CarrouselPortfolio
               photos={photosDuCarrousel}
@@ -1374,7 +1423,10 @@ export function FicheTatoueur({
                touche l'image comme sur une carte du fil.
                ⚠️ APERÇU : RIEN — on ne se signale pas soi-même, et « Ma
                fiche » n'a ni partage ni fanion depuis toujours. */}
-          {!apercu && (
+          {/*  §3 (nº 863) — depuis l'onglet Portfolio, chaque carte du
+               fil de galerie porte son propre pied ; celui-ci ne se
+               rend pas. */}
+          {!apercu && !consignePortfolio && (
             <div className="hidden mobile:block mobile:-mx-4 mobile:-mt-3">
               <PiedDeFil
                 tatoueur={tatoueur}
@@ -1403,7 +1455,52 @@ export function FicheTatoueur({
               />
             </div>
           )}
-          {rangeeSousLaPhoto && (
+
+          {/*  ██ §3 (nº 863) — LE FIL DE LA GALERIE, DEPUIS L'ONGLET
+               PORTFOLIO ██
+               ==================================================
+               DÉCISION DU PROPRIÉTAIRE : au-dessus de l'image le titre et
+               le sous-titre de la galerie ; sous l'image le pied du fil ;
+               pas de ligne « Blackwork • Black » sous le pied ; et LES
+               AUTRES PHOTOS DE LA GALERIE, sous la même forme de carte,
+               empilées au-dessus et en dessous de celle qu'on a touchée
+               — la vue s'ouvre sur elle. Tout cela vit chez
+               `FilDeGalerie` ; ce qu'on lui donne, c'est ce que la vue
+               photo savait déjà : la série montrée
+               (`photosDuCarrousel`), le rang de la photo touchée
+               (`indicePhoto`, lu dans l'adresse), le titre de la galerie
+               (`titreDeGalerie` — la chaîne du profil), l'adresse de
+               partage (`cheminDuCarrousel`, avec la photo de chaque
+               carte), le style du message et le nombre de vues — les
+               mêmes que le pied de la nº 862.
+               ⚠️ SEUL ENFANT VISIBLE DE LA COLONNE AU DOIGT dans ce
+               mode : l'en-tête et le pied ne se rendent pas, la photo
+               de tête est masquée — le gap de la colonne n'a donc rien
+               à écarter. Il déborde jusqu'aux bords comme une carte du
+               fil (`mobile:-mx-4`, chez lui). */}
+          {!apercu && consignePortfolio && (
+            <FilDeGalerie
+              tatoueur={tatoueur}
+              photos={photosDuCarrousel}
+              indiceOuvert={indicePhoto}
+              nature={surtitreDuFil}
+              titre={titreDeGalerie(groupeAffiche?.label, serieEffective?.rendu)}
+              styleLabel={groupeAffiche?.label ?? ""}
+              cheminDe={(photo) =>
+                cheminDuCarrousel(
+                  tatoueur.slug,
+                  styleAffiche,
+                  serieEffective,
+                  photo.cle
+                )
+              }
+              metier={stylePrincipal?.label ?? ""}
+              vues={tatoueur.vues}
+            />
+          )}
+          {/*  §3 (nº 863) — et cette ligne n'existe pas depuis l'onglet
+               Portfolio : le titre est au-dessus de chaque image. */}
+          {rangeeSousLaPhoto && !consignePortfolio && (
             <div className="hidden mobile:flex items-center gap-2.5 mobile:-mt-1">
               <p
                 data-titre-carrousel=""
@@ -1703,6 +1800,15 @@ export function FicheTatoueur({
                 if (serie.rendu) suite.set("rendu", serie.rendu);
                 if (serie.nature) suite.set("nature", serie.nature);
                 if (photoTouchee?.cle) suite.set("photo", photoTouchee.cle);
+                /*  ██ §3 (nº 863) — LA CONSIGNE PART AVEC LE GESTE ██
+                    « entree=portfolio » : la vue photo qui s'ouvre saura
+                    qu'elle vient de l'onglet Portfolio, et montrera la
+                    galerie entière, empilée (FilDeGalerie). C'est le
+                    seul endroit du site qui l'écrit — celui qui pose le
+                    lien sait d'où il vient (nº 365), et une carte de
+                    « Ma sélection » comme un lien partagé n'en portent
+                    aucune (§4 : la vue de la nº 862). */
+                suite.set(PARAM_ENTREE, ENTREE_PORTFOLIO);
                 const requete = suite.toString();
                 /*  ██ §1 (nº 742) — LA PAGE EST POSÉE EN HAUT ICI, AU
                     GESTE, ET VOICI POURQUOI ██

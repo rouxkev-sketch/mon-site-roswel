@@ -59,7 +59,8 @@ const RELEVE_ACCUEIL = `() => {
   };
 }`;
 const releve = (page) => page.evaluate((R) => new Function("return " + R)()(), RELEVE_ACCUEIL);
-const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
+//  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
+const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
 
 //  ══ 1-2-3-4 · L'ACCUEIL AU DOIGT ═════════════════════════════════════
 {
@@ -77,8 +78,11 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
       tattoo?.active && tattoo.dessin && tattoo.texte === TATTOO, `« ${tattoo?.texte} » · dessin ${tattoo?.dessin}`);
     //  §2 (nº 859) — ELLE NE SE RÉDUIT PLUS À SON ICÔNE : elle porte
     //  aussi son mot court. Le nom entier reste le sien.
-    verif("la position INACTIVE (flash) porte son icône et son mot court, et garde son nom entier",
-      flash && !flash.active && flash.dessin && flash.texte === "Flash" && flash.nom === FLASH,
+    //  §1 (nº 863) — ET PLUS DE MOT COURT DU TOUT : les deux positions
+    //  portent leur TITRE ENTIER, actives ou non (décision du
+    //  propriétaire — plus jamais d'abréviation).
+    verif("la position INACTIVE (flash) porte son icône et son titre ENTIER (nº 863)",
+      flash && !flash.active && flash.dessin && flash.texte === FLASH && flash.nom === FLASH,
       `texte « ${flash?.texte} » · nom « ${flash?.nom} » · ${flash?.l} px`);
     verif("sa hauteur est celle du champ qu'il remplace (46 = 43 + la ligne de 3) ; la réserve dit la vraie barre (116, nº 858)",
       v.vv?.h === 46 && v.rangee?.h === 58 && v.reserve === 116, `va-et-vient ${v.vv?.h} · rangée ${v.rangee?.h} · réserve ${v.reserve}`);
@@ -110,8 +114,8 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
     await page.waitForTimeout(900);
     const f = await releve(page);
     const [tattoo2, flash2] = f.positions;
-    verif("un tap sur l'éclair BASCULE : Flash prend la phrase, Tattoo son mot court (nº 859-§2)",
-      flash2?.active && flash2.texte === FLASH && tattoo2 && !tattoo2.active && tattoo2.texte === "Tattoo",
+    verif("un tap sur l'éclair BASCULE : Flash devient active, et Tattoo garde son titre entier (nº 863)",
+      flash2?.active && flash2.texte === FLASH && tattoo2 && !tattoo2.active && tattoo2.texte === TATTOO,
       `flash « ${flash2?.texte} » · tattoo « ${tattoo2?.texte} » ${tattoo2?.l} px`);
     verif("l'accueil FLASH : mêmes cartes de style, adressées aux flashs",
       f.grille && f.grille.nature === "flash" && f.grille.cartes > 0 && f.grille.adresses.every((a) => a.includes("nature=flash")),
@@ -199,7 +203,7 @@ const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
         859. Ce qui reste vrai ici : l'air appartient au CONTENU, donc
         le contenu commence au bas de la réserve, et son air avec lui. */
     verif("le contenu commence au bas de la réserve, son air compris (nº 859-§1)",
-      v.air === 14 && v.premier && v.reserve && v.premier.y === v.reserve.bas + v.air,
+      v.air === 16 && v.premier && v.reserve && v.premier.y === v.reserve.bas + v.air,
       `air ${v.air} px · contenu à ${v.premier?.y} pour une réserve finissant à ${v.reserve?.bas}`);
     await page.evaluate(() => window.scrollTo(0, 600));
     await page.waitForTimeout(800);

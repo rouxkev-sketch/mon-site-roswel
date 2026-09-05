@@ -15,7 +15,8 @@
 //  L'ATELIER : voir l'en-tête de `banc-socle.mjs`.
 import { BASE, ouvrir, verif, titre, bilan } from "./banc-socle.mjs";
 
-const TATTOO = "Find your tattoo style…", FLASH = "Find your Flash style…";
+//  nº 863-§1 — les deux positions sont devenues des TITRES, toujours entiers.
+const TATTOO = "Explore tattoo styles", FLASH = "Explore flash styles";
 
 const SONDE = `() => {
   const r = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
@@ -72,9 +73,11 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
       verif("… le lien de CETTE page se dit « page courante », et porte la phrase entière",
         ici?.courant === "page" && ici.dessin && ici.texte === (nature === "flash" ? FLASH : TATTOO),
         `« ${ici?.texte} » · aria-current ${ici?.courant} · ${ici?.l} px`);
-      verif("… celui de l'autre page ne dit rien, et porte son mot court",
+      //  nº 863-§1 — plus de mot court ni de colonne de 88 : le titre
+      //  entier de l'autre page, dans une colonne égale.
+      verif("… celui de l'autre page ne dit rien, et porte son titre entier (nº 863)",
         laBas && laBas.courant === null && laBas.dessin
-          && laBas.texte === (nature === "flash" ? "Tattoo" : "Flash") && laBas.l === 88,
+          && laBas.texte === (nature === "flash" ? TATTOO : FLASH) && laBas.l === ici?.l,
         `« ${laBas?.texte} » · aria-current ${laBas?.courant} · ${laBas?.l} px`);
       /*  §3 — L'APPARENCE NE BOUGE PAS D'UN PIXEL : la boîte de la nº 858
           (46 = 43 + la ligne de 3), la ligne bord à bord, la réserve. */
@@ -82,8 +85,8 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
         v.vv?.h === 46 && v.ligne?.h === 1 && v.ligne.l === 390 && v.reserve === 116
           && v.barre?.bas === v.ligne.bas,
         `va-et-vient ${v.vv?.h} · ligne ${v.ligne?.l} px · réserve ${v.reserve} · barre ${v.barre?.bas}`);
-      verif("… l'air de la nº 859 est là : quatorze pixels sous la ligne",
-        v.contenu && v.ligne && Math.round(v.contenu.y - v.ligne.bas) === 14,
+      verif("… l'air de la nº 859 est là, au cran de la nº 863 : seize pixels sous la ligne",
+        v.contenu && v.ligne && Math.round(v.contenu.y - v.ligne.bas) === 16,
         `${Math.round((v.contenu?.y ?? 0) - (v.ligne?.bas ?? 0))} px`);
       verif("… et le magasin de session de la nº 857 n'écrit plus rien (§3)",
         v.magasin === null, `${v.magasin}`);

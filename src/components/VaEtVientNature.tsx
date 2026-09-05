@@ -72,42 +72,48 @@ import { demanderRestaurationPosition } from "@/lib/navigation-session";
  * ⚠️ LES LIENS SONT DANS LE DOCUMENT AUX DEUX APPAREILS : ce bloc est
  * MASQUÉ au web (`hidden mobile:block`), pas retiré — les deux adresses
  * restent donc liées l'une à l'autre pour qui lit le document.
+ *
+ * ██ §1 (nº 863) — DEUX TITRES, TOUJOURS ENTIERS ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : les deux positions deviennent « Explore
+ * tattoo styles » (goutte) et « Explore flash styles » (éclair), icône
+ * devant chaque titre, et les titres restent TOUJOURS ENTIERS, actif
+ * comme inactif — plus jamais d'abréviation. Le mot court de la nº 859
+ * et sa colonne de 88 px partent donc, code compris : les deux colonnes
+ * redeviennent égales, comme celles de « Ma sélection » (le défaut du
+ * composant partagé, sans `largeurInactive`).
+ * CE QUE LA MESURE DIT, ET QU'IL FAUT DIRE : au corps de la charte
+ * (15 px demi-gras), « Explore tattoo styles » fait 159 px d'encre ;
+ * avec l'icône (20), son écart (8) et le rembourrage (4 de chaque
+ * côté), une position demande 195 px. Les deux côte à côte : 390 —
+ * sur une grille qui en offre 358 à 390 px de large (la page pose ses
+ * marges), 343 à 375, 328 à 360. LES DEUX TITRES NE TIENNENT DONC PAS
+ * SUR UNE LIGNE À CE CORPS, sur aucun téléphone courant. La consigne
+ * pour ce cas est « le dire et proposer, ne pas abréger » : rien n'est
+ * abrégé, rien n'est réduit — le titre PASSE À LA LIGNE dans sa
+ * colonne (plus de `truncate`), et la page reste lisible en attendant
+ * l'arbitrage du propriétaire (voir le compte rendu de la passe).
  */
-
-/**
- * La largeur d'une position inactive, mesurée (nº 859) : « Tattoo », le
- * plus long des deux mots, fait 49 px au corps 15 demi-gras ; l'icône
- * 20 ; leur écart 8 ; le rembourrage 4 de chaque côté. Soit 85 — on
- * prend 88, le cran au-dessus. Il reste 270 à la position active, pour
- * une phrase qui en demande 210 : elle n'est pas coupée.
- */
-const LARGEUR_MOT_COURT = "88px";
 
 const POSITIONS: ReadonlyArray<{
   nature: SlugNature;
   /** L'adresse de la page — c'est elle qui décide, désormais (nº 860). */
   adresse: string;
-  /** La phrase entière — la position active, et le nom accessible des
-      deux (l'œil lit un mot, un lecteur d'écran entend la phrase). */
+  /** Le titre entier — les deux positions le portent tel quel, et
+      c'est aussi leur nom accessible. */
   texte: string;
-  /** Le mot court de la position inactive (nº 859-§2) : les titres des
-      deux catégories du catalogue, et les mots des onglets de la page
-      de recherche. Aucun vocabulaire neuf. */
-  mot: string;
   Icone: typeof IconeGoutteDEncre;
 }> = [
   {
     nature: "tatouage",
     adresse: ADRESSE_ACCUEIL,
-    texte: TEXTES_TATOUAGE.invitePilule,
-    mot: "Tattoo",
+    texte: TEXTES_TATOUAGE.titreVaEtVientTattoo,
     Icone: IconeGoutteDEncre,
   },
   {
     nature: "flash",
     adresse: ADRESSE_ACCUEIL_FLASH,
-    texte: TEXTES_TATOUAGE.inviteFlash,
-    mot: "Flash",
+    texte: TEXTES_TATOUAGE.titreVaEtVientFlash,
     Icone: IconeEclair,
   },
 ];
@@ -125,8 +131,7 @@ export function VaEtVientNature() {
         cleActive={active}
         classeOnglet="px-1 min-h-[43px]"
         classeLigne={LIGNE_BORD_A_BORD_DOIGT}
-        largeurInactive={LARGEUR_MOT_COURT}
-        options={POSITIONS.map(({ nature, adresse, texte, mot, Icone }) => ({
+        options={POSITIONS.map(({ nature, adresse, texte, Icone }) => ({
           cle: nature,
           href: adresse,
           nom: texte,
@@ -134,17 +139,27 @@ export function VaEtVientNature() {
           //  sa place » : posé au départ, consommé à l'arrivée par
           //  MemoireNavigation. Voir la note, plus haut.
           surClic: () => demanderRestaurationPosition(adresse),
-          /*  Les deux positions portent leur icône ET un texte ; seul ce
-              texte change — la phrase entière quand la page est ouverte,
-              le mot court sinon. L'écriture est la même des deux côtés,
-              et c'est ce qui fait que la bascule se lit comme un
-              dépliement et non comme un échange. */
+          /*  §1 (nº 863) — LES DEUX POSITIONS PORTENT LEUR ICÔNE ET LEUR
+              TITRE ENTIER, actives ou non : rien ne change à la bascule
+              que la couleur et le trait. Le titre n'est plus coupé
+              (`truncate` est parti) : là où la colonne est trop étroite
+              pour lui, il passe à la ligne — jamais abrégé, c'est la
+              consigne. `text-left` : un titre sur deux lignes se lit
+              aligné sur son icône, pas centré ligne par ligne.
+              ⚠️ `leading-5` — ET LA BARRE NE GRANDIT PAS D'UN PIXEL :
+              deux lignes à l'interligne courant (22,5 px) font 45, soit
+              deux de plus que l'onglet (43) ; la ligne du va-et-vient
+              descendait d'autant, sous la réserve que la page garde à
+              la barre (116, lib/reserve-barre), et le premier contenu
+              se retrouvait à quatorze de la ligne au lieu de seize
+              (mesuré au banc 863). À vingt pixels d'interligne, les
+              deux lignes font quarante et tiennent dans l'onglet : la
+              barre, sa réserve et le script d'avant peinture ne bougent
+              pas. Un seul interligne sur ce texte (piège nº 389). */
           label: (
             <span className="flex min-w-0 items-center gap-2">
               <Icone taille={20} classe="shrink-0" />
-              <span className="min-w-0 truncate">
-                {nature === active ? texte : mot}
-              </span>
+              <span className="min-w-0 text-left leading-5">{texte}</span>
             </span>
           ),
         }))}
