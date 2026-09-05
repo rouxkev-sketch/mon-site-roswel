@@ -115,7 +115,16 @@ for (const mode of ["doigt", "web"]) {
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("846 · doigt — le champ de l'accueil ne se rétracte plus");
+    /*  ██ nº 857 — LE CHAMP DE L'ACCUEIL N'EXISTE PLUS ██
+        Le propriétaire l'a remplacé par le va-et-vient Tattoo / Flash
+        (VaEtVientNature), à la même place dans la rangée fixe de la
+        barre. Ce que ce banc mesurait de la pilule vaut désormais pour
+        la POSITION ACTIVE du va-et-vient : elle porte l'invite, elle
+        est fixe, la réserve ne bouge pas. Deux vérités ont changé de
+        sens : la hauteur (43, la piste des onglets du site, + la ligne
+        de 3 = les 46 d'avant) et la loupe, qui est ALLUMÉE — c'est elle
+        qui ouvre la recherche depuis que le champ n'est plus là. */
+    titre("846 · doigt — le va-et-vient de l'accueil ne se rétracte plus (nº 857)");
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
     const releve = () =>
@@ -141,12 +150,12 @@ for (const mode of ["doigt", "web"]) {
         La nº 846 l'avait changée parce qu'elle redisait le titre posé
         au-dessus des cartes ; la nº 847 retire ce titre AU DOIGT, et la
         pilule ne vit que là — le doublon n'existe plus. */
-    verif("le champ porte l'invite de l'accueil",
+    verif("la position active du va-et-vient porte l'invite de l'accueil",
       avant.texte === "Find your tattoo style…", avant.texte);
-    verif("le champ est là, à sa hauteur de toujours (46 px)",
-      avant.hauteur === 46 && avant.haut !== null, `${avant.hauteur} px @ ${avant.haut}`);
-    verif("et la loupe de la barre est éteinte (le champ suffit)",
-      avant.loupe === 0, `opacité ${avant.loupe}`);
+    verif("elle est là, à la hauteur de la piste (43 px, + la ligne de 3 = 46)",
+      avant.hauteur === 43 && avant.haut !== null, `${avant.hauteur} px @ ${avant.haut}`);
+    verif("et la loupe de la barre est ALLUMÉE (nº 857-§3 : le champ n'est plus là)",
+      avant.loupe === 1, `opacité ${avant.loupe}`);
 
     //  ON FAIT DÉFILER, POUR DE BON : bien au-delà des seuils de la
     //  barre (64 px du haut, 24 px cumulés vers le bas).
@@ -154,14 +163,14 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(900);
     const apres = await releve();
     verif("APRÈS DÉFILEMENT, la page a bien bougé", apres.y >= 200, `${apres.y} px`);
-    verif("le champ n'a pas bougé d'un pixel — il est FIXE",
+    verif("le va-et-vient n'a pas bougé d'un pixel — il est FIXE",
       apres.haut === avant.haut && apres.hauteur === avant.hauteur &&
       apres.rangee === avant.rangee && apres.opacite === 1,
       `haut ${avant.haut} → ${apres.haut} · rangée ${avant.rangee} → ${apres.rangee} · opacité ${apres.opacite}`);
     verif("la réserve de la barre ne change pas non plus",
       apres.reserve === avant.reserve && avant.reserve === 122,
       `${avant.reserve} → ${apres.reserve}`);
-    verif("et la loupe reste éteinte", apres.loupe === 0, `opacité ${apres.loupe}`);
+    verif("et la loupe reste allumée", apres.loupe === 1, `opacité ${apres.loupe}`);
   } catch (e) {
     verif("déroulement du banc 846 (champ fixe)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

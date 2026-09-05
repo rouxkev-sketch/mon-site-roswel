@@ -1007,6 +1007,44 @@ export function IconeArobase({ taille = 20, classe = "", trait = 1.8 }: Propriet
 }
 
 /**
+ * ██ §1 (nº 857) — LA GOUTTE D'ENCRE ET L'ÉCLAIR ██
+ * ------------------------------------------------------------------
+ * Les deux dessins du va-et-vient de l'accueil du doigt : la GOUTTE
+ * D'ENCRE dit « tattoo » (ce qui est fait), l'ÉCLAIR dit « flash » (le
+ * dessin à prendre). Demandés par le propriétaire « simples, au trait
+ * de la famille du site » : boîte de 24, trait de 1,8, extrémités et
+ * jointures rondes, `currentColor` — les conventions de toutes leurs
+ * voisines, et pas une de plus. Le site n'en avait aucun des deux
+ * (vérifié dans ce fichier, qui les tient toutes) ; ils sont dessinés
+ * ici, et une seule fois.
+ */
+export function IconeGoutteDEncre({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M12 3.5c3.2 4.1 6 7.4 6 10.9a6 6 0 0 1-12 0c0-3.5 2.8-6.8 6-10.9Z"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconeEclair({ taille = 20, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M13.5 3 6.5 13.5h5l-1 7.5 7-10.5h-5l1-7.5Z"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
  * ██ L'ŒIL, ET L'ŒIL BARRÉ (passe nº 788) ██
  * ------------------------------------------------------------------
  * Ils remplacent les mots « Afficher » / « Masquer » au bout des

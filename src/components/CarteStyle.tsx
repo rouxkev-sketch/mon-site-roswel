@@ -7,7 +7,11 @@ import {
   PREPARER_LA_RECHERCHE_A_LAVANCE,
 } from "@/lib/chemin-recherche";
 import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
-import { NATURE_PAR_DEFAUT, SEPARATEUR_GALERIE } from "@/lib/photos-tatoueur";
+import {
+  NATURE_PAR_DEFAUT,
+  SEPARATEUR_GALERIE,
+  type SlugNature,
+} from "@/lib/photos-tatoueur";
 //  §2 (nº 635) — l'écriture unique de la copie (nº 514), reprise telle
 //  quelle de la carte de la mosaïque : voir la note sur le lien.
 import { garderLeTexteALaCopie } from "@/lib/copie-du-texte";
@@ -148,8 +152,14 @@ const MOT_DU_COMPTE = "portfolios";
 export function CarteStyle({
   style,
   prioritaire,
+  nature = NATURE_PAR_DEFAUT,
 }: {
   style: StyleDuCatalogue;
+  /** §4 (nº 857) — LA NATURE DE CE CATALOGUE, écrite dans l'adresse de
+      la carte : une carte de l'accueil Flash mène aux flashs de ce
+      style, pas à ses réalisations. Par défaut la nature de toujours —
+      aucun appelant n'a à changer. */
+  nature?: SlugNature;
   /** Les premières cartes ne diffèrent pas leur image — la même règle
       que la mosaïque : ce que Google mesure ne doit pas attendre le
       défilement. */
@@ -159,7 +169,7 @@ export function CarteStyle({
   if (!photo) return null;
   //  §1 (nº 652) — une carte de style ouvre LA RECHERCHE de ce style,
   //  à son adresse. Le lien est le même qu'avant, au chemin près.
-  const adresse = `${ADRESSE_RECHERCHE}?style=${style.slug}&nature=${NATURE_PAR_DEFAUT}`;
+  const adresse = `${ADRESSE_RECHERCHE}?style=${style.slug}&nature=${nature}`;
   return (
     /*  §1 (nº 634) — LE TOTAL DES FAVORIS DU STYLE, POSÉ SANS ÊTRE
         MONTRÉ. C'est le second critère de l'ordre des cartes
@@ -356,11 +366,17 @@ export function CarteStyle({
  * carte par style, huit aujourd'hui). « Voir plus » et le compteur
  * restent l'affaire de la nº 622.
  */
-export function GrilleStyles({ styles }: { styles: StyleDuCatalogue[] }) {
+export function GrilleStyles({
+  styles,
+  nature = NATURE_PAR_DEFAUT,
+}: {
+  styles: StyleDuCatalogue[];
+  nature?: SlugNature;
+}) {
   return (
-    <div data-catalogue-styles="" className={CLASSES_GRILLE_CARTES}>
+    <div data-catalogue-styles="" data-nature={nature} className={CLASSES_GRILLE_CARTES}>
       {styles.map((style, rang) => (
-        <CarteStyle key={style.slug} style={style} prioritaire={rang < 4} />
+        <CarteStyle key={style.slug} style={style} prioritaire={rang < 4} nature={nature} />
       ))}
     </div>
   );

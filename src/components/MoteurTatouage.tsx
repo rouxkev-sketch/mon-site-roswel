@@ -13,7 +13,6 @@ import {
   TEXTES_TATOUAGE,
   valeurExplorer,
 } from "@/config/tatouage";
-import { ligneMoteur } from "@/lib/adresse";
 import {
   compteDeLaCategorie,
   compteDuStyle,
@@ -29,11 +28,7 @@ import { PageRechercheMobile } from "@/components/PageRechercheMobile";
 //  §1 (nº 331) — « la navigation gagne » : l'écriture commune, celle
 //  que les liens arment tout seuls (lib/etape-refermable).
 import { laSurfaceVaNaviguer } from "@/lib/etape-refermable";
-import {
-  ETATS_ROND_BARRE,
-  IconeLoupe,
-  IconeReglages,
-} from "@/components/Icones";
+import { ETATS_ROND_BARRE, IconeReglages } from "@/components/Icones";
 import { BadgeCharte, GroupeBadges } from "@/components/BadgesCharte";
 //  nº 815 — « Done » sous les pilules de rayon : le lien d'action du
 //  site (celui de « Unlink » / « Link »).
@@ -45,7 +40,6 @@ import {
   fermerRecherche,
   lireRecherche,
   lireRechercheServeur,
-  ouvrirRecherche,
   poserBrouillon,
   poserVueRecherche,
   souscrireRecherche,
@@ -205,19 +199,11 @@ export function suffixeRayon(criteres: CritèresTatouage): string {
   return rayonApplicable(criteres.lieu) ? ` · ${criteres.rayonMi} mi` : "";
 }
 
-/**
- * LE LIBELLÉ DU LIEU une fois validé : « Partout », « Lyon, France »,
- * « Miami, FL, États-Unis · 25 km ».
- * ⚠️ PLUS L'INTITULÉ BRUT DU GÉOCODEUR (passe nº 114) : c'est le
- * MÊME format que sur les cartes — ville, code de l'État si le pays
- * l'écrit, pays. Ni code postal, ni région ailleurs. Le code postal ne
- * sert qu'à CHOISIR, dans les suggestions ; une fois le lieu retenu,
- * il n'apprend plus rien.
- */
-export function libelleLieu(criteres: CritèresTatouage): string {
-  if (!criteres.lieu) return TEXTES_TATOUAGE.partoutLabel;
-  return `${ligneMoteur(criteres.lieu)}${suffixeRayon(criteres)}`;
-}
+/*  §1 (nº 857) — `libelleLieu` EST PARTIE AVEC LA PILULE : son libellé
+    (« Partout », « Lyon, France · 25 km ») ne servait plus qu'au nom
+    accessible de la pilule de l'accueil du doigt, et personne d'autre ne
+    l'appelait. Les briques qu'elle assemblait (`ligneMoteur`,
+    `suffixeRayon`) gardent leurs autres emplois. */
 
 /**
  * ██ §2 (nº 569) — LE PANNEAU DES FILTRES SE ROUVRE APRÈS UN REMONTAGE ██
@@ -287,18 +273,11 @@ export function MoteurTatouage({
   criteres,
   surChangement,
   id = "moteur-tatouage",
-  rangeeMobile = true,
 }: {
   criteres: CritèresTatouage;
   /** Appelé à CHAQUE changement : c'est ça, la recherche. */
   surChangement: (criteres: CritèresTatouage) => void;
   id?: string;
-  /** FAUX HORS ACCUEIL (nº 150-§3) : la rangée du smartphone — la
-      pilule et ses deux boutons — n'est pas rendue du tout ; seule la
-      LOUPE de la barre ouvre alors la recherche (le magasin
-      `recherche-mobile` est partagé, la page plein écran est un
-      portail : elle s'affiche d'où qu'on l'appelle). */
-  rangeeMobile?: boolean;
 }) {
   /**
    * L'ÉTAT DE LA PAGE DE RECHERCHE — LU HORS DE REACT, ET C'EST UNE
@@ -603,11 +582,9 @@ export function MoteurTatouage({
     poserBrouillon({ ...(brouillon ?? criteresComplets()), ...suivant });
   }
 
-  /** OUVRIR LA PAGE, toujours sur la vue « Recherche », et sur un
-      brouillon qui part de la recherche en cours. */
-  function ouvrirLaPage() {
-    ouvrirRecherche(criteres);
-  }
+  /*  §1 (nº 857) — `ouvrirLaPage` EST PARTIE AVEC LA PILULE : c'était
+      son geste. La page s'ouvre désormais depuis la LOUPE de la barre,
+      partout (EnTeteTatouage → `ouvrirRecherche`, le magasin partagé). */
 
   /** FERMER SANS RIEN APPLIQUER — la croix, le retour arrière, Échap.
       Appelée par la page UNE FOIS SA GLISSADE DE SORTIE TERMINÉE :
@@ -1142,7 +1119,6 @@ export function MoteurTatouage({
       invitation — il annoncerait un choix que personne n'a fait.
       Vide, l'indication « Explorer » reprend sa place. */
   const libelleQuoi = libelleExplorer(criteres.nature, criteres.style);
-  const libelleOu = libelleLieu(criteres);
 
   /**
    * §3 (nº 309) — LE CHAMP « Style » DU WEB NE GARDE QUE LE STYLE.
@@ -1168,15 +1144,10 @@ export function MoteurTatouage({
     ? libelleStyle(criteres.style)
     : libelleQuoi;
 
-  /** RIEN N'A ENCORE ÉTÉ CHERCHÉ : la barre fixe n'a alors aucun
-      résultat à résumer — elle INVITE, elle ne rend pas compte. */
-  const rechercheVierge =
-    !criteres.style && !criteres.nature && !criteres.lieu;
-  /*  ⚠️ LE RÉSUMÉ DE LA PILULE A DISPARU (nº 140) : la barre dit
-      toujours « Recherche », et les critères en cours se lisent dans
-      le TITRE au-dessus de la mosaïque. Seul l'aria-label garde le
-      détail (`libelleQuoi`, `libelleOu`) — un lecteur d'écran ne voit
-      pas ce titre à côté de la pilule. */
+  /*  §1 (nº 857) — `rechercheVierge` EST PARTIE AVEC LA PILULE : elle ne
+      servait qu'à choisir son nom accessible (inviter, ou rendre compte).
+      Le résumé de la pilule avait déjà disparu à la nº 140 ; la pilule
+      elle-même disparaît ici. */
 
   /* ---- LA REMONTÉE DU MENU « EXPLORER » (nº 175-§4, mobile) ----
      Le bloc à remonter, et la fonction qui range la remontée quand le
@@ -1820,89 +1791,17 @@ export function MoteurTatouage({
         </div>
       )}
 
-      {/* ---------- VRAIS MOBILES (tactile) ----------
-          UNE SEULE LIGNE, pleine largeur : la loupe à gauche, puis
-          « style · localité » — tronqué d'un seul tenant s'il déborde. */}
-      {/* LA RANGÉE DE LA BARRE (vrais mobiles) : la pilule de
-          recherche, SEULE depuis la nº 443 — les deux ronds de mise en
-          page (disposition une/deux, vue « sans texte ») sont
-          supprimés, et la pilule (`flex-1`) se prolonge d'elle-même
-          dans tout l'espace libéré.
-          ⚠️ SUR L'ACCUEIL SEULEMENT (nº 150-§3, `rangeeMobile`). */}
-      {rangeeMobile && (
-      <div className="hidden mobile:flex w-full items-center gap-2.5">
-        {/* LA PILULE : la loupe, puis LE RÉSUMÉ DE LA RECHERCHE.
-            TANT QUE RIEN N'EST CHERCHÉ, elle n'annonce pas « Partout »
-            — un lieu que personne n'a demandé : elle INVITE, d'un mot,
-            « Rechercher ».
-            UNE FOIS LA RECHERCHE FAITE, elle reprend EXACTEMENT la
-            typographie de la ligne de résultats posée au-dessus des
-            cartes : le STYLE en blanc et en gras (c'est lui qu'on est
-            venu voir), la LOCALITÉ en gris et sans gras derrière lui.
-            Les deux se répondent d'un coup d'œil — la barre fixe dit
-            la même chose que le titre, en une ligne. */}
-        <button
-          type="button"
-          onClick={ouvrirLaPage}
-          aria-haspopup="dialog"
-          aria-expanded={pageOuverte}
-          aria-label={
-            rechercheVierge
-              ? "Find a tattoo artist"
-              : `Search — ${libelleQuoi || "everything"}, ${libelleOu}`
-          }
-          //  ⚠️ FOND GOUVERNÉ PAR `[data-clair-barre]` (nº 174-§1) : sur
-          //  des photos qui défilent, `eleve` se noyait. Le même cran
-          //  que l'encadré du web et que les deux boutons voisins,
-          //  réglable par `?clair=1|2|3`. La pression garde son
-          //  comportement (`:active` monte d'un barreau).
-          /*  §2 (nº 852) — « doux » : le cran d'en dessous, pour CE
-              champ seul (le pourquoi et la valeur sont dans globals.css,
-              avec la règle). Le propriétaire le trouvait trop clair à
-              l'accueil du doigt — et cette pilule n'existe QUE là. */
-          data-clair-barre="doux"
-          //  §1 (nº 258) — MOINS 11 % : 52 × 0,89 = 46,28 → 46 au
-          //  pixel entier — la hauteur même des cercles du web. La
-          //  barre rend l'espace (réserve 122, voir EnTeteTatouage).
-          className="flex flex-1 min-w-0 items-center gap-3 text-left
-                     rounded-full
-                     px-5 min-h-[46px] transition-colors"
-        >
-          {/*  nº 443 — LE TITRE VISIBLE CHANGE (l'anglais est un choix
-               du propriétaire, mobile uniquement — cette pilule ne vit
-               que dans la rangée du doigt). La pilule reste une PORTE
-               (nº 140), pas un résumé ; l'aria-label garde le détail :
-               un lecteur d'écran ne voit pas le titre de la mosaïque à
-               côté.
-               ██ §1 (nº 846) — ET ELLE NE DIT PLUS LE TITRE DE LA PAGE.
-               Elle écrivait « Find your tattoo style… », mot pour mot le
-               titre posé au-dessus des cartes — un doublon que la nº 846
-               rend visible en montrant ce titre AUSSI au doigt (§3).
-               Elle dit désormais ce qu'on peut y chercher : le texte vit
-               avec les autres (`TEXTES_TATOUAGE.invitePilule`), et le
-               pourquoi complet est écrit là-bas. */}
-          <IconeLoupe taille={18} classe="shrink-0 text-sombre-texte-doux" />
-          <span
-            aria-hidden="true"
-            className="min-w-0 flex-1 truncate text-[15px] leading-tight
-                       font-semibold text-sombre-texte"
-          >
-            {TEXTES_TATOUAGE.invitePilule}
-          </span>
-        </button>
-
-        {/*  nº 443 — LES DEUX RONDS DE MISE EN PAGE SONT SUPPRIMÉS :
-             le bouton de DISPOSITION (une image par ligne ↔ deux
-             colonnes) et le rond de la VUE PHOTOTHÈQUE (« sans
-             texte »). Une seule mise en page subsiste — les cartes
-             côte à côte avec leur texte — et la pilule ci-dessus
-             (`flex-1`) occupe désormais toute la largeur de la rangée.
-             Leur mécanique est neutralisée à la source
-             (lib/disposition-grille, lib/vue-phototheque) : un vieux
-             lien ou une vieille mémoire retombe sur la mise en page
-             standard, sans casse. */}
-      </div>
-      )}
+      {/*  ██ §1 (nº 857) — LA PILULE DE L'ACCUEIL DU DOIGT N'EXISTE PLUS ██
+           Elle vivait ici depuis la nº 150 (une seule ligne, pleine
+           largeur, la loupe puis « style · localité », puis l'invite de
+           la nº 846). Le propriétaire la remplace par le va-et-vient
+           Tattoo / Flash, rendu par la BARRE (EnTeteTatouage →
+           VaEtVientNature) à la place exacte de cette rangée ; la loupe
+           de la barre ouvre la recherche sur l'accueil comme partout
+           ailleurs. Ce moteur ne rend donc plus rien de visible au
+           doigt : seulement la page plein écran, ci-dessous, quand elle
+           est ouverte. La propriété `rangeeMobile` est partie avec la
+           pilule — elle ne servait qu'à la rendre ou non. */}
 
       {pageOuverte && (
         /*  §1 (nº 447) — LES DEUX ONGLETS « Réalisation | Flash » : la

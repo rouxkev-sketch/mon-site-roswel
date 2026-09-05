@@ -25,7 +25,7 @@ import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 import { IndexTatoueurs } from "@/components/IndexTatoueurs";
 //  §1 (nº 621) — la lecture de la nº 620 : une carte par style, pour
 //  l'accueil au repos et lui seul (voir plus bas).
-import { catalogueDesStyles } from "@/lib/catalogue-styles";
+import { cataloguesDesStyles } from "@/lib/catalogue-styles";
 
 /**
  * L'ACCUEIL DE YOKOFOLIO
@@ -391,7 +391,15 @@ export async function RenduAccueil({
    */
   const surLeCatalogue =
     !style && !nature && !lieu && exclure.length === 0;
-  const catalogue = surLeCatalogue ? await catalogueDesStyles() : [];
+  /*  §4 (nº 857) — LES DEUX CATALOGUES, tattoos et flashs, en UNE
+      lecture (lib/catalogue-styles) : l'accueil du doigt montre l'un ou
+      l'autre au choix du va-et-vient, et la page étant prérendue, les
+      deux doivent être écrits dedans. « Avec catalogue » reste jugé sur
+      les tattoos, comme avant : c'est la garde de l'accueil au repos. */
+  const catalogues = surLeCatalogue
+    ? await cataloguesDesStyles()
+    : { tatouage: [], flash: [] };
+  const catalogue = catalogues.tatouage;
   const avecCatalogue = catalogue.length > 0;
 
   return (
@@ -399,6 +407,7 @@ export async function RenduAccueil({
     <IndexTatoueurs
       premiers={avecCatalogue ? [] : resultat.tatoueurs}
       catalogue={catalogue}
+      catalogueFlash={catalogues.flash}
       total={avecCatalogue ? 0 : resultat.total}
       page={page}
       //  §2 (nº 425) — le jour du mélange de CE rendu : le lien

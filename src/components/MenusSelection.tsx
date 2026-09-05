@@ -14,7 +14,11 @@ import {
   lireComptesSelection,
   souscrireComptesSelection,
 } from "@/lib/compte-selection";
-import { CATEGORIES_EXPLORER, libelleStyle } from "@/config/tatouage";
+import {
+  CATEGORIES_EXPLORER,
+  libelleStyle,
+  LIGNE_BORD_A_BORD_DOIGT,
+} from "@/config/tatouage";
 import { libelleExplorer } from "@/components/MoteurTatouage";
 import {
   LIBELLE_TOUS_LES_FAVORIS,
@@ -485,7 +489,7 @@ export function MenusSelection({
                    zone, nº 258) qui commandent, et la hauteur de ligne
                    de 17 px leur reste très inférieure. */
               taillePolice="text-[15px] lg:text-[17px]"
-              classeLigne="mobile:-inset-x-4 sm:mobile:-inset-x-6"
+              classeLigne={LIGNE_BORD_A_BORD_DOIGT}
             />
           </div>
           {/*  §2 (nº 461, resserré nº 462) — LE MENU COMMANDÉ,

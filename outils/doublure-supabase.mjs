@@ -486,10 +486,16 @@ const TATOUEURS = STYLES.flatMap((style, s) =>
     });
   })
 );
+/*  §4 (nº 857) — UNE PHOTO FLASH PAR FICHE, EN PLUS DES TROIS DE
+    RÉALISATION : l'accueil du doigt a désormais une position « Flash »
+    qui montre le catalogue des flashs — sans flash en doublure, il
+    serait vide à l'atelier et rien ne pourrait se mesurer. Les trois
+    photos d'avant ne bougent pas (les bancs qui les comptent non plus) ;
+    la quatrième est un flash, une galerie à elle seule. */
 const PHOTOS = TATOUEURS.flatMap((t) =>
-  [0, 1, 2].map((n) => ({
+  [0, 1, 2, 3].map((n) => ({
     id: `photo-${t.id}-${n}`, tatoueur_id: t.id, style: t.styles[0],
-    rendu: "noir", nature: "tatouage",
+    rendu: "noir", nature: n === 3 ? "flash" : "tatouage",
     url: `/images-demo/tatouage/${t.styles[0]}-${n + 1}.svg`,
     miniature: `/images-demo/tatouage/${t.styles[0]}-${n + 1}.svg`,
     ordre: n, cree_le: "2026-01-01T00:00:00Z",
@@ -1648,6 +1654,12 @@ function repondre(req, res, u, brut) {
     let params = {};
     try { params = JSON.parse(brut || "{}"); } catch { /* corps vide */ }
     const style = params.p_style;
+    /*  §4 (nº 857) — LA NATURE CHERCHÉE (`p_nature`), comme la vraie
+        fonction (migration nº 70) : les photos ramassées dans `galerie`
+        sont celles de cette nature, et une fiche sans photo de cette
+        nature ne répond pas. Sans `p_nature`, tout passe — comme avant. */
+    const nature = params.p_nature || null;
+    const delaNature = (p) => !nature || (p.nature ?? "tatouage") === nature;
     /*  §1 (nº 745) — SOUS LE CRAN, LA RÉPONSE EST CELLE DE LA VRAIE
         FONCTION : des lignes ENVELOPPÉES `{ fiche, distance_km,
         total_resultats }`, et une fiche RÉDUITE aux champs qu'elle
@@ -1689,6 +1701,8 @@ function repondre(req, res, u, brut) {
       console.log(`[doublure] rechercher_tatoueurs · p_rayon_km=${rayonKm} autour de ${lat},${lon}`);
     }
     corps = TATOUEURS.filter((l) => !style || l.styles.includes(style))
+      .filter((l) => !nature
+        || (TABLES.photos_tatoueur ?? []).some((p) => p.tatoueur_id === l.id && delaNature(p)))
       .filter((l) => !autourDUnPoint || (distanceDe(l) ?? Infinity) <= rayonKm)
       .map((l, _i, tous) =>
         FICHE_PARTIELLE
@@ -1703,7 +1717,7 @@ function repondre(req, res, u, brut) {
                 //  coalesce(g.photos)) : la doublure fait pareil,
                 //  bornée à `p_photos_max` comme elle.
                 galerie: (TABLES.photos_tatoueur ?? [])
-                  .filter((p) => p.tatoueur_id === l.id)
+                  .filter((p) => p.tatoueur_id === l.id && delaNature(p))
                   .slice(0, photosMax),
               },
               distance_km: distanceDe(l),

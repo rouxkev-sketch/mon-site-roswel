@@ -45,6 +45,7 @@ import { EMPREINTE_ZONE_COMPTE, MenuEspace } from "@/components/MenuEspace";
 //  §6 (nº 821) — la cible et le dessin des gestes de la barre, écrits
 //  une fois (lib/reserve-barre) et partagés avec le squelette.
 import { CIBLE_GESTE_BARRE, DESSIN_GESTE_BARRE } from "@/lib/reserve-barre";
+import { VaEtVientNature } from "@/components/VaEtVientNature";
 import { SelecteurLangue } from "@/components/SelecteurLangue";
 //  nº 815 — les accès au compte tirent le rideau au clic (nº 811).
 import { LienAuGeste } from "@/components/LienAuGeste";
@@ -496,9 +497,9 @@ export function EnTeteTatouage({
       page pilote la recherche » — l'accueil ET les résultats, alors
       qu'il servait à décider de choses qui n'appartiennent qu'à
       L'ACCUEIL (la rangée du doigt, la loupe). La page le dit désormais
-      elle-même, en un mot juste : `accueilNu`. Ses trois lecteurs
-      (`rangeePresente`, `loupeVisible`, la pilule du moteur) lisent ce
-      drapeau-là. */
+      elle-même, en un mot juste : `accueilNu`. Ses lecteurs
+      (`rangeePresente`, la rangée fixe, le va-et-vient Tattoo / Flash
+      et la loupe de la nº 857) lisent ce drapeau-là. */
   /** §1 (nº 245) — LA RANGÉE PORTE UN AUTRE CONTENU (« Ma
       sélection »). Elle existe alors comme sur l'accueil, mais elle
       n'EST PAS le moteur : la loupe reste donc à sa place (§4), et la
@@ -539,7 +540,16 @@ export function EnTeteTatouage({
    * on ne calcule pas un état qu'on n'affiche pas, et l'on n'écrit pas
    * dans la mémoire de module ce que l'accueil n'a pas vécu.
    */
-  const rangeeFixe = accueilNu;
+  /*  ██ §2 ET §5 (nº 857) — LA RANGÉE EST FIXE PARTOUT OÙ ELLE EXISTE ██
+      L'accueil l'était depuis la nº 846 ; le propriétaire veut que le
+      va-et-vient de « Ma sélection » (la rangée libre) le soit AUSSI :
+      il ne défile pas, la page défile sous sa ligne. Les pages de
+      résultats n'ont pas de rangée au doigt (`hidden lg:flex`) : il ne
+      reste donc plus AUCUN cas où la rangée se replie au défilement. La
+      mécanique du repli (l'écouteur, la mémoire de module, la marque du
+      script d'avant-peinture) reste en place, inerte — la retirer est
+      un autre chantier que cette passe, qui ne touche qu'à ses sujets. */
+  const rangeeFixe = accueilNu || rangeeLibre;
   const replie = rangeeFixe ? false : moteurReplie;
   useEffect(() => {
     rangeeFixeRef.current = rangeeFixe;
@@ -550,7 +560,17 @@ export function EnTeteTatouage({
       §1-§2 (nº 846) — SUR L'ACCUEIL ELLE NE PARAÎT PLUS JAMAIS (la
       rangée y est fixe, le champ est toujours là) ; sur les RÉSULTATS
       elle paraît toujours, puisque la rangée n'y est plus. */
-  const loupeVisible = !accueilNu || replie;
+  /*  ██ §3 (nº 857) — LA LOUPE EST LÀ SUR L'ACCUEIL AUSSI ██
+      Le champ de l'accueil a disparu (§1) : la loupe prend sa place dans
+      la barre, comme sur les résultats et « Ma sélection ». Il n'y a
+      donc plus un seul cas où elle s'éteint — la variable qui disait
+      « partout hors accueil, ou accueil replié » est partie : la loupe
+      est toujours là.
+      ⚠️ AU WEB, L'ACCUEIL NE CHANGE PAS : le moteur central y tient la
+      rangée, et la loupe y reste invisible — par l'APPAREIL (règle
+      nº 60), écrit sur le bouton lui-même (`not-mobile:invisible`), pas
+      par une largeur. Au-delà de 1024 px, le `lg:hidden` de la nº 465
+      la retire comme avant. */
   /**
    * L'ÉCRAN EST-IL ÉTROIT ? — c'est-à-dire : la rangée du moteur est-
    * elle réellement repliable ici ?
@@ -1027,16 +1047,18 @@ export function EnTeteTatouage({
                 //  l'enveloppe ci-dessus rabat la rangée elle-même.
                 rangee()
               ) : (
-                <MoteurTatouage
-                  criteres={valeur}
-                  surChangement={chercher}
-                  //  §2 (nº 846) — LA PILULE DU DOIGT N'EXISTE QUE SUR
-                  //  L'ACCUEIL : sur les résultats, la rangée entière
-                  //  est retirée du monde étroit, et un bouton que
-                  //  personne ne peut voir n'a rien à faire dans le
-                  //  document.
-                  rangeeMobile={accueilNu}
-                />
+                <>
+                  {/*  ██ §1 (nº 857) — SUR L'ACCUEIL, LE VA-ET-VIENT TATTOO /
+                       FLASH À LA PLACE DE LA PILULE ██
+                       Il ne vit qu'au doigt (`hidden mobile:block`, chez
+                       lui) ; le moteur qui le suit garde le champ du web
+                       et la page plein écran du doigt, et n'a plus de
+                       pilule à rendre — sa propriété « rangée mobile »
+                       (la pilule sur l'accueil seulement, nº 846-§2) est
+                       partie avec elle. */}
+                  {accueilNu && <VaEtVientNature />}
+                  <MoteurTatouage criteres={valeur} surChangement={chercher} />
+                </>
               )}
             </div>
           </div>
@@ -1056,9 +1078,10 @@ export function EnTeteTatouage({
           * magasin partagé (recherche-mobile) — il n'y avait plus
           * d'écran pour l'entendre.
           * IL EST DONC REMONTÉ ICI, dans un hôte INVISIBLE : ce n'est
-          * pas un second moteur, c'est LE moteur, sans sa rangée
-          * (`rangeeMobile={false}`) et sans son encadré (le parent est
-          * `hidden`) — rien qu'un porteur pour la page en portail.
+          * pas un second moteur, c'est LE moteur, sans son encadré (le
+          * parent est `hidden`) — rien qu'un porteur pour la page en
+          * portail. (Sa rangée du doigt, qu'on lui retirait ici par une
+          * propriété, n'existe plus du tout depuis la nº 857.)
           */}
         {rangeeLibre && (
           <div hidden data-hote-recherche="">
@@ -1066,7 +1089,6 @@ export function EnTeteTatouage({
               criteres={valeur}
               surChangement={chercher}
               id="moteur-hote-recherche"
-              rangeeMobile={false}
             />
           </div>
         )}
@@ -1107,8 +1129,8 @@ export function EnTeteTatouage({
                la barre de TOUTES les pages sauf celles à RANGÉE LIBRE
                (« Ma sélection », où le va-et-vient le remplace) : le
                `lg:hidden` d'origine tombe donc quand `rangeeLibre` —
-               même bouton, même condition d'opacité (`loupeVisible`,
-               vraie hors accueil), même action : `ouvrirRecherche`
+               même bouton, même règle d'affichage (toujours là depuis
+               la nº 857), même action : `ouvrirRecherche`
                passe par le moteur hôte caché (`data-hote-recherche`,
                plus haut), rendu précisément quand la rangée est libre.
                Partout ailleurs au web, rien ne change.
@@ -1129,9 +1151,10 @@ export function EnTeteTatouage({
                   d'historique (nº 332-§1), le retour ramène en un
                   appui (nº 332-§4), et le clic du milieu ouvre
                   l'accueil dans un onglet.
-               LA RÈGLE D'AFFICHAGE NE BOUGE PAS (`loupeVisible` et le
-               `lg:hidden` conditionnel de la nº 465), la boîte de
-               40 px et le glyphe non plus : seul le rôle change. */}
+               LA RÈGLE D'AFFICHAGE NE BOUGE PAS (le `lg:hidden`
+               conditionnel de la nº 465 ; la loupe est toujours là
+               depuis la nº 857), la boîte de 40 px et le glyphe non
+               plus : seul le rôle change. */}
           {/*  ██ §2 (nº 468) — L'ACCUEIL ARRIVE EN HAUT : LE PROCÉDÉ DU
                LOGO, À LA LETTRE ██
                LA CAUSE DU BAS DE PAGE, nommée : le lien posé à la
@@ -1195,8 +1218,6 @@ export function EnTeteTatouage({
             //  se peint en rond gris (le squelette de la zone,
             //  globals.css) ; sa règle d'opacité reste la sienne.
             data-loupe-barre=""
-            aria-hidden={!loupeVisible || undefined}
-            tabIndex={loupeVisible ? 0 : -1}
             /*  §6 (nº 821) — LA CIBLE VIENT DE L'ÉCRITURE UNIQUE : 46
                 au doigt (le standard tactile), 40 au web, inchangé.
                 L'attribut de style qui la posait est parti — il ne
@@ -1206,9 +1227,9 @@ export function EnTeteTatouage({
                        text-sombre-texte
                        focus-visible:outline-2 focus-visible:outline-offset-2
                        focus-visible:outline-primaire ${
-                         loupeVisible
-                           ? "opacity-100"
-                           : "opacity-0 pointer-events-none"
+                         accueilNu
+                           ? "mobile:opacity-100 not-mobile:invisible"
+                           : "opacity-100"
                        }`}
           >
             <IconeLoupe taille={28} classe={DESSIN_GESTE_BARRE} />

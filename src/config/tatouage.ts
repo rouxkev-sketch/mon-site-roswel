@@ -2130,6 +2130,16 @@ export const TEXTES_TATOUAGE = {
    * demandé.
    */
   invitePilule: "Find your tattoo style…",
+  /**
+   * ██ §1 (nº 857) — LA SECONDE POSITION DU VA-ET-VIENT DE L'ACCUEIL ██
+   * Le champ de recherche de l'accueil du doigt DISPARAÎT ; à sa place,
+   * un va-et-vient à deux positions — « Find your tattoo style… » (la
+   * clé ci-dessus, qui garde son rôle) et celle-ci, « Find your Flash
+   * style… », posée face à un éclair. Les mots sont ceux du
+   * propriétaire, capitale comprise : « Flash » est le nom de la
+   * catégorie (CATEGORIES_EXPLORER), pas un adjectif.
+   */
+  inviteFlash: "Find your Flash style…",
   /*  ██ §1 (nº 507) — `sousTitreMosaique` EST SUPPRIMÉE ██
       « Le portfolio des tatouages et des tatoueurs » ne s'écrit plus
       sous le titre : le propriétaire ne veut qu'UNE ligne au-dessus de
@@ -2658,3 +2668,16 @@ export const ARRONDI_ETIQUETTE = "rounded-lg";
  */
 export const TRAIT_SEPARATION = "border-sombre-trait";
 export const TRAIT_SEPARATION_FOND = "bg-sombre-trait";
+
+/**
+ * ██ §2 ET §5 (nº 857) — LA LIGNE QUI VA BORD À BORD, AU DOIGT ██
+ * Le débord négatif qui rend à une ligne de séparation les marges de
+ * la barre (16 px, 24 dès 640), pour qu'elle coure d'un bord de l'écran
+ * à l'autre — l'écriture de la nº 461, posée sur la ligne du va-et-vient
+ * de « Ma sélection ». Le va-et-vient de l'accueil (nº 857) trace la
+ * même ligne sous lui : une seule écriture pour les deux (piège nº 378).
+ * ⚠️ POSÉE SUR LA LIGNE, JAMAIS SUR UN CONTENEUR — et le débord meurt
+ * pile au bord de l'écran (le rognage de la rangée, nº 462) : aucun
+ * défilement horizontal possible.
+ */
+export const LIGNE_BORD_A_BORD_DOIGT = "mobile:-inset-x-4 sm:mobile:-inset-x-6";

@@ -161,7 +161,9 @@ for (const mode of ["doigt", "web"]) {
     if (mode === "doigt") {
       verif("AUCUN titre ni sous-titre à l'écran : le bloc est retiré de l'affichage",
         vu.montre === false && vu.affichage === "none", `montré ${vu.montre} · ${vu.affichage}`);
-      verif("le champ reprend l'invite de l'accueil",
+      //  nº 857 — le champ est devenu le va-et-vient Tattoo / Flash : sa
+      //  position active porte la même invite, au même endroit.
+      verif("la position active du va-et-vient porte l'invite de l'accueil (nº 857)",
         vu.pilule === "Find your tattoo style…", vu.pilule);
       verif("les cartes commencent sous la barre, sans bloc de tête",
         vu.premiereCarte !== null && vu.premiereCarte < 200, `${vu.premiereCarte} px`);

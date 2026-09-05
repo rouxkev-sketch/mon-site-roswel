@@ -551,7 +551,10 @@ export function CorpsSquelette({
       ) : (
         /*  « Ma sélection » n'a ni titre ni sous-titre (nº 708) : la
             grille commence après le seul espacement du rythme. */
-        <div className="pt-6 sm:pt-8 mobile:pt-3" />
+        /*  §5 (nº 857) — AU DOIGT, PLUS AUCUN AIR : la vraie page n'en a
+            plus sous la ligne du va-et-vient (`data-air-sous-barre`,
+            PageFavoris). Le squelette promet la même chose — zéro. */
+        <div className="pt-6 sm:pt-8 mobile:pt-0" />
       )}
       {/*  §1 (nº 722) — DES RANGÉES ENTIÈRES, À CHAQUE LARGEUR. La
            nº 710 avait tranché HUIT cases ; le propriétaire RE-TRANCHE :

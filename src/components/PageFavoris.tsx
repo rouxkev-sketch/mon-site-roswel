@@ -656,7 +656,18 @@ export function PageFavoris({
            de tête des pages web portaient (LigneResultats), le jeton
            d'air des têtes de page, rien d'inventé. Posé sur CE
            séparateur, jamais sur un conteneur partagé. */}
-      <div aria-hidden data-air-sous-barre className="h-3.5 lg:h-8" />
+      {/*  ██ §5 (nº 857) — AU DOIGT, AUCUNE MARGE SOUS LA LIGNE DU
+           VA-ET-VIENT ██
+           Les 14 px de la nº 445 s'en vont : le contenu commence PILE
+           sous la ligne de séparation de la barre (fixe, désormais), et
+           défile dessous. Le web garde son air, valeur par valeur — 14
+           sous 1024, 32 au-delà — écrit par l'APPAREIL (règle nº 60),
+           et une seule hauteur par écran (piège nº 389). */}
+      <div
+        aria-hidden
+        data-air-sous-barre
+        className="mobile:h-0 not-mobile:h-3.5 not-mobile:lg:h-8"
+      />
 
       {/* ---------- LES PHOTOS GARDÉES ----------
            §2 (nº 247) — LES DEUX MENUS SONT EXCLUSIFS : cette section

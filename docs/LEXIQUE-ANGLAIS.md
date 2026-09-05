@@ -475,3 +475,24 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > filtres « Artist » (`FILTRE_MODE_ACTIVITE`, config/tatouage) — ce
 > n'est pas le type d'un portfolio mais l'en-tête d'une section du
 > moteur (« comment travaille l'artiste qu'on cherche »).
+
+---
+
+## Passe nº 857 — le va-et-vient Tattoo / Flash de l'accueil du doigt
+
+| avant | après | où |
+| --- | --- | --- |
+| **Find your tattoo style…** (le champ de recherche de l'accueil, smartphone) | **Find your tattoo style…** — la première position du va-et-vient, face à une goutte d'encre | `TEXTES_TATOUAGE.invitePilule` — la clé garde son nom et sa chaîne ; elle n'est plus l'invite d'un champ mais le nom d'une position |
+| — | **Find your Flash style…** — la seconde position, face à un éclair | `TEXTES_TATOUAGE.inviteFlash` (config/tatouage), lue par `VaEtVientNature` |
+| — | **Tattoo or flash** (nom du groupe, lecteurs d'écran) | `VaEtVientNature` — le même nom que les deux onglets de la page de recherche (`PageRechercheMobile`), puisque c'est le même choix |
+
+> **Les mots sont ceux du propriétaire, capitale comprise** : « Flash »
+> est le nom de la catégorie (`CATEGORIES_EXPLORER`), pas un adjectif.
+> La position inactive ne montre que son icône ; son texte entier reste
+> son nom accessible (`aria-label`) — l'œil voit une icône, le lecteur
+> d'écran entend la phrase.
+>
+> **Ce qui n'a PAS changé** : le champ de recherche du web garde son
+> écriture ; la page de recherche plein écran garde ses onglets
+> « Tattoo | Flash » ; les cartes de style disent toujours « Réalisme •
+> 12 portfolios », pour les flashs comme pour les tattoos.

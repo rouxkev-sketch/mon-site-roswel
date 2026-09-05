@@ -3,9 +3,10 @@ import { libelleStyle, styleConnu } from "@/config/tatouage";
 import {
   cleDEnsemble,
   galerieOrdonnee,
-  NATURE_PAR_DEFAUT,
+  NATURES_PHOTO,
   natureConnue,
   type PhotoTatoueur,
+  type SlugNature,
 } from "@/lib/photos-tatoueur";
 import {
   ageEnJours,
@@ -180,7 +181,32 @@ type GalerieDuStyle = {
   note: number;
 };
 
-export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
+/** Les deux catalogues, l'un par nature — et jamais `undefined` : une
+    nature sans photo a une liste vide. */
+export type CataloguesDesStyles = Record<SlugNature, StyleDuCatalogue[]>;
+
+const CATALOGUES_VIDES: CataloguesDesStyles = { tatouage: [], flash: [] };
+
+/**
+ * ██ §4 (nº 857) — UN CATALOGUE PAR NATURE, EN UNE SEULE LECTURE ██
+ * ------------------------------------------------------------------
+ * L'accueil du doigt montre désormais les cartes de style des TATTOOS ou
+ * des FLASHS, au choix du va-et-vient (VaEtVientNature) — et l'accueil
+ * étant prérendu (nº 357), les deux listes doivent être écrites dans la
+ * page. Cette fonction rendait le seul catalogue des réalisations ; elle
+ * rend maintenant LES DEUX, et ce que la base coûte n'a pas changé : les
+ * fiches, les photos, la popularité et les cœurs sont lus UNE fois, puis
+ * chaque nature bâtit ses entrées sur cette même matière (`duneNature`,
+ * plus bas). Rien n'est lu deux fois — c'est la règle de l'accueil
+ * (« aucune lecture inutile », _accueil/rendu).
+ * ⚠️ LES ENTRÉES D'UNE NATURE NE VOIENT QUE SES PHOTOS : les galeries,
+ * les comptes, la photo retenue et les cœurs d'un style se calculent
+ * sur les photos de CETTE nature — un flash ne pèse jamais dans une
+ * carte « tattoo », et réciproquement. C'est ce que l'acquis nº 619
+ * faisait pour la seule nature par défaut (« les flashs sont écartés au
+ * plus tôt ») ; chaque nature écarte désormais l'autre.
+ */
+export async function cataloguesDesStyles(): Promise<CataloguesDesStyles> {
   try {
     const supabase = creerClientSupabaseAnonyme();
 
@@ -196,7 +222,7 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
     for (const ligne of fiches) {
       slugParFiche.set(ligne.id, ligne.slug);
     }
-    if (slugParFiche.size === 0) return [];
+    if (slugParFiche.size === 0) return CATALOGUES_VIDES;
 
     /* ---- 2. LEURS PHOTOS ---- */
     const { data: brutes } = await supabase
@@ -204,87 +230,25 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       .select(
         "id, tatoueur_id, style, rendu, nature, url, miniature, ordre, cree_le"
       );
-    const photos = ((brutes ?? []) as unknown as LignePhoto[]).filter(
+    const toutesLesPhotos = ((brutes ?? []) as unknown as LignePhoto[]).filter(
       (photo) =>
         slugParFiche.has(photo.tatoueur_id) &&
-        //  LES FLASHS SONT ÉCARTÉS ICI, AU PLUS TÔT (acquis nº 619) :
-        //  ni le compte, ni les galeries, ni le choix de la photo ne
-        //  doivent les voir.
-        natureConnue(photo.nature) === NATURE_PAR_DEFAUT &&
+        //  §4 (nº 857) — TOUTES LES NATURES PASSENT ICI : c'est chaque
+        //  nature qui, plus bas (`duneNature`), ne garde que les siennes
+        //  — l'acquis nº 619 (« les flashs écartés au plus tôt ») vaut
+        //  toujours, nature par nature.
         //  UN STYLE QUE LE SITE NE CONNAÎT PAS n'a ni nom ni page de
         //  recherche : il n'a rien à faire dans un catalogue.
         //  `styleConnu` est l'écriture unique de cette question.
         Boolean(styleConnu(photo.style))
     );
-    if (photos.length === 0) return [];
-
-    /* ---- 3. LE COMPTE EST CELUI DES GALERIES (§1 nº 624) ----
-       IL N'Y A PLUS DE DÉNOMBREMENT SÉPARÉ : le compte d'un style EST
-       le nombre de ses galeries, c'est-à-dire `galeriesParStyle` plus
-       bas. La nº 620 comptait ici des `tatoueur_id` distincts — le
-       chiffre du menu — et il ne disait pas la même chose que la
-       mosaïque, qui affiche des carrousels (nº 279) : un artiste ayant
-       deux galeries dans un style annonçait « 1 » et montrait deux
-       cartes. On compte désormais ce qui s'affiche. */
-
-    /* ---- 4. LES GALERIES, ET LEUR PREMIÈRE PHOTO ----
-       Une galerie, c'est le trio style + catégorie + rendu d'UNE fiche
-       (`cleDEnsemble`, la définition nº 278-§0). Sa première photo est
-       celle que l'artiste a mise en tête — d'où `galerieOrdonnee`, le
-       tri par `ordre` du formulaire, et jamais un tri à nous. */
-    const parGalerie = new Map<string, PhotoTatoueur[]>();
-    for (const photo of photos) {
-      const cle = `${photo.tatoueur_id}·${cleDEnsemble(photo)}`;
-      const liste = parGalerie.get(cle);
-      const entree: PhotoTatoueur = {
-        id: photo.id,
-        style: photo.style,
-        rendu: photo.rendu,
-        nature: photo.nature,
-        url: photo.url,
-        miniature: photo.miniature,
-        ordre: photo.ordre ?? 0,
-        cree_le: photo.cree_le,
-      };
-      if (liste) liste.push(entree);
-      else parGalerie.set(cle, [entree]);
-    }
-
-    /* ---- 5. LA NOTE DE CHAQUE GALERIE — le départage à cœurs égaux ---- */
+    if (toutesLesPhotos.length === 0) return CATALOGUES_VIDES;
+    /*  §4 (nº 857) — LA MATIÈRE COMMUNE AUX DEUX NATURES — la popularité
+        (étape 5) et les cœurs (étape 6) — est lue ICI, une fois. Les
+        étapes gardent leurs numéros et leurs notes plus bas, dans
+        `duneNature`, où chaque nature bâtit ses entrées. */
     const popularite = await lirePopularite();
     const jour = jourCourant();
-    const galeriesParStyle = new Map<string, GalerieDuStyle[]>();
-    for (const [cle, membres] of parGalerie) {
-      const ordonnees = galerieOrdonnee(membres);
-      const premiere = ordonnees[0];
-      if (!premiere) continue;
-      const tatoueurId = cle.slice(0, cle.indexOf("·"));
-      const tatoueurSlug = slugParFiche.get(tatoueurId) ?? "";
-      //  L'ÂGE DE LA GALERIE : celui de sa photo LA PLUS RÉCENTE — la
-      //  règle de `carrouselsDeLaFiche`, mot pour mot.
-      const derniere = membres
-        .map((photo) => photo.cree_le ?? null)
-        .filter((date): date is string => Boolean(date))
-        .sort()
-        .at(-1);
-      const galerie: GalerieDuStyle = {
-        premiere,
-        tatoueurSlug,
-        note: scoreDuCarrousel({
-          popularite: popularite.get(tatoueurSlug) ?? 0,
-          ageJours: ageEnJours(derniere, jour),
-          //  AUCUNE LOCALITÉ N'EST CHERCHÉE ICI : la proximité ne joue
-          //  pas, et le facteur vaut 1 (voir `facteurDeProximite`).
-          distanceKm: null,
-          personnalisation: 0,
-          photos: membres.length,
-        }),
-      };
-      const liste = galeriesParStyle.get(premiere.style);
-      if (liste) liste.push(galerie);
-      else galeriesParStyle.set(premiere.style, [galerie]);
-    }
-
     /* ---- 6. LES CŒURS DE TOUTES LES PHOTOS ----
        ⚠️ UNE VUE, PAS LA TABLE : `favoris_photos` est privée (RLS de la
        migration nº 53) ; `coeurs_par_photo` n'en rend qu'un compte, qui
@@ -336,6 +300,81 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
       }>) {
         coeursParPhoto.set(ligne.photo_id, Number(ligne.coeurs ?? 0));
       }
+    }
+
+
+    /*  ██ §4 (nº 857) — CE QUI SUIT SE JOUE UNE FOIS PAR NATURE ██
+        Sur la matière lue plus haut, chaque nature garde ses photos et
+        bâtit ses entrées : les étapes 3 à 7, inchangées, dans une
+        fonction. */
+    const duneNature = (nature: SlugNature): StyleDuCatalogue[] => {
+    const photos = toutesLesPhotos.filter(
+      (photo) => natureConnue(photo.nature) === nature
+    );
+    if (photos.length === 0) return [];
+    /* ---- 3. LE COMPTE EST CELUI DES GALERIES (§1 nº 624) ----
+       IL N'Y A PLUS DE DÉNOMBREMENT SÉPARÉ : le compte d'un style EST
+       le nombre de ses galeries, c'est-à-dire `galeriesParStyle` plus
+       bas. La nº 620 comptait ici des `tatoueur_id` distincts — le
+       chiffre du menu — et il ne disait pas la même chose que la
+       mosaïque, qui affiche des carrousels (nº 279) : un artiste ayant
+       deux galeries dans un style annonçait « 1 » et montrait deux
+       cartes. On compte désormais ce qui s'affiche. */
+
+    /* ---- 4. LES GALERIES, ET LEUR PREMIÈRE PHOTO ----
+       Une galerie, c'est le trio style + catégorie + rendu d'UNE fiche
+       (`cleDEnsemble`, la définition nº 278-§0). Sa première photo est
+       celle que l'artiste a mise en tête — d'où `galerieOrdonnee`, le
+       tri par `ordre` du formulaire, et jamais un tri à nous. */
+    const parGalerie = new Map<string, PhotoTatoueur[]>();
+    for (const photo of photos) {
+      const cle = `${photo.tatoueur_id}·${cleDEnsemble(photo)}`;
+      const liste = parGalerie.get(cle);
+      const entree: PhotoTatoueur = {
+        id: photo.id,
+        style: photo.style,
+        rendu: photo.rendu,
+        nature: photo.nature,
+        url: photo.url,
+        miniature: photo.miniature,
+        ordre: photo.ordre ?? 0,
+        cree_le: photo.cree_le,
+      };
+      if (liste) liste.push(entree);
+      else parGalerie.set(cle, [entree]);
+    }
+
+    /* ---- 5. LA NOTE DE CHAQUE GALERIE — le départage à cœurs égaux ---- */
+    const galeriesParStyle = new Map<string, GalerieDuStyle[]>();
+    for (const [cle, membres] of parGalerie) {
+      const ordonnees = galerieOrdonnee(membres);
+      const premiere = ordonnees[0];
+      if (!premiere) continue;
+      const tatoueurId = cle.slice(0, cle.indexOf("·"));
+      const tatoueurSlug = slugParFiche.get(tatoueurId) ?? "";
+      //  L'ÂGE DE LA GALERIE : celui de sa photo LA PLUS RÉCENTE — la
+      //  règle de `carrouselsDeLaFiche`, mot pour mot.
+      const derniere = membres
+        .map((photo) => photo.cree_le ?? null)
+        .filter((date): date is string => Boolean(date))
+        .sort()
+        .at(-1);
+      const galerie: GalerieDuStyle = {
+        premiere,
+        tatoueurSlug,
+        note: scoreDuCarrousel({
+          popularite: popularite.get(tatoueurSlug) ?? 0,
+          ageJours: ageEnJours(derniere, jour),
+          //  AUCUNE LOCALITÉ N'EST CHERCHÉE ICI : la proximité ne joue
+          //  pas, et le facteur vaut 1 (voir `facteurDeProximite`).
+          distanceKm: null,
+          personnalisation: 0,
+          photos: membres.length,
+        }),
+      };
+      const liste = galeriesParStyle.get(premiere.style);
+      if (liste) liste.push(galerie);
+      else galeriesParStyle.set(premiere.style, [galerie]);
     }
 
     /* ---- 6 bis. LE TOTAL DES FAVORIS PAR STYLE (§1 nº 634) ----
@@ -404,9 +443,13 @@ export async function catalogueDesStyles(): Promise<StyleDuCatalogue[]> {
         b.coeursDuStyle - a.coeursDuStyle ||
         a.label.localeCompare(b.label)
     );
+    };
+    return Object.fromEntries(
+      NATURES_PHOTO.map((n) => [n.slug, duneNature(n.slug)])
+    ) as CataloguesDesStyles;
   } catch {
     //  Injoignable : pas de catalogue, et rien ne casse. La page qui
     //  l'appellera saura n'afficher aucune carte plutôt qu'une erreur.
-    return [];
+    return CATALOGUES_VIDES;
   }
 }

@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 //  la lecture serveur (`import type` : il s'efface à la compilation,
 //  rien du module de lecture n'entre dans le navigateur).
 import { GrilleStyles } from "@/components/CarteStyle";
+import { useNatureAccueil } from "@/lib/nature-accueil";
 import type { StyleDuCatalogue } from "@/lib/catalogue-styles";
 import {
   LARGEUR_SITE,
@@ -340,6 +341,7 @@ function LibelleVoirPlus() {
 export function IndexTatoueurs({
   premiers,
   catalogue = [],
+  catalogueFlash = [],
   criteresInitiaux,
   message,
   total,
@@ -360,6 +362,17 @@ export function IndexTatoueurs({
       n'a à changer, et l'absence de catalogue vaut « la mosaïque,
       comme toujours ». */
   catalogue?: StyleDuCatalogue[];
+  /** ██ §4 (nº 857) — LE CATALOGUE DES FLASHS, à côté de celui des
+      tattoos ██ L'accueil du doigt les montre l'un OU l'autre, au choix
+      du va-et-vient de la barre (VaEtVientNature) : même présentation,
+      mêmes cartes, même compte — sur les flashs. Les deux sont écrits
+      dans la page prérendue (une seule lecture, lib/catalogue-styles),
+      et c'est le magasin `nature-accueil` qui dit lequel montrer.
+      ⚠️ CE N'EST PAS LUI QUI DÉCIDE SI L'ON EST « SUR LE CATALOGUE » :
+      cette garde reste celle des tattoos — l'accueil au repos est
+      l'accueil au repos, quelle que soit la position. Vide par défaut,
+      comme son voisin : aucun appelant n'a à changer. */
+  catalogueFlash?: StyleDuCatalogue[];
   criteresInitiaux?: Partial<CritèresTatouage>;
   /** §4 (nº 278) — LE DRAPEAU `demonstration` NE VIENT PLUS JUSQU'ICI :
       il ne servait qu'à conditionner l'affichage du message, et ce
@@ -1076,6 +1089,13 @@ export function IndexTatoueurs({
     !affiches.lieu &&
     affiches.exclure.length === 0;
   const surLeCatalogue = catalogue.length > 0 && sansRecherche;
+  /*  ██ §4 (nº 857) — LA NATURE MONTRÉE, ET LE CATALOGUE QUI VA AVEC ██
+      Lue dans le magasin partagé avec le va-et-vient de la barre. Au
+      serveur et pendant l'hydratation, c'est toujours « tattoo » (le
+      prérendu) ; le navigateur relit ensuite sa session. Au web, le
+      va-et-vient n'existe pas : c'est toujours « tattoo ». */
+  const natureAccueil = useNatureAccueil();
+  const catalogueActif = natureAccueil === "flash" ? catalogueFlash : catalogue;
 
   /*  §1 (nº 480) — `aucuneRecherche` A ÉTÉ RETIRÉE, avec le gros
       relevé qui la documentait (nº 395). Elle ne servait qu'à une
@@ -1234,7 +1254,7 @@ export function IndexTatoueurs({
                valeur reste EXACTEMENT `total` : cette ligne ne change
                rien pour les pages de résultats. */
           const totalAffiche = surLeCatalogue
-            ? catalogue.reduce((somme, style) => somme + style.portfolios, 0)
+            ? catalogueActif.reduce((somme, style) => somme + style.portfolios, 0)
             : total;
           const compte = `${totalAffiche} portfolio${totalAffiche > 1 ? "s" : ""}`;
           /*  ██ §3 (nº 846) — ET LE COMPTE DES STYLES, À CÔTÉ ██
@@ -1254,8 +1274,8 @@ export function IndexTatoueurs({
               « 1 style ». */
           const comptes = [
             totalAffiche > 0 ? compte : "",
-            catalogue.length > 0
-              ? `${catalogue.length} style${catalogue.length > 1 ? "s" : ""}`
+            catalogueActif.length > 0
+              ? `${catalogueActif.length} style${catalogueActif.length > 1 ? "s" : ""}`
               : "",
           ]
             .filter(Boolean)
@@ -1510,7 +1530,10 @@ export function IndexTatoueurs({
              la page suivante ne reçoit plus de catalogue. Rien ne
              saute au chargement, rien ne se démonte en cours de
              route. */}
-        {surLeCatalogue && <GrilleStyles styles={catalogue} />}
+        {/*  §4 (nº 857) — LA GRILLE DE LA NATURE MONTRÉE : les cartes des
+             tattoos ou celles des flashs, et chaque carte mène à la
+             recherche de SA nature (`nature`, chez CarteStyle). */}
+        {surLeCatalogue && <GrilleStyles styles={catalogueActif} nature={natureAccueil} />}
         {
           // La grille porte aussi la FENÊTRE de fiche (grand écran).
           //  ⚠️ ELLE N'EST JAMAIS DÉMONTÉE, ET C'EST LE POINT (nº 171) :
