@@ -215,14 +215,16 @@ const etat = (page) => page.evaluate(() => ({
         couleur: capsule ? getComputedStyle(capsule).color : null,
         fond: capsule ? getComputedStyle(capsule).backgroundColor : null }; };
     const bio = [...document.querySelectorAll("p")].find((p) => /6 artistes/.test(p.textContent));
-    const instagram = [...document.querySelectorAll("a")].find((a) => /instagram\\.com/.test(a.href));
-    const site = [...document.querySelectorAll("a")].find((a) => /exemple\\.test/.test(a.href));
+    //  nº 869 — les deux liens vivent dans la rangée d'actions : c'est
+    //  le haut de la RANGÉE qu'on relève pour l'ordre.
+    const rangee = document.querySelector("[data-rangee-actions]");
+    const instagram = rangee && [...rangee.querySelectorAll("a")].find((a) => /instagram\\.com/.test(a.href)) ? rangee : null;
+    const site = rangee && [...rangee.querySelectorAll("a")].find((a) => /exemple\\.test/.test(a.href)) ? rangee : null;
     const adresse = [...document.querySelectorAll("a, p, span")].reverse().find((n) => /Lyon/.test(n.textContent) && n.children.length === 0);
     return { instagram: haut(instagram), site: haut(site), bio: haut(bio),
       styles: ligne("data-styles-fiche"), pratiques: ligne("data-pratique-fiche"), adresse: haut(adresse) }; }`;
-  //  Les deux dessins du site, lus à la source (Icones / IconeReseau).
-  const GOUTTE = "M12 3.5c3.2 4.1 6 7.4 6 10.9a6 6 0 0 1-12 0c0-3.5 2.8-6.8 6-10.9Z";
-  const ETOILE = "M12 3.4 13.93 9.34 20.18 9.34 15.12 13.02 17.06 18.96 12 15.29 6.94 18.96 8.88 13.02 3.82 9.34 10.07 9.34 Z";
+  //  ⛔ nº 869-§1 — les deux dessins (goutte, étoile) ne sont plus en
+  //  tête des lignes : on vérifie leur ABSENCE.
   for (const mode of ["doigt", "web"]) {
     const { nav, page } = await ouvrir(mode);
     try {
@@ -231,15 +233,18 @@ const etat = (page) => page.evaluate(() => ({
       await page.waitForSelector("[data-styles-fiche]", { timeout: 20000 });
       await page.waitForTimeout(1500);
       const v = await page.evaluate(new Function("return " + LIRE)());
-      verif("§5 — l'ordre : les liens, le site, la bio, les styles, les techniques, l'adresse",
+      /*  ⛔ REPRIS PAR LA nº 869 : les liens (Instagram, le site) sont
+          devenus la RANGÉE D'ACTIONS sous le bloc du nom, et les lignes
+          de badges n'ont plus d'icône (§1). L'ordre se lit donc à
+          partir de la rangée, et les deux dessins ne sont plus là — le
+          banc 869 mesure le nouvel en-tête ; celui-ci garde le gris. */
+      verif("§5 — l'ordre (nº 869) : la rangée d'actions (Instagram, le site), la bio, les styles, les techniques, l'adresse",
         v.instagram !== null && v.site !== null && v.bio !== null && v.adresse !== null &&
-        v.instagram < v.site && v.site < v.bio && v.bio < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
+        v.instagram === v.site && v.site < v.bio && v.bio < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
         JSON.stringify({ instagram: v.instagram, site: v.site, bio: v.bio, styles: v.styles.y, techniques: v.pratiques.y, adresse: v.adresse }));
-      verif("§6 — la GOUTTE ouvre les styles", String(v.styles.chemin).replace(/\s+/g, " ").trim() === GOUTTE, String(v.styles.chemin).slice(0, 60));
-      verif("§6 — l'ÉTOILE ouvre les techniques", String(v.pratiques.chemin).replace(/\s+/g, " ").trim() === ETOILE, String(v.pratiques.chemin).slice(0, 60));
-      verif("§6 — même taille (20) et même trait (1,8) pour les deux",
-        v.styles.taille === 20 && v.pratiques.taille === 20 && v.styles.trait === "1.8" && v.pratiques.trait === "1.8",
-        `${v.styles.taille}/${v.styles.trait} · ${v.pratiques.taille}/${v.pratiques.trait}`);
+      verif("§6 (repris nº 869-§1) — plus aucun dessin en tête des deux lignes",
+        v.styles.chemin === null && v.pratiques.chemin === null && v.styles.taille === null && v.pratiques.taille === null,
+        `${String(v.styles.chemin).slice(0, 40)} · ${String(v.pratiques.chemin).slice(0, 40)}`);
       verif("§3 — les badges s'écrivent dans le GRIS des sous-titres, sur les deux lignes",
         v.styles.couleur === GRIS && v.pratiques.couleur === GRIS, `${v.styles.couleur} · ${v.pratiques.couleur}`);
       verif("… et le contour de la nº 867 ne bouge pas (aucun fond)",

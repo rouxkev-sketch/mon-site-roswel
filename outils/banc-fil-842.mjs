@@ -58,7 +58,10 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     const badge = page.locator('button[aria-label*="ollow Banc 842"]').first();
     const etat = () => page.evaluate(() => {
       const b = [...document.querySelectorAll("button")].find((x) => /ollow Banc 842/.test(x.getAttribute("aria-label") ?? ""));
-      const s = getComputedStyle(b);
+      //  nº 869-§3 — le bouton est une cible de la rangée d'actions : le
+      //  fond qui change avec l'état est celui du CARRÉ (son premier
+      //  enfant), le bouton lui-même n'en a pas.
+      const s = getComputedStyle(b.firstElementChild);
       return { libelle: b.getAttribute("aria-label"), presse: b.getAttribute("aria-pressed"), fond: s.backgroundColor };
     });
     const avant = await etat();

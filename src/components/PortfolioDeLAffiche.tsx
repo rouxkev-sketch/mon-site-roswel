@@ -134,14 +134,17 @@ function renduDe(photo: PhotoGalerie): string {
  *    deux pixels sous les onglets et un seul ailleurs.
  *
  * OÙ TOMBE LE ROSE (§3) : le bloc d'onglets mesure 44 + 3 = 47 px et
- * c'est le PLUS HAUT de la rangée (« Suivre » fait 30). Il occupe donc
+ * c'est le SEUL contenu de la rangée depuis la nº 869 (le plus haut
+ * avant elle, « Suivre » faisait 30). Il occupe donc
  * toute la boîte de contenu, et son trait rose — posé sur son bord
  * bas — se retrouve COLLÉ au trait fin de la rangée, qui commence
  * exactement là. Aucun calcul, aucune valeur : une identité de boîtes.
  *
- * ⚠️ « SUIVRE » N'EST PAS TOUCHÉ : il n'est pas rendu ici, c'est la
- * rangée de ContenuFiche qui le pose à droite. Rien de ce fichier ne
- * le concerne.
+ * ⚠️ « SUIVRE » N'EST PAS TOUCHÉ : il n'est pas rendu ici. Il était
+ * posé à droite par la rangée de ContenuFiche ; depuis la nº 869-§3 il
+ * vit dans la RANGÉE D'ACTIONS du profil, et ce va-et-vient est seul
+ * dans la sienne, sur toute la largeur (§4). Rien de ce fichier ne le
+ * concerne.
  */
 export function SelecteurOngletAffiche({
   valeur,
@@ -158,13 +161,19 @@ export function SelecteurOngletAffiche({
       //  le composant partagé, lui, parle en chaînes.
       surChoix={(cle) => surChoix(cle as OngletAffiche)}
       ariaLabel="Profile or portfolio"
-      /*  §5 (nº 852) — L'AIR LATÉRAL DESCEND D'UN CRAN AU WEB (20 → 16)
-          et lui seul : c'est l'un des trois écarts rendus pour que le
-          badge « Suivre » cesse de déborder la marge — le compte exact
-          est écrit chez son porteur (ContenuFiche). Le DOIGT garde ses
-          20 px : sa rangée ne déborde pas, et une cible tactile ne se
-          rétrécit pas sans raison. */
-      classeOnglet="px-5 not-mobile:px-4 min-h-[44px]"
+      /*  ██ §4 (nº 869) — TOUTE LA LARGEUR, CHAQUE ONGLET LA MOITIÉ ██
+          « Follow » et « Share » ont quitté la rangée pour la rangée
+          d'actions du profil (§3) : le va-et-vient y est seul, et il la
+          prend entière — comme celui de « Ma sélection » (MenusSelection),
+          le MÊME composant avec la même lecture : les colonnes égales de
+          la grille, le mot centré dans la sienne, aucune icône. L'air
+          latéral de la nº 382 (20 px, 16 au web depuis la nº 852) n'a
+          plus d'objet quand l'onglet fait une demi-largeur : il tombe au
+          rembourrage de la pleine largeur, celui de « Ma sélection ».
+          ⚠️ LA CIBLE TACTILE NE RÉTRÉCIT PAS, elle grandit : 44 px de
+          haut, inchangés, sur la moitié de la colonne au lieu d'un mot
+          et ses vingt pixels. */
+      classeOnglet="px-1 min-h-[44px]"
       avecLigneGrise={false}
     />
   );

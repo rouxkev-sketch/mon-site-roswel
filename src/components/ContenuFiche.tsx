@@ -25,24 +25,22 @@ import {
 //  §2 (nº 458) — la ville lisible partout, pour le partage du profil.
 import { villeAffichee } from "@/lib/adresse";
 import { BoutonHorsLigne } from "@/components/BoutonHorsLigne";
-//  §2 (nº 458) — le partage du PROFIL, à gauche de « Suivre » : le
-//  MÊME bouton que partout (l'action existante), en habillage
-//  « icone » — la flèche nue, l'écriture unique des deux emplacements
-//  de la passe.
+//  §3 (nº 869) — le partage du PROFIL est UNE DES QUATRE cibles de la
+//  rangée d'actions : le MÊME bouton que partout (l'action existante),
+//  en habillage « rangee » — le carré et le mot « Share » dessous.
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
-import {
-  IconeCalendrier,
-  IconeDuLien,
-  /*  §6 (nº 868) — L'ÉTOILE OUVRE DÉSORMAIS LA LIGNE DES TECHNIQUES
-      (elle ouvrait celle des styles) ; le DIAMANT que la nº 489 avait
-      mis là n'a plus d'emploi et a quitté le dépôt avec cette passe. */
-  IconeEtoile,
-} from "@/components/IconeReseau";
+//  §3 (nº 869) — l'icône d'Instagram, celle du pied de page (nº 240) ;
+//  la ligne de liens qui la portait a cédé la place à la rangée.
+import { IconeInstagram } from "@/components/IconeReseau";
 //  §2 (nº 490) — la flèche du compteur « +N ⌄ » : CELLE DES HORAIRES,
 //  au même rang 16 et pivotée de la même façon. Aucun dessin nouveau.
-//  §6 (nº 868) — et la GOUTTE D'ENCRE, celle du va-et-vient de
-//  l'accueil, qui ouvre maintenant la ligne des styles.
-import { IconeChevronBas, IconeGoutteDEncre } from "@/components/Icones";
+//  §3 (nº 869) — et le GLOBE (celui du sélecteur de langue) pour
+//  « Website » : le mot dit le site, le globe le montre — c'est le
+//  dessin du patron. Le maillon de la nº 240 n'est plus lu ici.
+import { IconeChevronBas, IconeMonde } from "@/components/Icones";
+//  §3 (nº 869) — la cible carrée et le mot dessous : l'écriture unique
+//  des quatre actions de la rangée (Follow et Share la lisent chez eux).
+import { ActionDeFiche } from "@/components/ActionDeFiche";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
   PanneauPortfolio,
@@ -54,15 +52,13 @@ import { capsulesPratiques } from "@/lib/pratique-fiche";
 //  §3 (nº 388) — l'écriture d'une ligne de profil a déménagé dans un
 //  module sans dépendance : l'adresse se dessine dans BlocLieux, et un
 //  cercle d'imports se paie cher (voir lignes-profil).
-import {
-  BOITE_ICONE_LIGNE,
-  ECRITURE_LIGNE_FICHE,
-  FORME_BOITE_ICONE,
-  LIGNE_GRISE,
-} from "@/components/lignes-profil";
+//  §1 et §3 (nº 869) — les deux boîtes d'icône (`BOITE_ICONE_LIGNE`,
+//  `FORME_BOITE_ICONE`) ne sont plus lues ici : les lignes de badges
+//  n'ont plus d'icône en tête, et la liste des liens n'existe plus.
+//  L'adresse (BlocLieux) lit toujours la première.
+import { ECRITURE_LIGNE_FICHE, LIGNE_GRISE } from "@/components/lignes-profil";
 import type { StyleGalerie } from "@/lib/photo-tatoueur";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
-import { libelleDuLien } from "@/lib/liens-fiche";
 import { sousLeNom } from "@/components/BlocsFiche";
 import {
   LigneAdresseDuLieu,
@@ -267,7 +263,10 @@ import { AVATAR_MOYEN, sourceAvatar } from "@/lib/avatar-variantes";
     deux choses, et les deux doivent la suivre : la boîte de l'icône en
     tête de ligne (qui s'aligne sur la première capsule) et le plafond
     de deux lignes (`maxHeight`), qui déciderait sinon de couper une
-    ligne trop tôt. */
+    ligne trop tôt.
+    §1 (nº 869) — LA BOÎTE DE L'ICÔNE EST PARTIE (plus d'icône en tête
+    des lignes de badges) : cette hauteur ne sert plus qu'au plafond des
+    deux lignes, et ne bouge pas. */
 const HAUTEUR_CAPSULE = 28;
 /** L'écart entre deux capsules (`gap-1.5`). */
 const ECART_CAPSULES = 6;
@@ -357,13 +356,11 @@ function capsulesQuiTiennent(
 
 function LigneDeCapsules({
   marqueur,
-  icone,
   valeurs,
   libelle,
   fond,
 }: {
   marqueur: string;
-  icone: React.ReactNode;
   valeurs: readonly string[];
   libelle: (slug: string) => string;
   fond: string;
@@ -463,14 +460,17 @@ function LigneDeCapsules({
   return (
     <p
       {...{ [marqueur]: "" }}
-      className={`flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
+      /*  ██ §1 (nº 869) — PLUS D'ICÔNE EN TÊTE DE LIGNE ██
+           Décision du propriétaire : les badges d'un profil s'écrivent
+           TEXTE SEUL, contour, gris. La boîte de 22 px qui ouvrait la
+           ligne (nº 489 → nº 868 : diamant, étoile, goutte) est partie
+           avec son dessin, et l'écart qui la séparait des capsules avec
+           elle : les capsules commencent au bord gauche de la liste,
+           comme la bio au-dessus d'elles. La rangée reste une boîte
+           souple : c'est elle qui donne à la zone des capsules sa
+           largeur (`flex-1`), donc le calcul du compteur (nº 491). */
+      className={`flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
     >
-      {/*  §1 (nº 490) — LA BOÎTE ÉPOUSE LA HAUTEUR D'UNE CAPSULE, pas
-           celle d'une ligne de texte : c'est ce qui recale le glyphe
-           sur la première capsule (voir la note, plus haut). */}
-      <span className={FORME_BOITE_ICONE} style={{ height: HAUTEUR_CAPSULE }}>
-        {icone}
-      </span>
       <span
         ref={zone}
         className={`min-w-0 flex flex-1 flex-wrap gap-1.5 ${
@@ -520,7 +520,10 @@ function LigneDeCapsules({
                 rapport que toutes les mentions grises du site.
                 ⚠️ L'ICÔNE EN TÊTE DE LIGNE GARDE SON GRIS À ELLE (la
                 note de la nº 547 tient : la couleur se pose ici, pas
-                sur la ligne). */
+                sur la ligne).
+                §1 (nº 869) — L'ICÔNE EST PARTIE ; la couleur reste
+                posée ici, sur la capsule, et le compteur garde la
+                sienne. */
             className={`px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte-doux ${fond}`}
           >
             {libelle(slug)}
@@ -1213,423 +1216,123 @@ export function ContenuFiche({
   );
 
   /**
-   * §2 (nº 222) — LES LIENS, SOUS LA PHOTO
+   * ██ §2 (nº 869) — L'ÉTAT DES CARNETS, DANS LE BLOC DU NOM ██
    * ==================================================================
-   * UNE SEULE FAMILLE, UNE SEULE FORME : les liens libres que
-   * l'artiste a créés (son site, sa page de liens), puis Instagram et
-   * TikTok. Chacun porte SON ICÔNE À GAUCHE, toutes de la même taille,
-   * et le bloc commence par une colonne d'icônes — quel que soit le
-   * nombre de rangées.
-   *
-   * ⚠️ LES DEUX BADGES-PHARES ONT DISPARU. Instagram et TikTok
-   * vivaient dans deux capsules de 68 px, cerclées de rose, avec un
-   * halo : trois choses que la charte de cette passe interdit
-   * désormais (aucun contour, le rose réservé au badge sélectionné, au
-   * bouton d'action finale et à la ligne du sélecteur actif). Ce sont
-   * des liens, ils se lisent comme les autres.
-   *
-   * ILS SE REGROUPENT : un seul lien libre et Instagram tiennent sur
-   * une ligne — `flex-wrap` ne laisse aucune ligne à moitié vide.
+   * Il quitte la ligne « Books open · Instagram » (nº 270 → nº 868) :
+   * il se pose SOUS LE TYPE, à droite de l'avatar — UN POINT ET LE
+   * MOT, comme l'« Open » d'une fiche Google Maps :
+   *  · booking OUVERT — point VERT (`sombre-succes`, le vert de la
+   *    pastille du site), « Books open » ;
+   *  · booking à DÉLAI — point GRIS, « Waitlist » ;
+   *  · booking FERMÉ — point GRIS, « Books closed ».
+   * Le point est le SEUL porteur de couleur : le mot reste dans le
+   * gris des sous-titres, sous le type qui l'est aussi — le point se
+   * lit de loin, le mot précise.
+   * ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ (acquis nº 273) : le site ne devine
+   * pas l'état des carnets de quelqu'un ; une fiche sans booking n'a
+   * pas cette ligne.
+   * ⛔ CE QUI PART AVEC LA LIGNE D'AVANT, ET JE LE DIS : le chiffre du
+   * délai (« 3-month wait », nº 408) n'est plus écrit — « Waitlist »
+   * est LE mot demandé, sans nombre. La donnée reste en base et dans
+   * le formulaire ; un « delai » sans mois, muet jusqu'ici, dit donc
+   * « Waitlist » comme les autres. Le calendrier (nº 273), les deux
+   * lignes du délai (nº 408) et leur compensation optique (nº 409)
+   * sont partis avec leur ligne (règle nº 386).
    */
-  /*  §5 (nº 227) — LE SURVOL SANS ROSE, comme toutes les lignes
-      cliquables du site : la couleur ne change jamais, le fond monte
-      d'un cran (voile blanc, annulé par des marges négatives — rien
-      ne bouge d'un pixel), un fin soulignement décalé sur le libellé.
-      Au doigt : un bref état enfoncé, jamais un état qui reste. */
+  const etatDesCarnets =
+    tatoueur.booking === "ouvert"
+      ? { ouvert: true, mot: "Books open" }
+      : tatoueur.booking === "delai"
+        ? { ouvert: false, mot: "Waitlist" }
+        : tatoueur.booking === "ferme"
+          ? { ouvert: false, mot: "Books closed" }
+          : null;
+
   /**
-   * ██ §4 et §5 (nº 388) — PLUS DE PILULE, ET UN BLEU POUR CE QUI SORT
-   * DU SITE ██
+   * ██ §3 (nº 869) — LA RANGÉE D'ACTIONS ██
    * ==================================================================
-   * §4 — L'ENCADRÉ DE SURVOL EST SUPPRIMÉ. Il était fait de cinq
-   * classes qui allaient ensemble : `rounded-lg` (l'arrondi),
-   * `hover:bg-white/5` et `active:bg-white/10` (le fond), et
-   * `-mx-1.5 -my-1 px-1.5 py-1` (le débord compensé qui donnait à la
-   * pilule sa chair sans déplacer le texte). Les cinq partent : il ne
-   * reste QUE le texte qui s'éclaircit.
-   * ⚠️ LA ZONE CLIQUABLE NE RÉTRÉCIT PAS. Ce débord compensé était
-   * NUL par construction — six pixels de marge négative rendus en six
-   * pixels de rembourrage : la boîte cliquable avait donc exactement
-   * la taille qu'elle a aujourd'hui. Ce qui disparaît est la
-   * PEINTURE, pas la surface. Le lien reste une ligne entière
-   * (`flex`), icône comprise.
-   *
-   * §5 — LE BLEU EST UN RÉGLAGE, PAS UNE FATALITÉ. Avant la nº 388,
-   * le booking, le site, Instagram et l'adresse partageaient une seule
-   * et même écriture : rendre Instagram bleu les aurait TOUS emportés.
-   * `sortDuSite` tranche donc appelant par appelant — et c'est ce qui
-   * permet à la nº 405 d'y ajouter LES DEUX LIENS DE SITE sans toucher
-   * à une ligne de couleur. Le passent aujourd'hui : Instagram,
-   * l'adresse, le site et la page de liens. Ne le passent pas : le
-   * booking (gris doux) ; les styles n'utilisent même pas cette
-   * fonction.
-   * ⚠️ L'ICÔNE RESTE GRISE : elle est peinte en `currentColor`, donc
-   * elle suivrait le bleu du texte. On lui rend donc explicitement le
-   * gris de la colonne (`text-sombre-texte-doux` sur sa boîte), ce qui
-   * la détache du libellé sans rien changer à son tracé.
+   * Elle REMPLACE la ligne « Books open · Instagram » ET la ligne du
+   * site (nº 222-§2 → nº 868) : « Follow » · « Instagram » (si
+   * renseigné) · « Website » (si renseigné) · « Share » — dans cet
+   * ordre, chacun une grande icône dans une cible carrée à coins
+   * arrondis, le mot centré dessous (`ActionDeFiche`, l'écriture
+   * unique des quatre ; le patron est la rangée d'une fiche Google
+   * Maps).
+   * FOLLOW ET SHARE SONT TOUJOURS LÀ : la rangée n'a jamais une icône
+   * seule — au minimum ces deux-là. Follow garde exactement son état
+   * et son geste (BoutonSuivre : même écriture en base, même retour
+   * sur la page d'avant, nº 868) ; Share est le même bouton que
+   * partout (BoutonPartageFiche). Ni l'un ni l'autre ne vivent plus
+   * dans la rangée du va-et-vient (§4).
+   * LES COLONNES SONT ÉGALES : quatre, trois ou deux actions se
+   * partagent la largeur de la colonne, chacune centrée dans la
+   * sienne — c'est la grille, pas un calcul.
+   * ⚠️ INSTAGRAM ET WEBSITE SORTENT DU SITE dans un nouvel onglet,
+   * comme les liens qu'ils remplacent. Ils ne sont plus BLEUS
+   * (nº 388, 405) : sur le patron, les quatre cibles sont identiques
+   * au repos, et c'est le mot qui dit où l'on va. Le bleu de ce qui
+   * sort du site reste à l'adresse (BlocLieux).
+   * ⛔ CE QUI N'EST PLUS ÉCRIT, ET JE LE DIS : la mention « DM »
+   * d'Instagram (nº 408-409), le titre choisi du site
+   * (`titre_site_web` — le mot est « Website ») et la PAGE DE LIENS
+   * (`page_de_liens`, nº 227 — le formulaire ne l'écrit plus depuis la
+   * nº 270, et la rangée demandée n'a pas de cible pour elle). Les
+   * données restent en base, on ne les lit plus : le traitement de
+   * TikTok (nº 387). `lienEnLigne`, ses icônes de colonne (nº 240) et
+   * les deux grilles de liens sont partis avec (règle nº 386).
+   * ⚠️ UNE FICHE DE DÉMONSTRATION n'a pas de « Follow » (on ne suit
+   * pas ce qui n'existe pas en base, BoutonSuivre) : sa rangée
+   * commence à Instagram.
    */
-  const lienEnLigne = (
-    cle: string,
-    href: string,
-    libelle: string,
-    icone: React.ReactNode,
-    sortDuSite = false
-  ) => (
-    <a
-      key={cle}
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      /*  §1 (nº 389) — UNE SEULE CLASSE DE COULEUR, ET C'EST LA
-           CORRECTION : `ECRITURE_LIGNE_FICHE` n'en porte plus aucune
-           (voir lignes-profil), le bleu et le gris ne se disputent
-           donc plus l'ordre de la feuille. */
-      /*  §3 (nº 391) — `max-w-full` BORNE LA CASE À SA PISTE. Sans lui,
-           `justify-items-start` taille la case sur SON CONTENU, et le
-           `white-space: nowrap` du `truncate` rend ce contenu
-           INCOMPRESSIBLE : la case ignorait sa moitié de colonne et
-           partait à droite. Mesuré : deux domaines longs donnaient une
-           case de 354,9 px dans une piste de 152, et la seconde case
-           finissait à 534,9 px dans une colonne de 332 — donc 203 px
-           HORS de la colonne, tranchés net par son `overflow-x: clip`,
-           sans points de suspension. `max-width: 100%` d'un enfant de
-           grille se mesure sur SA PISTE : la case s'y arrête, le
-           libellé peut enfin rétrécir, et le `truncate` fait ce pour
-           quoi il est là — une ellipse, à l'intérieur. */
-      className={`group flex max-w-full items-center gap-2.5 ${ECRITURE_LIGNE_FICHE} ${
-        sortDuSite
-          ? "text-sombre-lien hover:text-sombre-lien-clair"
-          : `${LIGNE_GRISE} hover:text-sombre-texte`
-      } transition-colors`}
+  const rangeeDActions = (
+    <div
+      data-rangee-actions=""
+      /*  Trente-deux pixels sous le bloc du nom (un cran sous les 40 qui
+          séparent les sections, nº 241 : la rangée appartient à
+          l'en-tête, elle n'est pas une section) ; la liste garde ses
+          40 px sous elle. */
+      className="mt-8 grid w-full auto-cols-fr grid-flow-col"
     >
-      {/*  ██ §1 (nº 392) — L'ICÔNE REVIENT AU GRIS, SANS CONDITION ██
-           La nº 391 laissait la boîte sans couleur quand la ligne sortait
-           du site : le tracé étant en `currentColor`, l'icône prenait le
-           bleu du lien. Le propriétaire est revenu dessus — TOUTES les
-           icônes de la colonne sont grises, comme à la nº 389. Le
-           ternaire disparaît, il n'y a plus qu'une écriture.
-           ⚠️ SEULE L'ICÔNE REVIENT : le MOT garde son bleu et son
-           éclaircissement au survol — ils sont posés sur le `<a>`, pas
-           ici.
-           ⚠️ UNE SEULE CLASSE DE COULEUR SUR CETTE BOÎTE, JAMAIS DEUX :
-           c'est tout le piège de la nº 389 (Tailwind range ses
-           utilitaires par ordre alphabétique, `sombre-lien` tombe AVANT
-           `sombre-texte-doux`, le gris gagnait donc toujours, quel que
-           soit l'ordre d'écriture). Le bleu du lien vit sur un AUTRE
-           élément — le `<a>` parent — donc il n'y a pas de dispute :
-           c'est un héritage, que ce gris-ci recouvre proprement. */}
-      <span className={`${BOITE_ICONE_LIGNE} text-sombre-texte-doux`}>
-        {icone}
-      </span>
-      {/*  §2 (nº 273) — PLUS DE SOULIGNEMENT ICI : le fond qui monte
-           au survol (`hover:bg-white/5`, la ligne cliquable de la
-           nº 227) dit déjà que la ligne se clique — le trait faisait
-           double emploi. Le soulignement du dépôt est réservé au SEUL
-           cas qui sort du site : l'adresse (AdresseCliquable). */}
-      <span className="min-w-0 truncate">
-        {libelle}
-      </span>
-    </a>
+      <BoutonSuivre
+        tatoueurId={tatoueur.id}
+        nomTatoueur={tatoueur.nom}
+        suiviAuDepart={suiviAuDepart}
+      />
+      {tatoueur.lien_instagram && (
+        <ActionDeFiche
+          cle="instagram"
+          href={tatoueur.lien_instagram}
+          ariaLabel={`${tatoueur.nom} on Instagram`}
+          icone={<IconeInstagram taille={24} />}
+          mot="Instagram"
+        />
+      )}
+      {tatoueur.site_web && (
+        <ActionDeFiche
+          cle="website"
+          href={tatoueur.site_web}
+          ariaLabel={`${tatoueur.nom}'s website`}
+          icone={<IconeMonde taille={24} />}
+          mot="Website"
+        />
+      )}
+      <BoutonPartageFiche
+        nomArtisan={tatoueur.nom}
+        cheminFiche={`/artist/${tatoueur.slug}`}
+        variante="rangee"
+        avecFenetre
+        sombre
+        metier={
+          tatoueur.styles?.[0] ? libelleStyle(tatoueur.styles[0]) : undefined
+        }
+        commune={villeAffichee(tatoueur.ville_nom)}
+        marque={MARQUE_YOKOFOLIO.nom}
+        //  §5 (nº 667) — chez yokofolio on partage un PORTFOLIO ; le
+        //  bouton sert aussi les artisans, qui gardent « fiche ».
+        objet="portfolio"
+      />
+    </div>
   );
-
-  /**
-   * §1 (nº 240) — LES ICÔNES DES LIENS SONT DESSINÉES DANS LE CODE.
-   * ==================================================================
-   * FIN DES FICHIERS : `icone-instagram.png`, `icone-tiktok.png` et
-   * `site.png` (et les versions rognées de la nº 231) ne sont plus
-   * servis ici — et LE DISQUE BLANC est parti avec eux, avec toute la
-   * mécanique du liseré des passes 231 à 235 : elle n'existait que
-   * parce que ces fichiers étaient dessinés pour un fond noir.
-   * Les tracés vivent dans IconeReseau.tsx (`IconeDuLien`, l'écriture
-   * PARTAGÉE avec le pied de page) : monochromes en `currentColor`,
-   * ils prennent la couleur du texte du lien — gris doux ici, et ses
-   * survols — sans un seul réglage. Aucun disque, aucun fond.
-   */
-  const iconeDeLien = (reseau: "instagram" | "site") => (
-    <IconeDuLien reseau={reseau} taille={20} />
-  );
-
-  /**
-   * §4 (nº 227) — LES LIENS, SUR DEUX LIGNES, RÈGLE EXACTE :
-   *  · ligne 1 : les liens de site (deux au maximum — le site et la
-   *    page de liens sont les deux seuls champs) ;
-   *  · ligne 2 : Instagram et TikTok, ensemble ;
-   *  · EXCEPTION UNIQUE : sans TikTok, Instagram remonte sur la
-   *    ligne 1, à côté d'un lien.
-   * Aucune autre combinaison ; une ligne vide ne rend rien, donc ne
-   * laisse aucun espace.
-   */
-  /**
-   * §3 (nº 270, REFAIT PAR LA Nº 273) — L'ÉTAT DES CARNETS, EN
-   * PREMIÈRE POSITION DES LIENS
-   * ==================================================================
-   * TROIS ÉCRITURES, ET PAS UNE DE PLUS : « Booking ouvert »,
-   * « Booking · 3 mois » (le chiffre = le mois déclaré),
-   * « Booking fermé ». C'est LE MOT qui dit l'état.
-   * ⚠️ LES TROIS RONDS DE LA Nº 270 SONT PARTIS (nº 273-§1) — le vert
-   * d'« ouvert », le gris clair du délai, le gris foncé de « fermé » :
-   * le booking parle de TEMPS, pas de feu de circulation. À leur
-   * place, UNE ICÔNE DE CALENDRIER — la même pour les trois états,
-   * sans variante, dans l'écriture unique des icônes de la nº 240
-   * (IconeReseau, `currentColor`, trait 1,8) : elle prend le gris
-   * doux du libellé à côté duquel elle vit, à la taille des autres
-   * icônes de la liste (20, dans la colonne de 22 px). L'icône dit de
-   * quoi on parle — la disponibilité — le mot dit l'état.
-   * ⚠️ RIEN DÉCLARÉ → RIEN AFFICHÉ : le site ne devine pas l'état
-   * des carnets de quelqu'un. Les fiches d'avant la migration
-   * (booking NULL) restent muettes jusqu'à leur prochain
-   * enregistrement — et un « délai » sans mois (donnée d'avant les
-   * garde-fous) se tait aussi : on n'écrit pas « Booking · ? mois ».
-   * CE N'EST PAS UN LIEN : une étiquette d'état, qui ne mène nulle
-   * part — ni survol, ni soulignement (leçon de la nº 268 : ce qui
-   * décrit ne se clique pas). Elle partage la famille des liens :
-   * même taille, même gris doux, même colonne de 22 px.
-   */
-  /*  ██ §3 (nº 408) — LE DÉLAI PASSE SUR DEUX LIGNES ██
-       CE QU'IL Y AVAIT : « Booking · 12 mois », tout sur une ligne —
-       et l'état du carnet n'y était jamais dit en toutes lettres.
-       CE QUE C'EST DEVENU, sur deux lignes alignées l'une sous
-       l'autre :
-             Booking ouvert
-             Attente : 12 mois
-       Un délai, c'est un booking OUVERT avec une attente : la
-       première ligne le dit, la seconde chiffre. « Attente » remplace
-       « Délai d'attente », plus court comme demandé.
-       ⚠️ LES DEUX AUTRES ÉTATS NE BOUGENT PAS : une seule ligne,
-       « Booking ouvert » ou « Booking fermé », au mot près.
-       ⚠️ ET LE SILENCE NON PLUS : un « delai » sans mois (donnée
-       d'avant les garde-fous) reste muet — on n'écrit pas
-       « Attente : ? mois ». */
-  const libelleBooking =
-    tatoueur.booking === "ouvert" || tatoueur.booking === "delai"
-      ? "Books open"
-      : tatoueur.booking === "ferme"
-        ? "Books closed"
-        : null;
-  const attenteBooking =
-    tatoueur.booking === "delai" && tatoueur.booking_mois
-      ? `${tatoueur.booking_mois}-month wait`
-      : null;
-  //  ⚠️ UN « delai » SANS MOIS SE TAIT, comme avant la nº 408 : sans
-  //  chiffre, la première ligne dirait « Booking ouvert » là où
-  //  l'artiste a déclaré une attente — ce serait lui faire dire autre
-  //  chose que ce qu'il a coché.
-  const bookingLisible =
-    tatoueur.booking === "delai" ? Boolean(attenteBooking) : true;
-  const entreeBooking = tatoueur.booking && libelleBooking && bookingLisible && (
-    <span
-      key="booking"
-      data-booking-fiche={tatoueur.booking}
-      /*  §3 (nº 391) — MÊME BORNE QUE LES LIENS, ET POUR LA MÊME
-           RAISON : mesuré dans la fenêtre superposée, « Booking ouvert »
-           fait une case de 146,1 px dans une piste de 152 — il reste
-           5,9 px, moins d'un caractère. Tout ce qui entoure ce texte est
-           en `rem` (`gap-x-7` = 1,75 rem, `gap-2.5` = 0,625 rem, le
-           `p-6` de la fenêtre = 1,5 rem) alors que le texte, lui, est
-           figé à 15 px : au moindre écart de rendu, la case passe en
-           débordement. Et « Booking · 12 mois » y est DÉJÀ : 166,5 px
-           dans 152, soit 14,5 px qui partent sur la case voisine.
-           `max-w-full` referme la case sur sa piste. */
-      /*  §3 (nº 408) — `items-start` REMPLACE `items-center` : avec
-           deux lignes, centrer l'icône la ferait flotter entre elles.
-           `BOITE_ICONE_LIGNE` fait exactement UNE hauteur de ligne
-           (`h-[1.375em]`, le `leading-snug` de 15 px) : posée en haut,
-           elle se centre donc sur la PREMIÈRE ligne, au pixel — et
-           rien ne bouge sur les fiches à une seule ligne, où les deux
-           alignements donnent le même résultat. */
-      className={`flex max-w-full items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-    >
-      {/*  §1 (nº 273) — LE CALENDRIER, hors de tout ternaire d'état :
-           une seule écriture couvre les trois états PAR CONSTRUCTION —
-           aucune variante n'est seulement possible. */}
-      <span className={BOITE_ICONE_LIGNE}>
-        <IconeCalendrier taille={20} />
-      </span>
-      {/*  §3 (nº 391) — PLUS DE `truncate` ICI, ET C'EST LE CŒUR DE LA
-           CORRECTION. Il ne servait à rien : son `white-space: nowrap`
-           empêchait le libellé de se plier, la case se taillait donc sur
-           le texte entier et l'ellipse ne se déclenchait JAMAIS
-           (mesuré : `ellipse=false` dans les trois formulations). Il ne
-           faisait qu'une chose — interdire le repli — et c'est
-           exactement ce qui envoyait le texte hors de sa case, là où un
-           `overflow` de conteneur le tranche au milieu d'une lettre,
-           sans points de suspension.
-           SANS LUI : le libellé peut se plier. Le plus court mot
-           (« Booking ») devient sa largeur minimale, la case tient donc
-           dans n'importe quelle piste, et le texte est TOUJOURS lisible
-           en entier — sur une ligne quand il y a la place (mesuré :
-           146,1 px, rigoureusement identique à aujourd'hui pour
-           « Booking ouvert » et « Booking fermé », page et fenêtre), sur
-           deux quand il n'y en a pas. Rien n'est plus jamais caché.
-           ⚠️ LE `truncate` DES LIENS RESTE : un nom de domaine long doit
-           bien s'arrêter quelque part, et l'ellipse est la bonne réponse
-           pour lui — elle fonctionne enfin, grâce au `max-w-full`
-           ci-dessus. Les trois formulations du booking, elles, forment
-           un vocabulaire fermé : il n'y a rien à abréger. */}
-      {/*  §3 (nº 408) — LES DEUX LIGNES DANS UNE COLONNE, derrière
-           l'icône : la seconde commence donc EXACTEMENT sous la
-           première, aucune des deux ne se décale. La colonne est le
-           seul enfant souple de la rangée, elle garde le `min-w-0` qui
-           autorise le repli du texte (leçon de la nº 391). */}
-      {/*  ██ §1 (nº 552) — LE TEXTE DU BOOKING PASSE EN BLANC ██
-           OÙ LA COULEUR EST POSÉE, ET POURQUOI ICI PLUTÔT QU'AU-DESSUS.
-           `LIGNE_GRISE` reste sur la RANGÉE (le `span` parent) : c'est
-           lui qui porte AUSSI la boîte du calendrier, et l'icône prend
-           sa couleur de là par `currentColor`. Poser le blanc sur la
-           rangée aurait donc blanchi le calendrier avec le mot —
-           l'acquis de la nº 392, rejoué à la nº 547 pour les capsules :
-           le gris de l'icône vit sur SA boîte, un autre élément.
-           La colonne des deux lignes, elle, ne contient QUE du texte :
-           le jeton `texte` (#F2F2F4) y est seul de sa propriété, aucune
-           classe de couleur ne s'y dispute la place (piège nº 389).
-           CE QUE ÇA DONNE, MESURÉ sur le fond de la colonne de lecture
-           (`bg-sombre-fond`, #0B0F14, page ET fenêtre superposée) :
-           8,14 hier (`texteDoux`), 17,19 aujourd'hui (`texte`).
-           ⚠️ LES DEUX LIGNES ENSEMBLE — « Booking ouvert » et
-           « Attente : 12 mois » : elles disent UNE seule chose, et un
-           gris sous un blanc en ferait une note de bas de page.
-           ⚠️ RIEN D'AUTRE NE SUIT. `LIGNE_GRISE` n'est PAS touchée :
-           ses trois autres porteurs — la ligne des capsules (l. 464),
-           les liens (l. 1251) et la mention au-dessus des plaques
-           (BlocLieux) — gardent leur gris au caractère près. */}
-      <span className="flex min-w-0 flex-col text-sombre-texte">
-        <span>{libelleBooking}</span>
-        {/*  ██ §1 (nº 409) — POURQUOI « Attente » DÉBORDAIT À GAUCHE ██
-             CE N'EST NI UNE MARGE NI UN ESPACE : les deux lignes sont
-             deux enfants d'une même colonne flex, de même corps et de
-             même graisse — leurs ORIGINES sont au même pixel. C'est
-             l'APPROCHE GAUCHE des glyphes qui diffère, une donnée de
-             la police elle-même. Relevé dans la table `hmtx` de Geist
-             (1000 unités par cadratin) : le « B » de « Booking » a une
-             approche de 92 unités, le « A » d'« Attente » de 20. À
-             15 px, l'encre du A commence donc 1,08 px PLUS À GAUCHE
-             que celle du B — exactement ce qui se voit.
-             LA COMPENSATION : (92 − 20) / 1000 = 0,072 em, posé en
-             rembourrage gauche sur la seconde ligne SEULE. En `em`,
-             elle suit le corps du texte si celui-ci change.
-             ⚠️ ELLE EST LIÉE À CES DEUX MOTS-LÀ. Changer « Attente »
-             ou « Booking » — ou changer de police — change l'écart et
-             oblige à recalculer cette valeur. C'est le prix d'un
-             alignement optique : le navigateur aligne des origines,
-             pas de l'encre, et aucune propriété CSS ne fait ce travail
-             à notre place. */}
-        {attenteBooking && (
-          <span className="pl-[0.072em]">{attenteBooking}</span>
-        )}
-      </span>
-    </span>
-  );
-
-  /*  ██ §2 (nº 408) — « Instagram • DM » QUAND LA CASE EST COCHÉE ██
-       LE TOUT EN BLEU — le mot, la puce et « DM » —, et c'est GRATUIT :
-       le bleu est posé sur le `<a>` entier par `sortDuSite` (cinquième
-       argument, déjà `true` pour Instagram depuis la nº 388), donc
-       tout ce que le libellé contient l'hérite. L'ICÔNE RESTE GRISE
-       par le même mécanisme qu'ailleurs : son gris vit sur SA boîte,
-       un autre élément (nº 392). Aucune classe de couleur n'est
-       ajoutée ici — donc aucun risque de rejouer la nº 389.
-       ⚠️ LA PUCE EST CELLE DU SITE (U+2022, nº 393) : la même que les
-       pratiques, les styles et les titres de galerie.
-       ⚠️ NON COCHÉE, LA LIGNE NE BOUGE PAS D'UN CARACTÈRE : « Instagram »,
-       comme avant. Et sans la migration, `dm_instagram` est absent,
-       donc faux : la mention ne peut pas apparaître par accident. */
-  const lienInstagram =
-    tatoueur.lien_instagram &&
-    lienEnLigne(
-      "instagram",
-      tatoueur.lien_instagram,
-      //  §3 (nº 409) — DM PASSE DEVANT : « DM • Instagram ». La
-      //  destination du lien ne change pas d'un caractère, et le bleu
-      //  comme le gris de l'icône continuent de venir d'ailleurs.
-      tatoueur.dm_instagram ? "DM • Instagram" : "Instagram",
-      iconeDeLien("instagram"),
-      //  §5 (nº 388) — Instagram SORT DU SITE : bleu, et lui seul avec
-      //  l'adresse. Le booking et le site gardent le gris doux.
-      true
-    );
-  /**
-   * ██ §2 (nº 387) — TIKTOK NE S'AFFICHE PLUS NULLE PART ██
-   * ==================================================================
-   * Le champ a quitté le formulaire (FormulaireFiche) ; sa LECTURE
-   * quitte les fiches ici. Les valeurs déjà écrites en base restent
-   * dans leur colonne — on ne les efface pas, on ne les lit plus.
-   * C'est exactement le traitement réservé à YouTube à la nº 101, et
-   * pour la même raison : ne rien effacer qu'on n'a pas demandé à
-   * effacer.
-   *
-   * ⚠️ CE QUE DEVIENT LA RÈGLE nº 227-§4 : elle avait DEUX branches —
-   * « avec TikTok, les deux réseaux prennent leur propre rangée ;
-   * sans TikTok, Instagram remonte auprès du booking ». La première
-   * branche n'a plus de condition capable de se vérifier : TikTok
-   * n'existe plus à l'affichage. La règle se réduit donc à son
-   * exception, qui devient le cas UNIQUE — Instagram est toujours sur
-   * la première rangée, à côté du booking. La seconde rangée n'est pas
-   * laissée inerte, elle est SUPPRIMÉE : une rangée qui ne peut plus
-   * jamais avoir de contenu est du code mort, pas une réserve.
-   * Aucune ligne vide, aucune icône orpheline ne peut donc subsister.
-   */
-  const lienInstagramEnPremiereLigne = lienInstagram;
-  /**
-   * §2 (nº 384) — LE SITE DESCEND D'UNE LIGNE.
-   * ------------------------------------------------------------------
-   * L'ORDRE DEMANDÉ : Booking et Instagram d'abord, LE SITE EN
-   * DESSOUS, les styles en dernier. Les liens de site quittent donc la
-   * première rangée pour la leur — un seul tableau déplacé, aucune
-   * autre règle touchée.
-   * ⚠️ LA RÈGLE DE LA Nº 227-§4 SUR TIKTOK NE BOUGE PAS : sans TikTok,
-   * Instagram remonte auprès du booking (c'est ce qui donne « Booking
-   * et Instagram » sur une même ligne) ; avec TikTok, les deux réseaux
-   * restent ensemble sur leur propre rangée. Je n'ai pas touché à
-   * cela : le propriétaire ne l'a pas demandé.
-   */
-  const premiereLigne = [
-    //  §3 (nº 270) — LE BOOKING OUVRE LA LISTE, devant tout le reste :
-    //  la PREMIÈRE position des liens, comme dans le formulaire.
-    entreeBooking,
-  ].filter(Boolean);
-  /**
-   * ██ §7 (nº 405) — LES LIENS DE SITE PASSENT AU BLEU ██
-   * ==================================================================
-   * Ils sortent du site, exactement comme Instagram et l'adresse : ils
-   * prennent donc le MÊME bleu, le même éclaircissement au survol, et
-   * toujours aucun soulignement — c'est le cinquième argument de
-   * `lienEnLigne` (`sortDuSite`) qui le dit, et rien d'autre. Aucune
-   * couleur n'est écrite ici.
-   * ⚠️ AUCUN PIÈGE DE LA nº 389 : le bleu ne vient pas d'une seconde
-   * classe posée à côté d'un gris — c'est un TERNAIRE, une classe OU
-   * l'autre, jamais les deux (voir `lienEnLigne`). Et l'ICÔNE RESTE
-   * GRISE sans condition depuis la nº 392 : son gris vit sur la boîte
-   * de l'icône, un AUTRE élément que le `<a>` qui porte le bleu — un
-   * héritage recouvert, pas une dispute d'ordre alphabétique.
-   * ⚠️ LES DEUX EMPLACEMENTS PASSENT ENSEMBLE. Ce sont deux exemplaires
-   * du même objet (`LienLibre` : une URL, un titre) ; en laisser un
-   * gris et l'autre bleu ferait croire à deux natures de lien.
-   * ⚠️ CE QUI NE BOUGE PAS, comme demandé : le booking, les pratiques
-   * et les styles restent dans le gris doux commun.
-   */
-  const ligneDuSite = [
-    tatoueur.site_web &&
-      lienEnLigne(
-        "site",
-        tatoueur.site_web,
-        tatoueur.titre_site_web || libelleDuLien(tatoueur.site_web),
-        iconeDeLien("site"),
-        true
-      ),
-    tatoueur.page_de_liens &&
-      lienEnLigne(
-        "liens",
-        tatoueur.page_de_liens,
-        tatoueur.titre_page_de_liens || libelleDuLien(tatoueur.page_de_liens),
-        iconeDeLien("site"),
-        true
-      ),
-  ].filter(Boolean);
-  //  §2 (nº 387) — INSTAGRAM EST TOUJOURS SUR LA PREMIÈRE RANGÉE,
-  //  auprès du booking : voir la note de la règle nº 227-§4 plus haut.
-  //  La seconde rangée est supprimée avec TikTok.
-  if (lienInstagramEnPremiereLigne) {
-    premiereLigne.push(lienInstagramEnPremiereLigne);
-  }
 
   /**
    * §1 et §2 (nº 315) — DE CINQ SECTIONS TITRÉES À UNE SEULE
@@ -1815,16 +1518,14 @@ export function ContenuFiche({
   const ligneDesPratiques = (
     <LigneDeCapsules
       marqueur="data-pratique-fiche"
-      /*  ██ §6 (nº 868) — LES DEUX DESSINS CHANGENT DE LIGNE ██
-          Décision du propriétaire : les STYLES prennent LA GOUTTE
-          D'ENCRE (celle du va-et-vient de l'accueil), et les TECHNIQUES
-          — couleur, machine, taille de pièce — prennent L'ÉTOILE qui
-          servait aux styles. Même taille (20), même trait : ce sont les
-          dessins du site, on ne fait que les échanger.
-          ⚠️ LE DIAMANT N'A PLUS D'EMPLOI et s'en va avec sa ligne
-          (règle nº 386 : une écriture sans lecteur est un piège pour la
-          passe suivante). Il vivait dans IconeReseau. */
-      icone={<IconeEtoile taille={20} />}
+      /*  ██ §1 (nº 869) — PLUS D'ICÔNE EN TÊTE DE LIGNE ██
+          Décision du propriétaire : les badges d'un profil s'écrivent
+          texte seul, contour, gris. L'étoile (techniques) et la goutte
+          (styles) de la nº 868-§6 sont parties : la goutte reste celle
+          du va-et-vient de l'accueil ; l'étoile de la liste des liens
+          n'avait plus de lecteur et a quitté IconeReseau (règle nº 386).
+          Les deux lignes se distinguent par leur ordre (les styles
+          d'abord, nº 868-§5) et par leurs mots. */
       valeurs={capsulesPratique}
       libelle={libelleFiltre}
       fond={FOND_CAPSULE}
@@ -1833,9 +1534,7 @@ export function ContenuFiche({
   const ligneDesStyles = (
     <LigneDeCapsules
       marqueur="data-styles-fiche"
-      //  §6 (nº 868) — la goutte d'encre, celle du va-et-vient de
-      //  l'accueil (VaEtVientNature) : un seul dessin dans le site.
-      icone={<IconeGoutteDEncre taille={20} />}
+      //  §1 (nº 869) — sans icône, comme la ligne des techniques.
       valeurs={tatoueur.styles}
       libelle={libelleStyle}
       /*  ██ §1 (nº 504) — LES DEUX FAMILLES AU MÊME FOND ██
@@ -2019,7 +1718,12 @@ export function ContenuFiche({
          * inset-x-0` DANS cette boîte — il s'élargit avec elle, et
          * couvre donc enfin toute la largeur au-dessus de la rangée.
          */
-        className={`relative flex items-center justify-between gap-2
+        /*  ██ §4 (nº 869) — LE VA-ET-VIENT EST SEUL DANS LA RANGÉE ██
+             « Follow » et « Share » vivent dans la rangée d'actions du
+             profil (§3) ; la rangée n'a plus qu'un enfant, qui la prend
+             entière — plus de répartition, plus d'écart. Le collage, le
+             trait, le fond et les débords ne bougent pas. */
+        className={`relative
                    border-b ${TRAIT_SEPARATION}
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
                      /**
@@ -2169,95 +1873,14 @@ export function ContenuFiche({
              largeur naturelle, à gauche — celle de la fiche publique,
              qui est désormais LA référence des deux vues. */}
         <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
-        {/*  §2 (nº 458) — LE PARTAGE DU PROFIL, À GAUCHE DE « SUIVRE ».
-             La rangée est `justify-between` : les deux vivent groupés à
-             droite dans une petite rangée (l'écart de 12 px de la
-             rangée). Même bouton que partout (`BoutonPartageFiche`,
-             l'action existante), habillage « icone » — la flèche nue,
-             cible de 40 px —, et le lien partagé est LE PROFIL
-             (`/artist/<slug>`).
-             ██ §2 (nº 473) — ET L'APERÇU LES A AUSSI ██
-             La condition `!apercu` est levée : « Mon compte → Mon
-             portfolio » doit montrer CE QUE LE PUBLIC VOIT, à
-             l'identique — c'est tout l'objet d'un aperçu. Leur absence
-             était précisément ce qui laissait le va-et-vient seul à
-             gauche.
-             ██ §4 (nº 505) — ET « SUIVRE » Y REDEVIENT VIVANT ██
-             LE RELEVÉ : dans l'aperçu, le bouton ne répondait plus —
-             ni « Suivre », ni « Suivi », aucune bascule possible.
-             LA CAUSE ÉTAIT ÉCRITE ICI, ET VOULUE : la nº 473 l'avait
-             enveloppé d'un `pointer-events-none` + `inert`, au motif
-             qu'on ne se suit pas soi-même. La note d'alors disait :
-             « Si le propriétaire veut qu'il FONCTIONNE en aperçu,
-             c'est sa décision, pas la mienne. » IL TRANCHE : il doit
-             fonctionner dans les deux sens. L'enveloppe est retirée,
-             et l'aperçu rend EXACTEMENT le même bouton que la fiche
-             publique — un seul rendu, plus de branche.
-             ⚠️ L'ENREGISTREMENT SUIT TOUT SEUL : le bouton n'a jamais
-             été touché d'une ligne, ni ici ni dans son fichier. C'est
-             la même action, la même écriture en base, le même état de
-             départ (`suiviAuDepart`) que sur une fiche publique.
-             Le PARTAGE, lui, était déjà vivant : il partage l'adresse
-             publique de son propre portfolio — la même action, au même
-             endroit. */}
-        {/*  ██ §5 (nº 852) — LES DEUX GESTES S'ALIGNENT SUR LES ONGLETS ██
-             --------------------------------------------------------
-             CE QUE LE PROPRIÉTAIRE VOIT : le partage et « Suivre » sont
-             PLUS BAS que les mots « Profile / Portfolio ».
-             LA CAUSE, MESURÉE : la rangée cale les centres
-             (`items-center`), et le bloc des onglets fait 47 px — ses
-             44 de cible PLUS LES TROIS PIXELS DU TRAIT ROSE, qui pend
-             sous eux. Son centre à lui tombe donc 1,5 px plus bas que
-             celui de ses mots, et les deux gestes suivent ce centre-là.
-             LE REMÈDE : `mb-[3px]` — l'épaisseur du trait, rendue au
-             groupe de droite. La rangée le centre alors sur une boîte
-             plus haute de trois pixels, ce qui le remonte d'un pixel et
-             demi : son centre retrouve celui de la CIBLE des onglets
-             (118,0 mesuré contre 117,3 pour le mot lui-même — le reste
-             est le blanc que la fonte pose au-dessus de ses capitales,
-             et il ne se règle pas à la marge).
-             ⚠️ AUCUNE CIBLE N'EST TOUCHÉE : une marge déplace la boîte,
-             elle ne la rétrécit pas. Le partage garde ses 40 px de haut,
-             « Suivre » ses 30.
-
-             ██ §5 (nº 852) — ET « SUIVRE » RENTRE DANS LA MARGE ██
-             CE QUE LE PROPRIÉTAIRE VOIT AU WEB : le badge DÉPASSE.
-             MESURÉ, à 1440 px : la rangée offre 340 px de large, et son
-             contenu en demande 357 — les onglets (195), l'écart (12) et
-             les deux gestes (150). Les dix-sept pixels de trop sortent
-             par la droite, et c'est le badge qui les porte : il finit à
-             1259 là où la colonne s'arrête à 1254.
-             LES VINGT PIXELS RENDUS, tous pris sur des écarts, aucun sur
-             une cible : l'écart de la rangée et celui des deux gestes
-             descendent d'un cran (12 → 8), et l'air latéral des onglets
-             aussi, AU WEB SEULEMENT (20 → 16, `classeOnglet`). Le
-             contenu tombe à 333 px : le badge finit exactement sur la
-             marge, avec sept pixels de reste.
-             ⚠️ AU DOIGT, LES ONGLETS NE BOUGENT PAS : leur cible y garde
-             ses 20 px d'air, et la rangée n'y déborde pas — la colonne
-             fait toute la largeur de l'écran. */}
-        <div className="flex shrink-0 items-center gap-2 mb-[3px]">
-          <BoutonPartageFiche
-            nomArtisan={tatoueur.nom}
-            cheminFiche={`/artist/${tatoueur.slug}`}
-            variante="icone"
-            avecFenetre
-            sombre
-            metier={
-              tatoueur.styles?.[0] ? libelleStyle(tatoueur.styles[0]) : undefined
-            }
-            commune={villeAffichee(tatoueur.ville_nom)}
-            marque={MARQUE_YOKOFOLIO.nom}
-            //  §5 (nº 667) — chez yokofolio on partage un PORTFOLIO ; le
-            //  bouton sert aussi les artisans, qui gardent « fiche ».
-            objet="portfolio"
-          />
-          <BoutonSuivre
-            tatoueurId={tatoueur.id}
-            nomTatoueur={tatoueur.nom}
-            suiviAuDepart={suiviAuDepart}
-          />
-        </div>
+        {/*  ██ §4 (nº 869) — PLUS DE PARTAGE NI DE « SUIVRE » ICI ██
+             Les deux gestes (nº 458 → nº 868 : le partage en habillage
+             « icone », le badge « Suivre », leur alignement sur les
+             onglets, nº 852) ont quitté cette rangée pour la rangée
+             d'actions du profil (`rangeeDActions`, §3). Le va-et-vient
+             occupe toute la largeur, chaque onglet la moitié, le mot
+             centré — comme celui de « Ma sélection », le même
+             composant (SelecteurOngletAffiche). */}
       </div>
 
       {onglet === "portfolio" && (
@@ -2400,121 +2023,68 @@ export function ContenuFiche({
               <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
+              {/*  §2 (nº 869) — L'ÉTAT DES CARNETS, sous le type : le point
+                   et le mot (voir `etatDesCarnets`). Un point de 8 px, le
+                   mot au corps du type mais en graisse normale et sans
+                   capitales — c'est une mention, pas un titre. Le bloc
+                   reste centré sur l'avatar tant qu'il est moins haut que
+                   lui (nº 241-§2), et trois lignes le sont encore. */}
+              {etatDesCarnets && (
+                <p
+                  data-booking-fiche={tatoueur.booking}
+                  className="mt-2 flex items-center gap-2 text-[14px] leading-[20px] text-sombre-texte-doux"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`h-2 w-2 shrink-0 rounded-full ${
+                      etatDesCarnets.ouvert
+                        ? "bg-sombre-succes"
+                        : "bg-sombre-texte-doux"
+                    }`}
+                  />
+                  {etatDesCarnets.mot}
+                </p>
+              )}
             </div>
           </div>
 
           {/* ==========================================================
-              §2 — LES LIENS, SOUS LA PHOTO
+              §2 (nº 869) — LA RANGÉE D'ACTIONS, SOUS LE BLOC DU NOM
               ==========================================================
-              DEUX LIGNES, RÈGLE EXACTE (nº 227-§4) : les sites sur la
-              première, Instagram et TikTok ensemble sur la seconde —
-              sauf sans TikTok, où Instagram remonte. Chacun son icône
-              à gauche, la colonne de 18 px pour les trois. Le `mt-8`
-              reste la marge basse de la photo (nº 225-§1). */}
-          {/*  16 px entre les deux lignes (nº 229-§3), et DEUX
-               COLONNES DE LARGEUR ÉGALE (nº 233-§5) : chaque ligne est
-               une grille au même gabarit — l'écart entre Instagram et
-               TikTok est EXACTEMENT celui des deux liens du dessus, et
-               TikTok se range sous le deuxième lien. `justify-items-
-               start` : la colonne est large, le lien garde sa taille.
-               L'ordre de la nº 227 ne bouge pas. */}
-          {/*  §2 (nº 384) — TROIS RANGÉES, ET L'ESPACE ENTRE ELLES EST
-               CELUI DE LA LISTE, un seul écart pour toutes (16 px à
-               l'époque de cette note, 24 depuis la nº 538 — voir le §5,
-               qui l'écrit). La ligne du site et celle des styles s'y
-               rangent sans qu'aucune marge soit écrite : une rangée
-               absente ne rend rien, donc ne laisse aucun vide — un
-               tatoueur sans site n'a pas de trou entre Booking et ses
-               styles, et un tatoueur sans style n'a pas d'icône
-               orpheline. */}
-          {/*  §2 (nº 490) — LA GARDE INTERROGE LES LISTES, PLUS LES
-               ÉLÉMENTS. Tant que les deux lignes étaient fabriquées par
-               une fonction qui rendait `false` sur une liste vide, les
-               nommer suffisait. `LigneDeCapsules` est un COMPOSANT :
-               l'élément JSX existe toujours, même quand il ne rendra
-               rien — il serait donc toujours « vrai » et ouvrirait ce
-               conteneur pour rien (une fiche sans lien, sans technique
-               et sans style aurait gagné 40 px de vide). On teste les
-               longueurs, qui sont la vérité. */}
-          {(premiereLigne.length > 0 ||
-            ligneDuSite.length > 0 ||
-            Boolean(tatoueur.bio) ||
-            aDesPratiques ||
-            aDesStyles) && (
+              Follow · Instagram · Website · Share (voir `rangeeDActions`).
+              Elle prend la place des deux lignes de liens (nº 222-§2 →
+              nº 868). */}
+          {rangeeDActions}
+
+          {/* ==========================================================
+              LA LISTE — la bio, les styles, les techniques, l'adresse
+              ==========================================================
+              §5 (nº 869) — L'ORDRE DU PROPRIÉTAIRE, de haut en bas : le
+              bloc du nom (avatar, nom, type, état des carnets), la rangée
+              d'actions, LA BIO, LES STYLES, LES TECHNIQUES, l'adresse,
+              puis les horaires (qui vivent dans les sections du bas et ne
+              bougent pas). Les deux grilles de liens qui ouvraient cette
+              liste (nº 233-§5, 384, 407, 408) sont parties avec la rangée
+              d'actions.
+              §2 (nº 490) — LA GARDE INTERROGE LES LISTES, PLUS LES
+              ÉLÉMENTS : `LigneDeCapsules` est un composant, son élément
+              JSX existe même vide — on teste les longueurs, qui sont la
+              vérité (une fiche sans bio, sans technique et sans style
+              n'ouvre pas ce conteneur pour rien). */}
+          {(Boolean(tatoueur.bio) || aDesPratiques || aDesStyles) && (
             <div
-              /*  §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ MONTE
-                   D'UN CRAN DE PLUS : 16 px à la nº 389, 20 px depuis, et
-                   VINGT-QUATRE aujourd'hui. C'est le SEUL endroit touché
-                   — aucune marge n'est posée sur les lignes elles-mêmes,
-                   elles n'en ont toujours aucune ; c'est la LISTE qui
-                   commande, et une ligne absente ne laisse donc aucun
-                   vide.
-                   POURQUOI 24 ET PAS 28. L'échelle de quatre n'offrait
-                   que ces deux crans, et 28 aurait ÉGALÉ l'air qui
-                   sépare la liste entière de la biographie juste
-                   dessous. Un écart INTERNE aussi grand que l'écart qui
-                   ferme le bloc aplatit la hiérarchie. À 24, elle tient
-                   dans l'ordre : 24 entre deux lignes, 28 jusqu'à la
-                   bio, 40 entre deux sections.
-                   ⚠️ LES DEUX RANGÉES EN GRILLE GARDENT LEUR ÉCART
-                   INTERNE DE 16 px : il sépare deux liens d'une MÊME
-                   rangée, pas deux lignes — et le contraste entre les
-                   deux se lit mieux qu'avant (16 dedans, 24 dehors).
-                   ⚠️ LES PLAQUES ET LEURS MENTIONS (nº 496-497) NE SONT
-                   PAS DANS CETTE LISTE : elles vivent dans les sections
-                   du bas, hors de ce conteneur. Leurs airs propres —
-                   12 px dedans, 40 px de section — ne bougent pas. */
+              /*  §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ : 16 px
+                   à la nº 389, 20 puis VINGT-QUATRE depuis la nº 538. C'est
+                   le SEUL endroit qui l'écrit — aucune marge n'est posée
+                   sur les lignes elles-mêmes ; c'est la LISTE qui commande,
+                   et une ligne absente ne laisse donc aucun vide. Le rythme
+                   tient : 24 entre deux lignes, 28 autour de la bio
+                   (nº 868), 40 entre deux sections — et 40 entre la rangée
+                   d'actions et cette liste, le `mt-10` qui MESURE la marge
+                   basse de l'en-tête (nº 241). Les plaques et leurs
+                   mentions (nº 496-497) ne sont pas dans cette liste. */
               className="mt-10 flex w-full flex-col items-start gap-y-6"
             >
-              {/*  §3 (nº 408) — `items-start` SUR CETTE RANGÉE, et sur elle
-                   seule. Le booking peut désormais faire DEUX lignes ;
-                   `items-center` aurait alors centré Instagram sur la
-                   hauteur totale, c'est-à-dire l'aurait fait descendre
-                   entre les deux. Aligné en haut, il reste en face de
-                   « Booking ouvert », comme demandé.
-                   ⚠️ LA LARGEUR ET LE PARTAGE EN DEUX COLONNES NE
-                   CHANGENT PAS : `grid-cols-2`, `gap-x-7` et
-                   `justify-items-start` sont intouchés. Seule la
-                   hauteur de la rangée suit son plus grand contenu. */}
-              {premiereLigne.length > 0 && (
-                <div className="grid w-full grid-cols-2 items-start justify-items-start gap-x-7 gap-y-4">
-                  {premiereLigne}
-                </div>
-              )}
-              {/*  ██ §2d (nº 407) — UN LIEN SEUL PREND TOUTE LA LARGEUR ██
-                   LE RELEVÉ : sur la fiche, le titre d'un lien s'abrégeait
-                   par une ellipse « alors que la place ne manque pas ».
-                   LA CAUSE, ET ELLE EST STRUCTURELLE : cette rangée était
-                   en `grid-cols-2` FIXE. Deux pistes existent toujours,
-                   même quand il n'y a QU'UN lien — celui-ci occupe alors
-                   la première et se voit borné à la MOITIÉ de la rangée
-                   par le `max-w-full` de la nº 391. La seconde piste
-                   reste vide à côté. Le `truncate` faisait donc
-                   exactement son travail, sur une piste deux fois trop
-                   étroite.
-                   LE REMÈDE : le nombre de colonnes suit le nombre de
-                   liens. Un lien → UNE piste, pleine largeur, et les
-                   trente caractères tiennent. Deux liens → les deux
-                   pistes d'avant, au pixel près.
-                   ⚠️ LA nº 391 N'EST PAS DÉFAITE, et c'est le point
-                   délicat : `max-w-full` et `truncate` RESTENT sur le
-                   lien (voir `lienEnLigne`). C'est eux qui empêchent une
-                   case de déborder de sa piste — le défaut que la nº 391
-                   réparait. On ne retire pas la borne, on donne à la
-                   piste la largeur qu'elle aurait dû avoir.
-                   ⚠️ LA PREMIÈRE RANGÉE (booking, Instagram) GARDE SES
-                   DEUX COLONNES : ses libellés sont un vocabulaire fermé
-                   et court, il n'y a rien à y abréger (note de la
-                   nº 391) — et le propriétaire n'a signalé que celle-ci. */}
-              {ligneDuSite.length > 0 && (
-                <div
-                  className={`grid w-full items-center justify-items-start gap-x-7 gap-y-4 ${
-                    ligneDuSite.length > 1 ? "grid-cols-2" : "grid-cols-1"
-                  }`}
-                >
-                  {ligneDuSite}
-                </div>
-              )}
               {/*  ██ §5 (nº 868) — LA BIOGRAPHIE MONTE DANS LA LISTE ██
                    L'ORDRE DU PROPRIÉTAIRE, de haut en bas : les liens
                    (booking, Instagram), le site, LA BIO, les STYLES, les

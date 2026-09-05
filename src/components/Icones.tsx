@@ -1641,3 +1641,58 @@ export function IconeAvion({ taille = 20, classe = "" }: ProprietesIcone) {
     </svg>
   );
 }
+
+/**
+ * SUIVRE / SUIVI (nº 869-§3) — les deux dessins de l'action « Follow »
+ * ==================================================================
+ * LE MÊME PERSONNAGE dans les deux : une tête (cercle de rayon 3,4
+ * centré sur (9,5 ; 8)) et des épaules (un arc de 3,2 à 15,8), posés à
+ * gauche de la grille pour laisser la place, à droite, au signe qui
+ * dit l'état — comme les glyphes « person add » que tout le monde
+ * reconnaît. Aucun cercle autour (IconeUtilisateur en a un : c'est un
+ * compte, ici c'est un geste).
+ *  · SUIVRE : un « + » de six unités, centré sur (18,8 ; 8,5) — à plus
+ *    d'une unité de l'encre de la tête, trait compris ;
+ *  · SUIVI : une coche, de (15,8 ; 8,8) à (21,8 ; 6,3) par (18 ; 11),
+ *    la même largeur que le plus, au même endroit — l'œil ne voit que
+ *    le signe changer.
+ * Même écriture que toute la famille : grille de 24, trait 1,8,
+ * extrémités rondes, `currentColor`.
+ */
+function personnageSuivi() {
+  return (
+    <>
+      <circle cx="9.5" cy="8" r="3.4" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M3.2 19.8c.6-3.5 3.2-5.6 6.3-5.6s5.7 2.1 6.3 5.6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </>
+  );
+}
+
+export function IconeSuivre({ taille = 24, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {personnageSuivi()}
+      <path d="M18.8 5.5v6M15.8 8.5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconeSuivi({ taille = 24, classe = "" }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      {personnageSuivi()}
+      <path
+        d="M15.8 8.8 18 11l3.8-4.7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

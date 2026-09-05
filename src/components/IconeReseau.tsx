@@ -102,83 +102,17 @@ export function IconeTikTok({ taille = 20 }: ProprietesIconeLien) {
   );
 }
 
-/**
- * LE CALENDRIER DU BOOKING (nº 273-§1) — l'état des carnets parle de
- * TEMPS, pas de feu de circulation : les trois ronds de la nº 270
- * (vert, gris clair, gris foncé) sont partis. À leur place, CETTE
- * icône — LA MÊME pour les trois états, sans variante : c'est le MOT
- * qui dit l'état (« Booking ouvert », « Booking · 3 mois », « Booking
- * fermé »), l'icône dit seulement de quoi on parle — la
- * disponibilité, ce que « Booking » seul ne dit pas à l'œil qui
- * balaie. Même écriture que ses voisines : trait 1,8 sur la grille de
- * 24, `currentColor` — elle prend le gris doux du libellé à côté
- * duquel elle vit, sans un seul réglage. Tout en CONTOUR : les icônes
- * de la liste des liens n'ont ni aplat ni fond.
- */
-export function IconeCalendrier({ taille = 20 }: ProprietesIconeLien) {
-  return (
-    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      {/*  Le corps, en contour — mêmes proportions qu'Instagram. */}
-      <rect
-        x="3.4"
-        y="5"
-        width="17.2"
-        height="15.6"
-        rx="2.6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      {/*  Les deux anneaux, au-dessus du corps. */}
-      <path
-        d="M8.2 3v3.4M15.8 3v3.4"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      {/*  La ligne du bandeau — le trait qui fait lire « calendrier ». */}
-      <path d="M3.4 10h17.2" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
+/*  ⛔ LE CALENDRIER DU BOOKING (nº 273-§1 → nº 868) N'EST PLUS ICI :
+    l'état des carnets vit dans le bloc du nom depuis la nº 869-§2 — un
+    point de couleur et le mot, sans icône. Le dessin n'avait plus de
+    lecteur (le calendrier des fiches artisans est celui d'Icones.tsx),
+    il est parti avec sa ligne (règle nº 386). */
 
-/**
- * §2 (nº 385) — L'ÉTOILE À CINQ BRANCHES, POUR LA LIGNE DES STYLES.
- * ==================================================================
- * Elle REMPLACE la machine à tatouer de la nº 384, que le propriétaire
- * n'a pas retenue. Aucun fichier n'est ajouté au dépôt : c'est un
- * tracé, comme ses voisines.
- *
- * SON TRAITEMENT EST CELUI D'INSTAGRAM, REPRIS SANS RIEN CHOISIR :
- *  · EN CONTOUR — `fill="none"` et un trait, comme l'appareil photo
- *    d'Instagram et le calendrier du booking. Aucune icône de cette
- *    liste n'a d'aplat ;
- *  · MÊME ÉPAISSEUR — 1,8 sur la grille de 24 ;
- *  · MÊME COULEUR — `currentColor`, c'est-à-dire AUCUNE couleur
- *    déclarée : elle prend celle du texte de sa ligne, le gris doux
- *    `sombre-texte-doux` d'`ECRITURE_LIGNE_FICHE`. Exactement ce que
- *    fait Instagram, par le même moyen ;
- *  · MÊME TAILLE — 20 px, dans la boîte de 22 px partagée par toutes
- *    les lignes du profil (`BOITE_ICONE_LIGNE`).
- *
- * LE TRACÉ : cinq branches, rayon extérieur 8,6 et rayon intérieur
- * 3,285 (le rapport classique 0,382), centrées sur (12, 12), la
- * première pointe vers le haut. Les jonctions sont arrondies —
- * à 20 px, des angles vifs sur un trait de 1,8 se remplissent et
- * l'étoile devient une tache.
- */
-export function IconeEtoile({ taille = 20 }: ProprietesIconeLien) {
-  return (
-    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M12 3.4 13.93 9.34 20.18 9.34 15.12 13.02 17.06 18.96
-           12 15.29 6.94 18.96 8.88 13.02 3.82 9.34 10.07 9.34 Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+/*  ⛔ L'ÉTOILE (nº 488 → nº 868) N'EST PLUS ICI : les lignes de badges
+    d'un profil (styles, techniques) n'ouvrent plus sur une icône depuis
+    la nº 869-§1 — texte seul, contour, gris. Le dessin n'avait plus de
+    lecteur (l'étoile des notifications est celle d'Icones.tsx), il est
+    parti avec la nº 869 (règle nº 386). */
 
 /*  ⛔ §6 (nº 868) — LE DIAMANT A QUITTÉ LE DÉPÔT. Il ouvrait la ligne
     des TECHNIQUES d'un profil depuis la nº 489 ; le propriétaire y met

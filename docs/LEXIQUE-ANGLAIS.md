@@ -557,3 +557,28 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > **Le seul porteur aujourd'hui** est le pied des cartes du doigt
 > (`PiedDeFil`, CarteFil) — résultats, vue photo, fil de galeries.
 
+
+---
+
+## Passe nº 869 — l'en-tête d'un profil : l'état des carnets, la rangée d'actions
+
+| avant | après | où |
+| --- | --- | --- |
+| **Books open** / **Books closed** / **Books open** + **3-month wait** — sur la ligne des liens, avec un calendrier | **Books open** (point VERT) / **Waitlist** (point GRIS) / **Books closed** (point GRIS) — dans le bloc du nom, sous le type, sans icône | `etatDesCarnets`, ContenuFiche |
+| **Instagram** / **DM • Instagram** — un lien de la liste, en bleu | **Instagram** — une cible carrée de la rangée d'actions, le mot centré dessous | `rangeeDActions`, ContenuFiche (`ActionDeFiche`) |
+| le titre choisi du site (ou son domaine) — un lien de la liste, en bleu | **Website** — une cible de la rangée, toujours ce mot | idem |
+| **Follow** / **Following** (le badge à droite du va-et-vient) | **Follow** / **Following** (inchangés) — la première cible de la rangée, le personnage avec un « + » puis avec une coche | `BoutonSuivre` |
+| **Share <nom>'s portfolio** (la flèche nue à gauche du badge) | **Share** — la dernière cible de la rangée ; le nom accessible ne change pas | `BoutonPartageFiche`, habillage « rangee » |
+
+> **Le mot dit l'état, le point dit la couleur** : « Waitlist » remplace
+> le couple « Books open / N-month wait » (nº 408) — le nombre de mois
+> n'est plus écrit à l'écran (il reste en base et dans le formulaire).
+> **La rangée n'a jamais une icône seule** : « Follow » et « Share » y
+> sont toujours ; « Instagram » et « Website » quand ils sont renseignés.
+> **Ce qui n'est PLUS écrit** : la mention « DM », le titre choisi d'un
+> site, et la page de liens (le formulaire ne l'écrit plus depuis la
+> nº 270).
+> **Ce qui n'a PAS changé** : « Profile » / « Portfolio » (le va-et-vient,
+> désormais seul sur sa ligne, chaque onglet la moitié), les noms
+> accessibles « Follow <nom> » / « Unfollow <nom> », et les badges de
+> styles et de techniques — texte seul, sans icône en tête de ligne.

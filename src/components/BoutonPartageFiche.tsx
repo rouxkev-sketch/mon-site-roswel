@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { EnteteModale, FenetreModale } from "@/components/FenetreModale";
 import { FenetreDeVerre } from "@/components/SurfaceDeVerre";
+//  §3 (nº 869) — la cible carrée et le mot dessous : l'écriture unique
+//  des quatre actions de la rangée d'un profil (habillage « rangee »).
+import { ActionDeFiche } from "@/components/ActionDeFiche";
 import {
   IconePartageEmail,
   IconePartageFacebook,
@@ -149,7 +152,17 @@ export function BoutonPartageFiche({
       photo mobile et la rangée du profil, à gauche de « Suivre ».
       MÊME action `partager` que les autres habillages : rien d'autre
       ne change. */
-  variante?: "fiche" | "carte" | "icone";
+  variante?: "fiche" | "carte" | "icone" | "rangee";
+  /*  ██ §3 (nº 869) — L'HABILLAGE « rangee » ██
+      La rangée d'actions d'un profil (ContenuFiche) : le partage y est
+      UNE DES QUATRE cibles — le carré à coins arrondis et le mot
+      « Share » dessous, l'écriture partagée d'`ActionDeFiche`. MÊME
+      action `partager`, même fenêtre, même « Link copied! » que les
+      autres habillages : seul le dessin du déclencheur change.
+      ⚠️ L'HABILLAGE « icone » RESTE : le pied des cartes du doigt
+      (PiedDeFil) le lit toujours — la flèche nue de 40 px. Le profil,
+      lui, ne l'appelle plus : « à gauche de Suivre » est de l'histoire
+      (nº 458 → nº 868), les deux gestes vivent dans la rangée. */
   /** §2 (nº 459) — LA TAILLE DU GLYPHE de la variante « icone » (les
       autres habillages ne la lisent pas). 22 par défaut (le profil, à
       gauche de « Suivre ») ; la vue photo du doigt demande 28 — la
@@ -575,6 +588,34 @@ export function BoutonPartageFiche({
       </>
     </FenetreModale>
   ) : null;
+
+  if (variante === "rangee") {
+    return (
+      <div className="relative min-w-0">
+        <ActionDeFiche
+          cle="share"
+          ref={declencheur}
+          onClick={partager}
+          ariaHaspopup={avecFenetre ? "dialog" : undefined}
+          ariaLabel={`Share ${nomArtisan}'s ${objet}`}
+          icone={<IconePartageIOS taille={24} />}
+          mot="Share"
+        />
+        {copie && (
+          /*  « Link copied! » sous le carré, centré sur lui — la bulle
+              des autres habillages, posée là où l'œil est. */
+          <span
+            role="status"
+            className="absolute top-14 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full bg-encre px-3 py-1.5 text-xs font-medium text-white shadow-lg"
+          >
+            Link copied!
+          </span>
+        )}
+        {fenetre}
+        {fenetreSombre}
+      </div>
+    );
+  }
 
   if (variante === "icone") {
     return (
