@@ -14,9 +14,11 @@ import {
   ECRITURE_TITRE_SECTION,
 } from "@/config/tatouage";
 import {
+  NATURE_PAR_DEFAUT,
   RENDU_PAR_DEFAUT,
   RENDUS_PHOTO,
   titreDeGalerie,
+  type SlugNature,
 } from "@/lib/photos-tatoueur";
 import {
   CHEVRON_GALERIE_PETIT,
@@ -24,11 +26,20 @@ import {
 } from "@/components/GalerieQuiDefile";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
 import { photoDuBord } from "@/lib/photos-du-bord";
+//  §1 (nº 873) — les trois vues d'un portfolio et leurs adresses : une
+//  feuille sans dépendance, lue ici comme par les routes et le proxy.
+import {
+  LIBELLES_DES_VUES,
+  VUES_DE_FICHE,
+  type VueDeFiche,
+} from "@/lib/lien-interne";
 
 /**
- * L'AFFICHE EN DEUX ONGLETS — « Profil » et « Portfolio »
+ * L'AFFICHE EN TROIS ONGLETS — « Profile », « Portfolio », « Flash »
  * ==================================================================
- * (passe nº 197 ; refondu par la nº 276-§3)
+ * (passe nº 197 ; refondu par la nº 276-§3 ; TROIS PAGES depuis la
+ * nº 873-§1 — voir `SelecteurOngletAffiche` plus bas, et
+ * lib/lien-interne pour les adresses.)
  *
  *  · « Profil / Portfolio » (nº 205-§1) — DEUX MOTS NUS côte à côte,
  *    l'actif en blanc, l'autre en gris, et sous lui un TRAIT ROSE qui
@@ -73,8 +84,10 @@ import { photoDuBord } from "@/lib/photos-du-bord";
  * bougé.
  */
 
-/** Les deux onglets de l'affiche. */
-export type OngletAffiche = "profil" | "portfolio";
+/*  §1 (nº 873) — LES ONGLETS SONT LES VUES D'UN PORTFOLIO (`VueDeFiche`,
+    lib/lien-interne) : « profil », « portfolio », « flash » — trois
+    pages, trois adresses. Le type `OngletAffiche` à deux valeurs de la
+    nº 197 est parti avec l'onglet-requête (« ?onglet=portfolio »). */
 
 /** UNE SÉRIE — ce qu'un toucher de vignette ouvre (nº 204-§3) :
     exactement une galerie de dépôt. */
@@ -88,10 +101,30 @@ export type SerieChoisie = {
   indice?: number;
 };
 
-const ONGLETS: Array<{ cle: OngletAffiche; label: string }> = [
-  { cle: "profil", label: "Profile" },
-  { cle: "portfolio", label: "Portfolio" },
-];
+//  §2 (nº 873) — LES TROIS ONGLETS, dans l'ordre des vues ; « Flash »
+//  est TOUJOURS là, même sans flash : la page existe, et dit alors
+//  « No flash yet. » (§4). Les mots vivent avec les adresses.
+const ONGLETS: Array<{ cle: VueDeFiche; label: string }> = VUES_DE_FICHE.map(
+  (cle) => ({ cle, label: LIBELLES_DES_VUES[cle] })
+);
+
+/**
+ * §1 (nº 873) — LA CATÉGORIE QU'UNE VUE MONTRE : « Portfolio » montre
+ * les tatouages (la nature par défaut du site), « Flash » les flashs.
+ * Le profil n'en montre aucune (`null`). C'est l'entrée de
+ * `CATEGORIES_EXPLORER` — son titre (« Tattoos », « Flash ») coiffe
+ * chaque galerie, sa phrase `vide` remplit une page sans photo.
+ */
+export function categorieDeLaVue(
+  vue: VueDeFiche
+): (typeof CATEGORIES_EXPLORER)[number] | null {
+  if (vue === "profil") return null;
+  const nature: SlugNature = vue === "flash" ? "flash" : NATURE_PAR_DEFAUT;
+  return (
+    CATEGORIES_EXPLORER.find((categorie) => categorie.nature === nature) ??
+    null
+  );
+}
 
 /** Le rendu d'une photo, jamais vide : les lignes d'avant la migration
     nº 48 n'en portent pas — on lit alors le même défaut que partout. */
@@ -146,21 +179,54 @@ function renduDe(photo: PhotoGalerie): string {
  * dans la sienne, sur toute la largeur (§4). Rien de ce fichier ne le
  * concerne.
  */
+/**
+ * ██ §1 ET §2 (nº 873) — TROIS ONGLETS, ET DEUX NATURES ██
+ * ------------------------------------------------------------------
+ * « Profile · Portfolio · Flash », chaque onglet un tiers, le mot
+ * centré, et LE TRAIT ROUGE SUR TOUTE LA LARGEUR DE L'ONGLET
+ * (`traitPlein` — la nº 871-§1 est annulée ici, et ici seulement :
+ * « Ma sélection » garde son trait court).
+ * SUR UNE PAGE PUBLIQUE (`adresses` fournies), les onglets sont des
+ * LIENS entre les trois pages d'un portfolio — la navigation douce de
+ * l'accueil (nº 860), la même bascule de nature d'`OngletsLigne` ;
+ * `surDepart` est ce que ContenuFiche déclare avant de partir (la
+ * place de la page visée). SANS ADRESSES — la fenêtre superposée du
+ * web, qui n'a pas d'adresse à elle, et l'aperçu « Ma fiche » —, ce
+ * sont des boutons, et `surChoix` change le contenu sur place, comme
+ * depuis la nº 197.
+ */
 export function SelecteurOngletAffiche({
   valeur,
   surChoix,
+  adresses,
+  surDepart,
 }: {
-  valeur: OngletAffiche;
-  surChoix: (onglet: OngletAffiche) => void;
+  valeur: VueDeFiche;
+  /** Le choix, quand les onglets sont des boutons (pas d'adresses). */
+  surChoix?: (onglet: VueDeFiche) => void;
+  /** Les adresses des trois vues (`adressesDesVues`) : les onglets
+      deviennent des liens. */
+  adresses?: Record<VueDeFiche, string>;
+  /** Ce qu'il faut déclarer avant de suivre un lien d'onglet. */
+  surDepart?: (onglet: VueDeFiche) => void;
 }) {
   return (
     <OngletsLigne
-      options={ONGLETS}
+      options={
+        adresses
+          ? ONGLETS.map((onglet) => ({
+              ...onglet,
+              href: adresses[onglet.cle],
+              surClic: () => surDepart?.(onglet.cle),
+            }))
+          : ONGLETS
+      }
       cleActive={valeur}
-      //  Les clés sont celles de `ONGLETS`, donc des `OngletAffiche` :
+      //  Les clés sont celles de `ONGLETS`, donc des `VueDeFiche` :
       //  le composant partagé, lui, parle en chaînes.
-      surChoix={(cle) => surChoix(cle as OngletAffiche)}
-      ariaLabel="Profile or portfolio"
+      surChoix={surChoix ? (cle) => surChoix(cle as VueDeFiche) : undefined}
+      ariaLabel="Profile, portfolio or flash"
+      traitPlein
       /*  ██ §4 (nº 869) — TOUTE LA LARGEUR, CHAQUE ONGLET LA MOITIÉ ██
           « Follow » et « Share » ont quitté la rangée pour la rangée
           d'actions du profil (§3) : le va-et-vient y est seul, et il la
@@ -263,21 +329,28 @@ export type GalerieDuPortfolio = {
  * VIDE NE REND RIEN : ni titre, ni espace (nº 276-§3) ; une liste vide
  * dit « No posts yet » (le panneau) ou ne dessine aucune carte (le fil).
  */
+/**
+ * ██ §1 (nº 873) — UNE CATÉGORIE À LA FOIS ██
+ * ------------------------------------------------------------------
+ * Le portfolio et les flashs sont DEUX PAGES : la liste ne mêle plus
+ * les deux catégories, elle rend les galeries de CELLE qu'on lui
+ * demande — les tatouages sur `/portfolio`, les flashs sur `/flash`
+ * (`categorieDeLaVue`). L'ordre dans une catégorie ne bouge pas. Une
+ * nature inconnue ne rend rien.
+ */
 export function galeriesDuPortfolio(
-  groupes: StyleGalerie[]
+  groupes: StyleGalerie[],
+  nature: string
 ): GalerieDuPortfolio[] {
-  const sections = CATEGORIES_EXPLORER.map((categorie) => ({
-    nature: categorie.nature,
-    titre: categorie.titre,
-    series: seriesDeLaCategorie(groupes, categorie.nature),
-  })).filter((section) => section.series.length > 0);
-  return sections.flatMap((section) =>
-    section.series.map((serie) => ({
-      serie,
-      nature: section.nature,
-      titre: section.titre,
-    }))
+  const categorie = CATEGORIES_EXPLORER.find(
+    (candidate) => candidate.nature === nature
   );
+  if (!categorie) return [];
+  return seriesDeLaCategorie(groupes, nature).map((serie) => ({
+    serie,
+    nature,
+    titre: categorie.titre,
+  }));
 }
 
 /**
@@ -464,14 +537,28 @@ function TeteDeGalerie({
  * LE PANNEAU « PORTFOLIO » — UNE SUITE DE GALERIES, sans plus aucun
  * sélecteur (nº 276-§3) ni aucun titre de section (nº 375-§2). Chaque
  * galerie porte sa catégorie en surtitre.
+ * ██ §1 ET §3 (nº 873) — LES GALERIES D'UNE PAGE, ET LE WEB SEUL ██
+ * ------------------------------------------------------------------
+ * Il ne reçoit plus le portfolio entier : ContenuFiche lui donne LES
+ * GALERIES DE LA PAGE (`galeriesDuPortfolio`, une catégorie), jamais
+ * vides — une page sans photo montre l'écran vide du site, chez lui.
+ * AU DOIGT, CE PANNEAU NE SE MONTRE PLUS : les pages Portfolio et
+ * Flash y sont LE FIL DE GALERIES (FilDeGalerie) — les bandes par
+ * style et la page intermédiaire de la nº 866 ont disparu du mobile.
+ * Ses deux blocs (« doigt », « web ») restent ce qu'ils étaient : le
+ * WEB garde sa présentation, galeries par style, sans qu'on y touche ;
+ * le bloc « doigt » ne sert plus qu'à une fenêtre étroite d'ordinateur
+ * — l'appareil décide (ContenuFiche, `mobile:hidden`), jamais une
+ * largeur (piège nº 60).
  */
 export function PanneauPortfolio({
-  groupes,
+  galeries,
   surSerie,
   nomTatoueur,
   slugTatoueur = "",
 }: {
-  groupes: StyleGalerie[];
+  /** Les galeries de la page — une catégorie, au moins une galerie. */
+  galeries: GalerieDuPortfolio[];
   /** Un toucher sur une vignette : la galerie principale montre CETTE
       série — style + catégorie + rendu, une galerie de dépôt — et la
       page remonte en haut (nº 197-§4, précisé par la nº 204-§3). */
@@ -490,20 +577,11 @@ export function PanneauPortfolio({
   useEffect(() => {
     if (slugTatoueur) oublierLesAutresGaleries(slugTatoueur);
   }, [slugTatoueur]);
-  /*  LES GALERIES — « Réalisations » puis « Flashs », une seule suite,
-      chacune portant sa catégorie : l'écriture partagée avec le fil de
-      galeries, au module (nº 866 ; la règle est celle de la nº 375). */
-  const galeries = galeriesDuPortfolio(groupes);
-
-  if (galeries.length === 0) {
-    /*  §5 (nº 197) — LE TITRE SEUL, centré. Aucune phrase, aucune
-        icône. */
-    return (
-      <p className="mt-10 text-center text-[16px] font-semibold text-sombre-texte-doux">
-        No posts yet
-      </p>
-    );
-  }
+  /*  LES GALERIES sont celles de la page (nº 873) — la liste que le fil
+      de galeries lit aussi (nº 866 ; la règle est celle de la nº 375),
+      calculée une fois par ContenuFiche. « No posts yet » (nº 197-§5)
+      n'a plus de place ici : une page vide se dit là-bas, par l'écran
+      vide du site (§4). */
 
   /**
    * §3 (nº 314) — LES CASES D'UNE GALERIE, ÉCRITES UNE SEULE FOIS.
@@ -571,10 +649,10 @@ export function PanneauPortfolio({
         {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
              UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),
              avec le RANG en plus : en web il pose la photo dans le
-             cadre du haut, au doigt il NAVIGUE vers la vue photo
-             (nº 455 — voir `surSerieChoisie` dans FicheTatoueur ; la
-             page plein écran qu'il ouvrait avant n'existe plus depuis
-             la nº 602). */}
+             cadre du haut. (Au doigt, la vignette NAVIGUAIT vers la vue
+             photo — nº 455, puis le fil de galeries de la nº 863 ; ce
+             panneau ne se montre plus au doigt depuis la nº 873-§3, et
+             ce chemin-là n'existe plus.) */}
         <button
           type="button"
           onClick={() =>

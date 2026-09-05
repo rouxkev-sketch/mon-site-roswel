@@ -30,10 +30,47 @@
  * remettra à traîner tout ce qui pend derrière.
  */
 
-/** §3 (nº 329) — LE NOM DU PARAMÈTRE D'ONGLET, écrit une seule fois.
-    Absent = « Profil », l'onglet d'arrivée : une adresse nue reste
-    exactement ce qu'elle était avant cette passe. */
-export const PARAM_ONGLET = "onglet";
+/**
+ * ██ §1 (nº 873) — LES TROIS PAGES D'UN PORTFOLIO, ET LEURS ADRESSES ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : le profil, le portfolio et les flashs d'un
+ * artiste sont TROIS PAGES, à trois adresses — web comme doigt :
+ *  · `/artist/<nom>`            → le PROFIL (l'en-tête et les infos) ;
+ *  · `/artist/<nom>/portfolio`  → le PORTFOLIO (les tatouages) ;
+ *  · `/artist/<nom>/flash`      → les FLASHS (les planches).
+ * Chacune a son titre, sa canonique et son contenu propre — pour
+ * Google —, et le va-et-vient Profile · Portfolio · Flash est un LIEN
+ * entre les trois (navigation douce, comme l'accueil de la nº 860).
+ * ⚠️ CE QUI PART AVEC : `PARAM_ONGLET` (« ?onglet=portfolio », nº 329)
+ * — l'onglet ne vit plus dans la requête, il vit dans le CHEMIN. Les
+ * anciennes adresses (« ?onglet=portfolio », « ?entree=portfolio… »)
+ * sont redirigées en 301 par le proxy vers la page qui leur
+ * correspond.
+ * ⚠️ AUCUN IMPORT, toujours : ces écritures restent une feuille.
+ */
+export type VueDeFiche = "profil" | "portfolio" | "flash";
+/** Les trois vues, dans l'ordre du va-et-vient — c'est aussi l'ordre
+    du glissement latéral (ContenuFiche). */
+export const VUES_DE_FICHE: readonly VueDeFiche[] = [
+  "profil",
+  "portfolio",
+  "flash",
+];
+/** LES MOTS DU VA-ET-VIENT — « Profile · Portfolio · Flash » — écrits
+    une fois : les onglets (PortfolioDeLAffiche) et le fil d'Ariane des
+    moteurs (page-de-fiche) les lisent ici. */
+export const LIBELLES_DES_VUES: Record<VueDeFiche, string> = {
+  profil: "Profile",
+  portfolio: "Portfolio",
+  flash: "Flash",
+};
+/** LE CHEMIN D'UNE PAGE D'UN PORTFOLIO — écrit une seule fois : les
+    routes, le va-et-vient, le plan du site, le proxy et les bancs le
+    lisent ici. Le profil est l'adresse nue ; les deux autres pages
+    portent le mot de leur vue. */
+export function cheminDeFiche(slug: string, vue: VueDeFiche = "profil"): string {
+  return vue === "profil" ? `/artist/${slug}` : `/artist/${slug}/${vue}`;
+}
 
 /**
  * §4 (nº 329) — COMMENT ON EST ARRIVÉ SUR CETTE FICHE.
@@ -58,27 +95,11 @@ export const PARAM_ONGLET = "onglet";
  */
 export const PARAM_ENTREE = "entree";
 export const ENTREE_LIEN = "lien";
-/**
- * ██ §3 (nº 863) — LA SECONDE CONSIGNE : « entree=portfolio » ██
- * ------------------------------------------------------------------
- * Une vignette de l'ONGLET PORTFOLIO d'un profil, au doigt, ouvre la vue
- * photo AUTREMENT qu'une carte de « Ma sélection » ou qu'un lien
- * partagé (décision du propriétaire) : LE FIL DE GALERIES — une carte
- * par galerie du portfolio, chacune un carrousel coiffé du titre de sa
- * galerie, la page ouverte sur la carte touchée et la carte sur la
- * photo touchée (FilDeGalerie ; la nº 863 empilait une carte par photo,
- * la nº 866-§1 l'a refait sur consigne).
- * C'est celui qui pose le lien qui sait d'où il vient (la règle de la
- * nº 365 : un réglage explicite, jamais une devinette d'adresse) — le
- * geste de l'onglet écrit donc cette consigne dans l'adresse, comme les
- * liens internes écrivent `entree=lien`, et la fiche la lit. Un retour,
- * un pas en avant, un rechargement la retrouvent tout seuls : c'est le
- * même motif, pour la même raison (nº 329).
- * ⚠️ AUCUN LIEN PARTAGÉ NE LA PORTE : le partage écrit l'adresse d'une
- * photo (`cheminDuCarrousel`), sans consigne — qui l'ouvre voit la vue
- * photo de la nº 862 (avatar, photo, icônes), c'est le §4.
- */
-export const ENTREE_PORTFOLIO = "portfolio";
+/*  ⚠️ LA SECONDE CONSIGNE, « entree=portfolio » (nº 863-§3), N'EXISTE
+    PLUS (nº 873) : la vignette de l'onglet Portfolio n'ouvre plus de
+    vue photo au doigt — le portfolio est une PAGE (`cheminDeFiche`,
+    plus haut), et le fil de galeries en est le contenu. Une vieille
+    adresse qui la porte est redirigée en 301 par le proxy. */
 
 /**
  * §4 (nº 330) — LA CONSIGNE, POSÉE SUR N'IMPORTE QUELLE ADRESSE.
@@ -101,5 +122,26 @@ export function avecConsigneDeLienInterne(adresse: string): string {
 /** L'adresse d'un portfolio ouvert DEPUIS UN AUTRE PORTFOLIO. Écrite
     une fois, employée par tous les liens internes. */
 export function adresseDeLienInterne(slug: string): string {
-  return avecConsigneDeLienInterne(`/artist/${slug}`);
+  return avecConsigneDeLienInterne(cheminDeFiche(slug));
+}
+
+/**
+ * §1 (nº 873) — LES ADRESSES DES TROIS ONGLETS D'UN PORTFOLIO.
+ * ------------------------------------------------------------------
+ * Le va-et-vient Profile · Portfolio · Flash d'une page publique est
+ * fait de trois liens ; voici ce qu'ils écrivent.
+ * ⚠️ L'ONGLET « PROFILE » PORTE LA CONSIGNE DE LIEN INTERNE, comme tout
+ * lien du site vers un profil : au doigt, l'adresse NUE d'un portfolio
+ * est la VUE PHOTO (nº 844-§4 — la vitrine, celle d'un lien partagé),
+ * et c'est `entree=lien` qui ouvre le profil (règle 6). Revenir au
+ * profil depuis le portfolio ou les flashs, c'est un lien interne :
+ * il écrit donc ce que les autres écrivent. Les deux autres pages
+ * n'ont pas de vue photo — leur chemin suffit.
+ */
+export function adressesDesVues(slug: string): Record<VueDeFiche, string> {
+  return {
+    profil: adresseDeLienInterne(slug),
+    portfolio: cheminDeFiche(slug, "portfolio"),
+    flash: cheminDeFiche(slug, "flash"),
+  };
 }

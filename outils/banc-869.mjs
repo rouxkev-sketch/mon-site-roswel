@@ -3,8 +3,9 @@
 //   1. LES BADGES SANS ICÔNE : plus aucun dessin en tête des lignes de
 //      styles et de techniques ; texte seul, contour, gris — et les
 //      capsules commencent au bord de la liste.
-//   2. LE VA-ET-VIENT Profile / Portfolio seul sur sa rangée, toute la
-//      largeur, chaque onglet la moitié, le mot centré, sans icône.
+//   2. LE VA-ET-VIENT seul sur sa rangée, toute la largeur, le mot
+//      centré, sans icône — TROIS LIENS depuis la nº 873 (Profile ·
+//      Portfolio · Flash), chacun un tiers.
 //   3. L'ORDRE : bloc du nom, rangée d'actions, bio, styles, techniques,
 //      adresse.
 //   4. FOLLOW ET UNFOLLOW NE TOUCHENT PLUS À L'HISTOIRE (l'acquis de la
@@ -86,8 +87,9 @@ const LIRE = `() => {
       icone: carre.querySelector("svg") ? B(carre.querySelector("svg")).w : null,
       mot: mot.textContent.trim().replace(/Follow(ing)?FollowFollowing$/, (m) => m.startsWith("Following") ? "Following" : "Follow"),
       centreMot: centreTexte(mot), motY: B(mot).y, couleurMot: getComputedStyle(mot).color, largeur: B(a.closest("[data-rangee-actions] > *")).w }; }) : null;
-  const groupe = document.querySelector('[role=radiogroup][aria-label="Profile or portfolio"]');
-  const onglets = groupe ? [...groupe.querySelectorAll("[role=radio]")].map((b) => ({ mot: b.textContent.trim(), ...B(b), centre: +((B(b).x + B(b).d) / 2).toFixed(1), centreMot: centreTexte(b), svg: b.querySelectorAll("svg").length })) : null;
+  //  nº 873 — trois liens dans une navigation, plus un groupe de boutons.
+  const groupe = document.querySelector('nav[aria-label="Profile, portfolio or flash"]');
+  const onglets = groupe ? [...groupe.querySelectorAll("a")].map((b) => ({ mot: b.textContent.trim(), ...B(b), centre: +((B(b).x + B(b).d) / 2).toFixed(1), centreMot: centreTexte(b), svg: b.querySelectorAll("svg").length })) : null;
   const rangeeDuHaut = groupe?.parentElement;
   const ligne = (m) => { const n = document.querySelector("[" + m + "]"); if (!n) return null;
     const capsule = [...n.querySelectorAll("span")].find((e) => e.className.includes("px-2.5")); const s = capsule ? getComputedStyle(capsule) : null;
@@ -132,11 +134,11 @@ for (const mode of ["doigt", "web"]) {
     //  §4
     verif("§4 — le va-et-vient est seul sur sa rangée : ni Follow ni Share à côté",
       v.rangeeDuHaut && v.rangeeDuHaut.actions === 0 && v.rangeeDuHaut.boutons === 0, JSON.stringify(v.rangeeDuHaut));
-    verif("§4 — il prend toute la largeur, chaque onglet la moitié",
-      v.groupe && v.onglets?.length === 2 && proche(v.groupe.w, v.rangeeDuHaut?.largeurContenu, 2) && v.onglets.every((o) => proche(o.w, v.groupe.w / 2)),
+    verif("§4 — il prend toute la largeur, chaque onglet un tiers (nº 873 : trois liens)",
+      v.groupe && v.onglets?.length === 3 && proche(v.groupe.w, v.rangeeDuHaut?.largeurContenu, 2) && v.onglets.every((o) => proche(o.w, v.groupe.w / 3)),
       JSON.stringify({ groupe: v.groupe?.w, onglets: v.onglets?.map((o) => o.w), contenu: v.rangeeDuHaut?.largeurContenu }));
     verif("§4 — le mot centré dans son onglet, sans icône",
-      v.onglets?.every((o) => proche(o.centreMot, o.centre) && o.svg === 0) && JSON.stringify(v.onglets?.map((o) => o.mot)) === JSON.stringify(["Profile", "Portfolio"]),
+      v.onglets?.every((o) => proche(o.centreMot, o.centre) && o.svg === 0) && JSON.stringify(v.onglets?.map((o) => o.mot)) === JSON.stringify(["Profile", "Portfolio", "Flash"]),
       JSON.stringify(v.onglets?.map((o) => [o.mot, o.centreMot, o.centre, o.svg])));
     //  §5
     verif("§5 — l'ordre : bloc du nom, rangée d'actions, bio, styles, techniques, adresse",

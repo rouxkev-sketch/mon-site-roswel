@@ -5,7 +5,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 //  elle survit aux remontages (leçon nº 430), voir lib/memoire-galeries.
 import {
   defilementGalerieRetenu,
-  photoDeGalerieRetenue,
   retenirDefilementGalerie,
 } from "@/lib/memoire-galeries";
 
@@ -430,41 +429,18 @@ export function GalerieQuiDefile({
     const cadre = zone.current;
     if (!cadre) return;
     const retenue = defilementGalerieRetenu(cleMemoire);
-    /*  ██ §1 (nº 866) — LE RANG D'UNE PHOTO PASSE DEVANT LA POSITION ██
-        Le fil de galeries (FilDeGalerie) note LA PHOTO REGARDÉE dans la
-        carte de cette galerie (lib/memoire-galeries, `retenirPhotoDe
-        Galerie`) ; au remontage, la bande se pose SUR CETTE CASE — son
-        bord gauche au bord utile du cadre, là où l'accrochage
-        (`snap-start`, rembourrage de défilement compris) la poserait
-        lui-même. La position en pixels ne sert que s'il n'y a aucun
-        rang à honorer ; le rang est consommé à la lecture, et le
-        démontage suivant retient à nouveau des pixels, comme avant.
-        ⚠️ TRADUIT AU MOMENT DE LA POSE, jamais avant : la case n'a sa
-        place que mise en page, et la pose se répète tant que le cadre
-        n'a pas de largeur (l'image suivante, puis l'observateur de
-        taille, ci-dessous) — le rang se relit donc à chaque essai. */
-    const photo = photoDeGalerieRetenue(cleMemoire);
-    const cible = (): number | undefined => {
-      if (photo === undefined) return retenue;
-      const cases = cadre.querySelectorAll<HTMLElement>("[data-case-galerie]");
-      const visee = cases[Math.min(photo, cases.length - 1)];
-      if (!visee) return retenue;
-      const rembourrage = parseFloat(getComputedStyle(cadre).paddingLeft) || 0;
-      return Math.max(
-        0,
-        Math.round(
-          cadre.scrollLeft +
-            visee.getBoundingClientRect().left -
-            cadre.getBoundingClientRect().left -
-            rembourrage
-        )
-      );
-    };
+    /*  ⛔ §1 (nº 866 → nº 873) — « LE RANG D'UNE PHOTO PASSE DEVANT LA
+        POSITION » n'existe plus : le fil de galeries ne note plus la
+        photo regardée (il n'y a plus de bande au doigt à qui la dire —
+        les pages Portfolio et Flash SONT le fil, nº 873-§3). La pose ne
+        connaît plus que la position en pixels (nº 459), comme avant la
+        nº 866 ; ce qui suit — la vérification de la pose et la
+        protection de la mémoire (nº 863-§5) — n'a pas bougé. */
     const aUneLargeur = () => cadre.scrollWidth > cadre.clientWidth;
-    let posee = photo === undefined && (retenue === undefined || retenue <= 0);
+    let posee = retenue === undefined || retenue <= 0;
     const poser = () => {
       if (posee || !aUneLargeur()) return;
-      const voulue = cible();
+      const voulue = retenue;
       if (voulue === undefined || voulue <= 0) {
         posee = true;
         return;

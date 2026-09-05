@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { adresseDuSite } from "@/lib/email";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
 import { estEnLigne, styleConnu } from "@/lib/tatoueurs";
+//  §1 (nº 873) — les trois pages d'un portfolio, leur chemin écrit une
+//  seule fois.
+import { cheminDeFiche } from "@/lib/lien-interne";
 import { chargerStylesAjoutes } from "@/lib/styles-ajoutes";
 //  nº 811/814 — les adresses des pages éditoriales, écrites une fois.
 import {
@@ -27,7 +30,9 @@ export const revalidate = 86400;
  *
  * CE QU'IL LISTE, ET RIEN D'AUTRE :
  *  - l'accueil, « Qui sommes-nous », « Contact », les mentions légales ;
- *  - les fiches /artist/nom des tatoueurs PUBLIÉS ;
+ *  - les fiches /artist/nom des tatoueurs PUBLIÉS — et, depuis la
+ *    nº 873-§1, leurs deux autres pages, /artist/nom/portfolio et
+ *    /artist/nom/flash : trois adresses, trois titres, trois canoniques ;
  *  - les pages /tattoo/style/ville qui EXISTENT vraiment (au moins
  *    un tatoueur — jamais de page vide dans un plan de site).
  *
@@ -108,11 +113,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const fiches = await fichesPourLePlan();
     for (const fiche of fiches) {
       pages.push({
-        url: `${base}/artist/${fiche.slug}`,
+        url: `${base}${cheminDeFiche(fiche.slug)}`,
         lastModified: fiche.date ?? aujourdhui,
         changeFrequency: "weekly",
         priority: 0.8,
       });
+      //  §1 (nº 873) — LE PORTFOLIO ET LES FLASHS, un cran sous le
+      //  profil : ce sont ses pages, pas des doublons — chacune a son
+      //  contenu propre. La page Flash existe même sans flash (§2 :
+      //  l'onglet est toujours là) ; elle dit alors « No flash yet. ».
+      for (const vue of ["portfolio", "flash"] as const) {
+        pages.push({
+          url: `${base}${cheminDeFiche(fiche.slug, vue)}`,
+          lastModified: fiche.date ?? aujourdhui,
+          changeFrequency: "weekly",
+          priority: 0.7,
+        });
+      }
     }
     // LES COUPLES STYLE + VILLE QUI EXISTENT VRAIMENT — jamais de page
     // vide envoyée aux moteurs de recherche.

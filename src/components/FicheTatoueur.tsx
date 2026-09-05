@@ -4,9 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 //  §3 (nº 862) — `Link` N'EST PLUS APPELÉ D'ICI : la plaque du profil,
 //  son dernier porteur dans ce fichier, a cédé la place à l'en-tête du
 //  fil, qui écrit son lien chez lui (components/CarteFil).
-//  §2 (nº 455) — `useRouter` : la vignette du Portfolio navigue vers
-//  la vue photo au doigt (une entrée, le retour rend le profil).
-import { useRouter } from "next/navigation";
 /*  §1 (nº 602) — LA SURVEILLANCE D'ADRESSE EST PARTIE AVEC LA FENÊTRE
     DE CARROUSEL. Elle ne servait qu'à elle : `usePathname`,
     `useSyncExternalStore` et les trois lecteurs de `adresse-courante`
@@ -22,11 +19,11 @@ import {
   LARGEUR_PHOTO_FICHE,
   libelleStyle,
 } from "@/config/tatouage";
-//  ██ §3 (nº 863) — LA CONSIGNE « entree=portfolio » ██ Écrite par le
-//  geste de l'onglet Portfolio (plus bas), lue ici : la vue photo
-//  devient alors LE FIL DE LA GALERIE (FilDeGalerie) — voir sa note.
-import { ENTREE_PORTFOLIO, PARAM_ENTREE } from "@/lib/lien-interne";
-import { FilDeGalerie } from "@/components/FilDeGalerie";
+//  §1 (nº 873) — LA PAGE OÙ L'ON EST (profil, portfolio, flash). La
+//  consigne « entree=portfolio » de la nº 863 et le fil de galeries
+//  qu'elle ouvrait ici sont partis : le portfolio est une PAGE, et
+//  c'est ContenuFiche qui rend le fil (voir sa note).
+import type { VueDeFiche } from "@/lib/lien-interne";
 /*  ██ §3 (nº 862) — QUATRE IMPORTS SONT PARTIS AVEC LA PLAQUE ET LA
     RANGÉE D'ICÔNES DU DOIGT ██
     ------------------------------------------------------------------
@@ -106,10 +103,6 @@ import {
   SEPARATEUR_GALERIE,
 } from "@/lib/photos-tatoueur";
 import type { Tatoueur } from "@/lib/tatoueurs";
-//  §1 (nº 742) — l'abonnement aux changements d'adresse, l'écriture
-//  unique du site : la vue photo attend que l'adresse soit commise
-//  avant de poser la page en haut (voir `surSerieChoisie`).
-import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 //  §1 (nº 845) — RÉTABLI avec la plaque, son seul porteur ici.
@@ -179,6 +172,7 @@ export function FicheTatoueur({
   entreeInitiale = "",
   apercu = false,
   suiviAuDepart = false,
+  vue = "profil",
 }: {
   tatoueur: Tatoueur;
   demonstration: boolean;
@@ -212,6 +206,14 @@ export function FicheTatoueur({
   /** SUIT-ON DÉJÀ CE TATOUEUR ? — la page l'a demandé au serveur
       (nº 208-§1) : le bouton naît juste, sans se corriger. */
   suiviAuDepart?: boolean;
+  /** ██ §1 (nº 873) — LA PAGE OÙ L'ON EST : le profil (`/artist/<nom>`,
+      le défaut — c'est aussi le jumeau complet et l'aperçu), le
+      portfolio (`/portfolio`) ou les flashs (`/flash`). Connue du
+      SERVEUR par la route : elle ouvre l'onglet (ContenuFiche) et, au
+      doigt, retire la photo de tête aux deux pages de galeries — le fil
+      montre toutes les photos, une photo de plus dirait deux fois la
+      même chose (l'acquis de la nº 863-§3, porté aux pages). */
+  vue?: VueDeFiche;
 }) {
   const styles = tatoueur.styles.map((slug) => ({
     slug,
@@ -539,29 +541,15 @@ export function FicheTatoueur({
     pays: tatoueur.pays,
     code_pays: tatoueur.code_pays,
   };
-  /**
-   * ██ §3 (nº 863) — D'OÙ VIENT-ON ? LA CONSIGNE « entree=portfolio » ██
-   * ------------------------------------------------------------------
-   * DÉCISION DU PROPRIÉTAIRE : la vue photo ouverte DEPUIS L'ONGLET
-   * PORTFOLIO d'un profil (au doigt) prend une autre présentation que
-   * celle ouverte depuis « Ma sélection » ou un lien partagé (§4, qui
-   * garde la nº 862) — LE FIL DE GALERIES : une carte-carrousel par
-   * galerie du portfolio, le titre de la galerie au-dessus de chaque
-   * image (FilDeGalerie ; nº 866-§1, sur consigne — la nº 863 empilait
-   * une carte par photo).
-   * C'EST L'ADRESSE QUI LE DIT, et elle seule : le geste de l'onglet
-   * écrit `entree=portfolio` (voir `surSerieChoisie`, plus bas), comme
-   * les liens internes écrivent `entree=lien` — un réglage explicite,
-   * jamais une devinette (nº 365). La fiche est resemée sur cette
-   * valeur (elle entre dans la clé de FicheSelonLAdresse) : un retour,
-   * un pas en avant, un rechargement retrouvent la même vue.
-   * ⚠️ CE QUE LA CONSIGNE COMMANDE, ET RIEN D'AUTRE : au doigt, le fil
-   * de galerie à la place de l'en-tête, de l'image et du pied de la
-   * nº 862 ; la ligne du titre sous le pied n'existe pas là (le titre
-   * est au-dessus). Le WEB n'est pas concerné : sa colonne photo reste
-   * rendue et montrée, le fil y est masqué (règle nº 60).
-   */
-  const consignePortfolio = entreeInitiale === ENTREE_PORTFOLIO;
+  /*  ██ §3 (nº 863 → nº 873) — LA CONSIGNE « entree=portfolio » N'EXISTE
+      PLUS ██ Elle disait « la vue photo vient de l'onglet Portfolio »
+      et faisait de cette page LE FIL DE GALERIES (FilDeGalerie). Le
+      portfolio est une PAGE depuis la nº 873-§1 (`/artist/<nom>/
+      portfolio`, `vue`), et au doigt cette page EST le fil : plus rien
+      ne s'ouvre depuis une vignette, plus aucune consigne à lire, et
+      la vue photo ne connaît plus qu'une présentation — celle de la
+      nº 862 (avatar, photo, icônes). Les vieilles adresses à consigne
+      sont redirigées en 301 par le proxy. */
   /*  nº 866 — le surtitre du fil (« Tattoos » / « Flash ») n'est plus
       calculé ici : chaque carte du fil de galeries porte le sien, lu
       dans la liste des galeries du profil (`galeriesDuPortfolio`). */
@@ -591,8 +579,6 @@ export function FicheTatoueur({
       doigt (nº 451 à nº 455) est une AUTRE surface — c'est cette
       page-ci —, et la FENÊTRE SUPERPOSÉE du web (FenetreFiche) une
       troisième. Aucune des deux ne consommait ce qui part. */
-  //  §2 (nº 455) — la navigation des vignettes du Portfolio, au doigt.
-  const router = useRouter();
 
   /**
    * §3 (nº 290, EXTRAITE nº 776) — LA PHOTO ÉPOUSE LA HAUTEUR
@@ -664,7 +650,13 @@ export function FicheTatoueur({
    * ContenuFiche) : rien ne change pour elles.
    */
   const sansPhoto = apercu && consigneLien;
-  const photoCacheeAuDoigt = !apercu && consigneLien;
+  /*  §1 (nº 873) — ET LES DEUX PAGES DE GALERIES CACHENT LA PHOTO AU
+      DOIGT COMME LE FAIT LA CONSIGNE : le portfolio et les flashs
+      commencent par leur va-et-vient, le fil montre toutes les photos.
+      Même bascule d'appareil, même rendu au web (la photo de toujours,
+      à gauche). Le serveur connaît la page par la route : l'HTML
+      préparé est déjà juste, aucune garde d'avant peinture à poser. */
+  const photoCacheeAuDoigt = !apercu && (consigneLien || vue !== "profil");
 
   const cadrePhoto = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -807,7 +799,13 @@ export function FicheTatoueur({
       //  voir le bloc de `sansPhoto`. Au doigt avec consigne, la vue
       //  reste PROFIL (pas de data-vue-photo), et la garde jumelle de
       //  la nº 453 garde la colonne de lecture visible.
-      data-vue-photo={!apercu && !consigneLien ? "" : undefined}
+      //  §1 (nº 873) — et JAMAIS sur les pages Portfolio et Flash : au
+      //  doigt elles montrent le fil de galeries dans la colonne de
+      //  lecture, qui doit donc rester affichée. Seul le profil (la page
+      //  nue, celle d'une carte ou d'un lien partagé) a une vue photo.
+      data-vue-photo={
+        !apercu && !consigneLien && vue === "profil" ? "" : undefined
+      }
       // En aperçu (« Ma fiche »), l'ESPACE fournit déjà le cadre
       // (largeur, marges latérales, marge du haut) : ne pas les
       // doubler — la photo mobile reste ainsi bord à bord et vient
@@ -948,10 +946,7 @@ export function FicheTatoueur({
                met pas un lien vers son propre profil au-dessus de sa
                propre photo. La photo y garde donc sa place et son
                collage à la barre. */}
-          {/*  §3 (nº 863) — PAS D'EN-TÊTE AVATAR / BADGE depuis l'onglet
-               Portfolio : la carte du fil de galerie porte le titre de
-               la galerie à sa place (FilDeGalerie). */}
-          {!apercu && !consignePortfolio && (
+          {!apercu && (
             <div
               data-habillage-photo=""
               className="hidden mobile:block mobile:-mx-4 mobile:-mb-3"
@@ -1129,15 +1124,14 @@ export function FicheTatoueur({
                 (`mobile:-mt-4`, les seize pixels rendus).
                 ⚠️ LE WEB N'A JAMAIS ÉTÉ CONCERNÉ : les deux valeurs sont
                 des variantes du doigt (règle nº 60). */
-            /*  §3 (nº 863) — DEPUIS L'ONGLET PORTFOLIO, LA PHOTO DE TÊTE
-                S'EFFACE AU DOIGT : le fil de galerie montre toutes les
-                photos de la série, chacune dans sa carte — un carrousel
-                de plus dirait deux fois la même chose. Elle reste
-                rendue, et montrée au web (règle nº 60) ; une seule
-                déclaration d'affichage, par appareil (piège nº 389). */
+            /*  §3 (nº 863 → nº 873) — le retrait de la photo de tête
+                depuis l'onglet Portfolio (« mobile:hidden » sur ce
+                cadre) est parti avec la consigne : sur les pages
+                Portfolio et Flash, c'est la COLONNE ENTIÈRE qui se
+                cache au doigt (`photoCacheeAuDoigt`, plus haut). */
             className={`${LARGEUR_PHOTO_FICHE} mobile:-mx-4 mobile:max-w-none ${
               apercu ? "mobile:-mt-4" : ""
-            }${consignePortfolio ? " mobile:hidden" : ""}`}
+            }`}
           >
             <CarrouselPortfolio
               photos={photosDuCarrousel}
@@ -1414,10 +1408,7 @@ export function FicheTatoueur({
                touche l'image comme sur une carte du fil.
                ⚠️ APERÇU : RIEN — on ne se signale pas soi-même, et « Ma
                fiche » n'a ni partage ni fanion depuis toujours. */}
-          {/*  §3 (nº 863) — depuis l'onglet Portfolio, chaque carte du
-               fil de galerie porte son propre pied ; celui-ci ne se
-               rend pas. */}
-          {!apercu && !consignePortfolio && (
+          {!apercu && (
             <div className="hidden mobile:block mobile:-mx-4 mobile:-mt-3">
               <PiedDeFil
                 tatoueur={tatoueur}
@@ -1447,49 +1438,10 @@ export function FicheTatoueur({
             </div>
           )}
 
-          {/*  ██ §3 (nº 863, REFAIT PAR LA nº 866-§1) — LE FIL DE GALERIES,
-               DEPUIS L'ONGLET PORTFOLIO ██
-               ==================================================
-               DÉCISION DU PROPRIÉTAIRE : une carte PAR GALERIE du
-               portfolio (les styles de tattoos, puis ceux de flashs),
-               empilées ; dans chaque carte on glisse entre les photos de
-               cette galerie — le mécanisme des cartes de recherche
-               (encadré fixe, pastille, points) ; le titre de la galerie
-               au-dessus de l'image, le pied du fil en dessous ; la carte
-               touchée ouverte sur la photo touchée, la page ouverte sur
-               cette carte. Tout cela vit chez `FilDeGalerie` ; ce qu'on
-               lui donne : LE PORTFOLIO ENTIER (`groupes`, dont le
-               profil fait ses bandes), l'identité de la galerie touchée
-               (le style montré et sa série), le rang de la photo
-               touchée (`indicePhoto`, lu dans l'adresse), le style du
-               message de partage et le nombre de vues — les mêmes que
-               le pied de la nº 862.
-               ⚠️ SEUL ENFANT VISIBLE DE LA COLONNE AU DOIGT dans ce
-               mode : l'en-tête et le pied ne se rendent pas, la photo
-               de tête est masquée — le gap de la colonne n'a donc rien
-               à écarter. Il déborde jusqu'aux bords comme une carte du
-               fil (`mobile:-mx-4`, chez lui). */}
-          {!apercu && consignePortfolio && (
-            <FilDeGalerie
-              tatoueur={tatoueur}
-              groupes={groupes}
-              ouverte={
-                serieEffective
-                  ? {
-                      style: groupeAffiche?.slug ?? "",
-                      nature: serieEffective.nature,
-                      rendu: serieEffective.rendu,
-                    }
-                  : null
-              }
-              indiceOuvert={indicePhoto}
-              metier={stylePrincipal?.label ?? ""}
-              vues={tatoueur.vues}
-            />
-          )}
-          {/*  §3 (nº 863) — et cette ligne n'existe pas depuis l'onglet
-               Portfolio : le titre est au-dessus de chaque image. */}
-          {rangeeSousLaPhoto && !consignePortfolio && (
+          {/*  §3 (nº 863 → nº 873) — LE FIL DE GALERIES NE SE MONTE PLUS
+               ICI : il est le contenu des pages Portfolio et Flash, au
+               doigt (ContenuFiche → FilDeGalerie). */}
+          {rangeeSousLaPhoto && (
             <div className="hidden mobile:flex items-center gap-2.5 mobile:-mt-1">
               <p
                 data-titre-carrousel=""
@@ -1742,148 +1694,29 @@ export function FicheTatoueur({
             //  ouvrir « au bon endroit ». La série cherchée continue,
             //  elle, d'ouvrir le carrousel ci-dessus (serieCherchee).
             suiviAuDepart={suiviAuDepart}
+            //  §1 (nº 873) — la page où l'on est : c'est elle qui ouvre
+            //  l'onglet, et fait des trois onglets des liens.
+            vue={vue}
             surSerieChoisie={(serie) => {
-              /*  ██ §2 (nº 455) — AU DOIGT, UNE GALERIE OUVRE LA VUE
-                  PHOTO, la même page qu'un clic de carte ██
-                  --------------------------------------------------
-                  La page plein écran de la nº 284 n'est plus le chemin
-                  des vignettes (et n'existe plus depuis la nº 602) :
-                  le geste NAVIGUE, par le routeur, vers
-                  l'adresse que les CARTES écrivent (nº 371 — style,
-                  rendu, nature, photo ; `URLSearchParams`, mêmes
-                  paramètres, même page servie par le jumeau dynamique).
-                  UNE entrée d'historique (332-§1) ; le RETOUR rend le
-                  profil à sa position (mémoire de navigation) — comme
-                  depuis une carte, parce que c'est le même chemin.
-                  ⚠️ CORRIGÉ À LA nº 742 : cette note disait « l'arrivée
-                  se fait en haut (nº 446, DefilementEnHaut) ». C'était
-                  FAUX, et mesuré comme tel — ce composant ne joue qu'au
-                  changement de CHEMIN, et ce geste n'en change pas. La
-                  page arrivait donc où le raccourcissement du document
-                  la laissait. C'est la pose du §1 (nº 742), plus bas,
-                  qui tient désormais cette promesse.
-                  LA PHOTO TOUCHÉE (nº 314-§3d) voyage désormais par son
-                  IDENTIFIANT : le rang touché est traduit dans la série
-                  affichée (`serieMontree`, l'écriture unique nº 247) —
-                  `ouvertureSurUnePhoto` la retrouve à l'arrivée
-                  (nº 302-§4). Sans photo trouvée (série vide), l'adresse
-                  porte les trois tags et la fiche ouvre leur série.
-                  ⚠️ LU AU MOMENT DU GESTE, jamais au rendu (la règle de
-                  PileFiches) : le serveur ne connaît pas l'appareil.
-                  SUR LE WEB (et en aperçu), tout ce qui suit reste le
-                  comportement d'avant, à la lettre. */
-              if (
-                !apercu &&
-                document.documentElement.dataset.appareil === "mobile"
-              ) {
-                const groupeTouche = groupes.find(
-                  (groupe) => groupe.slug === serie.style
-                );
-                const photosDeLaSerie = serieMontree(
-                  groupeTouche?.photos ?? [],
-                  { nature: serie.nature, rendu: serie.rendu }
-                );
-                const photoTouchee = photosDeLaSerie[serie.indice ?? 0];
-                const suite = new URLSearchParams();
-                if (serie.style) suite.set("style", serie.style);
-                if (serie.rendu) suite.set("rendu", serie.rendu);
-                if (serie.nature) suite.set("nature", serie.nature);
-                if (photoTouchee?.cle) suite.set("photo", photoTouchee.cle);
-                /*  ██ §3 (nº 863) — LA CONSIGNE PART AVEC LE GESTE ██
-                    « entree=portfolio » : la vue photo qui s'ouvre saura
-                    qu'elle vient de l'onglet Portfolio, et montrera la
-                    galerie entière, empilée (FilDeGalerie). C'est le
-                    seul endroit du site qui l'écrit — celui qui pose le
-                    lien sait d'où il vient (nº 365), et une carte de
-                    « Ma sélection » comme un lien partagé n'en portent
-                    aucune (§4 : la vue de la nº 862). */
-                suite.set(PARAM_ENTREE, ENTREE_PORTFOLIO);
-                const requete = suite.toString();
-                /*  ██ §1 (nº 742) — LA PAGE EST POSÉE EN HAUT ICI, AU
-                    GESTE, ET VOICI POURQUOI ██
-                    ------------------------------------------------------
-                    LE DÉFAUT, DIT PAR LE PROPRIÉTAIRE : toucher une photo
-                    au fond d'une galerie fait « clignoter et se
-                    réinitialiser » la page AVANT que la photo ne s'ouvre.
-                    LA CAUSE, MESURÉE (nº 742, base ralentie) : cette
-                    navigation ne change PAS de chemin — seuls les
-                    paramètres bougent. Elle fait donc apparaître la VUE
-                    PHOTO, dont la feuille de style retire la colonne de
-                    lecture de l'affichage (nº 453) : le document PERD
-                    presque toute sa hauteur, en deux temps, à mesure que
-                    le contenu arrive. Relevé depuis 763 px de
-                    défilement : le document passe de 5 579 à 1 543 px
-                    (+131 ms) puis à 933 (+599 ms), et le navigateur
-                    RAMÈNE la page à chaque fois — 763 → 699 → 89. Ce
-                    glissement de six cents millisecondes EST le
-                    clignotement.
-                    ⚠️ CE N'EST PAS `DefilementEnHaut` : il ne joue qu'au
-                    changement de CHEMIN, et il n'a jamais été appelé sur
-                    ce geste. La note de la nº 455 qui promettait « l'
-                    arrivée se fait en haut (nº 446) » était donc fausse
-                    pour lui — elle est remise d'aplomb juste au-dessus.
-                    LE REMÈDE, ET IL TIENT EN UNE POSE : on met la page en
-                    haut AU GESTE, tant que le document est encore long.
-                    Zéro reste une position valable quel que soit ce qui
-                    suit : le raccourcissement ne trouve plus rien à
-                    ramener, et il n'y a plus qu'un seul mouvement — le
-                    même que sur tout autre départ du site (nº 446).
-                    ⚠️ ET LA POSE ATTEND QUE L'ADRESSE SOIT COMMISE —
-                    c'est la moitié la plus importante, et elle est
-                    MESURÉE. Posée à l'instant du geste, elle marchait :
-                    plus aucun glissement. Mais la mémoire de navigation
-                    écrit la position AU FIL DU DÉFILEMENT, pour
-                    l'adresse affichée : ce zéro était donc enregistré
-                    pour LA GALERIE qu'on quitte, et le retour la rendait
-                    en haut au lieu de 763 px (mesuré). On attend donc
-                    l'écriture d'adresse (`souscrireAdresse`, l'écriture
-                    unique du site) : le zéro tombe alors sur la VUE
-                    PHOTO — qui s'ouvre en haut, c'est sa règle — et la
-                    galerie garde la sienne. L'attente est courte devant
-                    le raccourcissement : l'adresse se commet vers 90 ms,
-                    le document ne perd sa hauteur qu'à 131 ms.
-                    ⚠️ NI GARDE DE POSITION NI DÉCLARATION D'ARRIVÉE EN
-                    HAUT, et ce n'est pas un oubli : les deux ont été
-                    essayées et MESURÉES inutiles une fois la remontée
-                    animée bornée (§1 nº 742 de ContenuFiche). La garde
-                    (nº 661) défend une pose contre les recalages du
-                    navigateur : la boîte noire n'en relève aucun ici, et
-                    zéro n'a de toute façon rien à défendre — aucun
-                    raccourcissement ne peut le déplacer. La déclaration
-                    (nº 429/446) empêche une restitution : personne n'en
-                    tente. Les garder aurait été du code mort.
-                    ⚠️ RIEN NE FUIT : l'abonnement se retire dès qu'il a
-                    servi, et un filet de deux secondes le retire même si
-                    l'adresse n'est jamais commise (navigation
-                    abandonnée) — on ne pose alors rien du tout, la page
-                    reste où elle est.
-                    ⚠️ AU DOIGT SEULEMENT : cette branche entière l'est
-                    déjà (`data-appareil`, lu au geste — piège nº 60). Le
-                    web ouvre sa galerie sans changer d'adresse, et ne
-                    passe jamais ici. */
-                const destination = requete
-                  ? `/artist/${tatoueur.slug}?${requete}`
-                  : `/artist/${tatoueur.slug}`;
-                let retirerLEcoute = () => {};
-                let posee = false;
-                const poserEnHautALArrivee = () => {
-                  if (posee) return;
-                  const ici =
-                    window.location.pathname + window.location.search;
-                  if (ici !== destination) return;
-                  posee = true;
-                  retirerLEcoute();
-                  window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-                };
-                const desabonner = souscrireAdresse(poserEnHautALArrivee);
-                const filet = window.setTimeout(() => retirerLEcoute(), 2000);
-                retirerLEcoute = () => {
-                  desabonner();
-                  window.clearTimeout(filet);
-                };
-                router.push(destination);
-                return;
-              }
+              /*  ██ §3 (nº 873) — AU DOIGT, PLUS AUCUNE NAVIGATION ICI ██
+                  ------------------------------------------------------
+                  De la nº 455 à la nº 872, une vignette de l'onglet
+                  Portfolio NAVIGUAIT au doigt vers la vue photo — puis,
+                  depuis la nº 863, vers le fil de galeries, avec la
+                  consigne « entree=portfolio » dans l'adresse et la page
+                  posée en haut à l'adresse commise (nº 742, mesurée). Ce
+                  chemin n'existe plus : le portfolio est une PAGE
+                  (`/artist/<nom>/portfolio`), et au doigt cette page EST
+                  le fil de galeries — le panneau de vignettes ne s'y
+                  montre plus (ContenuFiche, `mobile:hidden`). Une
+                  vignette ne peut donc être touchée qu'au WEB, où elle
+                  change la série sous la même adresse, et la photo du
+                  haut avec : ce qui suit est ce comportement-là, à la
+                  lettre. Parties avec la branche, faute d'appelant :
+                  `useRouter`, `souscrireAdresse`, la pose en haut de la
+                  nº 742 et la traduction du rang touché en identifiant
+                  de photo (nº 314-§3d) — le web reçoit le rang lui-même
+                  (`serie.indice`, nº 306). */
               setStyleAffiche(serie.style);
               setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
               //  §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE. Les

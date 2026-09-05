@@ -115,18 +115,21 @@
  *    arrive lui aussi avec une requête, et lui doit garder sa place.
  *  · 4 — `positionSousLeGel` (lib/gel-du-corps), appelée par TOUS
  *    ceux qui écrivent une position depuis la nº 328-§2.
- *  · 5 — l'onglet Profil / Portfolio (`?onglet=`) et la consigne
- *    d'arrivée (`?entree=lien`) vivent dans l'adresse depuis la
- *    nº 329-§3 et §4 — voir ContenuFiche, qui porte les deux noms ;
- *    la SECTION D'ADMINISTRATION (`?section=`) depuis la nº 332-§4,
- *    par l'écriture commune `useEtapeDansLAdresse`
- *    (lib/etape-dans-adresse).
- *    ⚠️ DEUX RÈGLES OPPOSÉES, ET IL FAUT LES DISTINGUER : l'onglet
- *    d'une fiche REMPLACE son entrée (changer d'onglet n'est pas un
- *    déplacement, le retour doit quitter la fiche d'un seul appui) ;
- *    une SECTION ou une ÉTAPE en POSE une (c'est un vrai déplacement,
- *    et un retour ne doit pas abandonner un formulaire à moitié
- *    rempli). Décision du propriétaire, nº 332-§4.
+ *  · 5 — la consigne d'arrivée (`?entree=lien`) vit dans l'adresse
+ *    depuis la nº 329-§4 (lib/lien-interne) ; la SECTION
+ *    D'ADMINISTRATION (`?section=`) depuis la nº 332-§4, par
+ *    l'écriture commune `useEtapeDansLAdresse` (lib/etape-dans-adresse).
+ *    ⚠️ L'ONGLET D'UNE FICHE NE VIT PLUS DANS LA REQUÊTE (nº 873-§1) :
+ *    « ?onglet=portfolio » (nº 329-§3) est parti — le profil, le
+ *    portfolio et les flashs sont TROIS PAGES (`cheminDeFiche`,
+ *    lib/lien-interne), et le va-et-vient est un lien entre elles, comme
+ *    l'accueil de la nº 860. La règle de la nº 332-§4 (« l'onglet d'une
+ *    fiche REMPLACE son entrée, le retour doit quitter la fiche d'un
+ *    seul appui ») est donc CADUQUE, sur décision du propriétaire :
+ *    chaque onglet suivi POSE une entrée, et le retour rend la page
+ *    d'avant, à sa place — c'est le prix des trois adresses, et c'est
+ *    ce qu'il veut. Une SECTION ou une ÉTAPE en pose une aussi (un
+ *    retour ne doit pas abandonner un formulaire à moitié rempli).
  *    ⚠️ L'AUTRE MOITIÉ DU C-6 RESTE OUVERTE, faute d'objet : le
  *    formulaire n'a AUCUNE étape que l'on parcourt — son seul état
  *    nommé `etape` est un sas de vérification qui avance tout seul au
@@ -1026,4 +1029,52 @@ export function consommerRestaurationPosition(): boolean {
     // rien
   }
   return false;
+}
+
+/* ------------------------------------------------------------
+ * ██ §1 (nº 873) — LA PLACE DE LA COLONNE DE LECTURE, PAR PAGE (WEB) ██
+ * ------------------------------------------------------------
+ * « Chaque page garde sa position de défilement » — le profil, le
+ * portfolio et les flashs d'un artiste (ContenuFiche). AU DOIGT, la
+ * page défile : la mémoire ci-dessus fait le travail seule
+ * (`memoriserDefilement`, écrite au départ vers une fiche par
+ * MemoireNavigation, rendue par `rendreLaPlace`). AU WEB, ce n'est pas
+ * la page qui défile mais LA COLONNE DE LECTURE (`data-colonne-lecture`,
+ * FicheTatoueur — `window.scrollY` y vaut zéro), et la colonne est
+ * REMONTÉE à chaque page : sa place doit donc se retenir à part, sous
+ * l'adresse de la page, et se rendre au montage de la suivante.
+ * ⚠️ MÊME ÂGE QUE LES POSITIONS DE PAGE (`AGE_POSITION_MS`), et la
+ * session pour support : une place de colonne n'a pas à survivre à
+ * l'onglet. Zéro n'est pas retenu — rien à rendre, on efface.
+ */
+export const PREFIXE_COLONNE = "yokofolio:colonne:";
+
+/** Retient la place de la colonne d'une page (0 : on efface). */
+export function memoriserColonne(url: string, y: number) {
+  try {
+    if (y <= 0) {
+      sessionStorage.removeItem(PREFIXE_COLONNE + url);
+      return;
+    }
+    sessionStorage.setItem(
+      PREFIXE_COLONNE + url,
+      JSON.stringify({ y: Math.round(y), date: Date.now() })
+    );
+  } catch {
+    // sans stockage : la colonne s'ouvrira simplement en haut
+  }
+}
+
+/** La place retenue pour la colonne d'une page (0 : aucune, ou trop
+    ancienne). */
+export function lireColonne(url: string): number {
+  try {
+    const brut = sessionStorage.getItem(PREFIXE_COLONNE + url);
+    if (!brut) return 0;
+    const note = JSON.parse(brut) as { y?: number; date?: number };
+    if (Date.now() - (note.date ?? 0) > AGE_POSITION_MS) return 0;
+    return note.y || 0;
+  } catch {
+    return 0;
+  }
 }

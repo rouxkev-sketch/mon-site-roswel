@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 //  §1 (nº 652) — le chemin de la recherche, écrit une seule fois.
 import { ADRESSE_RECHERCHE } from "@/lib/chemin-recherche";
+//  §1 (nº 873) — le chemin des pages d'un portfolio, écrit une seule
+//  fois (une feuille sans dépendance, comme la recherche).
+import { cheminDeFiche } from "@/lib/lien-interne";
 import { NextResponse, type NextRequest } from "next/server";
 import { infosConnexionSupabase } from "@/lib/supabase/env";
 //  §1 (nº 796) — la règle des effacements, écrite une seule fois.
@@ -36,6 +39,43 @@ export async function proxy(request: NextRequest) {
       nommé (nº 350 : Chrome iOS saute au retour les entrées créées
       sans interaction) : le banc, son cookie, ses huit portes et son
       bloc du script d'avant peinture partent au grand ménage. */
+
+  /*  ██ §1 (nº 873) — LES ANCIENNES ADRESSES DE L'ONGLET PORTFOLIO
+      REDIRIGENT EN 301 ██
+      ------------------------------------------------------------------
+      Le portfolio et les flashs d'un artiste sont des PAGES depuis
+      cette passe (`/artist/<nom>/portfolio`, `/artist/<nom>/flash`) :
+      l'onglet ne vit plus dans la requête. Deux écritures l'y
+      mettaient, et des liens copiés ou des signets peuvent encore les
+      porter :
+       · « ?onglet=portfolio » — l'onglet Portfolio d'un profil (nº 329) ;
+       · « ?entree=portfolio » — le fil de galeries ouvert depuis ce
+         même onglet, au doigt (nº 863/866), avec les tags de la galerie
+         touchée (style, rendu, nature, photo).
+      Les deux mènent DÉFINITIVEMENT à la page qui leur correspond : les
+      flashs si les tags disaient « nature=flash », le portfolio sinon.
+      Les autres tags se perdent — la page montre TOUTE la catégorie,
+      il n'y a plus de galerie « ouverte » (nº 873-§3). Le 301 transfère
+      ce que les moteurs savaient de l'ancienne adresse. */
+  const ficheAncienOnglet = /^\/artist\/([^/]+)$/.exec(request.nextUrl.pathname);
+  if (ficheAncienOnglet) {
+    const requete = request.nextUrl.searchParams;
+    if (
+      requete.get("onglet") === "portfolio" ||
+      requete.get("entree") === "portfolio"
+    ) {
+      return NextResponse.redirect(
+        new URL(
+          cheminDeFiche(
+            ficheAncienOnglet[1],
+            requete.get("nature") === "flash" ? "flash" : "portfolio"
+          ),
+          request.url
+        ),
+        301
+      );
+    }
+  }
 
   /*  nº 357 — L'ACCUEIL NU EST PRÉRENDU ; dès que « / » porte une
       requête (?style=…, ?page=…), on SERT LE JUMEAU

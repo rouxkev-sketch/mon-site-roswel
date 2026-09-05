@@ -1,7 +1,17 @@
 "use client";
 
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties } from "react";
+//  §1 (nº 873) — le glissement latéral d'une page publique NAVIGUE vers
+//  la page voisine (les onglets sont des liens) : il lui faut le routeur.
+import { useRouter } from "next/navigation";
 import {
   defilerEnDouceur,
   defilerSansGeste,
@@ -47,11 +57,16 @@ import { IconeChevronBas } from "@/components/Icones";
 import { ActionDeFiche } from "@/components/ActionDeFiche";
 import { BoutonSuivre } from "@/components/BoutonSuivre";
 import {
+  categorieDeLaVue,
+  galeriesDuPortfolio,
   PanneauPortfolio,
   SelecteurOngletAffiche,
-  type OngletAffiche,
   type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
+//  §3 (nº 873) — au doigt, les pages Portfolio et Flash SONT le fil de
+//  galeries ; §4 — une page sans photo montre l'écran vide du site.
+import { FilDeGalerie } from "@/components/FilDeGalerie";
+import { EcranVideSelection } from "@/components/EcranVideSelection";
 import { capsulesPratiques } from "@/lib/pratique-fiche";
 //  §3 (nº 388) — l'écriture d'une ligne de profil a déménagé dans un
 //  module sans dépendance : l'adresse se dessine dans BlocLieux, et un
@@ -124,7 +139,7 @@ import {
 /**
  * §2 (nº 703) — LES QUATRE ÉCRITURES DE LA CONSIGNE ONT DÉMÉNAGÉ.
  * ------------------------------------------------------------------
- * `PARAM_ONGLET`, `PARAM_ENTREE`, `ENTREE_LIEN`,
+ * `PARAM_ENTREE`, `ENTREE_LIEN`,
  * `avecConsigneDeLienInterne` et `adresseDeLienInterne` vivent
  * désormais dans `lib/lien-interne` — avec leurs explications, mot
  * pour mot. RIEN DE LA RÈGLE N'A CHANGÉ (nº 329-330) ; seul l'endroit
@@ -139,16 +154,32 @@ import {
  * directement — c'est ce qui allège.
  */
 export {
-  PARAM_ONGLET,
   PARAM_ENTREE,
   ENTREE_LIEN,
   avecConsigneDeLienInterne,
   adresseDeLienInterne,
 } from "@/lib/lien-interne";
 
-/*  Réexporter ne fait pas entrer le nom dans CE fichier : ce composant
-    lit lui-même l'onglet dans l'adresse, il lui faut donc l'import. */
-import { PARAM_ONGLET } from "@/lib/lien-interne";
+/*  Réexporter ne fait pas entrer un nom dans CE fichier : ce composant
+    importe lui-même ce qu'il emploie. §1 (nº 873) — l'onglet vit dans
+    le CHEMIN (trois pages) : les adresses des trois vues, leur ordre et
+    leur type viennent de la même feuille (`PARAM_ONGLET` est parti). */
+import {
+  adressesDesVues,
+  VUES_DE_FICHE,
+  type VueDeFiche,
+} from "@/lib/lien-interne";
+//  §1 (nº 873) — la mémoire de position du site : la place de la page
+//  visée (au doigt) et celle de la colonne de lecture (au web), rendues
+//  quand on revient sur un onglet — voir `avantDePartir`.
+import {
+  demanderRestaurationPosition,
+  lireColonne,
+  lireLaPlace,
+  memoriserColonne,
+  memoriserDefilement,
+} from "@/lib/navigation-session";
+import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_MOYEN, sourceAvatar } from "@/lib/avatar-variantes";
@@ -652,6 +683,7 @@ export function ContenuFiche({
   suiviAuDepart = false,
   adresseALui = false,
   collantSousLaBarre = false,
+  vue = "profil",
 }: {
   tatoueur: Tatoueur;
   /** LE PORTFOLIO GROUPÉ PAR STYLE — l'enveloppe le calcule (elle en a
@@ -693,56 +725,64 @@ export function ContenuFiche({
    * Faux par défaut, donc : seule la page demande ce comportement.
    */
   collantSousLaBarre?: boolean;
+  /**
+   * ██ §1 (nº 873) — LA PAGE OÙ L'ON EST : profil, portfolio ou flash ██
+   * ------------------------------------------------------------------
+   * Connue du SERVEUR par la route (page.tsx, portfolio/page.tsx,
+   * flash/page.tsx). Sur une page publique (`adresseALui`, hors aperçu),
+   * c'est ELLE l'onglet ouvert, et les trois onglets sont des liens
+   * entre les trois pages. Ailleurs — la fenêtre superposée du web,
+   * l'aperçu « Ma fiche » — elle ne dit rien : l'onglet y vit dans
+   * React, comme depuis la nº 197.
+   */
+  vue?: VueDeFiche;
 }) {
   /**
-   * LES DEUX ONGLETS DE L'AFFICHE (nº 197-§1)
-   * « Profil » montre le contenu de la fiche ; « Portfolio » montre les
-   * styles publiés, catégorie par catégorie.
-   */
-  /**
-   * §3 (nº 329) — L'ONGLET VIT DANS L'ADRESSE, PLUS DANS REACT.
+   * ██ LES TROIS ONGLETS DE L'AFFICHE — TROIS PAGES (nº 197-§1, nº 873-§1) ██
    * ==================================================================
-   * C'est le POINT 5 de la règle de navigation (lib/navigation-session).
-   * LE DÉFAUT : l'onglet vivait dans un `useState`. On quittait la
-   * fiche en Portfolio, on revenait à la liste, on RAVANÇAIT — et la
-   * fiche rouvrait sur Profil. La position, elle, revenait juste :
-   * seul l'onglet se perdait, parce qu'il n'était nulle part.
+   * « Profile » montre le contenu de la fiche ; « Portfolio » ses
+   * tatouages, « Flash » ses planches — les galeries d'UNE catégorie
+   * (PortfolioDeLAffiche), le fil de galeries au doigt (§3).
    *
-   * ⚠️ CHANGER D'ONGLET **REMPLACE** L'ENTRÉE, IL N'EN AJOUTE AUCUNE —
-   * et c'est une exigence du propriétaire, pas un détail
-   * d'implémentation : le retour doit continuer de QUITTER la fiche,
-   * exactement comme avant. Un `pushState` par onglet obligerait à
-   * appuyer deux ou trois fois sur « précédent » pour sortir d'une
-   * fiche qu'on a parcourue. C'est le pas EN AVANT qui retrouve
-   * l'onglet, parce que l'adresse de l'étape le porte.
-   *
-   * ⚠️ ET SEULEMENT QUAND CE CONTENU A UNE ADRESSE À LUI. Dans la
-   * FENÊTRE du web (FenetreFiche), l'adresse est celle de la fiche
-   * ouverte par-dessus la mosaïque : y écrire un onglet reviendrait à
-   * réécrire l'adresse d'une surface qui n'est pas une page. Le
-   * drapeau `adresseALui` tranche, et il est faux par défaut — aucune
-   * surface ne se met à écrire dans l'adresse sans l'avoir demandé.
+   * OÙ VIT L'ONGLET, ET C'EST LE POINT DE LA nº 873 :
+   *  · SUR UNE PAGE PUBLIQUE, DANS LE CHEMIN. Les trois vues sont trois
+   *    pages (`/artist/<nom>`, `/portfolio`, `/flash`) : l'onglet
+   *    ouvert EST la page (`vue`, connue du serveur par la route), et
+   *    les trois onglets sont des LIENS — la navigation douce de
+   *    l'accueil (nº 860). Un retour rend la page d'avant, à sa place.
+   *    ⚠️ CE QUI PART AVEC, code compris : l'onglet-requête de la
+   *    nº 329-§3 — « ?onglet=portfolio », le `replaceState` qui
+   *    l'écrivait, la relecture pendant le rendu qui le suivait — et sa
+   *    règle « changer d'onglet REMPLACE l'entrée » (nº 332-§4) : chaque
+   *    onglet suivi pose une entrée, c'est la décision du propriétaire
+   *    (« comme l'accueil, nº 860 »). L'adresse de l'étape porte
+   *    toujours l'onglet — mieux qu'avant, c'est son chemin.
+   *  · DANS LA FENÊTRE SUPERPOSÉE DU WEB ET DANS L'APERÇU, DANS REACT,
+   *    comme depuis la nº 197 : ni l'une ni l'autre n'a d'adresse à
+   *    elle (la fenêtre est une surface posée sur une autre page,
+   *    l'aperçu vit dans l'espace tatoueur — `adresseALui` et `apercu`
+   *    tranchent), les onglets y sont des boutons qui changent le
+   *    contenu sur place.
    */
-  const ongletDeLAdresse = (): OngletAffiche =>
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get(PARAM_ONGLET) ===
-      "portfolio"
-      ? "portfolio"
-      : "profil";
-  const [onglet, setOnglet] = useState<OngletAffiche>(ongletDeLAdresse);
-  /*  L'ADRESSE MÈNE, MÊME QUAND ELLE CHANGE SOUS NOS PIEDS : un retour
-      ou un pas en avant ne remonte pas ce composant (même route), il
-      ne fait que changer la requête. On se réaligne PENDANT LE RENDU,
-      le motif de PileFiches. */
-  const [requeteLue, setRequeteLue] = useState<string | null>(null);
-  if (adresseALui && typeof window !== "undefined") {
-    const requete = window.location.search;
-    if (requeteLue !== requete) {
-      setRequeteLue(requete);
-      const voulu = ongletDeLAdresse();
-      if (voulu !== onglet) setOnglet(voulu);
-    }
-  }
+  const enPages = adresseALui && !apercu;
+  const [ongletChoisi, setOngletChoisi] = useState<VueDeFiche>("profil");
+  const onglet: VueDeFiche = enPages ? vue : ongletChoisi;
+  /** Les adresses des trois onglets, quand ce sont des liens. */
+  const adresses = enPages ? adressesDesVues(tatoueur.slug) : null;
+  const router = useRouter();
+  /**
+   * §1 ET §3 (nº 873) — LES GALERIES DE LA PAGE, CALCULÉES UNE FOIS : la
+   * catégorie de l'onglet (« Portfolio » → les tatouages, « Flash » →
+   * les flashs ; le profil n'en a pas), et ses galeries dans l'ordre du
+   * profil — données telles quelles au panneau du web et au fil du
+   * doigt, qui n'ont donc rien à tenir d'accord. Vides : la page le
+   * dit (§4), aucun des deux ne se monte.
+   */
+  const categorie = categorieDeLaVue(onglet);
+  const galeries = useMemo(
+    () => (categorie ? galeriesDuPortfolio(groupes, categorie.nature) : []),
+    [groupes, categorie]
+  );
   /*  §3 (nº 276) — PLUS AUCUN ÉTAT DE CATÉGORIE NI DE RENDU : les deux
       sélecteurs du portfolio sont SUPPRIMÉS, code compris. Le panneau
       montre les deux sections empilées ; il n'a plus rien à retenir,
@@ -1039,25 +1079,70 @@ export function ContenuFiche({
    * (mobile) » n'apparaît plus au toucher d'un onglet. C'est la
    * preuve, à l'écran, que le mécanisme est bien parti.
    */
-  function choisirOnglet(suivant: OngletAffiche) {
-    setOnglet(suivant);
-    if (adresseALui && typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search);
-      if (suivant === "portfolio") p.set(PARAM_ONGLET, "portfolio");
-      else p.delete(PARAM_ONGLET);
-      const requete = p.toString();
-      //  ⚠️ `replaceState`, JAMAIS `pushState` : voir la note de
-      //  l'état ci-dessus — le retour doit continuer de quitter la
-      //  fiche d'un seul appui.
-      window.history.replaceState(
-        window.history.state,
-        "",
-        window.location.pathname + (requete ? `?${requete}` : "")
-      );
-      setRequeteLue(window.location.search);
-    }
+  function choisirOnglet(suivant: VueDeFiche) {
+    setOngletChoisi(suivant);
     ouvrirLOngletAuDebut();
   }
+
+  /**
+   * ██ §1 (nº 873) — « CHAQUE PAGE GARDE SA POSITION DE DÉFILEMENT » ██
+   * ==================================================================
+   * LA DEMANDE : Portfolio à 600 → Flash → retour → 600. Deux surfaces
+   * défilent, selon l'appareil, et chacune a sa mémoire :
+   *  · AU DOIGT, LA PAGE. C'est la mémoire de navigation du site, sans
+   *    une ligne de plus pour écrire : au clic d'un lien vers une fiche
+   *    depuis une fiche, MemoireNavigation note la place de la page
+   *    qu'on quitte (nº 230-§3) — un onglet est exactement ce lien. Il
+   *    manquait de la RENDRE : une navigation en avant arrive en haut,
+   *    c'est la règle ; l'exception a un mot, celui de l'accueil
+   *    (nº 860-§2) — `demanderRestaurationPosition(adresse)`, « la
+   *    prochaine arrivée à CETTE adresse rend sa place ». On ne la pose
+   *    QUE SI UNE PLACE EXISTE pour la page visée : une première visite
+   *    arrive en haut, nette et instantanée (DefilementEnHaut), au lieu
+   *    de s'en remettre au recalage du routeur. Nominative, la demande
+   *    ne peut pas repeindre une autre page ; tout geste l'annule.
+   *  · AU WEB, LA COLONNE DE LECTURE (`data-colonne-lecture`, l'enveloppe
+   *    de ce contenu — `window.scrollY` y vaut zéro), et la colonne est
+   *    REMONTÉE avec chaque page. Sa place se retient donc à part, sous
+   *    l'adresse de la page, à mesure qu'elle défile (`memoriserColonne`,
+   *    une image par écriture), et se rend au montage de la page
+   *    suivante — avant la peinture, pour qu'aucune image ne montre la
+   *    colonne en haut. Un retour ou une avance du navigateur passent
+   *    par le même montage : ils la rendent aussi.
+   * ⚠️ RIEN N'EST FAIT HORS D'UNE PAGE PUBLIQUE : la fenêtre du web et
+   * l'aperçu changent d'onglet sur place, et gardent leur remontée
+   * (`ouvrirLOngletAuDebut`).
+   */
+  function avantDePartir(cible: VueDeFiche) {
+    if (!adresses) return;
+    if (lireLaPlace(adresses[cible])) {
+      demanderRestaurationPosition(adresses[cible]);
+    }
+  }
+  useLayoutEffect(() => {
+    if (!enPages) return;
+    const colonne =
+      rangeeDuHaut.current?.closest<HTMLElement>("[data-colonne-lecture]") ??
+      null;
+    if (!colonne) return;
+    //  L'adresse est la nôtre dès ce montage : FicheSelonLAdresse ne
+    //  monte la fiche qu'une fois l'arrivée commise (nº 360).
+    const ici = window.location.pathname + window.location.search;
+    const retenue = lireColonne(ici);
+    if (retenue > 0) colonne.scrollTop = retenue;
+    let image = 0;
+    const retenir = () => {
+      cancelAnimationFrame(image);
+      image = requestAnimationFrame(() =>
+        memoriserColonne(ici, colonne.scrollTop)
+      );
+    };
+    colonne.addEventListener("scroll", retenir, { passive: true });
+    return () => {
+      cancelAnimationFrame(image);
+      colonne.removeEventListener("scroll", retenir);
+    };
+  }, [enPages]);
 
   /**
    * ██ §2 (nº 527) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
@@ -1085,34 +1170,42 @@ export function ContenuFiche({
    *    commencer. On ne bascule pas un va-et-vient invisible, et
    *    aucune garde n'a eu à le dire.
    *
-   * ⚠️ ET C'EST `choisirOnglet`, PAS UNE SECONDE ÉCRITURE : le geste
-   * appelle exactement ce que le toucher d'un onglet appelle. D'où
-   * trois acquis qu'on n'a pas à obtenir, on les HÉRITE :
-   *  · le va-et-vient suit — trait rose compris : il lit `onglet`, et
-   *    c'est `onglet` qu'on change ;
-   *  · L'HISTORIQUE NE BOUGE PAS D'UN CRAN — `choisirOnglet` écrit par
-   *    `replaceState` (nº 329-§3), jamais `pushState` : le retour
-   *    continue de QUITTER la fiche d'un seul appui (règle 332-§1 et
-   *    §4). Et dans une fenêtre superposée, qui n'a pas d'adresse à
-   *    elle, rien n'est écrit du tout ;
-   *  · LA POSITION SUIT LA MÊME RÈGLE QU'AU TOUCHER : `ouvrirLOngletAuDebut`
-   *    ne remonte que si l'on est DESCENDU sous le début de la section,
-   *    et alors jusqu'à lui — jamais jusqu'en haut de la page (la
-   *    nº 377 a retiré ce saut-là). Rester où l'on est quand on est
-   *    déjà en haut, revenir au début de la section quand on lisait
-   *    plus bas : le contenu change sous les yeux, pas ailleurs.
+   * ⚠️ ET C'EST LE MÊME CHEMIN QUE LE TOUCHER D'UN ONGLET, jamais une
+   * seconde écriture (nº 873-§1) :
+   *  · SUR UNE PAGE PUBLIQUE, le geste NAVIGUE vers la page voisine —
+   *    l'ordre est celui du va-et-vient (`VUES_DE_FICHE`) : vers la
+   *    gauche, l'onglet suivant ; vers la droite, le précédent. Un
+   *    glissement n'est pas un clic : la mémoire de navigation n'a pas
+   *    vu partir la page, on écrit donc sa place nous-mêmes (ce que
+   *    MemoireNavigation fait au clic d'un lien de fiche, nº 230-§3),
+   *    puis on déclare et on part comme l'onglet (`avantDePartir`) ;
+   *  · DANS LA FENÊTRE DU WEB ET L'APERÇU, `choisirOnglet` — le
+   *    va-et-vient suit (trait rouge compris : il lit `onglet`), rien
+   *    n'est écrit dans l'adresse, et LA POSITION SUIT LA MÊME RÈGLE
+   *    QU'AU TOUCHER : `ouvrirLOngletAuDebut` ne remonte que si l'on est
+   *    DESCENDU sous le début de la section, et alors jusqu'à lui —
+   *    jamais jusqu'en haut de la page (la nº 377 a retiré ce saut-là).
    *
-   * ⚠️ RIEN SI L'ON EST DÉJÀ DU BON CÔTÉ : sans cette garde, un
-   * glissement vers la droite en « Profil » rejouerait l'écriture
-   * d'adresse et la remontée pour rien.
+   * ⚠️ RIEN AU BOUT DE LA RANGÉE : un glissement vers la droite en
+   * « Profile », vers la gauche en « Flash », n'a pas de voisin et ne
+   * fait rien.
    * ⚠️ LA MÉMOIRE DES GALERIES (nº 459) N'EST PAS CONCERNÉE : elle
    * s'écrit au défilement d'une galerie et se relit à son montage —
    * ce geste ne fait ni l'un ni l'autre, et il refuse même de partir
    * d'une galerie.
    */
   useGlissementLateralSurLaPage((sens) => {
-    const cible: OngletAffiche = sens === 1 ? "portfolio" : "profil";
-    if (cible === onglet) return;
+    const cible = VUES_DE_FICHE[VUES_DE_FICHE.indexOf(onglet) + sens];
+    if (!cible) return;
+    if (adresses) {
+      memoriserDefilement(
+        window.location.pathname + window.location.search,
+        positionSousLeGel()
+      );
+      avantDePartir(cible);
+      router.push(adresses[cible]);
+      return;
+    }
     choisirOnglet(cible);
   }, "[data-colonne-lecture]");
 
@@ -2025,7 +2118,12 @@ export function ContenuFiche({
              étirait le va-et-vient en aperçu est retiré. Il reprend sa
              largeur naturelle, à gauche — celle de la fiche publique,
              qui est désormais LA référence des deux vues. */}
-        <SelecteurOngletAffiche valeur={onglet} surChoix={choisirOnglet} />
+        <SelecteurOngletAffiche
+          valeur={onglet}
+          surChoix={adresses ? undefined : choisirOnglet}
+          adresses={adresses ?? undefined}
+          surDepart={avantDePartir}
+        />
         {/*  ██ §4 (nº 869) — PLUS DE PARTAGE NI DE « SUIVRE » ICI ██
              Les deux gestes (nº 458 → nº 868 : le partage en habillage
              « icone », le badge « Suivre », leur alignement sur les
@@ -2036,73 +2134,63 @@ export function ContenuFiche({
              composant (SelecteurOngletAffiche). */}
       </div>
 
-      {onglet === "portfolio" && (
-        <PanneauPortfolio
-          groupes={groupes}
-          nomTatoueur={tatoueur.nom}
-          //  §4 (nº 459) — l'identité de la fiche, pour la mémoire de
-          //  défilement des galeries du doigt (et sa purge d'arrivée).
-          slugTatoueur={tatoueur.slug}
-          surSerie={(serie) => {
-            surSerieChoisie(serie);
-            //  §1 (nº 236) — UNE VIGNETTE DE STYLE CHANGE LES PHOTOS
-            //  D'EN DESSOUS : la page remonte. Même mouvement, même
-            //  durée que les sélecteurs, aucune entrée d'historique.
-            //  ⚠️ MAIS PAS AU MÊME REPÈRE (nº 239-§1) : elle ramène TOUT
-            //  EN HAUT, au sommet de la photo de l'affiche — elle
-            //  change la photo, pas seulement ce qui est dessous.
-            //  Profil / Portfolio gardent le leur, sous la barre.
-            //  ⚠️ SEULE LA VIGNETTE REMONTE : ouvrir une PHOTO passe
-            //  par le carrousel de l'enveloppe, pas par ici — rien n'y
-            //  bouge, et c'est voulu.
-            //  ⚠️ ET ELLE SE FAIT APRÈS LE RENDU (nº 238-§1) : c'est le
-            //  seul sélecteur qui change aussi la photo du haut, donc
-            //  le repère lui-même. Voir `remonteeDemandee`.
-            /*  ██ §1 (nº 742) — AU DOIGT, PLUS DE REMONTÉE : ON NAVIGUE ██
-                ----------------------------------------------------------
-                LE DÉFAUT DIT PAR LE PROPRIÉTAIRE : toucher une photo au
-                fond d'une galerie fait « clignoter et se réinitialiser »
-                la page avant que la photo ne s'ouvre.
-                LA CAUSE, MESURÉE AU BANC (pile d'appels à l'appui) :
-                depuis la nº 455, `surSerieChoisie` NAVIGUE au doigt vers
-                la vue photo. Cette remontée-ci, écrite pour le web
-                (nº 236/238/239 — la vignette change la photo du haut,
-                donc la page se recale dessus), partait quand même : une
-                ANIMATION de trois cents millisecondes sur la page qu'on
-                est en train de QUITTER. Et pendant qu'elle glissait, la
-                vue photo retirait la colonne de lecture — le document
-                tombait de 5 579 à 933 px, l'animation était rabotée à
-                chaque palier, et l'on voyait la page descendre par
-                à-coups. Relevé : 763 → 699 → 89 px en six cents
-                millisecondes.
-                LE REMÈDE : au doigt, on ne demande plus rien. Il n'y a
-                pas de repère à rejoindre sur une page qu'on quitte ; la
-                vue photo s'ouvre en haut par la pose de FicheTatoueur
-                (§1 nº 742), à l'adresse commise.
-                ⚠️ LA CONDITION EST CELLE DE LA NAVIGATION, AU MOT PRÈS
-                — `!apercu && mobile`, la jumelle exacte de la branche de
-                `surSerieChoisie` (nº 455). Elle ne peut donc pas s'en
-                écarter : on ne saute la remontée que là où la vignette
-                EST PARTIE. Les deux autres cas la gardent, entière :
-                 · le WEB — la vignette n'y navigue pas, elle change la
-                   série sous la même adresse et la photo du haut avec :
-                   même repère, même durée, pas un pixel de changé ;
-                 · l'APERÇU au doigt (« Mon compte → Mon portfolio ») —
-                   il ne navigue pas non plus (la nº 455 l'exclut
-                   nommément), et la remontée y sert comme avant. Sans
-                   cette moitié de condition, je l'aurais tuée là-bas.
-                ⚠️ L'APPAREIL SE LIT AU GESTE (`data-appareil`), jamais à
-                une largeur — piège nº 60. */
-            if (
-              !apercu &&
-              document.documentElement.dataset.appareil === "mobile"
-            ) {
-              return;
-            }
-            setRemonteeDemandee((tour) => tour + 1);
-          }}
-        />
-      )}
+      {/*  ██ §1, §3 ET §4 (nº 873) — LES PAGES PORTFOLIO ET FLASH ██
+           ==========================================================
+           Une catégorie par page, ses galeries calculées une fois
+           (`galeries`, plus haut). SANS PHOTO (§4) : l'écran vide du
+           site — la phrase de la catégorie (« No tattoos yet. »,
+           « No flash yet. », config/tatouage) et sa capsule, web et
+           doigt, le motif de « Ma sélection » (EcranVideSelection).
+           AVEC : au WEB, le panneau de galeries par style, inchangé
+           (PanneauPortfolio — caché au doigt par l'appareil, jamais par
+           une largeur, piège nº 60) ; AU DOIGT, le fil de galeries
+           (FilDeGalerie, `hidden mobile:block` chez lui). Les deux
+           sont rendus, un seul se montre : le HTML préparé est le même
+           pour les deux appareils. */}
+      {categorie &&
+        (galeries.length === 0 ? (
+          <EcranVideSelection message={categorie.vide} marque="data-page-vide" />
+        ) : (
+          <>
+            <div className="mobile:hidden">
+              <PanneauPortfolio
+                galeries={galeries}
+                nomTatoueur={tatoueur.nom}
+                //  §4 (nº 459) — l'identité de la fiche, pour la mémoire
+                //  de défilement des galeries (et sa purge d'arrivée).
+                slugTatoueur={tatoueur.slug}
+                surSerie={(serie) => {
+                  surSerieChoisie(serie);
+                  /*  §1 (nº 236) — UNE VIGNETTE DE STYLE CHANGE LES PHOTOS
+                      D'EN DESSOUS : la page remonte. Même mouvement, même
+                      durée que les sélecteurs, aucune entrée d'historique.
+                      ⚠️ MAIS PAS AU MÊME REPÈRE (nº 239-§1) : elle ramène
+                      TOUT EN HAUT, au sommet de la photo de l'affiche —
+                      elle change la photo, pas seulement ce qui est
+                      dessous. Les onglets gardent le leur, sous la barre.
+                      ⚠️ ET ELLE SE FAIT APRÈS LE RENDU (nº 238-§1) : c'est
+                      le seul sélecteur qui change aussi la photo du haut,
+                      donc le repère lui-même. Voir `remonteeDemandee`.
+                      §3 (nº 873) — LA GARDE DU DOIGT (nº 742) EST PARTIE :
+                      ce panneau ne se montre plus au doigt, une vignette
+                      n'y est plus jamais touchée ; le web et l'aperçu
+                      gardent la remontée, entière. */
+                  setRemonteeDemandee((tour) => tour + 1);
+                }}
+              />
+            </div>
+            <FilDeGalerie
+              tatoueur={tatoueur}
+              galeries={galeries}
+              //  Le style principal, pour le message de partage — ce que
+              //  la vue photo donne à son pied (FicheTatoueur).
+              metier={tatoueur.styles[0] ? libelleStyle(tatoueur.styles[0]) : ""}
+              //  §6 (nº 853) — les vues arrivent de la base avec la fiche.
+              vues={tatoueur.vues}
+              apercu={apercu}
+            />
+          </>
+        ))}
 
       {onglet === "profil" && (
         <>

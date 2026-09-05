@@ -1,4 +1,9 @@
-//  ██ BANC 747 (doigt, puis web) — LES GALERIES SURVIVENT AU RE-RENDU ██
+//  ██ BANC 747 (web) — LES GALERIES SURVIVENT AU RE-RENDU ██
+//  ⛔ nº 873 — LE DOIGT NE PASSE PLUS ICI : la page Portfolio du doigt est
+//  le fil de galeries (plus de bandes par style, plus de vue photo à
+//  ouvrir depuis une vignette) ; le panneau de galeries ne se montre
+//  qu'au web, où l'onglet Portfolio est désormais UNE PAGE
+//  (/artist/<nom>/portfolio) — le banc y va par son lien.
 //  `TeteDeGalerie` vit au module : un re-rendu du panneau ne démonte plus
 //  les galeries — mêmes nœuds, mêmes images, défilement et compteurs
 //  intacts, aucune photo redemandée.
@@ -15,7 +20,9 @@ const gabarit = (await lire("tatoueurs", "slug=eq.demo-blackwork-12"))[0];
 await ranger("tatoueurs", { ...gabarit, id: SLUG, slug: SLUG, nom: "Atelier riche 747", styles: ["blackwork", "realisme"], ville_slug: `lyon-${SLUG}` });
 const photos = []; let n = 0;
 const serie = (style, rendu, nature, k) => { for (let i = 0; i < k; i++) { n++; photos.push({ id: `${SLUG}-p${n}`, tatoueur_id: SLUG, style, rendu, nature, url: `/images-demo/tatouage/${style}-${(i % 3) + 1}.svg`, miniature: `/images-demo/tatouage/${style}-${(i % 3) + 1}.svg`, ordre: n, cree_le: "2026-01-01T00:00:00Z" }); } };
-serie("blackwork", "black", "tatouage", 6); serie("blackwork", "color", "tatouage", 5); serie("realisme", "black", "flash", 4);
+//  nº 873 — trois galeries de TATTOOS : la page Portfolio ne montre que
+//  cette catégorie (les flashs ont leur page).
+serie("blackwork", "black", "tatouage", 6); serie("blackwork", "color", "tatouage", 5); serie("realisme", "black", "tatouage", 4);
 await ranger("photos_tatoueur", photos);
 
 const LECTURE = `(() => {
@@ -31,7 +38,7 @@ const LECTURE = `(() => {
     sl: gs.map((g) => { const r = rangee(g); return r ? Math.round(r.scrollLeft) : null; }),
     compteurs: gs.map((g) => (g.querySelector("[data-compteur-galerie]") || {}).textContent),
     parametree: document.documentElement.dataset.ficheParametree ?? null,
-    onglet: [...document.querySelectorAll("[role=radio]")].map((b) => b.textContent.trim() + ":" + b.getAttribute("aria-checked")).join(" "),
+    onglet: [...document.querySelectorAll('nav[aria-label="Profile, portfolio or flash"] a')].map((a) => a.textContent.trim() + ":" + (a.getAttribute("aria-current") === "page")).join(" "),
   };
 })()`;
 const lire_ = (page) => page.evaluate(LECTURE);
@@ -61,15 +68,16 @@ const intact = (nom, avant, apres, images) => {
   verif(`${nom} : aucune photo redemandée`, images === 0, `${images} requête(s) d'image`);
 };
 
-for (const mode of ["doigt", "web"]) {
+for (const mode of ["web"]) {
   const { nav, page } = await ouvrir(mode);
   const images = [];
   page.on("request", (r) => { if (r.resourceType() === "image") images.push(r.url()); });
   try {
     titre(`747 · ${mode} — le portfolio, trois galeries`);
     await page.goto(`${BASE}/artist/${SLUG}?entree=lien`, { waitUntil: "networkidle" });
-    const radio = page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first();
-    if (mode === "doigt") await radio.tap(); else await radio.click();
+    //  nº 873 — l'onglet est un lien vers la page Portfolio.
+    await page.locator('nav[aria-label="Profile, portfolio or flash"] a').filter({ hasText: /^Portfolio$/ }).first().click();
+    await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio`, SLUG, { timeout: 15000 });
     await page.waitForFunction((b) => document.querySelectorAll('[data-galeries="' + b + '"] [data-galerie-serie]').length === 3, mode, { timeout: 15000 });
     await page.waitForTimeout(600);
     const nImages = await memoriser(page, OFFSETS);

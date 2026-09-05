@@ -40,6 +40,7 @@ export function OngletsLigne({
   classeLigne = "",
   taillePolice = "text-[15px]",
   largeurInactive,
+  traitPlein = false,
 }: {
   /** §1 (nº 460) — le label devient un NŒUD : le va-et-vient de « Ma
       sélection » y pose « Favoris 10 ⌄ » (mot + nombre + chevron).
@@ -171,6 +172,20 @@ export function OngletsLigne({
    * (les sept autres appelants ne passent rien).
    */
   largeurInactive?: string;
+  /**
+   * ██ §2 (nº 873) — LE TRAIT SUR TOUTE LA LARGEUR DE L'ONGLET ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : sur le va-et-vient Profile · Portfolio ·
+   * Flash d'un portfolio, le trait rouge prend TOUTE LA LARGEUR de
+   * l'onglet — plus de trait court (la nº 871-§1 est annulée pour ce
+   * va-et-vient, et pour lui seul : « Ma sélection » garde le sien).
+   * Vrai : le trait est le segment entier, comme avant la nº 870 ; la
+   * copie invisible du libellé n'a alors plus rien à mesurer et ne se
+   * rend pas. Faux (le défaut) : le mot plus vingt-huit pixels de
+   * chaque côté — les huit autres appelants ne passent rien et ne
+   * changent donc pas d'un pixel.
+   */
+  traitPlein?: boolean;
 }) {
   const index = options.findIndex((option) => option.cle === cleActive);
   /*  ██ §1 (nº 860) — DEUX NATURES POUR UN MÊME DESSIN ██
@@ -342,11 +357,16 @@ export function OngletsLigne({
               transform: `translateX(${decalageDuTrait})`,
             }}
           >
-            <span className="h-[3px] max-w-full overflow-hidden rounded-full bg-primaire px-7">
-              <span className={`invisible block whitespace-nowrap ${ECRITURE_ONGLET}`}>
-                {options[index].label}
+            {traitPlein ? (
+              //  §2 (nº 873) — le segment entier, d'un bord à l'autre.
+              <span className="h-[3px] w-full rounded-full bg-primaire" />
+            ) : (
+              <span className="h-[3px] max-w-full overflow-hidden rounded-full bg-primaire px-7">
+                <span className={`invisible block whitespace-nowrap ${ECRITURE_ONGLET}`}>
+                  {options[index].label}
+                </span>
               </span>
-            </span>
+            )}
           </span>
         )}
       </div>

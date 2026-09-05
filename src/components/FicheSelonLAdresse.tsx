@@ -14,6 +14,9 @@ import {
 //  s'efface à la compilation — il peut venir de n'importe où.
 import { renduConnu, styleConnu } from "@/config/tatouage";
 import { natureCherchee } from "@/lib/photos-tatoueur";
+//  §1 (nº 873) — la page où l'on est (profil, portfolio, flash) et son
+//  chemin, écrit une seule fois.
+import { cheminDeFiche, type VueDeFiche } from "@/lib/lien-interne";
 import type { Tatoueur } from "@/lib/tatoueurs";
 
 /**
@@ -87,11 +90,17 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 export function FicheSelonLAdresse({
   tatoueur,
   demonstration,
+  vue = "profil",
 }: {
   tatoueur: Tatoueur;
   demonstration: boolean;
+  /** §1 (nº 873) — LA PAGE : le profil (`/artist/<nom>`), le portfolio
+      (`/portfolio`) ou les flashs (`/flash`). Le serveur la connaît par
+      la route ; c'est elle qui décide de l'onglet ouvert, et c'est son
+      chemin que cette lecture d'adresse reconnaît comme le sien. */
+  vue?: VueDeFiche;
 }) {
-  const cheminDeLaPage = `/artist/${tatoueur.slug}`;
+  const cheminDeLaPage = cheminDeFiche(tatoueur.slug, vue);
   /*  LA LECTURE BORNÉE À NOTRE ADRESSE (lib/adresse-courante). `null`
       = « la page n'a encore jamais possédé l'adresse » — un état que
       la chaîne vide ne peut pas dire, puisqu'une adresse nue EST une
@@ -201,6 +210,7 @@ export function FicheSelonLAdresse({
       natureInitiale={tags.nature}
       photoInitiale={tags.photo}
       entreeInitiale={entree}
+      vue={vue}
     />
   );
 }

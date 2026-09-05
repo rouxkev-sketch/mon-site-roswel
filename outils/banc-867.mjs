@@ -112,35 +112,32 @@ const onglets = (page) => page.evaluate(() =>
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("867 · §3 — le fil de galeries : l'avatar de quarante à gauche du titre");
-    await page.goto(`${BASE}/artist/${SLUG}?style=blackwork&rendu=black&nature=tatouage&photo=${PHOTO(2)}&entree=portfolio`, { waitUntil: "networkidle" });
+    /*  ⛔ nº 873-§3 — L'AVATAR DE LA nº 867-§3 EST PARTI : la page
+        Portfolio du doigt EST le fil de galeries, et chaque carte n'a en
+        tête que le titre et le sous-titre de sa galerie, à seize du
+        bord. Le banc mesure désormais ce que la nº 873 demande. */
+    titre("867 · §3 (annulé par la nº 873) — le fil de galeries : plus d'avatar, le titre à seize du bord");
+    await page.goto(`${BASE}/artist/${SLUG}/portfolio`, { waitUntil: "networkidle" });
     await page.waitForSelector("[data-carte-de-galerie]", { timeout: 20000 });
     await page.waitForTimeout(1200);
     const cartes = await page.evaluate((S) => { const B = new Function("return " + S)();
       return [...document.querySelectorAll("[data-carte-de-galerie]")].map((li) => {
         const surtitre = li.querySelector("[data-surtitre-galerie]");
-        const entete = surtitre?.closest("div");
-        const rond = entete?.firstElementChild;
-        return { avatar: B(rond), surtitre: B(surtitre), titre: B(li.querySelector("[data-titre-galerie]")),
-          entete: B(entete), cadre: B(li.querySelector("[data-cadre-de-galerie]")),
-          rond: rond ? getComputedStyle(rond).borderRadius : null };
+        const entete = surtitre?.parentElement;
+        return { rond: entete ? entete.querySelectorAll("img, svg, [class*='rounded-full']").length : null, surtitre: B(surtitre),
+          titre: B(li.querySelector("[data-titre-galerie]")), entete: B(entete), cadre: B(li.querySelector("[data-cadre-de-galerie]")) };
       }); }, B);
-    verif("chaque carte porte son rond de 40 × 40, à seize pixels du bord",
-      cartes.length > 0 && cartes.every((c) => c.avatar && c.avatar.h === 40 && c.avatar.l === 40 && c.avatar.g === 16),
-      JSON.stringify(cartes.map((c) => c.avatar && `${c.avatar.l}×${c.avatar.h}@${c.avatar.g}`)));
-    verif("… il est rond, et le titre commence après lui (16 + 40 + 12 = 68)",
-      cartes.every((c) => parseFloat(c.rond ?? "0") >= 20 && c.titre.g === 68 && c.surtitre.g === 68),
-      JSON.stringify({ rond: cartes[0]?.rond, titre: cartes[0]?.titre.g }));
+    verif("aucune carte ne porte de rond : l'avatar de la nº 867-§3 est parti (nº 873-§3)",
+      cartes.length > 0 && cartes.every((c) => c.rond === 0), JSON.stringify(cartes.map((c) => c.rond)));
+    verif("… le titre et le sous-titre commencent à seize du bord (plus de 16 + 40 + 12)",
+      cartes.every((c) => c.titre.g === 16 && c.surtitre.g === 16), JSON.stringify(cartes.map((c) => [c.surtitre.g, c.titre.g])));
     verif("… l'en-tête garde ses douze pixels au-dessus de l'image",
       cartes.every((c) => Math.round(c.cadre.y - c.entete.bas) === 0 && Math.round(c.cadre.y - c.titre.bas) === 12),
       JSON.stringify(cartes.map((c) => Math.round(c.cadre.y - c.titre.bas))));
-    verif("… et le rond est centré sur les deux lignes",
-      cartes.every((c) => Math.abs((c.avatar.y + c.avatar.bas) / 2 - (c.surtitre.y + c.titre.bas) / 2) <= 1),
-      JSON.stringify(cartes.map((c) => +((c.avatar.y + c.avatar.bas) / 2 - (c.surtitre.y + c.titre.bas) / 2).toFixed(1))));
 
     titre("867 · §7 — le pied : quatre dessins de 24, quatre cibles de 40, seize d'air");
     const pied = await page.evaluate((S) => { const B = new Function("return " + S)();
-      const rangee = document.querySelector("[data-carte-ouverte] [data-pied-de-fil]") ?? document.querySelector("[data-pied-de-fil]");
+      const rangee = document.querySelector("[data-carte-de-galerie] [data-pied-de-fil]");
       const svgs = [...rangee.querySelectorAll("svg")].filter((s) => !s.closest("button[aria-label^='View photo']")).map((s) => {
         const label = s.closest("[aria-label]")?.getAttribute("aria-label") ?? "";
         const role = /Report/.test(label) ? "signaler" : /Save|Remove/.test(label) ? "fanion" : /Share/.test(label) ? "partage" : "vues";

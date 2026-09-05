@@ -2,7 +2,10 @@
 //  ==================================================================
 //   1. LE TRAIT DU VA-ET-VIENT : la largeur du MOT plus VINGT-HUIT
 //      pixels de chaque côté (nº 871-§1), centré sous lui, plus court
-//      que son segment — sur le profil ET sur « Ma sélection ».
+//      que son segment — sur « Ma sélection ». ⛔ SUR LE PROFIL, LA
+//      nº 873-§2 L'ANNULE : trois onglets (Profile · Portfolio · Flash,
+//      des LIENS), chacun un tiers, et le trait sur TOUTE la largeur de
+//      l'onglet — c'est ce que ce banc mesure désormais là.
 //   2. LE BOOKING : plus de point, LE CALENDRIER et le texte —
 //      « Books open • 5-month wait », « Books open », « Books closed »,
 //      et rien du tout quand rien n'est déclaré. Il a quitté le bloc du
@@ -105,7 +108,8 @@ const LIRE = `() => {
       mot: mot ? mot.textContent.trim().replace(/^(Following|Follow)(Follow|Following)*$/, "$1") : null,
       motX: mot ? +mot.getBoundingClientRect().left.toFixed(1) : null,
       motD: mot ? +mot.getBoundingClientRect().right.toFixed(1) : null }; }) : null;
-  const groupe = document.querySelector('[role=radiogroup][aria-label="Profile or portfolio"]');
+  //  nº 873 — le va-et-vient du profil est une NAVIGATION (trois liens).
+  const groupe = document.querySelector('nav[aria-label="Profile, portfolio or flash"]');
   const rangeeDuHaut = groupe?.parentElement;
   const boiteLigne = groupe ? [...groupe.children].find((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3) : null;
   const segment = boiteLigne?.lastElementChild;
@@ -114,8 +118,8 @@ const LIRE = `() => {
   //  qu'un enfant, le segment. On ne relève une grise que s'il y en a deux.
   const grise = boiteLigne && boiteLigne.children.length > 1 ? boiteLigne.firstElementChild : null;
   const trait = segment?.firstElementChild;
-  const onglets = groupe ? [...groupe.querySelectorAll("[role=radio]")].map((b) => ({
-    mot: b.textContent.trim(), actif: b.getAttribute("aria-checked") === "true", ...B(b), encre: encre(b) })) : null;
+  const onglets = groupe ? [...groupe.querySelectorAll("a")].map((b) => ({
+    mot: b.textContent.trim(), actif: b.getAttribute("aria-current") === "page", ...B(b), encre: encre(b) })) : null;
   const ligne = (m) => { const n = document.querySelector("[" + m + "]"); return n ? { ...B(n), svg: n.querySelectorAll("svg").length } : null; };
   const bio = [...document.querySelectorAll("p")].find((p) => /banc 870/i.test(p.textContent) && /fiche/i.test(p.textContent));
   const site = [...document.querySelectorAll("a")].find((a) => /exemple\\.test/.test(a.href));
@@ -148,19 +152,21 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1500);
     const v = await lireProfil(page);
     const actif = v.onglets?.find((o) => o.actif);
-    //  §1 — LE TRAIT
-    verif("§1 — le trait fait la largeur du mot plus vingt-huit pixels de chaque côté",
-      proche(v.trait?.w, (actif?.encre.w ?? 0) + 2 * DEBORD_TRAIT),
-      `trait ${v.trait?.w} · mot ${actif?.encre.w} (+ ${2 * DEBORD_TRAIT} attendus)`);
-    verif("§1 — il est centré sous le mot", proche(v.trait?.centre, actif?.encre.centre),
+    //  §1 — LE TRAIT (nº 873-§2 : sur TOUTE la largeur de l'onglet ; la
+    //  largeur du mot + 28 de la nº 871 ne vaut plus que pour « Ma
+    //  sélection », plus bas)
+    verif("§1 (nº 873) — trois onglets, des liens : Profile · Portfolio · Flash",
+      v.onglets?.map((o) => o.mot).join(" · ") === "Profile · Portfolio · Flash", v.onglets?.map((o) => o.mot).join(" · "));
+    verif("§1 (nº 873) — le trait prend TOUTE la largeur de l'onglet actif",
+      v.trait && v.segment && proche(v.trait.w, v.segment.w, 0.6) && proche(v.trait.w, (v.groupe?.w ?? 0) / 3, 1),
+      `trait ${v.trait?.w} · segment ${v.segment?.w} · tiers ${((v.groupe?.w ?? 0) / 3).toFixed(1)}`);
+    verif("§1 — il est centré sous le mot (le mot est centré dans son onglet)", proche(v.trait?.centre, actif?.encre.centre, 2),
       `${v.trait?.centre} contre ${actif?.encre.centre}`);
-    verif("§1 — il est nettement plus court que son segment (la moitié de la rangée)",
-      v.trait && v.segment && v.trait.w < v.segment.w - 40, `${v.trait?.w} contre ${v.segment?.w}`);
     verif("§1 — il garde sa robe : trois pixels, rose, extrémités rondes, au bas de la rangée",
       v.trait?.h === 3 && v.trait?.fond !== "rgba(0, 0, 0, 0)" && parseFloat(v.trait?.rayon) >= 3 &&
       proche(v.trait?.bas, v.segment?.bas, 0.6), JSON.stringify(v.trait));
-    verif("§1 — le segment, lui, garde la moitié de la rangée (c'est lui qui glisse)",
-      proche(v.segment?.w, (v.groupe?.w ?? 0) / 2, 1) && v.grise === null,
+    verif("§1 — le segment fait un tiers de la rangée (c'est lui qui glisse), sans ligne grise",
+      proche(v.segment?.w, (v.groupe?.w ?? 0) / 3, 1) && v.grise === null,
       `segment ${v.segment?.w} · groupe ${v.groupe?.w} · ligne grise ${v.grise === null ? "aucune (voulu)" : "présente"}`);
     //  §2 — LE BOOKING
     verif("§2 — la ligne du booking porte LE CALENDRIER et aucun point de couleur",

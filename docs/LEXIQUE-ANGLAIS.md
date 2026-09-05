@@ -604,3 +604,21 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > les noms accessibles (« Follow <nom> », « Unfollow <nom> »,
 > « Share <nom>'s portfolio »), et les badges de styles et de
 > techniques (texte seul, sans icône).
+
+## Passe nº 873 — profil, portfolio, flash : trois pages
+
+| avant | après | où |
+| --- | --- | --- |
+| **Profile** / **Portfolio** — deux onglets d'une même page (`?onglet=portfolio`) | **Profile** · **Portfolio** · **Flash** — trois onglets, trois pages : `/artist/<nom>`, `/artist/<nom>/portfolio`, `/artist/<nom>/flash` ; le nom lu du va-et-vient devient **Profile, portfolio or flash** | `LIBELLES_DES_VUES` (lib/lien-interne), `SelecteurOngletAffiche` |
+| **<nom> — tattoo artist in <ville>** — le titre de la page unique | inchangé pour le profil ; le portfolio titre **<nom> — tattoo portfolio in <ville>**, les flashs **<nom> — flash tattoos in <ville>** | `titreEtDescription`, page-de-fiche |
+| « <nom>, tattoo artist in <ville> — <styles>. Instagram portfolio and styles. » — la description unique | inchangée pour le profil ; le portfolio : « <nom>'s tattoo portfolio in <ville> — <styles>. Tattoos by style. » ; les flashs : « <nom>'s flash tattoos in <ville> — <styles>. Flash designs by style. » | idem |
+| **No posts yet** — un portfolio sans photo (onglet Portfolio) | **No tattoos yet.** sur un Portfolio sans tatouage, **No flash yet.** sur des Flashs sans flash — la phrase et la capsule **Explore styles** de l'écran vide du site | `CATEGORIES_EXPLORER.vide` (config/tatouage), `EcranVideSelection` |
+| **Portfolio** / **Flash** — les onglets seulement | aussi la dernière marche du fil d'Ariane des moteurs (Home › style › nom › **Portfolio** / **Flash**), invisible à l'écran | `page-de-fiche` |
+
+> **Ce qui n'a PAS changé** : « Profile » et « Portfolio » (les mots),
+> « Tattoos » / « Flash » en surtitre des galeries, « Blackwork • Black »
+> (la puce du site), les noms lus « Follow <nom> », « Share <nom>'s
+> portfolio », et tous les textes du profil.
+> **Les données en base** : aucune de ces phrases n'y vit — les titres
+> des galeries viennent des styles (`suggestions_style.label` pour les
+> styles ajoutés, déjà relus à la nº 807) ; rien à corriger en SQL.

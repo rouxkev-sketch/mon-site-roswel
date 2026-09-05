@@ -636,9 +636,19 @@ export function entreesExplorer(): EntreeExplorer[] {
 //  partout ailleurs sur le site ; ici, on nomme UNE NATURE DE PHOTO,
 //  et ce qu'on regarde alors, c'est ce que le tatoueur a RÉALISÉ —
 //  par opposition au flash, qui n'est pas encore fait.
+//  §4 (nº 873) — `vide` : LA PHRASE D'UNE PAGE SANS PHOTO de cette
+//  nature — « No tattoos yet. » sur le Portfolio d'un artiste qui n'a
+//  pas encore de tatouage, « No flash yet. » sur ses Flashs — écrite
+//  ici, à côté du titre de la catégorie qu'elle décrit, et rendue par
+//  l'écran vide du site (EcranVideSelection, ContenuFiche).
 export const CATEGORIES_EXPLORER = [
-  { nature: "tatouage", titre: "Tattoos", tous: "All tattoos" },
-  { nature: "flash", titre: "Flash", tous: "All flash" },
+  {
+    nature: "tatouage",
+    titre: "Tattoos",
+    tous: "All tattoos",
+    vide: "No tattoos yet.",
+  },
+  { nature: "flash", titre: "Flash", tous: "All flash", vide: "No flash yet." },
 ] as const;
 
 /** « flash » + « realisme » → « flash:realisme ». Sans style : la

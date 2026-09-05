@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { cheminDeFiche, VUES_DE_FICHE } from "@/lib/lien-interne";
 
 /**
  * VIDER LE CACHE DES PAGES QUAND UNE FICHE CHANGE
@@ -44,10 +45,16 @@ export function rafraichirPagesPubliques(slug?: string | null): void {
     }
   }
   if (slug) {
-    try {
-      revalidatePath(`/artist/${slug}`);
-    } catch {
-      // Idem.
+    //  §1 (nº 873) — LES TROIS PAGES DE LA FICHE : le profil, le
+    //  portfolio et les flashs sont trois adresses en cache — une photo
+    //  ajoutée doit sortir sur la page qui la montre, pas cinq minutes
+    //  plus tard. Leur chemin est écrit une fois (lib/lien-interne).
+    for (const vue of VUES_DE_FICHE) {
+      try {
+        revalidatePath(cheminDeFiche(slug, vue));
+      } catch {
+        // Idem.
+      }
     }
   }
 }
