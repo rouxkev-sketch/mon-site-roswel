@@ -24,13 +24,14 @@ import { BASE, ouvrir, verif, titre, bilan } from "./banc-socle.mjs";
     désormais au banc 851, badge contre badge, aux deux appareils.
     CE QUI RESTE ICI, et qui n'appartient qu'à ce banc : LE SQUELETTE
     d'attente promet la hauteur qui vient, sans saut d'un pixel. */
-/*  ██ nº 855 — LA HAUTEUR A CHANGÉ, ET ELLE VIT AILLEURS ██
-    Elle valait trente. L'air neuf des badges (quinze pixels jusqu'à
-    l'encre, en haut, en bas et à gauche) la porte à quarante — le
-    calcul est écrit en entier dans config/tatouage (`AIR_BADGE`), qui
-    en est la seule source ; ce nombre-ci n'est que sa copie de
-    lecture, et le banc 855 vérifie l'air dont il découle. */
-const HAUTEUR_BADGE = 40;
+/*  ██ nº 856 — UNE HAUTEUR PAR APPAREIL ██
+    La nº 855 les avait portées toutes deux à quarante ; le propriétaire
+    l'annule. Au doigt, la rangée reprend les mesures du badge du type
+    (trente) ; au web, le corps monte d'un cran et la boîte grandit en
+    proportion (trente-deux). La source est `AIR_BADGE_RECHERCHE`
+    (config/tatouage) ; ce banc n'en garde que la copie de lecture, et
+    le banc 856 mesure les proportions dont elle découle. */
+const HAUTEUR_BADGE = { doigt: 30, web: 32 };
 
 const RECHERCHE = new URLSearchParams({
   style: "blackwork", nature: "tatouage", lieu: "Lyon", zone: "69",
@@ -75,7 +76,7 @@ for (const mode of ["doigt", "web"]) {
       const r = rangee.getBoundingClientRect();
       return { y: Math.round(r.top), h: Math.round(r.height) };
     });
-    const attendue = HAUTEUR_BADGE;
+    const attendue = HAUTEUR_BADGE[mode];
     verif("les badges gris ont la hauteur des vrais",
       gris.hauteurs.every((h) => h === attendue), `${gris.hauteurs.join(" | ")} pour ${attendue}`);
     verif("AUCUN SAUT : la rangée arrive là où le squelette la promettait",

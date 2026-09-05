@@ -5,6 +5,7 @@ import { LogoYokofolio } from "@/components/LogoYokofolio";
 import {
   CADRE_PHOTO_PORTFOLIO,
   HAUTEUR_BADGE_GRIS,
+  HAUTEUR_BADGE_RECHERCHE_GRIS,
   LARGEUR_SITE,
 } from "@/config/tatouage";
 import {
@@ -378,9 +379,9 @@ function CarteGriseDuFil() {
           <div className="mt-1 h-[18.125px] w-1/3 bg-sombre-eleve" />
         </div>
         {/*  LE BADGE DU TYPE : la hauteur de la charte, LUE et non
-             recopiée (`HAUTEUR_BADGE_GRIS`, config/tatouage — nº 855).
-             Elle valait trente ; l'air neuf des badges la porte à
-             quarante, et ce gris suit sans qu'on y touche.
+             recopiée (`HAUTEUR_BADGE_GRIS`, config/tatouage). La nº 855
+             l'avait portée à quarante, la nº 856 la remet à trente —
+             ce gris a suivi les deux fois sans qu'on y touche.
              SA LARGEUR NE PEUT PAS ÊTRE SUE : elle dépend du libellé, et
              il y en a trois. MESURÉS à l'atelier : « Artist » 69 px,
              « Tattoo Shop » 115, « Private Studio » 128. On pose donc le
@@ -535,9 +536,16 @@ export function CorpsSquelette({
                depuis que leur écriture est la même (nº 853-§4), et
                « Blackwork » 127 au doigt pour 129 au web — d'où 118 et
                128. */}
+          {/*  §3 (nº 856) — AU WEB, LES DEUX GRIS GRANDISSENT AVEC LES
+               VRAIS : le corps monte d'un cran, la boîte suit en
+               proportion (32 de haut), et la largeur avec elle — 129 et
+               134 px MESURÉS à l'atelier sur « 14 portfolios » et
+               « Blackwork ✕ », comme les 118 et 128 du doigt l'avaient
+               été. La hauteur est celle de la charte, lue
+               (`HAUTEUR_BADGE_RECHERCHE_GRIS`). */}
           <div data-squelette-badges="" className="flex items-center gap-2">
-            <div className={`${HAUTEUR_BADGE_GRIS} w-[118px] rounded-lg bg-sombre-eleve`} />
-            <div className={`${HAUTEUR_BADGE_GRIS} w-[128px] rounded-lg bg-sombre-eleve`} />
+            <div className={`${HAUTEUR_BADGE_RECHERCHE_GRIS} w-[118px] not-mobile:w-[129px] rounded-lg bg-sombre-eleve`} />
+            <div className={`${HAUTEUR_BADGE_RECHERCHE_GRIS} w-[128px] not-mobile:w-[134px] rounded-lg bg-sombre-eleve`} />
           </div>
         </div>
       ) : (

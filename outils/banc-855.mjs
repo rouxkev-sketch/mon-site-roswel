@@ -7,34 +7,15 @@
 //      (« icône puis 28 »), le dessin est un ŒIL de vingt pixels, et
 //      les deux sont en BLANC. Quatre choses, quatre mesures.
 //
-//   2. L'AIR DES BADGES (les deux appareils) — « l'air au-dessus et
-//      au-dessous du texte = l'air entre le bord gauche du badge et la
-//      première lettre, mesuré aux LETTRES ». On mesure donc L'ENCRE
-//      PEINTE (outils/mesure-air.mjs, où la leçon de la nº 850 est
-//      écrite), jamais les boîtes.
-//      ⚠️ DEUX BADGES POUR TROIS AIRS, et il le faut. Le flanc du
-//      glyphe et la descendante décalent chacun UN des trois nombres,
-//      et aucun mot ne les évite tous les deux :
-//        · le badge du COMPTE (« 14 portfolios ») porte un « p » qui
-//          descend sous la ligne de base — son BAS est donc l'encre de
-//          la descendante, pas de l'air. Il prouve HAUT = GAUCHE ;
-//        · le badge du FILTRE (« Blackwork ») n'a aucune descendante :
-//          il prouve HAUT = BAS.
-//      Ensemble, les trois airs sont égaux — et c'est la seule façon
-//      honnête de le dire.
+//   2. L'AIR DES BADGES — ANNULÉ PAR LA nº 856. Ce banc mesurait quinze
+//      pixels jusqu'à l'encre sur trois côtés ; le propriétaire l'a
+//      annulé, et ces mesures vivent désormais au banc 856. Il reste ici
+//      le squelette, qui promet la hauteur du vrai badge quelle qu'elle
+//      soit (3).
 //
 //  L'ATELIER : voir l'en-tête de `banc-socle.mjs`.
 import { BASE, ouvrir, verif, titre, bilan, lire, modifier } from "./banc-socle.mjs";
-import { imageDuPng, airsVisuels } from "./mesure-air.mjs";
-
-/** L'air voulu, de quinze pixels — voir `AIR_BADGE` (config/tatouage),
-    qui en est la source et où le calcul est écrit en entier. */
-const AIR = 15;
-/** LE JEU TOLÉRÉ, ET IL A UNE CAUSE PRÉCISE : le FLANC du premier
-    glyphe. Le « T » de « Tattoo » avance sur sa marge, le « B » de
-    « Blackwork » recule d'un flanc — un pixel, que rien ne peut
-    égaliser sans décaler le mot lui-même. Jamais plus d'un. */
-const JEU = 1;
+import { imageDuPng } from "./mesure-air.mjs";
 
 const RECHERCHE = new URLSearchParams({
   style: "blackwork", nature: "tatouage", lieu: "Lyon", zone: "69",
@@ -42,33 +23,6 @@ const RECHERCHE = new URLSearchParams({
   region: "Auvergne-Rhône-Alpes", ville: "Lyon", rayon: "25",
 }).toString();
 const URL_RECHERCHE = `${BASE}/search?${RECHERCHE}`;
-
-/** Les airs visuels d'un badge, lus sur l'encre qu'il peint. */
-async function airsDuBadge(page, selecteur) {
-  const poignee = await page.evaluateHandle((s) => [...document.querySelectorAll(s)]
-    //  LE VISIBLE SEULEMENT : deux badges de type vivent dans le
-    //  document depuis la nº 852, et l'un des deux est toujours retiré
-    //  de l'affichage.
-    .find((n) => n.getBoundingClientRect().height > 0) ?? null, selecteur);
-  const noeud = poignee.asElement();
-  if (!noeud) return null;
-  await noeud.scrollIntoViewIfNeeded();
-  const { hauteur, xTexteFin, mot } = await noeud.evaluate((n) => {
-    const r = n.getBoundingClientRect();
-    //  On borne la lecture À LA FIN DU TEXTE : la croix, plus haute
-    //  que les lettres, fausserait la mesure des glyphes.
-    const partie = [...n.childNodes].find((x) => x.nodeType === 3 || x.tagName === "SPAN");
-    let fin = r.width;
-    if (partie) {
-      const plage = document.createRange();
-      plage.selectNodeContents(partie);
-      fin = plage.getBoundingClientRect().right - r.left + 2;
-    }
-    return { hauteur: Math.round(r.height), xTexteFin: Math.round(fin), mot: n.textContent.trim() };
-  });
-  const img = imageDuPng(await noeud.screenshot({ scale: "css" }));
-  return { ...airsVisuels(img, { bord: 0, xTexteFin }), hauteur, mot };
-}
 
 //  ══ 1 · LE PIED DU FIL : L'ŒIL, PUIS LE NOMBRE, EN BLANC ═════════════
 {
@@ -137,43 +91,15 @@ async function airsDuBadge(page, selecteur) {
   } finally { await nav.close(); }
 }
 
-//  ══ 2 · L'AIR DES BADGES, AUX DEUX APPAREILS ═════════════════════════
-for (const mode of ["doigt", "web"]) {
-  const { nav, page } = await ouvrir(mode);
-  try {
-    titre(`855 · ${mode} — l'air des badges, mesuré aux lettres`);
-    await page.goto(URL_RECHERCHE, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("[data-filtre-actif]", { state: "visible", timeout: 20000 });
-    await page.waitForTimeout(900);
-
-    //  a · LE COMPTE — sa descendante lui interdit de dire le BAS, mais
-    //  il dit HAUT = GAUCHE, qui est la règle telle qu'elle est écrite.
-    const compte = await airsDuBadge(page, "[data-badge-compte]");
-    verif("le badge du compte est là, et son encre se lit",
-      compte !== null, compte ? `« ${compte.mot} »` : "badge absent");
-    verif("HAUT = GAUCHE, à quinze pixels de l'encre",
-      compte && Math.abs(compte.haut - AIR) <= JEU && Math.abs(compte.gauche - AIR) <= JEU
-        && Math.abs(compte.haut - compte.gauche) <= JEU,
-      compte ? `haut ${compte.haut} · gauche ${compte.gauche}` : "badge absent");
-
-    //  b · UN FILTRE — sans descendante, il dit HAUT = BAS.
-    const filtre = await airsDuBadge(page, "[data-filtre-actif]");
-    verif("HAUT = BAS, à quinze pixels de l'encre",
-      filtre && Math.abs(filtre.haut - AIR) <= JEU && Math.abs(filtre.bas - AIR) <= JEU
-        && Math.abs(filtre.haut - filtre.bas) <= JEU,
-      filtre ? `haut ${filtre.haut} · bas ${filtre.bas}` : "badge absent");
-
-    //  c · LA MÊME BOÎTE POUR TOUS — c'est ce que « ils suivent » veut
-    //  dire : le badge du type des cartes partage l'écriture.
-    const type = await airsDuBadge(page, "[data-badge-type]");
-    verif("le badge du TYPE des cartes suit la même hauteur",
-      compte && filtre && type
-        && compte.hauteur === filtre.hauteur && filtre.hauteur === type.hauteur,
-      [compte?.hauteur, filtre?.hauteur, type?.hauteur].join(" | "));
-  } catch (e) {
-    verif(`déroulement du banc 855 (l'air, ${mode})`, false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
+//  ══ 2 · L'AIR DES BADGES — ANNULÉ PAR LA nº 856 ═════════════════════
+/*  Ce banc mesurait ici « quinze pixels jusqu'à l'encre, en haut, en
+    bas et à gauche », aux deux appareils, et la hauteur de quarante qui
+    en découlait. Le propriétaire a annulé ce point à la nº 856 : les
+    badges du doigt reviennent à l'état du bâti nº 854 (trente), et ceux
+    du web montent d'un cran EN PROPORTION (trente-deux), sans air
+    ajouté. Ces mesures-là vivent au banc 856 ; celui-ci ne garde que ce
+    qui est resté vrai de la nº 855 — l'œil des vues (1) et le squelette
+    qui promet la hauteur du vrai badge, quelle qu'elle soit (3). */
 
 //  ══ 3 · LE SQUELETTE PROMET LA NOUVELLE HAUTEUR, SANS SAUT ═══════════
 /*  MESURE FINE ASSUMÉE ICI : c'est le seul endroit où un pixel d'écart

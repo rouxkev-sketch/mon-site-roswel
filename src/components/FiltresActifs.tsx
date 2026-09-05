@@ -2,9 +2,9 @@
 
 import { IconeCroix } from "@/components/Icones";
 import {
-  AIR_BADGE,
+  AIR_BADGE_RECHERCHE,
   COULEURS_SOMBRE,
-  ECRITURE_BADGE,
+  ECRITURE_BADGE_RECHERCHE,
   ROBE_BADGE_CONTOUR,
 } from "@/config/tatouage";
 
@@ -143,20 +143,24 @@ import {
  * son exact complément.
  */
 /**
- * ██ §2 (nº 855) — L'AIR ET L'ÉCRITURE ONT DÉMÉNAGÉ DANS LA CHARTE ██
+ * ██ §2-§3 (nº 856) — CES BADGES ONT LEUR PROPRE ÉCRITURE, DANS LA
+ * CHARTE ██
  * ------------------------------------------------------------------
- * CE QUI ÉTAIT ÉCRIT ICI, et qui n'y est plus : la hauteur, l'air
- * latéral, le corps et la graisse des trois badges de la rangée. Ils
- * vivaient EN DOUBLE — une fois ici, une fois chez le badge du type
- * (`BadgeTypeDeFiche`) — depuis que la nº 851 avait demandé aux deux
- * d'être identiques. Deux copies d'une même mesure finissent toujours
- * par se séparer (piège nº 378) ; le propriétaire tranche à la nº 855
- * (« les badges type des cartes partagent cette écriture : ils
- * suivent »), et la mesure part donc là où les deux la LISENT —
- * `AIR_BADGE` et `ECRITURE_BADGE`, dans config/tatouage, où le
- * pourquoi du quinze est écrit en entier.
- * CE QUI CHANGE À L'ÉCRAN : la seule hauteur, qui suit l'air neuf.
- * Les côtés, la croix, les couleurs et les mots ne bougent pas.
+ * OÙ ELLE VIT : `AIR_BADGE_RECHERCHE` et `ECRITURE_BADGE_RECHERCHE`,
+ * dans config/tatouage, où le calcul des proportions est écrit en
+ * entier. Ce fichier ne recopie plus aucune mesure (piège nº 378).
+ * CE QU'ELLE DIT, EN DEUX MOTS :
+ *  · AU DOIGT — exactement le badge du type, comme au bâti nº 854 :
+ *    trente de haut, quatorze d'air, corps quatorze. La nº 855 les
+ *    avait portés à quarante ; le propriétaire les remet (§2) ;
+ *  · AU WEB — le corps monte d'un cran (14 → 15) et la boîte grandit
+ *    EN PROPORTION, au rapport de l'état nº 853 : 32 de haut, 15
+ *    d'air. Ce n'est pas de l'air ajouté, c'est la même proportion à
+ *    un corps plus grand (§3).
+ * ⚠️ ET ELLE NE SUIT PLUS CELLE DU BADGE DU TYPE : les deux familles
+ * se séparent à cette passe, et le badge du type ne bouge pas — ni au
+ * doigt ni au web. Le banc 851, qui les comparait mesure contre
+ * mesure, ne compare donc plus que ce qui doit encore l'être.
  */
 
 /**
@@ -274,7 +278,7 @@ export function FiltresActifs({
            rien qui laisse croire qu'on peut le toucher. */}
       <h1
         data-badge-compte=""
-        className={`${ROBE_BADGE_CONTOUR} ${AIR_BADGE} ${ECRITURE_BADGE}`}
+        className={`${ROBE_BADGE_CONTOUR} ${AIR_BADGE_RECHERCHE} ${ECRITURE_BADGE_RECHERCHE}`}
       >
         {compte}
       </h1>
@@ -291,7 +295,7 @@ export function FiltresActifs({
               exact des deux, canal par canal) : le calcul et le pourquoi
               vivent avec la valeur, dans config/tatouage.
               §2 (nº 848) — L'AIR EST ÉGAL SUR LES QUATRE CÔTÉS
-              (`AIR_BADGE`), et l'écart entre le texte et la croix est le
+              (`AIR_BADGE_RECHERCHE`), et l'écart entre le texte et la croix est le
               cran d'en dessous (6 px) : c'est un écart INTÉRIEUR, il n'a
               pas à valoir l'air du contour.
               ⚠️ LE CONTOUR TRANSPARENT N'EST PAS UN ORNEMENT : le badge
@@ -347,7 +351,7 @@ export function FiltresActifs({
           style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
           className={`inline-flex shrink-0 items-center gap-1.5
                      whitespace-nowrap rounded-lg border border-transparent
-                     ${AIR_BADGE} ${ECRITURE_BADGE}`}
+                     ${AIR_BADGE_RECHERCHE} ${ECRITURE_BADGE_RECHERCHE}`}
         >
           {filtre.libelle}
           {/*  §2-§3c (nº 848) — LA CROIX : sa boîte vaut celle de la

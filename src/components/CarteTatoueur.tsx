@@ -42,6 +42,7 @@ import {
 //  §2 (nº 452) — le fanion revient sur les cartes de « Ma sélection »
 //  (et d'elles seules) : l'import que la nº 445 avait retiré.
 import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+import { estIdentifiantDeBase } from "@/lib/favoris-yokofolio";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 //  §2 (nº 486) — la ligne de lieu DES CARTES : « Ville, Pays »,
 //  sans État ni région (lib/adresse) — une seule écriture, les deux
@@ -475,6 +476,29 @@ function CarteTatoueurNue({
     photoRecherche ||
     photoEnregistrable?.id ||
     "";
+
+  /**
+   * ██ §4 (nº 856) — LE FANION SUR LA LIGNE DES STYLES, AU WEB ██
+   * ------------------------------------------------------------------
+   * DÉCISION DU PROPRIÉTAIRE : sur les CARTES DE RECHERCHE du web, le
+   * fanion prend place sur la ligne des styles, aligné à droite. Il n'y
+   * était pas du tout — la mosaïque du moteur restait nue depuis la
+   * nº 452, alors que la carte du DOIGT porte le sien dans son pied
+   * depuis la nº 841. Le web rattrape le doigt.
+   * ⚠️ ET « MA SÉLECTION » NE BOUGE PAS : elle a déjà son fanion, celui
+   * qui FLOTTE dans l'angle de la photo (le drapeau `fanion`, passé par
+   * PageFavoris, plus bas dans ce fichier). La consigne ne parle que des
+   * cartes de recherche ; les deux placements ne se rencontrent donc
+   * jamais sur une même carte, et c'est ce que cette condition dit.
+   * ⚠️ RIEN SANS PHOTO DE BASE : on n'enregistre pas une image qui
+   * n'existe pas en base — et la garde est LA MÊME que celle du bouton
+   * (`estIdentifiantDeBase`, chez lui), pas une approximation. Sans
+   * quoi la rangée réserverait quarante pixels à un fanion que le
+   * bouton refuserait de rendre : une fiche de démonstration, ou
+   * d'avant le portfolio catalogué, garderait un creux à droite de sa
+   * ligne de styles. Même condition des deux côtés, même résultat.
+   */
+  const fanionSurLaLigne = !fanion && estIdentifiantDeBase(photoRegardee);
 
   /** Le lieu de la fiche, tel que les deux écritures de la ligne le
       lisent (voir plus bas, nº 212-§6). */
@@ -1105,6 +1129,44 @@ function CarteTatoueurNue({
              lib/photos-tatoueur) : aucune ponctuation inventée, et le
              rendu absent ne laisse jamais de puce orpheline. */}
         {partiesDuTitre && (
+          /*  ██ §4 (nº 856) — LA RANGÉE DE LA LIGNE 1, AU WEB ██
+              ----------------------------------------------------------
+              DÉCISION DU PROPRIÉTAIRE : sur les cartes de recherche du
+              web, le FANION prend place SUR CETTE LIGNE, aligné à
+              droite — au lieu de flotter dans l'angle de la photo,
+              comme il le fait sur « Ma sélection ».
+              CE QUE CETTE ENVELOPPE FAIT, ET RIEN D'AUTRE : elle
+              RÉSERVE la place du fanion. Quarante pixels de haut (sa
+              cible, `h-10` chez lui) et de quoi ne jamais passer sous
+              lui à droite ; le texte s'y centre.
+              ⚠️ POURQUOI LE FANION N'EST PAS DEDANS : cette ligne vit
+              DANS LE LIEN de la carte, et un bouton dans un lien est du
+              contenu interactif imbriqué, que le langage interdit (la
+              leçon de la nº 517). Le fanion est donc posé À CÔTÉ du
+              lien, tout en bas de ce fichier, et vient se placer
+              exactement sur cette rangée — les deux lisent le même
+              repère (le cadre de la photo) et le même écart, ils ne
+              peuvent pas se séparer.
+              ⚠️ ET LA LIGNE DESCEND, c'est demandé : « si le fanion
+              touche le haut de la photo, ABAISSER cette ligne ». Le
+              fanion centré sur une ligne de dix-huit pixels posée à
+              huit de la photo mordait dessus de trois. La rangée
+              COMMENCE désormais là où la ligne commençait, et fait la
+              hauteur du fanion : le fanion ne touche plus rien, et le
+              texte descend de onze pixels. La césure sous elle est
+              réduite d'autant, pour que le rythme du web ne bouge pas.
+              ⚠️ AU DOIGT, AUCUN EFFET : pas de flexion, pas de hauteur
+              imposée, pas de marge — l'enveloppe y est transparente, et
+              la ligne garde la sienne (`mobile:mb-1`).
+              ⚠️ ET SANS FANION, AUCUN EFFET NON PLUS : une carte de « Ma
+              sélection » (son fanion flotte sur la photo) ou une fiche
+              sans photo de base garde EXACTEMENT sa ligne d'avant — la
+              césure de seize pixels (`mb-4`), pas de rangée de quarante.
+              La réservation n'existe que là où le fanion existe ; une
+              seule déclaration de marge par cas (piège nº 389). */
+          <div className={fanionSurLaLigne
+            ? "not-mobile:flex not-mobile:min-h-10 not-mobile:items-center not-mobile:gap-2 not-mobile:mb-[5px]"
+            : "not-mobile:mb-4"}>
           <p
             /*  ██ §1 ET §3 (nº 481) — LA GRAISSE ET L'AIR DE LA LIGNE 1 ██
                 LA GRAISSE S'INVERSE AVEC CELLE DU NOM : cette ligne
@@ -1144,7 +1206,15 @@ function CarteTatoueurNue({
                 ⚠️ LE RÉGLAGE QUI LA GOUVERNAIT S'EN VA AVEC : plus
                 personne ne la masque, et un paramètre qui ne change
                 plus rien est un piège pour la passe suivante. */
-            className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-1 text-[15px] text-sombre-texte ${
+            /*  ██ §4 (nº 856) — AU WEB, CETTE LIGNE PORTE LE FANION ██
+                Sa marge du bas passe donc à la RANGÉE qui l'enveloppe
+                (juste au-dessus dans le marquage) : c'est elle qui
+                réserve les quarante pixels du fanion et qui tient la
+                césure. La ligne elle-même ne garde que celle du doigt,
+                où rien ne change — une seule déclaration de marge par
+                appareil (piège nº 389). */
+            className={`font-normal leading-[18px] line-clamp-1 mobile:mb-1 text-[15px] text-sombre-texte
+                        not-mobile:min-w-0 not-mobile:flex-1 ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1169,6 +1239,14 @@ function CarteTatoueurNue({
               </span>
             )}
           </p>
+          {/*  LE CREUX QUE LE FANION VIENDRA REMPLIR — il n'existe qu'au
+               web, et seulement là où le fanion est rendu. Il porte SA
+               cible (quarante pixels), jamais une valeur recopiée : la
+               rangée réserve donc exactement ce qu'il occupe. */}
+          {fanionSurLaLigne && (
+            <span aria-hidden className="hidden not-mobile:block size-10 shrink-0" />
+          )}
+          </div>
         )}
 
         {/*  §1 (nº 480) — LA RANGÉE DES LIGNES 2 ET 3 : le rond de
@@ -1531,6 +1609,45 @@ function CarteTatoueurNue({
             pastilleEveillee={galerie.pastilleEveillee}
             pleineLargeur={uneColonne}
           />
+        </div>
+      )}
+
+      {/**
+        * ██ §4 (nº 856) — LE FANION DE LA LIGNE DES STYLES (WEB) ██
+        * ================================================================
+        * IL SE POSE EXACTEMENT DANS LE CREUX que la rangée de la ligne 1
+        * lui réserve, plus haut — et les deux le trouvent par LE MÊME
+        * CHEMIN, sans qu'aucun nombre soit recopié :
+        *  · le repère est LE CADRE DE LA PHOTO (`CADRE_PHOTO_PORTFOLIO`,
+        *    la constante que la photo elle-même lit) ; `top-full` pose
+        *    donc le fanion au bas de la photo, au pixel ;
+        *  · l'écart est celui du bloc de texte (`pt-2`, huit pixels) ;
+        *  · la marge de droite est celle du bloc de texte (`px-0.5`).
+        * La rangée, elle, part du même bas de photo avec le même `pt-2`
+        * et réserve la même cible de quarante. Les deux boîtes tombent
+        * l'une sur l'autre parce qu'elles disent la même chose, pas
+        * parce qu'on les a réglées.
+        * ⚠️ POURQUOI IL EST ICI, HORS DU LIEN : un bouton DANS un lien
+        * est du contenu interactif imbriqué, que le langage interdit
+        * (nº 517) — la même raison qui a sorti le fanion flottant et les
+        * chevrons de la galerie. L'enveloppe ne prend aucun clic, seul
+        * le bouton en reçoit.
+        * ⚠️ AU DOIGT, RIEN : la carte du fil porte déjà le sien dans son
+        * pied (nº 841), et cette vignette-ci n'a pas de ligne de styles
+        * assez large pour en loger un second.
+        */}
+      {fanionSurLaLigne && (
+        <div
+          data-fanion-de-ligne=""
+          className={`pointer-events-none absolute inset-x-0 top-0 hidden not-mobile:block ${CADRE_PHOTO_PORTFOLIO}`}
+        >
+          <div className="pointer-events-auto absolute top-full right-0 mt-2 mr-0.5 z-10">
+            <BoutonCoeurPhoto
+              key={photoRegardee}
+              photoId={photoRegardee}
+              variante="carte"
+            />
+          </div>
         </div>
       )}
 

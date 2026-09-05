@@ -89,9 +89,10 @@ export function BadgeTypeDeFiche({
           ⚠️ SA BOÎTE EST CELLE DE LA CHARTE — `BOITE_BADGE` pour la
           forme, `AIR_BADGE` et `ECRITURE_BADGE` pour la hauteur, l'air
           et la typographie (config/tatouage). Les badges de la rangée
-          de recherche lisent les mêmes : la nº 851 leur avait fait
-          COPIER ces mesures, la nº 855 les leur fait PARTAGER. Le banc
-          851 les compare toujours, mesure contre mesure.
+          de recherche avaient COPIÉ ces mesures (nº 851), puis les
+          avaient PARTAGÉES (nº 855) ; ils s'en séparent à la nº 856 et
+          ont leur propre écriture. Ce badge-ci n'a pas bougé depuis le
+          bâti nº 854.
           ⚠️ ET IL N'A PLUS DE CONTOUR DU TOUT : c'est écrit dans la
           consigne. Sa hauteur ne bouge pas pour autant — la hauteur
           minimale se compte sur la boîte entière, contour compris. */
@@ -112,14 +113,18 @@ export function BadgeTypeDeFiche({
           serait donc muette. L'opacité est l'autre écriture du site
           pour ce cas (elle sert déjà dans l'administration). */
       style={{ backgroundColor: COULEURS_SOMBRE.carteClair }}
-      /*  ██ §2 (nº 855) — SA BOÎTE EST CELLE DE LA CHARTE, LUE ██
-          Il écrivait sa hauteur, son air et sa typographie à la lettre,
-          et les badges de la rangée de recherche les recopiaient chez
-          eux. Le propriétaire veut UNE écriture (« les badges type des
-          cartes partagent cette écriture : ils suivent ») : elle vit
-          désormais dans config/tatouage, et ce badge la LIT. Sa hauteur
-          passe donc de trente à quarante avec elle — c'est l'air neuf,
-          quinze pixels jusqu'à l'encre des trois côtés. */
+      /*  ██ §1 (nº 856) — IL REVIENT À SA TAILLE, ET IL Y RESTE ██
+          La nº 855 l'avait porté à quarante pixels de haut, en même
+          temps que les badges de recherche : le propriétaire le dit
+          agrandi PAR ERREUR et le remet à l'état du bâti nº 854 —
+          trente de haut, quatorze d'air latéral, la robe de « Suivre ».
+          SA BOÎTE RESTE CELLE DE LA CHARTE, lue et non recopiée
+          (`AIR_BADGE`, `ECRITURE_BADGE`) ; c'est la CHARTE qui revient
+          en arrière, et ce badge avec elle.
+          ⚠️ ET IL NE SUIT PLUS LES BADGES DE RECHERCHE : les deux
+          familles se séparent à cette passe (§3), et celle-ci monte
+          d'un cran au web sans lui. Ni le doigt ni le web ne touchent
+          à ce badge-ci. */
       className={`${BOITE_BADGE} ${AIR_BADGE} ${ECRITURE_BADGE}
                  transition-opacity
                  hover:opacity-90 active:opacity-90

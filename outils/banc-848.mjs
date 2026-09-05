@@ -201,13 +201,14 @@ for (const mode of ["doigt", "web"]) {
     verif("tous les badges de la rangée ont la MÊME hauteur",
       tous.every((b) => b.hauteur === tous[0].hauteur),
       tous.map((b) => b.hauteur).join(" | "));
-    //  §4 (nº 853) — LA MÊME BOÎTE QUE LE BADGE DU TYPE, aux deux
-    //  appareils. §2 (nº 855) — et elle vaut désormais QUARANTE : l'air
-    //  monte à quinze pixels jusqu'à l'encre, en haut comme à gauche,
-    //  et la hauteur s'en déduit (15 + 10 + 15). Le pourquoi est écrit
-    //  dans config/tatouage ; l'air lui-même se mesure au banc 855.
+    //  §2-§3 (nº 856) — TRENTE AU DOIGT (l'état du bâti 854), TRENTE-DEUX
+    //  AU WEB : le corps y monte d'un cran (14 → 15) et la boîte grandit
+    //  en proportion (30 × 15/14 → 32). La nº 855 disait quarante
+    //  partout ; le propriétaire l'annule. Source : `AIR_BADGE_RECHERCHE`
+    //  (config/tatouage) ; le banc 856 mesure.
     verif("… et c'est celle que le squelette d'attente promet",
-      tous[0].hauteur === 40, `${tous[0].hauteur} px (attendu 40)`);
+      tous[0].hauteur === { doigt: 30, web: 32 }[mode],
+      `${tous[0].hauteur} px (attendu ${{ doigt: 30, web: 32 }[mode]})`);
 
     /*  ██ §3c — LE TEXTE ET LA CROIX, AU WEB ██
         « un cran de plus qu'à la nº 847 » : le corps y valait 15 px sur
@@ -216,8 +217,11 @@ for (const mode of ["doigt", "web"]) {
     /*  nº 851 — AU DOIGT, LE CORPS EST CELUI DU BADGE DU TYPE (14 px) :
         le propriétaire a demandé les mesures exactes de ce badge-là sur
         smartphone. Le web garde le cran gagné à la nº 848. */
-    verif("le corps est celui du badge du type : 14 px, aux deux appareils (nº 853-§4)",
-      tous.every((b) => b.corps === "14px"),
+    /*  §3 (nº 856) — LE WEB REPREND SON CRAN : corps 14 au doigt (celui
+        du badge du type, nº 851), 15 au web — la boîte suit en
+        proportion. Le banc 856 mesure les rapports. */
+    verif(`le corps de la rangée : ${{ doigt: 14, web: 15 }[mode]} px (nº 856-§3)`,
+      tous.every((b) => b.corps === `${{ doigt: 14, web: 15 }[mode]}px`),
       tous.map((b) => b.corps).join(" | "));
     verif(doigt
       ? "au doigt, le dessin de la croix ne bouge pas : 16 px"
@@ -270,11 +274,12 @@ for (const mode of ["doigt", "web"]) {
 {
   titre("848 · le web monte bien d'un cran sur le doigt");
   const d = releves.doigt, w = releves.web;
-  /*  §4 (nº 853) — LE CORPS NE DIFFÈRE PLUS : les deux appareils
-      prennent celui du badge du type. Ce qui reste vrai, et qu'on
-      garde : les deux rangées disent la même chose, au même corps. */
-  verif("le corps du texte est le MÊME aux deux appareils",
-    d && w && w.compte.corps === d.compte.corps,
+  /*  §4 (nº 853) — le corps ne différait plus. §3 (nº 856) — IL DIFFÈRE
+      DE NOUVEAU, sur décision du propriétaire, et c'est le titre de cette
+      partie qui redevient vrai à la lettre : le web monte d'un cran sur
+      le doigt (14 → 15), et la boîte suit en proportion. */
+  verif("le corps du texte monte d'UN cran du doigt au web (14 → 15)",
+    d && w && parseFloat(w.compte.corps) === parseFloat(d.compte.corps) + 1,
     d && w ? `${d.compte.corps} au doigt, ${w.compte.corps} au web` : "relevé manquant");
   verif("le dessin de la croix aussi",
     d && w && w.filtres[0].glyphe > d.filtres[0].glyphe,
@@ -347,11 +352,10 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1200);
     const vrai = await page.evaluate((R) => new Function("return " + R)()(), RANGEE);
 
-    //  nº 850 — la hauteur que l'air visuel appelle. §2 (nº 855) : elle
-    //  vaut quarante depuis que l'air monte à quinze pixels jusqu'à
-    //  l'encre, en haut comme à gauche (15 + 10 + 15). La source est
-    //  `AIR_BADGE`, dans config/tatouage ; le banc 855 mesure l'air.
-    const attendue = 40;
+    //  §2-§3 (nº 856) — trente au doigt, trente-deux au web : le corps y
+    //  monte d'un cran et la boîte suit en proportion. Source :
+    //  `AIR_BADGE_RECHERCHE`, config/tatouage ; mesure au banc 856.
+    const attendue = { doigt: 30, web: 32 }[mode];
     verif("les badges gris ont la hauteur des vrais badges",
       gris.hauteurs.every((h) => h === attendue),
       `${gris.hauteurs.join(" | ")} pour ${attendue} attendus`);

@@ -2479,61 +2479,88 @@ export const BOITE_BADGE =
 export const ROBE_BADGE_CONTOUR = `${BOITE_BADGE} border border-sombre-haut bg-transparent`;
 
 /**
- * ██ §2 (nº 855) — L'AIR D'UN BADGE : QUINZE PIXELS JUSQU'À L'ENCRE ██
+ * ██ §1-§2-§3 (nº 856) — DEUX ÉCRITURES, ET IL EN FAUT DEUX ██
  * ==================================================================
- * LA RÈGLE DU PROPRIÉTAIRE, à la lettre : « l'air au-dessus et
- * au-dessous du texte = l'air entre le bord gauche du badge et la
- * première lettre — mesuré aux LETTRES, pas la boîte de ligne ».
+ * CE QUE LA nº 855 AVAIT FAIT, ET QUE LE PROPRIÉTAIRE ANNULE : elle
+ * avait porté TOUS les badges du site à quarante pixels de haut, pour
+ * donner à l'encre quinze pixels d'air en haut, en bas et à gauche. La
+ * mesure était juste ; le résultat, non — sur smartphone les badges du
+ * type comme ceux de la recherche sont devenus trop gros, et il les
+ * remet où ils étaient.
  *
- * CE QU'ON MESURAIT AVANT (nº 854, à l'encre, aux deux appareils) :
- *   compte « 14 portfolios »  haut 10 · bas  8 · gauche 15
- *   filtre « Blackwork »      haut 10 · bas 10 · gauche 16
- *   type   « Tattoo Artist »  haut 10 · bas 11 · gauche 13
- * Dix pixels au-dessus des lettres pour quinze à leur gauche : le
- * badge était TROP SERRÉ EN HAUTEUR, et c'est ce que l'œil voyait.
+ * ET LES DEUX FAMILLES SE SÉPARENT, parce qu'elles ne veulent plus la
+ * même chose (§3) :
+ *  · LES BADGES DU TYPE des cartes — `AIR_BADGE` / `ECRITURE_BADGE`,
+ *    juste en dessous — reprennent EXACTEMENT l'état du bâti nº 854 :
+ *    trente de haut, quatorze d'air latéral, corps quatorze. Aux deux
+ *    appareils, et le web n'y est pas touché non plus ;
+ *  · LES BADGES DE LA RANGÉE DE RECHERCHE — `AIR_BADGE_RECHERCHE` /
+ *    `ECRITURE_BADGE_RECHERCHE`, plus bas — les reprennent AU DOIGT, et
+ *    montent d'un cran AU WEB.
  *
- * D'OÙ VIENT LE QUINZE, ET POURQUOI CE NOMBRE-LÀ : c'est l'air gauche
- * tel qu'il se mesure aujourd'hui — le trait d'un pixel plus les
- * quatorze du rembourrage (`px-3.5`). On ne touche pas aux côtés : on
- * amène le haut et le bas SUR EUX.
- * LA HAUTEUR SE DÉDUIT, elle ne se choisit pas : 15 + 10 + 15 = 40.
- * Le dix du milieu est la hauteur d'encre d'une ligne de ce corps
- * (14 px, demi-gras) — du haut des capitales à la ligne de base,
- * mesuré, pas supposé.
- *
- * ⚠️ LES DESCENDANTES DÉBORDENT PAR LE BAS, et c'est juste : le « p »
- * de « portfolios » descend sous la ligne de base, comme dans tout
- * texte bien composé. L'air se compte des capitales à la ligne de
- * base — le reste est le dessin de la lettre, pas de l'air.
- * ⚠️ IL RESTE UN PIXEL DE JEU À GAUCHE selon la première lettre : le
- * « T » de « Tattoo » avance sur sa marge, le « B » de « Blackwork »
- * recule d'un flanc. C'est le FLANC DU GLYPHE, que rien ne peut
- * égaliser sans décaler le mot lui-même.
- *
- * ⚠️ UNE SEULE ÉCRITURE, ET ELLE VIT ICI (piège nº 378). Les badges de
- * la rangée de recherche (components/FiltresActifs) et le badge du
- * type des cartes (components/BadgeTypeDeFiche) la LISENT — ils ne la
- * recopient plus. C'est la consigne du propriétaire : « les badges
- * type des cartes partagent cette écriture : ils suivent ».
- * ⚠️ AUCUNE VARIANTE D'APPAREIL (règle nº 60) : les deux appareils ont
- * la même écriture depuis la nº 853-§4, et la mesure de l'encre les
- * donne identiques au pixel.
+ * ⚠️ POURQUOI DEUX CONSTANTES PLUTÔT QU'UNE AVEC DES VARIANTES : parce
+ * que ce sont deux DÉCISIONS, pas deux tailles d'écran. La nº 851 les
+ * avait rendues identiques, la nº 855 les avait fondues en une seule ;
+ * le propriétaire les sépare à la nº 856 et demande que ce soit dit.
+ * Une seule écriture par famille (piège nº 378), deux familles nommées.
  */
-export const AIR_BADGE = "min-h-[40px] px-3.5";
+export const AIR_BADGE = "min-h-[30px] px-3.5";
 
-/** L'écriture des badges — corps, graisse, couleur (nº 853-§4). Elle
-    voyage avec l'air : les deux ne se séparent jamais. */
+/** L'écriture des badges du TYPE — corps, graisse, couleur. Elle
+    voyage avec son air : les deux ne se séparent jamais. */
 export const ECRITURE_BADGE = "text-[14px] font-semibold text-sombre-texte";
 
 /**
- * LA MÊME HAUTEUR, POUR LE SQUELETTE D'ATTENTE.
+ * LA MÊME HAUTEUR, POUR LE SQUELETTE D'ATTENTE DU BADGE DU TYPE.
  * Le gris ne peut pas porter `min-h-` : il n'a pas de texte à
  * contenir, il DOIT faire exactement la hauteur promise. C'est donc
- * l'autre propriété (`h-`), mais le même nombre — et il est écrit
- * juste ici, contre celui du vrai badge, pour que les deux ne
- * puissent pas se séparer d'une passe à l'autre (nº 855).
+ * l'autre propriété (`h-`), mais le même nombre — écrit juste ici,
+ * contre celui du vrai badge, pour que les deux ne puissent pas se
+ * séparer d'une passe à l'autre.
  */
-export const HAUTEUR_BADGE_GRIS = "h-[40px]";
+export const HAUTEUR_BADGE_GRIS = "h-[30px]";
+
+/**
+ * ██ §3 (nº 856) — LES BADGES DE RECHERCHE : LE WEB MONTE D'UN CRAN ██
+ * ==================================================================
+ * LA CONSIGNE, à la lettre : « PAS d'air ajouté (annuler le 15/15/15
+ * de la 855 au web) — à la place, la TYPOGRAPHIE monte d'un cran et le
+ * badge grandit EN PROPORTION (même rapport air/texte qu'à l'état
+ * 853) ».
+ *
+ * L'ÉTAT nº 853, QUI EST LE PATRON : corps 14, boîte 30, air latéral
+ * 14. Deux rapports en sortent, et ce sont eux qu'on garde :
+ *      hauteur / corps  =  30 / 14  =  2,143
+ *      air      / corps =  14 / 14  =  1,000
+ * UN CRAN DE PLUS, c'est le cran de ce site — 14 → 15, celui que la
+ * nº 847 avait déjà monté et que la nº 853 avait redescendu. Les deux
+ * rapports le suivent :
+ *      hauteur = 30 × 15/14 = 32,14  →  32   (32/15 = 2,133)
+ *      air     = 14 × 15/14 = 15,00  →  15   (15/15 = 1,000)
+ * Le badge grandit donc de deux pixels en hauteur et d'un de chaque
+ * côté : c'est la proportion, pas de l'air ajouté.
+ *
+ * ⚠️ AU DOIGT, RIEN NE BOUGE (§2) : mêmes mesures que le badge du
+ * type, celles du bâti nº 854.
+ * ⚠️ C'EST L'APPAREIL QUI TRANCHE, jamais une largeur (règle nº 60) :
+ * `mobile:` et `not-mobile:` lisent `html[data-appareil]`.
+ * ⚠️ ET LES DEUX S'EXCLUENT, donc aucune propriété n'est déclarée deux
+ * fois pour un même écran (piège nº 389) : chaque appareil pose sa
+ * hauteur, son air et son corps dans SA variante, et une seule des
+ * deux s'applique.
+ */
+export const AIR_BADGE_RECHERCHE =
+  "mobile:min-h-[30px] mobile:px-3.5 not-mobile:min-h-[32px] not-mobile:px-[15px]";
+
+/** L'écriture des badges de recherche — le corps monte d'un cran au
+    web (§3), la graisse et la couleur ne bougent pas. */
+export const ECRITURE_BADGE_RECHERCHE =
+  "font-semibold text-sombre-texte mobile:text-[14px] not-mobile:text-[15px]";
+
+/** La hauteur des gris qui attendent la rangée de recherche — le même
+    nombre que le vrai badge, appareil par appareil. */
+export const HAUTEUR_BADGE_RECHERCHE_GRIS =
+  "mobile:h-[30px] not-mobile:h-[32px]";
 
 /**
  * ██ §3 (nº 845) — L'AIR DE LA PASTILLE SUR UNE CARTE DU DOIGT ██

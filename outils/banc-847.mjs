@@ -222,7 +222,9 @@ for (const mode of ["doigt", "web"]) {
     /*  §4 (nº 853) — LE WEB REJOINT LE DOIGT : les deux prennent
         l'écriture du badge du TYPE des cartes (corps 14, demi-gras).
         Il n'y a plus qu'une seule valeur à dire. */
-    const ECRITURE = { corps: "14px", graisse: "600" };
+    /*  §3 (nº 856) — LE WEB REMONTE D'UN CRAN : corps 15 au web, 14 au
+        doigt (celui du badge du type). La graisse ne bouge pas. */
+    const ECRITURE = { corps: { doigt: "14px", web: "15px" }[mode], graisse: "600" };
     verif(`TOUS les badges portent la même écriture : corps ${ECRITURE.corps}, graisse ${ECRITURE.graisse}`,
       tous.every((b) => b.corps === ECRITURE.corps && b.graisse === ECRITURE.graisse),
       tous.map((b) => `${b.corps}/${b.graisse}`).join(" | "));

@@ -34,12 +34,16 @@ const MESURES = `(n) => {
   };
 }`;
 
-/*  §4 (nº 853) — ET LE WEB REJOINT LE DOIGT : le propriétaire demande
-    les mêmes mesures aux DEUX appareils. La comparaison est la même,
-    jouée deux fois — et c'est tout ce qu'il y avait à changer, puisque
-    ce banc ne récite aucun nombre : il lit le badge du type et exige
-    que les autres lui ressemblent. */
-for (const mode of ["doigt", "web"]) {
+/*  §4 (nº 853) — ET LE WEB REJOIGNAIT LE DOIGT : les mêmes mesures aux
+    deux appareils, la comparaison jouée deux fois.
+    ██ §3 (nº 856) — LE WEB S'EN SÉPARE, SUR DÉCISION DU PROPRIÉTAIRE ██
+    Au web, les badges de recherche montent d'un cran (corps 15, boîte
+    32) et le badge du type NE BOUGE PAS (corps 14, boîte 30) : ils ne
+    doivent plus se ressembler, et ce banc ne peut plus l'exiger. La
+    comparaison ne se joue donc qu'AU DOIGT, où la consigne tient
+    toujours (§2 : identiques au badge type). Le web se mesure au banc
+    856, nombre par nombre — deux bancs ne diront pas deux vérités. */
+for (const mode of ["doigt"]) {
   const { nav, page } = await ouvrir(mode);
   try {
     titre(`851 · ${mode} — la rangée et la carte, mesure contre mesure`);
