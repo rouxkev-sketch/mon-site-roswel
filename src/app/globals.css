@@ -665,6 +665,30 @@ html[data-clair="3"] {
   --rw-clair-barre: var(--rw-sombre-haut-clair);
   --rw-clair-barre-vif: var(--rw-sombre-haut-clair);
 }
+/*  ██ §2 (nº 852) — LE CHAMP DE L'ACCUEIL AU DOIGT, UN CRAN PLUS
+    SOMBRE ██
+    -------------------------------------------------------------------
+    LE PROPRIÉTAIRE : « sur smartphone, à l'accueil, le champ de
+    recherche est trop CLAIR — l'assombrir d'un cran de la charte ».
+    LE CRAN, NOMMÉ : `eleve-clair` (#323942) au lieu de `haut`
+    (#3E4650) — le barreau immédiatement en dessous sur l'échelle
+    sombre, mesuré (luminosité 56,2 contre 69,0). Ce n'est pas une
+    valeur neuve : c'est EXACTEMENT la paire que `?clair=1` sert depuis
+    la nº 175, celle que le web portait avant qu'on grave le cran 2.
+    COMMENT, ET POURQUOI C'EST SANS RISQUE : la marque redéfinit les
+    DEUX VARIABLES SUR L'ÉLÉMENT LUI-MÊME. Les règles ci-dessous ne
+    changent pas d'une ligne — elles lisent la variable, qui vaut
+    désormais autre chose ici. Aucune bataille de spécificité, aucun
+    `!important`, et l'état vif (survol, appui, saisie) descend du même
+    cran, comme il le fait à tous les autres crans.
+    ⚠️ ELLE NE VISE QUE LA PILULE DE L'ACCUEIL AU DOIGT : ce bouton
+    n'est rendu que là (`rangeeMobile`, MoteurTatouage). Le champ du
+    web, les deux ronds de la barre et l'encadré de « Ma sélection »
+    gardent leur cran, sans qu'aucune de leurs règles soit touchée. */
+[data-clair-barre="doux"] {
+  --rw-clair-barre: var(--rw-sombre-eleve-clair);
+  --rw-clair-barre-vif: var(--rw-sombre-haut);
+}
 [data-clair-barre] {
   background-color: var(--rw-clair-barre);
 }

@@ -1856,7 +1856,11 @@ export function MoteurTatouage({
           //  que l'encadré du web et que les deux boutons voisins,
           //  réglable par `?clair=1|2|3`. La pression garde son
           //  comportement (`:active` monte d'un barreau).
-          data-clair-barre=""
+          /*  §2 (nº 852) — « doux » : le cran d'en dessous, pour CE
+              champ seul (le pourquoi et la valeur sont dans globals.css,
+              avec la règle). Le propriétaire le trouvait trop clair à
+              l'accueil du doigt — et cette pilule n'existe QUE là. */
+          data-clair-barre="doux"
           //  §1 (nº 258) — MOINS 11 % : 52 × 0,89 = 46,28 → 46 au
           //  pixel entier — la hauteur même des cercles du web. La
           //  barre rend l'espace (réserve 122, voir EnTeteTatouage).

@@ -226,7 +226,9 @@ const mesureTitre = `(bloc) => {
       };
     }, CARTE);
     verif("SIGNALER est seul à gauche", JSON.stringify(pied.aGauche) === JSON.stringify(["Report"]), pied.aGauche.join(" · "));
-    verif("PARTAGE puis FANION à droite, dans cet ordre", JSON.stringify(pied.aDroite) === JSON.stringify(["Share", "Save"]) || JSON.stringify(pied.aDroite) === JSON.stringify(["Share", "Remove"]), pied.aDroite.join(" · "));
+    //  §7 (nº 852) — LES DEUX GESTES ÉCHANGENT LEUR PLACE : le fanion
+    //  passe devant le partage (décision du propriétaire).
+    verif("FANION puis PARTAGE à droite, dans cet ordre", JSON.stringify(pied.aDroite) === JSON.stringify(["Save", "Share"]) || JSON.stringify(pied.aDroite) === JSON.stringify(["Remove", "Share"]), pied.aDroite.join(" · "));
     verif("les points sont centrés sur la carte", pied.pointsCentres);
     verif("les trois cibles font 40 px", pied.cibles.every((c) => c === 40), pied.cibles.join("/"));
     verif("les glyphes des bords tombent sur la marge de la page", pied.bordGauche === 8 && pied.bordDroit === 8, `${pied.bordGauche} / ${pied.bordDroit}`);
@@ -248,14 +250,20 @@ const mesureTitre = `(bloc) => {
       const c = document.querySelector(SEL);
       const t = f(c.querySelector("h3"));
       const p = [...c.querySelectorAll("[data-lien-carte] p")].pop();
-      t.sousTitre = p.textContent.trim();
+      //  §8 (nº 852) — LE SOUS-TITRE SE LIT SUR CE QUI SE VOIT : les
+      //  deux écritures (celle du doigt, celle du web) vivent dans le
+      //  même paragraphe, et l'appareil en montre une.
+      t.sousTitre = ([...p.children].find((n) => n.getBoundingClientRect().height > 0)
+        ?? p).textContent.trim();
       t.sousTitreCouleur = getComputedStyle(p).color;
       return t;
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${T}"])`, M: mesureTitre });
-    //  §1 (nº 843) — le titre redevient le nom seul, et le type redescend
-    //  devant la ville (la carte du web ne prend pas le badge).
+    /*  §1 (nº 843) — le titre est le nom seul.
+        §8 (nº 852) — ET LE TYPE A QUITTÉ LE SOUS-TITRE DU WEB : il y est
+        devenu un badge face à l'avatar, comme sur le fil. Le sous-titre
+        ne dit plus que la localité. */
     verif("le titre est le nom seul, demi-gras et blanc", m.texte === "Banc 842" && Number(m.nomGraisse) >= 600, `${m.texte} · ${m.nomGraisse}`);
-    verif("le sous-titre porte « Type · Ville »", m.sousTitre === "Private Studio · Lyon, FR", m.sousTitre);
+    verif("le sous-titre du web ne porte que la LOCALITÉ (nº 852-§8)", m.sousTitre === "Lyon, FR", m.sousTitre);
     const ml = await page.evaluate(({ SEL, M }) => {
       const f = new Function("return " + M)();
       return f(document.querySelector(SEL + " h3"));

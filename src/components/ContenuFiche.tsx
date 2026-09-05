@@ -1941,7 +1941,7 @@ export function ContenuFiche({
          * inset-x-0` DANS cette boîte — il s'élargit avec elle, et
          * couvre donc enfin toute la largeur au-dessus de la rangée.
          */
-        className={`relative flex items-center justify-between gap-3
+        className={`relative flex items-center justify-between gap-2
                    border-b ${TRAIT_SEPARATION}
                    lg:sticky lg:top-0 lg:z-[2] bg-[var(--fond-colonne)] ${
                      /**
@@ -2122,7 +2122,43 @@ export function ContenuFiche({
              Le PARTAGE, lui, était déjà vivant : il partage l'adresse
              publique de son propre portfolio — la même action, au même
              endroit. */}
-        <div className="flex shrink-0 items-center gap-3">
+        {/*  ██ §5 (nº 852) — LES DEUX GESTES S'ALIGNENT SUR LES ONGLETS ██
+             --------------------------------------------------------
+             CE QUE LE PROPRIÉTAIRE VOIT : le partage et « Suivre » sont
+             PLUS BAS que les mots « Profile / Portfolio ».
+             LA CAUSE, MESURÉE : la rangée cale les centres
+             (`items-center`), et le bloc des onglets fait 47 px — ses
+             44 de cible PLUS LES TROIS PIXELS DU TRAIT ROSE, qui pend
+             sous eux. Son centre à lui tombe donc 1,5 px plus bas que
+             celui de ses mots, et les deux gestes suivent ce centre-là.
+             LE REMÈDE : `mb-[3px]` — l'épaisseur du trait, rendue au
+             groupe de droite. La rangée le centre alors sur une boîte
+             plus haute de trois pixels, ce qui le remonte d'un pixel et
+             demi : son centre retrouve celui de la CIBLE des onglets
+             (118,0 mesuré contre 117,3 pour le mot lui-même — le reste
+             est le blanc que la fonte pose au-dessus de ses capitales,
+             et il ne se règle pas à la marge).
+             ⚠️ AUCUNE CIBLE N'EST TOUCHÉE : une marge déplace la boîte,
+             elle ne la rétrécit pas. Le partage garde ses 40 px de haut,
+             « Suivre » ses 30.
+
+             ██ §5 (nº 852) — ET « SUIVRE » RENTRE DANS LA MARGE ██
+             CE QUE LE PROPRIÉTAIRE VOIT AU WEB : le badge DÉPASSE.
+             MESURÉ, à 1440 px : la rangée offre 340 px de large, et son
+             contenu en demande 357 — les onglets (195), l'écart (12) et
+             les deux gestes (150). Les dix-sept pixels de trop sortent
+             par la droite, et c'est le badge qui les porte : il finit à
+             1259 là où la colonne s'arrête à 1254.
+             LES VINGT PIXELS RENDUS, tous pris sur des écarts, aucun sur
+             une cible : l'écart de la rangée et celui des deux gestes
+             descendent d'un cran (12 → 8), et l'air latéral des onglets
+             aussi, AU WEB SEULEMENT (20 → 16, `classeOnglet`). Le
+             contenu tombe à 333 px : le badge finit exactement sur la
+             marge, avec sept pixels de reste.
+             ⚠️ AU DOIGT, LES ONGLETS NE BOUGENT PAS : leur cible y garde
+             ses 20 px d'air, et la rangée n'y déborde pas — la colonne
+             fait toute la largeur de l'écran. */}
+        <div className="flex shrink-0 items-center gap-2 mb-[3px]">
           <BoutonPartageFiche
             nomArtisan={tatoueur.nom}
             cheminFiche={`/artist/${tatoueur.slug}`}

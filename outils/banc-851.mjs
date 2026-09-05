@@ -46,7 +46,12 @@ const MESURES = `(n) => {
       const f = new Function("return " + M)();
       const rangee = [...document.querySelectorAll("[data-badge-compte],[data-filtre-actif]")];
       return {
-        type: f(document.querySelector("[data-badge-type]")),
+        //  §8-§9 (nº 852) — DEUX BADGES DE TYPE VIVENT DÉSORMAIS DANS
+        //  LE MÊME DOCUMENT (la carte du fil et celle du web), et
+        //  l'appareil n'en montre qu'un : on prend CELUI QU'ON VOIT,
+        //  jamais le premier venu, dont la boîte vaut zéro.
+        type: f([...document.querySelectorAll("[data-badge-type]")]
+          .find((n) => n.getBoundingClientRect().height > 0)),
         rangee: rangee.map((n) => ({ texte: n.textContent.trim(), ...f(n) })),
       };
     }, MESURES);

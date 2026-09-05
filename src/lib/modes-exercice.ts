@@ -1234,7 +1234,8 @@ export function sousTitreArtiste(
   modes: ModeExerciceFiche[] | null | undefined
 ): string {
   const ordonnes = modesOrdonnes(modes);
-  if (ordonnes.length === 0) return "Artist";
+  //  §10 (nº 852) — le mot du type, comme `libelleTypeFiche`.
+  if (ordonnes.length === 0) return "Tattoo Artist";
   const principal = ordonnes.find((mode) => mode.role) ?? ordonnes[0];
   const lieu = genreMode(principal.genre).label;
   const role = libelleRoleCourt(principal.role);
@@ -1252,7 +1253,8 @@ export function libelleModesActifs(
   modes: ModeExerciceFiche[] | null | undefined
 ): string {
   const actifs = modesActifs(modes);
-  if (actifs.length === 0) return "Artist";
+  //  §10 (nº 852) — le mot du type, comme `libelleTypeFiche`.
+  if (actifs.length === 0) return "Tattoo Artist";
   const vus: string[] = [];
   for (const mode of actifs) {
     // « En studio » NE SUFFIT PLUS : le sous-choix vient s'y accoler,

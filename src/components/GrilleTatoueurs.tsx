@@ -826,6 +826,14 @@ export function GrilleTatoueurs({
                  et gardent le nom par le défaut de la carte. */
             surApproche={precharger}
             surOuverture={ouvrir}
+            /*  §4 (nº 852) — CETTE GRILLE EST CELLE DES PAGES DE
+                RÉSULTATS : la recherche, les vitrines de style et de
+                ville. C'est exactement le « style ou recherche » de la
+                consigne — la pastille de ses cartes s'allume donc
+                d'emblée au doigt. « Ma sélection » monte SA propre
+                grille (PageFavoris) et ne passe rien : ses cartes ne
+                bougent pas, comme demandé. */
+            pastilleDEmblee
             //  §1 (nº 841) — CETTE GRILLE EST CELLE DES RÉSULTATS : au
             //  doigt, ses cartes sont celles du fil. Et chacune sait si
             //  elle est à moins d'un écran (voir l'observateur d'approche).

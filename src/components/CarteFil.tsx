@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AvatarRond } from "@/components/AvatarRond";
 import { BoutonPartageFiche } from "@/components/BoutonPartageFiche";
+import { IconeStatistiques } from "@/components/Icones";
 import { PointsDuCarrousel } from "@/components/CarrouselPortfolio";
 import { FenetreSignalement } from "@/components/FenetreSignalement";
 import { MARQUE_YOKOFOLIO } from "@/config/tatouage";
@@ -160,8 +161,8 @@ export function EnTeteDeFil({
   );
 }
 
-/** LE PIED DU FIL — signaler à gauche, les points au centre, le partage
-    et le fanion à droite (nº 842). */
+/** LE PIED DU FIL — les vues et le signalement à gauche, les points au
+    centre, le fanion puis le partage à droite (nº 852-§7). */
 export function PiedDeFil({
   tatoueur,
   photos,
@@ -169,6 +170,7 @@ export function PiedDeFil({
   surRang,
   cheminAPartager,
   metier,
+  vues,
 }: {
 
   tatoueur: Tatoueur;
@@ -182,6 +184,23 @@ export function PiedDeFil({
   cheminAPartager: string;
   /** Le style montré, pour le message pré-rempli du partage. */
   metier: string;
+  /**
+   * ██ §7 (nº 852) — LE NOMBRE DE VUES ██
+   * DEMANDÉ PAR LE PROPRIÉTAIRE : « à gauche de l'icône signaler, une
+   * icône STATISTIQUES précédée du nombre de vues (« 28 » puis
+   * l'icône) ».
+   * ⚠️ ET IL N'A AUCUNE SOURCE AUJOURD'HUI, ce qui doit être dit plutôt
+   * que caché : le site ne compte les vues NULLE PART — ni colonne sur
+   * `tatoueurs` ou `photos_tatoueur`, ni table de statistiques, ni
+   * signal de classement (vérifié, base et code). Le SQL qui crée ce
+   * compteur est livré avec la passe (`docs/SQL-852-VUES.md`), à coller
+   * à la main comme toujours ; le jour où la colonne existe et voyage
+   * jusqu'ici, le bloc s'affiche tout seul.
+   * ⚠️ RIEN N'EST INVENTÉ EN ATTENDANT : sans nombre, le bloc ne se
+   * rend pas du tout. Un « 28 » de démonstration serait un chiffre
+   * public faux — le pire des deux maux.
+   */
+  vues?: number | null;
 }) {
   return (
     <div
@@ -199,10 +218,31 @@ export function PiedDeFil({
           largeur. */
       className={RANGEE_PIED_DE_FIL}
     >
-      {/*  SIGNALER — sa cible de 40 px ramenée sur la marge de la page :
-           le retrait vaut le vide autour du glyphe, (40 − 22) / 2 = 9,
-           arrondi au cran de l'échelle (8 px). */}
+      {/*  ██ §7 (nº 852) — LES VUES OUVRENT LE PIED, PUIS LE SIGNALEMENT ██
+           « À gauche de l'icône signaler, une icône statistiques
+           précédée du nombre de vues » : le nombre, puis le dessin,
+           puis le signalement — dans cet ordre, à la lettre.
+           ⚠️ CE N'EST PAS UN BOUTON : rien à toucher, rien à ouvrir. Un
+           nombre et un dessin, en gris doux comme les autres icônes du
+           pied, avec l'écart de la rangée entre eux.
+           ⚠️ SANS DONNÉE, RIEN : voir la note de `vues`, plus haut — le
+           site ne compte pas encore les vues, et un chiffre faux serait
+           pire que pas de chiffre.
+           SIGNALER garde sa place et son retrait : sa cible de 40 px
+           ramenée sur la marge de la page — le retrait vaut le vide
+           autour du glyphe, (40 − 22) / 2 = 9, arrondi au cran de
+           l'échelle (8 px). */}
       <div className="relative flex shrink-0 items-center -ml-2">
+        {typeof vues === "number" && (
+          <span
+            data-vues-de-fil=""
+            className="flex items-center gap-1.5 pl-2 pr-1 text-[13px]
+                       font-semibold text-sombre-texte-doux"
+          >
+            {vues}
+            <IconeStatistiques taille={20} />
+          </span>
+        )}
         <FenetreSignalement
           slug={tatoueur.slug}
           nom={tatoueur.nom}
@@ -220,25 +260,18 @@ export function PiedDeFil({
           <PointsDuCarrousel photos={photos} indice={indice} surRang={surRang} />
         </div>
       )}
-      {/*  LE PARTAGE, PUIS LE FANION — deux cibles qui se touchent,
-           l'écriture de la rangée sous la photo d'une fiche au doigt
-           (nº 487). Le retrait négatif ramène le BORD DU GLYPHE de
-           droite sur la marge, jamais sa cible : le fanion fait 40 px
-           de large pour un dessin de 24, soit huit pixels de vide de
-           chaque côté — le même cran que le retrait. */}
+      {/*  ██ §7 (nº 852) — LE FANION, PUIS LE PARTAGE ██
+           Les deux gestes de droite ÉCHANGENT leur place : la nº 842 les
+           avait posés « partage puis fanion », le propriétaire les veut
+           dans l'autre sens. Rien d'autre ne bouge — ni leurs cibles, ni
+           leur écart, ni le retrait.
+           LE RETRAIT NÉGATIF ramène le BORD DU GLYPHE de droite sur la
+           marge, jamais sa cible ; il vaut toujours autant, et c'est
+           maintenant le PARTAGE qui en profite : ses deux dessins font
+           24 px dans une cible de 40, soit les mêmes huit pixels de vide
+           de chaque côté (l'écriture de la rangée sous la photo d'une
+           fiche au doigt, nº 487). */}
       <div className="relative flex shrink-0 items-center -mr-2">
-        <BoutonPartageFiche
-          nomArtisan={tatoueur.nom}
-          cheminFiche={cheminAPartager}
-          variante="icone"
-          tailleIcone={24}
-          avecFenetre
-          sombre
-          metier={metier}
-          commune={villeAffichee(tatoueur.ville_nom)}
-          marque={MARQUE_YOKOFOLIO.nom}
-          objet="portfolio"
-        />
         {/*  ██ §4 (nº 842) — LE FANION ENREGISTRE LA PHOTO AFFICHÉE ██
              Sur « 7/18 », c'est la SEPTIÈME qui part dans « Ma
              sélection » — la consigne du propriétaire, et c'est déjà ce
@@ -261,6 +294,18 @@ export function PiedDeFil({
             variante="carte"
           />
         )}
+        <BoutonPartageFiche
+          nomArtisan={tatoueur.nom}
+          cheminFiche={cheminAPartager}
+          variante="icone"
+          tailleIcone={24}
+          avecFenetre
+          sombre
+          metier={metier}
+          commune={villeAffichee(tatoueur.ville_nom)}
+          marque={MARQUE_YOKOFOLIO.nom}
+          objet="portfolio"
+        />
       </div>
     </div>
   );

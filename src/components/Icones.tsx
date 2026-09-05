@@ -955,6 +955,34 @@ export function IconeDrapeau({ taille = 16, classe = "", trait = 1.8 }: Propriet
   );
 }
 
+/**
+ * ██ §7 (nº 852) — LES STATISTIQUES : TROIS BARRES QUI MONTENT ██
+ * ------------------------------------------------------------------
+ * Demandée par le propriétaire pour le pied des cartes du fil, devant
+ * le nombre de vues. Le site n'avait AUCUNE icône de ce sens : ni
+ * graphique, ni barres, ni courbe — vérifié dans ce fichier, qui les
+ * tient toutes. Elle est donc dessinée, et une seule fois.
+ * LE DESSIN : trois barres de hauteurs croissantes, sur la même ligne
+ * de base, aux mêmes conventions que toutes ses voisines — boîte de 24,
+ * trait de 1,8, extrémités rondes, `currentColor`. Un quart d'unité de
+ * retrait tout autour, comme le drapeau de la nº 812.
+ * ⚠️ CE N'EST PAS UN ŒIL : `IconeOeil` existe et dit « voir / masquer »
+ * (un mot de passe, une prévisualisation) — lui donner un second sens
+ * dans le même écran brouillerait les deux.
+ */
+export function IconeStatistiques({ taille = 22, classe = "", trait = 1.8 }: ProprietesIcone) {
+  return (
+    <svg width={taille} height={taille} viewBox="0 0 24 24" fill="none" className={classe} aria-hidden>
+      <path
+        d="M6.25 19.75v-5.5m5.75 5.5V8.5m5.75 11.25V4.25"
+        stroke="currentColor"
+        strokeWidth={trait}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /* ------------------------------------------------------------------
  * PARTAGE — les trois icônes qui manquaient à la fenêtre « Partager
  * cette fiche ». Même gabarit que toutes les autres : viewBox 24,

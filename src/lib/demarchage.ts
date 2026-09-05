@@ -59,7 +59,8 @@ export const JOURS_APRES_SUPPRESSION = 30;
 export type TypeFiche = "artiste" | "studio" | "salon";
 
 export const LIBELLE_TYPE_FICHE: Record<TypeFiche, string> = {
-  artiste: "Artist",
+  //  §10 (nº 852) — le même mot que sur le site (`libelleTypeFiche`).
+  artiste: "Tattoo Artist",
   studio: "Private Studio",
   salon: "Tattoo Shop",
 };

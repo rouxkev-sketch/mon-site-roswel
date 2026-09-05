@@ -165,8 +165,14 @@ const REPOS = 3400;
         ensemble: racine.className.split(/\s+/).includes("group"),
       };
     }, [PASTILLE]);
-    verif("la pastille de la fiche est éteinte à l'arrivée (elle était permanente depuis la nº 483)",
-      auRepos.pastille.opacite === 0 && auRepos.pastille.texte === "1/6",
+    /*  ██ LA RÈGLE D'ARRIVÉE A CHANGÉ À LA nº 852-§4 ██
+        La nº 844 l'éteignait au repos, partout. Le propriétaire ajoute
+        deux règles d'ALLUMAGE : au web, une fiche ou une vue photo
+        montre sa pastille À L'OUVERTURE, trois secondes, puis l'éteint
+        si la souris ne bouge plus. La règle du geste, elle, n'a pas
+        bougé — c'est ce que la suite de ce banc mesure encore. */
+    verif("à l'ouverture d'une fiche au web, la pastille est ALLUMÉE (nº 852-§4)",
+      auRepos.pastille.opacite === 1 && auRepos.pastille.texte === "1/6",
       `${auRepos.pastille.texte} · opacité ${auRepos.pastille.opacite}`);
     verif("le chevron est NU : le dessin des galeries, aucun disque, aucun flou",
       auRepos.boite === "0 0 12 24" && auRepos.largeurGlyphe === "20" && auRepos.hauteurGlyphe === "40" &&
@@ -190,8 +196,12 @@ const REPOS = 3400;
         pastille: f(racine.querySelector('[data-role="compteur"]')).opacite,
       };
     }, [PASTILLE]);
-    verif("au survol de la photo, le chevron paraît — et la pastille, non (elle attend le geste)",
-      surSurvol.droite === "visible" && surSurvol.pastille === 0,
+    /*  nº 852-§4 — LE SURVOL EST UN MOUVEMENT DE SOURIS, et au web un
+        mouvement de souris tient désormais la pastille éveillée : elle
+        est donc allumée ici, avec le chevron. Ce que ce point garde de
+        la nº 844 : le chevron paraît au survol. */
+    verif("au survol de la photo, le chevron paraît — et la pastille reste éveillée (nº 852-§4)",
+      surSurvol.droite === "visible" && surSurvol.pastille === 1,
       `chevron ${surSurvol.droite} · pastille ${surSurvol.pastille}`);
     verif("à la première photo, il n'y a pas de chevron gauche", surSurvol.gauche === "absent");
 
@@ -236,7 +246,8 @@ const REPOS = 3400;
     const auRepos = await page.evaluate(([SEL, M]) => {
       const f = new Function("return " + M)();
       const c = document.querySelector(SEL);
-      const badge = c.querySelector("[data-badge-type]");
+      const badge = [...c.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       const s = getComputedStyle(badge);
       const carte = getComputedStyle(c);
       return {
@@ -249,17 +260,24 @@ const REPOS = 3400;
         lienProfil: c.querySelector("[data-lien-profil-de-fil]").getAttribute("href"),
       };
     }, [CARTE, PASTILLE]);
-    verif("au repos, la pastille du fil est éteinte (elle était permanente depuis la nº 841)",
-      auRepos.pastille.opacite === 0 && auRepos.pastille.texte === "1/6",
+    /*  ██ LE FIL AU DOIGT, LUI AUSSI, A CHANGÉ À LA nº 852-§4 ██
+        Sur une page de RÉSULTATS, la pastille des cartes est là
+        D'EMBLÉE et s'efface trois secondes après l'arrêt du défilement
+        de la page. Ce banc ouvre exactement une page de résultats : la
+        pastille y est donc allumée à l'arrivée. */
+    verif("sur les résultats au doigt, la pastille du fil est ALLUMÉE d'emblée (nº 852-§4)",
+      auRepos.pastille.opacite === 1 && auRepos.pastille.texte === "1/6",
       `${auRepos.pastille.texte} · opacité ${auRepos.pastille.opacite}`);
-    /*  §3 — LE FOND DU BADGE. « Transparent » se lit d'une seule façon
-        dans le style calculé : `rgba(0, 0, 0, 0)`. On vérifie aussi que
-        le contour, lui, reste — et qu'il se distingue du fond. */
-    verif("le badge du type a un fond TRANSPARENT (la carte transparaît)",
-      auRepos.badgeFond === "rgba(0, 0, 0, 0)", auRepos.badgeFond);
-    verif("il ne lui reste que son contour d'un pixel, d'une autre couleur que le fond",
-      auRepos.contour === "1px solid" && auRepos.contourCouleur !== auRepos.fondDeLaCarte,
-      `${auRepos.contour} ${auRepos.contourCouleur} sur ${auRepos.fondDeLaCarte}`);
+    /*  ██ §3 — LA ROBE DU BADGE, ANNULÉE PAR LA nº 852-§6 ██
+        La nº 844 l'avait VIDÉ (fond transparent, contour seul) ; le
+        propriétaire lui donne la robe de « Suivre » — un aplat plein,
+        sans contour — « parce que c'est un lien ». La règle mesurée est
+        donc l'inverse, et c'est écrit plutôt que caché. */
+    verif("le badge du type est PLEIN (la robe de « Suivre », nº 852-§6)",
+      auRepos.badgeFond !== "rgba(0, 0, 0, 0)" && auRepos.badgeFond !== auRepos.fondDeLaCarte,
+      `${auRepos.badgeFond} sur ${auRepos.fondDeLaCarte}`);
+    verif("… et il n'a plus aucun contour",
+      parseFloat(auRepos.contour) === 0, auRepos.contour);
     verif("la carte du fil mène toujours au PROFIL",
       auRepos.lienProfil === `/artist/${T}?entree=lien`, auRepos.lienProfil);
 

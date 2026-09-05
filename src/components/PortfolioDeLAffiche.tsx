@@ -158,7 +158,13 @@ export function SelecteurOngletAffiche({
       //  le composant partagé, lui, parle en chaînes.
       surChoix={(cle) => surChoix(cle as OngletAffiche)}
       ariaLabel="Profile or portfolio"
-      classeOnglet="px-5 min-h-[44px]"
+      /*  §5 (nº 852) — L'AIR LATÉRAL DESCEND D'UN CRAN AU WEB (20 → 16)
+          et lui seul : c'est l'un des trois écarts rendus pour que le
+          badge « Suivre » cesse de déborder la marge — le compte exact
+          est écrit chez son porteur (ContenuFiche). Le DOIGT garde ses
+          20 px : sa rangée ne déborde pas, et une cible tactile ne se
+          rétrécit pas sans raison. */
+      classeOnglet="px-5 not-mobile:px-4 min-h-[44px]"
       avecLigneGrise={false}
     />
   );

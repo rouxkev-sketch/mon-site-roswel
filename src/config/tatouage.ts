@@ -1115,7 +1115,8 @@ export function groupeDuFiltre(slug: string): GroupeFiltre | null {
 export const TYPES_FICHE = [
   {
     slug: "artiste",
-    label: "Artist",
+    //  §10 (nº 852) — le même mot que partout ailleurs (`libelleTypeFiche`).
+    label: "Tattoo Artist",
     resume: "I tattoo under my own name",
   },
   {
@@ -1150,7 +1151,8 @@ export type TypeFiche = (typeof TYPES_FICHE)[number]["slug"];
 //  Le slug `studio-prive` et le couple type/établissement, eux, ne
 //  bougent pas : rien ne change en base ni dans les adresses.
 export const CHOIX_PROFIL = [
-  { slug: "artiste", label: "Artist", typeFiche: "artiste", etablissement: "salon" },
+  //  §10 (nº 852) — « Tattoo Artist », comme partout ailleurs.
+  { slug: "artiste", label: "Tattoo Artist", typeFiche: "artiste", etablissement: "salon" },
   {
     slug: "studio-prive",
     label: "Private Studio",
@@ -1548,7 +1550,23 @@ export function libelleTypeFiche(
   //  nº 838 — les trois libellés du lexique (Kevin, §1) : ils étaient
   //  restés en français sur chaque carte, la ligne de la fiche, le menu
   //  « Profile » de Ma sélection et la liste des suivis.
-  if (nature === "artiste") return "Artist";
+  /*  ██ §10 (nº 852) — « Artist » DEVIENT « Tattoo Artist » ██
+      DÉCISION DU PROPRIÉTAIRE : le type d'un portfolio d'artiste se dit
+      désormais en deux mots, PARTOUT où le type apparaît — les badges
+      des cartes (web et fil), la ligne sous le nom d'un profil, la
+      plaque, « Ma sélection », la liste des suivis. C'est cette
+      fonction que toutes ces surfaces lisent : le mot change ici, et
+      il change partout d'un seul geste.
+      ⚠️ LES DEUX AUTRES NE BOUGENT PAS : « Private Studio » et
+      « Tattoo Shop » nommaient déjà le métier ; seul l'artiste était
+      resté nu. Les trois se lisent maintenant dans la même famille.
+      ⚠️ LA CASSE EST CELLE DE LA FAMILLE (deux capitales, comme
+      « Tattoo Shop »), et non des capitales pleines : c'est un libellé,
+      pas un cri — si le propriétaire voulait « TATTOO ARTIST » en
+      lettres capitales, un mot suffira à le changer ici.
+      ⚠️ LE SLUG NE BOUGE PAS D'UNE LETTRE (`artiste`) : rien en base,
+      rien dans les adresses. */
+  if (nature === "artiste") return "Tattoo Artist";
   return nature === "prive" ? "Private Studio" : "Tattoo Shop";
 }
 
@@ -2443,9 +2461,21 @@ export const PASTILLE_COMPTEUR =
     dire sa boîte ; la robe ne dit plus que la couleur et la forme.
     ⚠️ LE BADGE DU TYPE NE BOUGE PAS D'UN PIXEL : il écrit désormais son
     `min-h-[30px]` lui-même, à la lettre. */
-export const ROBE_BADGE_CONTOUR =
-  "inline-flex shrink-0 items-center justify-center " +
-  "whitespace-nowrap rounded-lg border border-sombre-haut bg-transparent";
+/**
+ * ██ §6 (nº 852) — LA BOÎTE SEULE, SANS SA ROBE ██
+ * La forme d'un badge du site — la ligne, le rayon (nº 449), le refus
+ * de rétrécir et de se couper — SANS aucune couleur. Elle est extraite
+ * parce que le badge du TYPE change de robe à la nº 852 (il prend celle
+ * de « Suivre » : un aplat d'action, sans contour) tandis que le badge
+ * du COMPTE garde la sienne (contour fin, rien dedans). Les deux
+ * doivent rester la MÊME BOÎTE — c'est ce qui fait qu'ils s'alignent
+ * partout où ils se croisent, et le banc 851 le mesure — et cette boîte
+ * ne peut donc s'écrire qu'une fois (piège nº 378).
+ */
+export const BOITE_BADGE =
+  "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-lg";
+
+export const ROBE_BADGE_CONTOUR = `${BOITE_BADGE} border border-sombre-haut bg-transparent`;
 
 /**
  * ██ §3 (nº 845) — L'AIR DE LA PASTILLE SUR UNE CARTE DU DOIGT ██

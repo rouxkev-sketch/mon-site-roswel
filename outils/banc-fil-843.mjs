@@ -60,7 +60,8 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     const m = await page.evaluate((SEL) => {
       const c = document.querySelector(SEL);
       const t = c.querySelector("[data-en-tete-de-fil]");
-      const badge = t.querySelector("[data-badge-type]");
+      const badge = [...t.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       const s = badge && getComputedStyle(badge);
       const avatar = t.querySelector("[data-lien-profil-de-fil] > span:first-child");
       const r = badge?.getBoundingClientRect();
@@ -84,19 +85,26 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     }, CARTE);
     verif("le badge dit le type", m.texte === "Private Studio", m.texte);
     verif("c'est un LIEN vers le profil", m.balise === "A" && m.href === `/artist/${T}?entree=lien`, `${m.balise} ${m.href}`);
-    /*  ⚠️ ON NE FIGE PAS LA VALEUR DU JETON : la charte a déjà été
-        retintée une fois (nº 466), et un banc qui récite des nombres
-        tombe à la retouche suivante sans rien apprendre. Ce qui compte
-        est la RÈGLE : un contour d'un pixel, plein, D'UNE AUTRE
-        COULEUR QUE LE FOND — donc visible — et un fond qui n'est pas
-        le blanc plein de « Follow ». */
-    verif("contour fin visible, fond de l'interface — pas le plein de « Follow »", m.contour.startsWith("1px solid") && m.contourCouleur !== m.fond && m.fond !== "rgb(242, 242, 244)", `${m.contour} · fond ${m.fond}`);
+    /*  ██ LA ROBE A CHANGÉ DEUX FOIS, ET C'EST LA CONSIGNE QUI COMPTE ██
+        nº 843 : contour fin, fond de l'interface. nº 844-§3 : fond
+        transparent, contour seul. nº 852-§6 : LA ROBE DE « SUIVRE » —
+        un aplat PLEIN de la couleur d'action, SANS CONTOUR, « parce
+        que c'est un lien ». C'est cette dernière que le banc mesure.
+        ⚠️ ON NE FIGE TOUJOURS PAS LE JETON (la charte a déjà été
+        retintée, nº 466) : ce qui compte est la RÈGLE — un fond PLEIN,
+        aucun trait, et le texte dans la couleur du fond de page (le
+        contraste inversé d'un bouton d'action). */
+    verif("la robe de « Suivre » : un aplat plein, sans contour (nº 852-§6)",
+      m.fond !== "rgba(0, 0, 0, 0)" && parseFloat(m.contour) === 0,
+      `${m.contour} · fond ${m.fond}`);
     verif("hauteur d'un badge (30 px), texte insécable", m.hauteur === 30 && m.insecable === "nowrap", `${m.hauteur} px · ${m.insecable}`);
     verif("il est à droite, face à l'avatar", m.aDroite === 16 && m.faceALAvatar, `${m.aDroite} px du bord`);
     verif("PLUS AUCUN « Follow » dans le fil", m.suivreDansLeFil === 0, `${m.suivreDansLeFil} trouvé(s)`);
     verif("le titre est le NOM SEUL, la ville seule dessous", m.titre === "Banc 843" && m.sousTitre === "Lyon, FR", `${m.titre} / ${m.sousTitre}`);
     //  LE CLIC MÈNE AU PROFIL.
-    await page.locator(`${CARTE} [data-badge-type]`).tap();
+    //  nº 852 — LE BADGE QU'ON VOIT : la carte du web en porte un
+    //  second depuis le §8, retiré de l'affichage au doigt.
+    await page.locator(`${CARTE} [data-badge-type]:visible`).tap();
     await page.waitForTimeout(2500);
     verif("un toucher sur le badge ouvre le profil", (await page.evaluate(() => location.pathname + location.search)) === `/artist/${T}?entree=lien`);
     //  ET « FOLLOW » EST TOUJOURS LÀ, SUR LE PROFIL.
@@ -116,7 +124,8 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
       const bloc = t.querySelector("[data-lien-profil-de-fil] > span:nth-child(2)");
       const nom = bloc.querySelector(":scope > span:first-child");
       const ville = bloc.querySelector(":scope > span:nth-child(2)");
-      const badge = t.querySelector("[data-badge-type]");
+      const badge = [...t.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       const regle = new Function("return " + R)();
       return {
         nomLongueur: nom.textContent.trim().length, villeLongueur: ville.textContent.trim().length,
@@ -157,16 +166,34 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
           par la feuille de style, comme toute la structure du doigt
           (nº 841). La question n'est donc pas « existe-t-il ? » mais
           « SE VOIT-IL ? ». */
-      const badge = c.querySelector("[data-badge-type]");
+      const badge = [...c.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       return {
         titre: h.textContent.trim(), ...regle(h), titreGras: getComputedStyle(h).fontWeight,
-        sousTitre: p.textContent.trim(), sousTitreLignes: regle(p).lignes,
+        sousTitre: [...p.children].length
+          ? [...p.children].find((n) => n.getBoundingClientRect().height > 0)?.textContent.trim()
+          : p.textContent.trim(),
+        sousTitreLignes: regle(p).lignes,
         badgeVisible: badge ? badge.getBoundingClientRect().width > 0 : false,
+        badgeTexte: badge?.textContent.trim() ?? null,
       };
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${T}"])`, R: REGLE });
     verif("le titre est le NOM SEUL, demi-gras, sur une ligne", m.titre === "Banc 843" && m.lignes === 1 && Number(m.titreGras) >= 600, `${m.titre} · ${m.lignes} ligne(s) · ${m.titreGras}`);
-    verif("le sous-titre porte « Type · Ville », sur une ligne", m.sousTitre === "Private Studio · Lyon, FR" && m.sousTitreLignes === 1, `${m.sousTitre} · ${m.sousTitreLignes} ligne(s)`);
-    verif("aucun badge VISIBLE sur la carte du web (le choix est dit chez sousTitreDeCarte)", m.badgeVisible === false);
+    /*  ██ LA CARTE DU WEB A CHANGÉ À LA nº 852 (§8/§9) ██
+        Le TYPE y est devenu un BADGE face à l'avatar, comme sur le fil,
+        et le sous-titre n'est plus que LA LOCALITÉ. Ce banc mesurait
+        l'inverse — « Type · Ville » dans le sous-titre, aucun badge —
+        et disait vrai jusqu'à cette passe.
+        ⚠️ LE SOUS-TITRE SE LIT SUR CE QUI SE VOIT : les deux écritures
+        (celle du doigt, celle du web) vivent dans le même paragraphe,
+        et l'appareil en montre une — `textContent` les recopierait
+        toutes les deux. */
+    verif("le sous-titre du web ne porte que la LOCALITÉ, sur une ligne (nº 852-§8)",
+      m.sousTitre === "Lyon, FR" && m.sousTitreLignes === 1,
+      `${m.sousTitre} · ${m.sousTitreLignes} ligne(s)`);
+    verif("et le TYPE y est un badge, visible face à l'avatar (nº 852-§8)",
+      m.badgeVisible === true && m.badgeTexte === "Private Studio",
+      `${m.badgeVisible} · « ${m.badgeTexte} »`);
     const l = await page.evaluate(({ SEL, R }) => {
       const regle = new Function("return " + R)();
       const c = document.querySelector(SEL);

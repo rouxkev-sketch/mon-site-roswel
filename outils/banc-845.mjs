@@ -148,7 +148,9 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         ...f(
           c, tete, cadre, pied,
           tete.querySelector("[data-lien-profil-de-fil] > span:first-child"),
-          tete.querySelector("[data-badge-type]"),
+          //  nº 852 — le badge QU'ON VOIT (deux vivent dans le document).
+          [...tete.querySelectorAll("[data-badge-type]")]
+            .find((n) => n.getBoundingClientRect().height > 0),
           pied.querySelector(":scope > div:first-child"),
           pied.querySelector(":scope > div:last-child")
         ),
@@ -204,7 +206,8 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
       const c = document.querySelector(SEL);
       const cadre = c.querySelector("[data-cadre-de-fil]");
       const past = cadre.querySelector('[data-role="compteur"]');
-      const badge = c.querySelector("[data-badge-type]");
+      const badge = [...c.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       const rp = past.getBoundingClientRect();
       const rc = cadre.getBoundingClientRect();
       const principal = document.querySelector("main");

@@ -7,6 +7,7 @@ import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import {
   PastilleCompteur,
   usePastilleDeDefilement,
+  type EveilPastille,
 } from "@/components/PastilleCompteur";
 //  §2 (nº 844) — les chevrons des galeries de profil, ceux-là mêmes que
 //  les cartes portent depuis la nº 839.
@@ -145,6 +146,7 @@ export function CarrouselPortfolio({
   indice,
   surChangement,
   variante = "fiche",
+  eveilPastille,
   prioritaire = false,
   natureDeLaSerie = "",
   badgeReduit = false,
@@ -191,6 +193,10 @@ export function CarrouselPortfolio({
    *    demandée tant que le doigt n'a pas touché cette carte-là.
    */
   variante?: "fiche" | "carte";
+  /** §4 (nº 852) — en variante « carte » : « page » pour les cartes qui
+      doivent montrer leur pastille d'emblée (les résultats au doigt),
+      rien pour les autres. La variante « fiche », elle, décide seule. */
+  eveilPastille?: EveilPastille;
   /** En variante « carte » : cette carte est-elle dans les premières
       de la mosaïque ? Elle seule charge son image sans attendre le
       défilement — les autres restent `lazy`, donc une carte hors écran
@@ -378,7 +384,24 @@ export function CarrouselPortfolio({
    * (avant la peinture suivante), et personne ne fait glisser une photo
    * à l'instant précis où elle s'ouvre.
    */
-  const pastille = usePastilleDeDefilement();
+  /*  ██ §4 (nº 852) — QUAND LA PASTILLE S'ALLUME TOUTE SEULE ██
+      Deux règles neuves du propriétaire, chacune sur son appareil (la
+      mécanique et le garde d'appareil vivent chez le crochet) :
+       · UNE FICHE OU UNE VUE PHOTO, AU WEB — elle s'allume à
+         l'ouverture et s'éteint trois secondes après le dernier
+         mouvement de souris. C'est décidé ICI parce que c'est la
+         variante qui le dit : `fiche`, ce sont exactement « un profil
+         ou une image du portfolio » ;
+       · UNE CARTE, AU DOIGT — elle s'allume d'emblée et suit le
+         défilement de LA PAGE. Mais toutes les cartes ne sont pas
+         concernées : celles des résultats le sont, celles de « Ma
+         sélection » ne bougent pas. La carte ne peut pas le deviner,
+         c'est donc SA GRILLE qui le lui dit (`eveilPastille`).
+      ⚠️ LA RÈGLE DU GESTE (nº 844) N'EST PAS TOUCHÉE : elle continue de
+      réveiller la pastille à chaque glissement, partout. */
+  const pastille = usePastilleDeDefilement(
+    surCarte ? eveilPastille : "souris"
+  );
   const poseSilencieuse = useRef(0);
   const DELAI_POSE_SILENCIEUSE = 200;
   const annoncerPoseSilencieuse = () => {

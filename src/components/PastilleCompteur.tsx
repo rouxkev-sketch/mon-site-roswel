@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ECRITURE_COMPTEUR, PASTILLE_COMPTEUR } from "@/config/tatouage";
 
 /**
@@ -69,21 +69,71 @@ export const REPOS_PASTILLE = 3000;
  * (`clearTimeout` puis `setTimeout`) — il n'y en a jamais deux. Le
  * démontage l'efface : rien ne survit à une carte qui sort de l'écran.
  */
-export function usePastilleDeDefilement() {
+/**
+ * ██ §4 (nº 852) — DEUX RÈGLES DE PLUS, QUI S'AJOUTENT À CELLE DU
+ * GESTE ██
+ * ------------------------------------------------------------------
+ * DÉCISIONS DU PROPRIÉTAIRE, et elles ne remplacent rien : la règle du
+ * geste (nº 844) reste vraie partout ; ces deux-ci disent en plus À
+ * QUEL MOMENT la pastille s'allume TOUTE SEULE.
+ *  · `"page"` — AU DOIGT, SUR UNE PAGE DE RÉSULTATS (style ou
+ *    recherche) : la pastille est là D'EMBLÉE sur les cartes, et elle
+ *    s'efface trois secondes après que LE DÉFILEMENT DE LA PAGE s'est
+ *    arrêté. Ce n'est donc plus le glissement DANS la carte qui la
+ *    tient éveillée, mais celui de la page — on lit une liste, on ne
+ *    manipule pas encore une carte ;
+ *  · `"souris"` — AU WEB, À L'OUVERTURE D'UN PROFIL OU D'UNE IMAGE DU
+ *    PORTFOLIO : trois secondes, puis elle s'efface SI LA SOURIS NE
+ *    BOUGE PLUS. Un pointeur qui se promène sur la photo veut voir où
+ *    il en est ; un écran laissé tranquille n'a rien à annoncer.
+ *
+ * ⚠️ CHACUNE NE VAUT QUE SUR SON APPAREIL, et c'est la règle nº 60 qui
+ * en décide — `data-appareil` sur la racine, jamais une largeur de
+ * fenêtre ni la finesse du pointeur. Une tablette tactile large reste
+ * un doigt ; une fenêtre d'ordinateur rétrécie reste un web.
+ * ⚠️ ET RIEN NE S'ALLUME AU PREMIER RENDU : l'état de départ reste FAUX
+ * des deux côtés (serveur et navigateur), et l'éveil se fait dans un
+ * effet, après le montage. Sans cela, le serveur rendrait une pastille
+ * visible là où le navigateur la veut cachée — une erreur
+ * d'hydratation, pour une image que personne n'aurait vue.
+ * ⚠️ LES DEUX ÉCOUTES SONT PASSIVES et posées sur la fenêtre : un
+ * défilement de page et un mouvement de souris sont des événements
+ * fréquents, et `reveiller` ne coûte un rendu qu'au premier (voir la
+ * note du crochet, plus haut).
+ */
+export type EveilPastille = "page" | "souris";
+
+export function usePastilleDeDefilement(eveil?: EveilPastille) {
   const [eveillee, setEveillee] = useState(false);
   const minuteur = useRef(0);
+  //  ⚠️ UNE FONCTION STABLE, ET C'EST NÉCESSAIRE : l'effet ci-dessous
+  //  la prend en dépendance, et il ne doit pas se rejouer à chaque
+  //  allumage — il poserait alors deux écoutes. `useCallback` sans
+  //  dépendance la rend une fois pour la vie du composant.
+  //  (Une référence écrite pendant le rendu ferait la même chose, mais
+  //  React l'interdit désormais — la règle « pas de référence pendant
+  //  le rendu », que le contrôle du dépôt applique.)
+  const reveiller = useCallback(() => {
+    setEveillee(true);
+    window.clearTimeout(minuteur.current);
+    minuteur.current = window.setTimeout(
+      () => setEveillee(false),
+      REPOS_PASTILLE
+    );
+  }, []);
   useEffect(() => () => window.clearTimeout(minuteur.current), []);
-  return {
-    eveillee,
-    reveiller: () => {
-      setEveillee(true);
-      window.clearTimeout(minuteur.current);
-      minuteur.current = window.setTimeout(
-        () => setEveillee(false),
-        REPOS_PASTILLE
-      );
-    },
-  };
+  useEffect(() => {
+    if (!eveil) return;
+    const auDoigt = document.documentElement.dataset.appareil === "mobile";
+    if (eveil === "page" ? !auDoigt : auDoigt) return;
+    const evenement = eveil === "page" ? "scroll" : "mousemove";
+    const suivre = () => reveiller();
+    //  L'ALLUMAGE D'OUVERTURE : la même minuterie que partout ailleurs.
+    suivre();
+    window.addEventListener(evenement, suivre, { passive: true });
+    return () => window.removeEventListener(evenement, suivre);
+  }, [eveil, reveiller]);
+  return { eveillee, reveiller };
 }
 
 /**

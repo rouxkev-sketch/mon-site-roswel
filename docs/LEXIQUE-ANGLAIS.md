@@ -268,7 +268,7 @@ des mots restés en français, des fautes d'anglais, deux graphies) :
 
 | Français (ou l'anglais fautif) | Anglais | Note |
 |---|---|---|
-| Artiste · Studio · Salon (le type d'un portfolio : chaque carte, la ligne de la fiche, le menu « Profile » de Ma sélection, la liste des suivis) | **Artist** · **Private Studio** · **Tattoo Shop** | `libelleTypeFiche` (config/tatouage) et les deux replis de `lib/modes-exercice` : les trois mots de la table 1 étaient restés en français |
+| Artiste · Studio · Salon (le type d'un portfolio : chaque carte, la ligne de la fiche, le menu « Profile » de Ma sélection, la liste des suivis) | **Tattoo Artist** (nº 852-§10 ; « Artist » jusque-là) · **Private Studio** · **Tattoo Shop** | `libelleTypeFiche` (config/tatouage) et les deux replis de `lib/modes-exercice` : les trois mots de la table 1 étaient restés en français |
 | Connecte-toi (l'écran de connexion, la bascule vers la connexion) | **Log in** | `EcranAuthentification` |
 | Langue (le titre du menu des langues) | **Language** | `SelecteurLangue` — le bouton disait déjà « Language: English » |
 | Filtrer (le bouton des filtres, au doigt) | **Filter** | `MenusSelection` |
@@ -337,7 +337,7 @@ Aucune phrase neuve : la carte du fil réemploie mot pour mot les
 
 | Français | Anglais | Note |
 |---|---|---|
-| le badge du type, dans le fil du doigt | **Artist** · **Private Studio** · **Tattoo Shop** | `components/BadgeTypeDeFiche` — les trois libellés de la table 1, inchangés ; contour fin, fond de l'interface, et c'est un LIEN vers le profil |
+| le badge du type, dans le fil du doigt ET sur les cartes du web (nº 852-§8/§9) | **Tattoo Artist** · **Private Studio** · **Tattoo Shop** | `components/BadgeTypeDeFiche` — les trois libellés de la table 1, inchangés ; contour fin, fond de l'interface, et c'est un LIEN vers le profil |
 | le titre d'une carte | **Mara Voss** — le nom seul | le type l'a quitté (nº 843) : il est dans le badge au doigt, devant la ville au web |
 | le sous-titre d'une carte du web et de la plaque | **Private Studio · Lyon, FR** | `sousTitreDeCarte` (lib/photo-tatoueur), l'écriture partagée des deux porteurs qui n'ont pas la place d'un badge |
 
@@ -457,3 +457,21 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
   la nº 806 — des DONNÉES, jamais de l'interface. Les instruments
   (sondes, /dev) et les étiquettes `data-source-composant` ne sont plus
   des exceptions : ils sont traduits.
+
+---
+
+## Passe nº 852 — le type d'un artiste se dit en deux mots
+
+| avant | après | où |
+| --- | --- | --- |
+| **Artist** | **Tattoo Artist** | `libelleTypeFiche` (config/tatouage) — les badges des cartes (web et fil), la ligne sous le nom d'un profil, la plaque, « Ma sélection », la liste des suivis ; les deux replis de `lib/modes-exercice` ; le tableau du démarchage (`lib/demarchage`) ; les deux libellés du formulaire (`TYPES_FICHE`, `CHOIX_PROFIL`) |
+
+> La casse est celle de la famille — deux capitales, comme
+> « Tattoo Shop » —, et non des capitales pleines : c'est un libellé,
+> pas un cri. Le slug (`artiste`) ne bouge pas d'une lettre : rien en
+> base, rien dans les adresses.
+>
+> **Ce qui n'a PAS changé, et c'est voulu** : le titre du groupe de
+> filtres « Artist » (`FILTRE_MODE_ACTIVITE`, config/tatouage) — ce
+> n'est pas le type d'un portfolio mais l'en-tête d'une section du
+> moteur (« comment travaille l'artiste qu'on cherche »).

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { libelleTypeFiche, ROBE_BADGE_CONTOUR } from "@/config/tatouage";
+import { BOITE_BADGE, libelleTypeFiche } from "@/config/tatouage";
 import { adresseDeLienInterne } from "@/lib/lien-interne";
 
 /**
@@ -64,18 +64,33 @@ export function BadgeTypeDeFiche({
     <Link
       href={adresseDeLienInterne(tatoueur.slug)}
       data-badge-type=""
-      /*  §2 (nº 847) — SA BOÎTE ET SON CONTOUR SONT L'ÉCRITURE PARTAGÉE
-          (`ROBE_BADGE_CONTOUR`, config/tatouage) : le badge du COMPTE des
-          résultats en veut exactement la même. Rien n'a changé d'un
-          pixel — les mêmes classes, lues ailleurs. Ce qui reste ici est
-          ce qui n'appartient qu'à CE badge : sa typographie, son air
-          latéral, et ses états de LIEN. */
-      //  §2 (nº 848) — LA HAUTEUR EST REVENUE ICI : la robe partagée ne
-      //  la porte plus (voir sa note, config/tatouage). Trente pixels,
-      //  comme depuis la nº 843.
-      className={`${ROBE_BADGE_CONTOUR} min-h-[30px] px-3.5 text-[14px] font-semibold
-                 text-sombre-texte transition-colors
-                 hover:bg-sombre-eleve active:bg-sombre-eleve
+      /*  ██ §6 (nº 852) — IL PREND LA ROBE DE « SUIVRE » ██
+          ----------------------------------------------------------
+          DÉCISION DU PROPRIÉTAIRE : sur les cartes du fil, ce badge
+          prend la robe du badge « Suivre » — un APLAT PLEIN de la
+          couleur d'action, SANS CONTOUR — « c'est un lien ».
+          CE QUE CELA ANNULE, ET IL FAUT LE DIRE : la nº 844-§3 l'avait
+          VIDÉ (fond transparent, contour seul) au motif que « le
+          contour renseigne, le plein agit ». Le propriétaire retourne
+          l'argument : ce badge n'est pas une étiquette, il OUVRE le
+          profil — il agit, donc il se remplit. La règle de la nº 844
+          reste vraie pour ce qui ne mène nulle part ; ce badge, lui,
+          change de camp.
+          LES DEUX JETONS SONT CEUX DE « SUIVRE », lus chez lui
+          (BoutonSuivre) et non réinventés : `bg-sombre-texte` (le blanc
+          de la charte) avec le texte au fond de page, et la même
+          descente d'un dixième au survol et à l'appui.
+          ⚠️ SA BOÎTE NE BOUGE PAS D'UN PIXEL : `BOITE_BADGE` est
+          l'écriture partagée (config/tatouage), et la hauteur, l'air et
+          la typographie restent ceux que la nº 851 a fait copier aux
+          badges de la rangée de recherche — le banc 851 les compare
+          encore, mesure contre mesure.
+          ⚠️ ET IL N'A PLUS DE CONTOUR DU TOUT : c'est écrit dans la
+          consigne. Sa hauteur ne bouge pas pour autant — la hauteur
+          minimale se compte sur la boîte entière, contour compris. */
+      className={`${BOITE_BADGE} min-h-[30px] px-3.5 text-[14px] font-semibold
+                 bg-sombre-texte text-sombre-fond transition-colors
+                 hover:bg-sombre-texte/90 active:bg-sombre-texte/90
                  focus-visible:outline-2 focus-visible:outline-offset-2
                  focus-visible:outline-primaire`}
     >

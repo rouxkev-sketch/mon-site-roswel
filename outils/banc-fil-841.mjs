@@ -49,7 +49,8 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       const enTete = c.querySelector("[data-en-tete-de-fil]"), cadre = c.querySelector("[data-cadre-de-fil]"), pied = c.querySelector("[data-pied-de-fil]");
       const y = (n) => Math.round(n.getBoundingClientRect().top);
       const avatar = enTete.querySelector("[data-lien-profil-de-fil] > span:first-child");
-      const suivre = enTete.querySelector("[data-badge-type]");
+      const suivre = [...enTete.querySelectorAll("[data-badge-type]")]
+        .find((n) => n.getBoundingClientRect().height > 0);
       return {
         appareil: document.documentElement.dataset.appareil,
         colonnes: getComputedStyle(grille).gridTemplateColumns.split(" ").length,
@@ -88,14 +89,17 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     //  §1 (nº 843) — le TYPE est parti dans le badge : le titre redevient
     //  le nom seul, et la ville reste seule dessous.
     verif("le titre est le NOM SEUL (demi-gras), puis la ville seule", structure.titre === "Banc 841" && structure.sousTitre === "Lyon, FR" && Number(structure.titreGras) >= 600, `${structure.titre} / ${structure.sousTitre} / ${structure.titreGras}`);
-    verif("LE BADGE DU TYPE à droite, face à l'avatar (nº 843)", structure.suivre === "Artist" && structure.suivreADroite === 16 && structure.suivreFace, `${structure.suivre} · ${structure.suivreADroite} px du bord`);
+    //  §10 (nº 852) — le type d'un artiste se dit « Tattoo Artist ».
+    verif("LE BADGE DU TYPE à droite, face à l'avatar (nº 843)", structure.suivre === "Tattoo Artist" && structure.suivreADroite === 16 && structure.suivreFace, `${structure.suivre} · ${structure.suivreADroite} px du bord`);
     verif("la pastille « 1/5 » en haut à droite de l'image", structure.compteur === "1/5" && structure.compteurVisible === "visible" && structure.compteurEnHautADroite);
     verif("le glissement est natif, avec accrochage par photo", structure.accrochage === "x mandatory", structure.accrochage);
-    //  §4 (nº 842) — le pied s'écarte en trois places : signaler à
-    //  gauche, les points au centre, partage puis fanion à droite. Le
-    //  détail (les bords, les cibles) est mesuré par le banc 842 ; ici
-    //  on vérifie seulement qu'ils sont tous là et dans cet ordre.
-    verif("le pied : signaler, cinq points, partage et fanion", structure.points === 5 && structure.icones.length === 3 && structure.icones[0].startsWith("Report") && structure.icones[1].startsWith("Share") && /photo/.test(structure.icones[2]), structure.icones.join(" · "));
+    /*  §4 (nº 842), RÉORDONNÉ À LA nº 852-§7 — le pied garde ses trois
+        places : signaler à gauche, les points au centre, les deux
+        gestes à droite. Ce qui a changé : LE FANION PASSE DEVANT LE
+        PARTAGE (décision du propriétaire). Le détail (les bords, les
+        cibles) est mesuré par le banc 842 ; ici on vérifie seulement
+        qu'ils sont tous là et dans ce nouvel ordre. */
+    verif("le pied : signaler, cinq points, fanion puis partage", structure.points === 5 && structure.icones.length === 3 && structure.icones[0].startsWith("Report") && /photo/.test(structure.icones[1]) && structure.icones[2].startsWith("Share"), structure.icones.join(" · "));
 
     titre("841 · les photos : la première seule au loin, la suivante à l'approche, jamais tout");
     const ecran = await page.evaluate(() => innerHeight);

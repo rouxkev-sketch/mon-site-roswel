@@ -24,6 +24,7 @@ import {
   retenirPhotoDeCarte,
 } from "@/lib/memoire-cartes";
 import { AvatarRond } from "@/components/AvatarRond";
+import { BadgeTypeDeFiche } from "@/components/BadgeTypeDeFiche";
 import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import {
@@ -98,6 +99,8 @@ function CarteTatoueurNue({
   prioritaire = false,
   phototheque = false,
   fanion = false,
+  pastilleDEmblee = false,
+  avecLigneDesStyles = false,
   fil = false,
   approchee = false,
   surOuverture,
@@ -154,6 +157,36 @@ function CarteTatoueurNue({
    * comportement (règle 137 : son état se charge côté navigateur).
    */
   fanion?: boolean;
+  /**
+   * ██ §4 (nº 852) — LA PASTILLE « 7/20 » S'ALLUME D'EMBLÉE ██
+   * DÉCISION DU PROPRIÉTAIRE : au doigt, SUR UNE PAGE DE RÉSULTATS
+   * (style ou recherche), la pastille est visible dès l'arrivée sur les
+   * cartes, et s'efface trois secondes après l'arrêt du défilement de la
+   * page. Ailleurs — « Ma sélection » notamment —, elle garde la règle
+   * du geste (nº 844) et rien ne change.
+   * ⚠️ UN RÉGLAGE EXPLICITE, JAMAIS UNE DEVINETTE : la carte est rendue
+   * par deux grilles, et c'est LA GRILLE qui sait sur quelle page elle
+   * vit — comme pour le fanion, juste au-dessus.
+   */
+  pastilleDEmblee?: boolean;
+  /**
+   * ██ §8 ET §9 (nº 852) — LA LIGNE DES STYLES, AU WEB ██
+   * DÉCISIONS DU PROPRIÉTAIRE, et elles se répondent :
+   *  · sur les cartes de RECHERCHE, la ligne « Fine Line • Black &
+   *    gray » est SUPPRIMÉE — la carte montre une photo, un badge de
+   *    type, un nom et une ville, et c'est tout ;
+   *  · sur les cartes de « MA SÉLECTION », elle est GARDÉE : on y
+   *    retrouve ce qu'on a mis de côté, et le style est ce qui le
+   *    distingue.
+   * ⚠️ UN RÉGLAGE EXPLICITE, comme le fanion et la pastille : la carte
+   * est rendue par deux grilles, et c'est la grille qui sait où elle
+   * vit. « Ma sélection » le passe, la grille des résultats non.
+   * ⚠️ ET AU DOIGT, RIEN NE CHANGE : la consigne dit « WEB ». La
+   * vignette du doigt garde sa ligne de style dans les deux cas — elle
+   * n'a ni badge, ni nom, ni rond de profil, et cette ligne est presque
+   * tout ce qu'elle dit.
+   */
+  avecLigneDesStyles?: boolean;
   tatoueur: Tatoueur;
   /** Le style demandé dans le moteur, s'il y en a un. */
   styleRecherche?: string;
@@ -1120,7 +1153,18 @@ function CarteTatoueurNue({
                 pixels au web, seize au doigt côte à côte, vingt en
                 pleine largeur — voir la note de la hauteur, sur la
                 ligne du nom. */
+            /*  ██ §8 (nº 852) — ELLE QUITTE LES CARTES DE RECHERCHE, AU
+                WEB SEULEMENT ██
+                `not-mobile:hidden` quand la grille ne demande pas les
+                styles : le web des résultats ne la montre plus, « Ma
+                sélection » la garde (elle passe le réglage), et le
+                doigt la garde partout — voir `avecLigneDesStyles`.
+                ⚠️ C'EST UNE BASCULE DE FEUILLE, pas un rendu
+                conditionnel : le serveur écrit la même chose pour tout
+                le monde, donc aucun écart d'hydratation. */
             className={`font-normal leading-[18px] line-clamp-1 mb-4 mobile:mb-1 text-[15px] text-sombre-texte ${
+              avecLigneDesStyles ? "" : "not-mobile:hidden"
+            } ${
               uneColonne
                 ? "mobile:text-[17px] mobile:leading-[20px]"
                 : "mobile:leading-[16px] mobile:text-[14px]"
@@ -1272,7 +1316,25 @@ function CarteTatoueurNue({
           {tatoueur.nom}
         </h3>
         <p
-          className={`text-sombre-texte-doux leading-[18px] line-clamp-1 ${
+          /*  ██ §8 ET §9 (nº 852) — AU WEB, LE SOUS-TITRE EST LA
+              LOCALITÉ SEULE, ET IL GRANDIT ██
+              LE TYPE en part : il est devenu le BADGE face à l'avatar,
+              juste à droite (même décision pour les deux familles de
+              cartes). Il ne peut pas se dire deux fois sur la même
+              carte.
+              LE CORPS MONTE d'un cran, de 13 à 14 px — « agrandi, mais
+              plus petit que le nom », qui vaut 15. La hiérarchie tient
+              donc encore, d'un pixel, et par la couleur (gris doux sous
+              le blanc du nom).
+              ⚠️ DEUX CLASSES DE CORPS SUR CETTE LIGNE (piège nº 389),
+              et c'est le motif que la carte emploie déjà : la variante
+              d'appareil s'écrit avec `:where`, qui ne pèse rien, et elle
+              est écrite APRÈS dans la feuille — c'est elle qui gouverne
+              au web. Vérifié dans la feuille produite.
+              ⚠️ LE DOIGT NE BOUGE PAS D'UN PIXEL : ni son corps, ni son
+              contenu (le type y ouvre toujours la ligne — il n'a pas de
+              badge pour le dire). */
+          className={`text-sombre-texte-doux leading-[18px] line-clamp-1 not-mobile:text-[14px] ${
             uneColonne
               ? "text-[14.5px] mobile:leading-[20px]"
               : "text-[13px] mobile:leading-[16px]"
@@ -1324,9 +1386,32 @@ function CarteTatoueurNue({
                ⚠️ CETTE CARTE EST RENDUE PARTOUT — moteur, vitrines,
                « Ma sélection » : ce qui change ici se voit sur les
                trois d'un seul geste. */}
-          {sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
+          {/*  §8-§9 (nº 852) — deux écritures qui s'excluent : le doigt
+               garde « Type · Ville », le web ne dit que la ville. */}
+          <span className="not-mobile:hidden">
+            {sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
+          </span>
+          <span className="mobile:hidden">
+            {ligneDeLieuDeCarte(lieuDeLaCarte)}
+          </span>
         </p>
         </div>
+        {/*  ██ §8 ET §9 (nº 852) — LE TYPE, EN BADGE FACE À L'AVATAR ██
+             DÉCISION DU PROPRIÉTAIRE, pour les deux familles de cartes
+             du web : le type quitte le sous-titre et devient un badge, à
+             l'autre bout de la rangée du profil — exactement la place
+             qu'il occupe déjà sur les cartes du fil (nº 843), et la même
+             robe depuis le §6 de cette passe (l'aplat de « Suivre »).
+             ⚠️ C'EST LE COMPOSANT DU FIL, pas une copie : un seul badge
+             de type existe dans le site (`BadgeTypeDeFiche`), et il
+             porte sa robe, sa boîte et son lien. Les deux surfaces ne
+             peuvent donc plus diverger.
+             ⚠️ AU DOIGT, RIEN : la vignette n'a ni rond de profil ni nom
+             (nº 486), et cette rangée n'y montre que le sous-titre — un
+             badge y prendrait la moitié de la largeur. */}
+        <span className="mobile:hidden">
+          <BadgeTypeDeFiche tatoueur={tatoueur} />
+        </span>
         </div>
       </div>
       )}
@@ -1369,6 +1454,8 @@ function CarteTatoueurNue({
                 indice={indiceDoigt}
                 surChangement={setIndiceDoigt}
                 variante="carte"
+                //  §4 (nº 852) — voir `pastilleDEmblee`, plus haut.
+                eveilPastille={pastilleDEmblee ? "page" : undefined}
                 prioritaire={prioritaire}
                 approchee={approchee}
               />

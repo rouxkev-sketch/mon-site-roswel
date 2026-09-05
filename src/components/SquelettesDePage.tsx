@@ -119,15 +119,39 @@ function RondGris({ classe = "", geste = false }: { classe?: string; geste?: boo
   return (
     <span
       aria-hidden="true"
-      /*  §6 (nº 821) — LES RONDS QUI ANNONCENT UN GESTE DE LA BARRE
-          (loupe, globe, fanion) PRENNENT SA CIBLE : 46 au doigt, 40 au
-          web (`CIBLE_GESTE_BARRE`, l'écriture unique). Sans cela, le
-          squelette promettrait une largeur que la barre ne tiendrait
-          pas, et la barre sauterait à l'arrivée — l'acquis de la
-          nº 815. Le rond de l'AVATAR, lui, garde ses 40 : le
-          propriétaire l'exclut de l'agrandissement. */
-      className={`${geste ? CIBLE_GESTE_BARRE : "h-10 w-10"} shrink-0 rounded-full bg-sombre-eleve ${classe}`}
-    />
+      /*  ██ §3 (nº 852) — TOUS LES RONDS À LA TAILLE DE L'AVATAR ██
+          CE QUI SE VOYAIT : les ronds du fanion, de la loupe et du
+          compte faisaient 46 px au doigt (la CIBLE du geste,
+          `CIBLE_GESTE_BARRE`) quand celui de l'avatar en fait 40 — trois
+          disques gris manifestement plus gros qu'un quatrième, à côté.
+          LE PROPRIÉTAIRE TRANCHE : tous à la taille du cercle de
+          l'avatar.
+          POURQUOI CE N'ÉTAIT PAS FAUX, ET POURQUOI C'EST MIEUX AINSI :
+          la nº 821 avait donné à ces ronds la CIBLE TACTILE des gestes,
+          pour que le squelette promette la largeur que la barre allait
+          tenir. Mais un squelette ne promet pas une cible — il promet ce
+          qu'on VERRA : une icône de 26 px dans un rond de 40, comme
+          l'avatar. La largeur de la barre, elle, ne dépend pas de ces
+          ronds : elle est tenue par la réserve et par le logo, et le
+          banc le mesure (nº 852, aucun saut).
+          ⚠️ MAIS LA BARRE, ELLE, NE DOIT PAS RÉTRÉCIR — et elle l'a
+          fait dès le premier essai : au doigt, sa hauteur EST celle de
+          ses cibles (46 + 24 d'air = 70), et des ronds de 40 la
+          ramenaient à 64. Six pixels de saut à l'arrivée, mesurés.
+          D'OÙ DEUX BOÎTES, ET C'EST LA JUSTE LECTURE : la CIBLE tient la
+          place (46 au doigt, 40 au web — `CIBLE_GESTE_BARRE`, l'écriture
+          unique), le DISQUE se voit à la taille de l'avatar, centré
+          dedans. Un squelette promet ce qu'on VERRA, pas ce qu'on
+          touchera ; il doit tout de même réserver ce que la barre
+          occupera. Les deux tiennent maintenant ensemble.
+          ⚠️ LE RÉGLAGE `geste` RESTE, mais il ne dit plus la taille du
+          disque : il dit si ce rond annonce un GESTE de la barre, donc
+          s'il en réserve la cible. L'avatar, lui, n'en a pas. */
+      className={`${geste ? CIBLE_GESTE_BARRE : "h-10 w-10"} shrink-0
+                  flex items-center justify-center ${classe}`}
+    >
+      <span className="h-10 w-10 rounded-full bg-sombre-eleve" />
+    </span>
   );
 }
 
@@ -167,7 +191,8 @@ function ZoneDroite({
           <RondGris geste classe={loupeAuDoigtSeulement ? "lg:hidden" : ""} />
         )}
         <RondGris geste />
-        {/*  Le dernier est l'AVATAR : il garde ses 40 (nº 821). */}
+        {/*  Le dernier est l'AVATAR — et depuis la nº 852 les trois
+             DISQUES ont sa taille ; seule leur cible diffère. */}
         <RondGris />
       </span>
       <span data-squelette-deconnecte="" className="contents">
