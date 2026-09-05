@@ -295,9 +295,14 @@ export function OngletsLigne({
            * onglets, le trait courait sur TOUTE la moitié — 179 px au
            * doigt pour un mot de 50. « Trop étalé pour un seul mot. »
            * CE QU'IL DEVIENT : la largeur du MOT, centré sous lui, plus
-           * HUIT PIXELS de débord de chaque côté — assez pour que le
-           * trait ne paraisse pas coupé aux lettres extrêmes, trop peu
-           * pour qu'il redevienne une barre de segment.
+           * un DÉBORD de chaque côté.
+           * ██ §1 (nº 871) — LE DÉBORD PASSE DE HUIT À VINGT-HUIT ██
+           * Les huit pixels de la nº 870 donnaient 65 px sous un mot de
+           * 49 : le propriétaire l'a trouvé TROP COURT. Vingt-huit de
+           * chaque côté donnent 105 px — la valeur intermédiaire qu'il
+           * demande, entre le mot nu et la moitié de la rangée (179 au
+           * doigt). Le trait tient encore largement sous son segment
+           * (`max-w-full` reste là pour les libellés très longs).
            *
            * COMMENT LA LARGEUR EST OBTENUE, ET POURQUOI SANS MESURE :
            * le trait CONTIENT une copie invisible du libellé actif, dans
@@ -337,7 +342,7 @@ export function OngletsLigne({
               transform: `translateX(${decalageDuTrait})`,
             }}
           >
-            <span className="h-[3px] max-w-full overflow-hidden rounded-full bg-primaire px-2">
+            <span className="h-[3px] max-w-full overflow-hidden rounded-full bg-primaire px-7">
               <span className={`invisible block whitespace-nowrap ${ECRITURE_ONGLET}`}>
                 {options[index].label}
               </span>

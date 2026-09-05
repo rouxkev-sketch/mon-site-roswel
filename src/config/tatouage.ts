@@ -2526,9 +2526,28 @@ export const ROBE_BADGE_CONTOUR = `${BOITE_BADGE} border border-sombre-haut bg-t
  */
 export const AIR_BADGE = "min-h-[30px] px-3.5";
 
+/**
+ * ██ §5 (nº 871) — LE CORPS ET LA GRAISSE, SANS LA COULEUR ██
+ * ------------------------------------------------------------------
+ * LE BESOIN : les badges d'action d'un profil (`ActionDeFiche`) ont
+ * désormais DEUX ROBES — l'aplat gris des trois, et LE BLANC de
+ * « Follow » (la robe de la nº 528, rendue par le propriétaire). Leur
+ * TYPOGRAPHIE, elle, est la même : c'est celle des badges du site.
+ * Lire `ECRITURE_BADGE` en entier aurait posé `text-sombre-texte` À
+ * CÔTÉ du texte sombre du blanc — deux classes de couleur sur un même
+ * élément, et c'est le piège nº 389 au caractère près (Tailwind range
+ * ses utilitaires par ordre alphabétique, pas par ordre d'écriture).
+ * Le corps et la graisse se détachent donc ici, et la couleur reste
+ * dans la robe de chacun.
+ * ⚠️ `ECRITURE_BADGE` NE CHANGE PAS D'UN CARACTÈRE : elle est
+ * recomposée à partir de ce morceau (piège nº 378 — une seule
+ * écriture, deux lecteurs). Le badge du TYPE ne bouge pas d'un pixel.
+ */
+export const CORPS_BADGE = "text-[14px] font-semibold";
+
 /** L'écriture des badges du TYPE — corps, graisse, couleur. Elle
     voyage avec son air : les deux ne se séparent jamais. */
-export const ECRITURE_BADGE = "text-[14px] font-semibold text-sombre-texte";
+export const ECRITURE_BADGE = `${CORPS_BADGE} text-sombre-texte`;
 
 /**
  * LA MÊME HAUTEUR, POUR LE SQUELETTE D'ATTENTE DU BADGE DU TYPE.

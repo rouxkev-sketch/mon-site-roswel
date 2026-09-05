@@ -1,15 +1,20 @@
 //  ██ BANC 870 — LES CORRECTIONS DE L'EN-TÊTE DU PROFIL ██
 //  ==================================================================
-//   1. LE TRAIT DU VA-ET-VIENT : la largeur du MOT plus huit pixels de
-//      chaque côté, centré sous lui, plus court que son segment — sur
-//      le profil ET sur « Ma sélection » (le même composant).
+//   1. LE TRAIT DU VA-ET-VIENT : la largeur du MOT plus VINGT-HUIT
+//      pixels de chaque côté (nº 871-§1), centré sous lui, plus court
+//      que son segment — sur le profil ET sur « Ma sélection ».
 //   2. LE BOOKING : plus de point, LE CALENDRIER et le texte —
 //      « Books open • 5-month wait », « Books open », « Books closed »,
-//      et rien du tout quand rien n'est déclaré.
+//      et rien du tout quand rien n'est déclaré. Il a quitté le bloc du
+//      nom (nº 871-§2) : c'est LA PREMIÈRE LIGNE D'INFORMATION.
 //   3. LE SITE : sa ligne, son icône, son BLEU — sous la bio.
 //   4. TROIS BADGES : Follow et Instagram de MÊME LARGEUR, icône à
-//      gauche du mot, puis le partage — petit, icône seule ; même
-//      hauteur et même robe pour les trois, toute la largeur ensemble.
+//      gauche du mot, puis le partage — petit, icône seule ; QUARANTE
+//      de haut (nº 871-§4), toute la largeur ensemble.
+//   4 bis. LES ROBES (nº 871-§5) : « Follow » en BLANC, « Following » et
+//      les deux autres sur l'aplat d'action ; l'icône et le mot CENTRÉS
+//      ENSEMBLE dans les deux états. Les dessins sont le PLUS et la
+//      COCHE (nº 871-§6), plus aucun personnage.
 //   5. LES DEUX AIRS : au-dessus de la rangée, celui qui sépare le
 //      va-et-vient du haut de l'avatar ; en dessous, celui qui sépare
 //      deux blocs du profil.
@@ -26,7 +31,12 @@ const CARTE_CLAIR = "rgb(32, 38, 45)";    // carteClair  #20262D
 const BLEU = "rgb(127, 169, 238)";        // lien  #7FA9EE
 //  L'air de référence : celui qui sépare le va-et-vient du haut de
 //  l'avatar (le `mt-10` du bloc du nom) et celui de la liste (`gap-y-6`).
-const AIR_ENTETE = 40, AIR_BLOC = 24, DEBORD_TRAIT = 8;
+const AIR_ENTETE = 40, AIR_BLOC = 24, DEBORD_TRAIT = 28, HAUTEUR_BADGE = 40;
+//  §5 (nº 871) — la robe blanche de la nº 528 : l'aplat `sombre-texte`
+//  et le fond de page en texte.
+const BLANC_FOND = "rgb(242, 242, 244)", FOND_PAGE = "rgb(11, 15, 20)";
+//  §6 (nº 871) — les deux signes, lus à la source (Icones).
+const PLUS = "M12 5v14M5 12h14", COCHE = "M5 12.5 9.5 17 19 7.5";
 
 const U = { id: "30000000-0000-4000-8000-000000000870", email: "banc-870@yokofolio.test" };
 await rest("auth/v1/admin/users", { method: "POST", body: { id: U.id, email: U.email } }).catch(() => {});
@@ -84,9 +94,12 @@ const LIRE = `() => {
     return { cle: a.dataset.actionFiche, balise: a.tagName, href: a.getAttribute("href"), cible: a.getAttribute("target"),
       aria: a.getAttribute("aria-label"), presse: a.getAttribute("aria-pressed"), sansCran: a.hasAttribute("data-sans-cran"),
       ...B(a), fond: s.backgroundColor, trait: s.borderTopWidth, rayon: s.borderTopLeftRadius, corps: s.fontSize,
-      couleur: s.color, icone: svg ? { taille: Math.round(svg.getBoundingClientRect().width), x: +svg.getBoundingClientRect().left.toFixed(1) } : null,
+      couleur: s.color, icone: svg ? { taille: Math.round(svg.getBoundingClientRect().width),
+        x: +svg.getBoundingClientRect().left.toFixed(1),
+        chemin: (svg.querySelector("path")?.getAttribute("d") ?? "").replace(/\\s+/g, " ").trim() } : null,
       mot: mot ? mot.textContent.trim().replace(/^(Following|Follow)(Follow|Following)*$/, "$1") : null,
-      motX: mot ? +mot.getBoundingClientRect().left.toFixed(1) : null }; }) : null;
+      motX: mot ? +mot.getBoundingClientRect().left.toFixed(1) : null,
+      motD: mot ? +mot.getBoundingClientRect().right.toFixed(1) : null }; }) : null;
   const groupe = document.querySelector('[role=radiogroup][aria-label="Profile or portfolio"]');
   const rangeeDuHaut = groupe?.parentElement;
   const boiteLigne = groupe ? [...groupe.children].find((n) => n.tagName === "DIV" && Math.round(n.getBoundingClientRect().height) === 3) : null;
@@ -131,7 +144,7 @@ for (const mode of ["doigt", "web"]) {
     const v = await lireProfil(page);
     const actif = v.onglets?.find((o) => o.actif);
     //  §1 — LE TRAIT
-    verif("§1 — le trait fait la largeur du mot plus huit pixels de chaque côté",
+    verif("§1 — le trait fait la largeur du mot plus vingt-huit pixels de chaque côté",
       proche(v.trait?.w, (actif?.encre.w ?? 0) + 2 * DEBORD_TRAIT),
       `trait ${v.trait?.w} · mot ${actif?.encre.w} (+ ${2 * DEBORD_TRAIT} attendus)`);
     verif("§1 — il est centré sous le mot", proche(v.trait?.centre, actif?.encre.centre),
@@ -151,16 +164,18 @@ for (const mode of ["doigt", "web"]) {
     verif("§2 — l'icône est grise, le mot est blanc (l'écriture d'avant la nº 869)",
       v.booking?.couleurIcone === GRIS && v.booking?.couleurMot === BLANC,
       `${v.booking?.couleurIcone} · ${v.booking?.couleurMot}`);
-    verif("§2 — elle vit sous le type, à droite de l'avatar, au-dessus de la rangée",
-      v.booking && v.type && v.booking.y >= v.type.bas - 0.5 && v.booking.x >= v.avatar.d && v.booking.bas <= v.rangee.y,
-      JSON.stringify({ type: v.type?.bas, booking: v.booking?.y, avatar: v.avatar?.d, rangee: v.rangee?.y }));
+    verif("§2 (nº 871) — elle a QUITTÉ le bloc du nom : elle ouvre les lignes d'information, sous la rangée",
+      v.booking && v.type && v.booking.y >= v.rangee.bas && v.booking.bas <= v.site.y && v.booking.x < v.avatar.d,
+      JSON.stringify({ type: v.type?.bas, rangee: v.rangee?.bas, booking: v.booking?.y, site: v.site?.y }));
+    verif("§2 (nº 871) — le bloc du nom n'a plus que le nom et le type",
+      v.h1 && v.type && v.booking.y > v.h1.bas + 40, `nom ${v.h1?.bas} · booking ${v.booking?.y}`);
     //  §3 — LE SITE
     verif("§3 — le site a sa ligne, son icône et le titre choisi",
       v.site?.texte === "Mon site à moi" && v.site?.svg === 1 && v.site?.cible === "_blank", JSON.stringify(v.site && { texte: v.site.texte, svg: v.site.svg }));
     verif("§3 — son lien est BLEU (ce qui sort du site)", v.site?.couleur === BLEU, v.site?.couleur);
-    verif("§3 — il est SOUS LA BIO et au-dessus des styles",
-      v.bio && v.site && v.styles && v.bio.bas <= v.site.y && v.site.bas <= v.styles.y,
-      JSON.stringify({ bio: v.bio?.bas, site: v.site?.y, styles: v.styles?.y }));
+    verif("§3 (nº 871) — il est SOUS LE BOOKING et AU-DESSUS DE LA BIO",
+      v.bio && v.site && v.booking && v.booking.bas <= v.site.y && v.site.bas <= v.bio.y,
+      JSON.stringify({ booking: v.booking?.bas, site: v.site?.y, bio: v.bio?.y }));
     verif("§3 — et il n'est plus un badge de la rangée",
       (v.actions ?? []).every((a) => a.cle !== "website"), (v.actions ?? []).map((a) => a.cle).join(" · "));
     //  §4 — LES TROIS BADGES
@@ -170,11 +185,18 @@ for (const mode of ["doigt", "web"]) {
     verif("§4 — les deux grands ont la MÊME LARGEUR", proche(suivre?.w, insta?.w, 0.6), `${suivre?.w} contre ${insta?.w}`);
     verif("§4 — le partage est petit, carré, sans mot", partage && partage.mot === null && proche(partage.w, partage.h) && partage.w < suivre.w / 2,
       JSON.stringify(partage && { w: partage.w, h: partage.h, mot: partage.mot }));
-    verif("§4 — même hauteur pour les trois (la mesure tactile)",
-      v.actions?.every((a) => a.h === suivre.h) && suivre?.h >= 44, v.actions?.map((a) => a.h).join(" · "));
-    verif("§4 — même robe pour les trois : l'aplat des badges d'action, aucun contour",
-      v.actions?.every((a) => a.fond === CARTE_CLAIR && a.trait === "0px" && a.rayon === "8px" && a.corps === "14px" && a.couleur === BLANC),
-      JSON.stringify(v.actions?.map((a) => [a.fond, a.trait, a.rayon, a.corps])));
+    verif(`§4 (nº 871) — même hauteur pour les trois : ${HAUTEUR_BADGE} px`,
+      v.actions?.every((a) => a.h === HAUTEUR_BADGE), v.actions?.map((a) => a.h).join(" · "));
+    verif("§5 (nº 871) — « Follow » porte LE BLANC de la nº 528 (aplat blanc, texte au fond de page)",
+      suivre?.fond === BLANC_FOND && suivre?.couleur === FOND_PAGE, `${suivre?.fond} · ${suivre?.couleur}`);
+    verif("§5 — les deux autres gardent l'aplat d'action, sans contour, même boîte",
+      [insta, partage].every((a) => a?.fond === CARTE_CLAIR && a?.couleur === BLANC && a?.trait === "0px" && a?.rayon === "8px" && a?.corps === "14px"),
+      JSON.stringify([insta, partage].map((a) => [a?.fond, a?.couleur, a?.trait, a?.rayon])));
+    verif("§5 — l'icône et le mot sont CENTRÉS ENSEMBLE dans le badge (plus de trou à droite)",
+      [suivre, insta].every((a) => proche((a.icone.x + a.motD) / 2, (a.x + a.d) / 2, 1)),
+      JSON.stringify([suivre, insta].map((a) => [+((a.icone.x + a.motD) / 2).toFixed(1), +((a.x + a.d) / 2).toFixed(1)])));
+    verif("§6 (nº 871) — le dessin de « Follow » est LE PLUS, et il fait vingt pixels",
+      suivre?.icone?.chemin === PLUS && suivre?.icone?.taille === 20, `${suivre?.icone?.chemin} (${suivre?.icone?.taille})`);
     verif("§4 — l'icône est À GAUCHE du mot dans les deux grands",
       suivre?.icone && insta?.icone && suivre.icone.x < suivre.motX && insta.icone.x < insta.motX,
       JSON.stringify([[suivre?.icone?.x, suivre?.motX], [insta?.icone?.x, insta?.motX]]));
@@ -189,13 +211,13 @@ for (const mode of ["doigt", "web"]) {
     verif("§5-a — l'air entre le bas de l'avatar et la rangée = celui du va-et-vient au haut de l'avatar",
       proche(v.rangee?.y - v.avatar?.bas, AIR_ENTETE, 1) && proche(v.avatar?.y - v.groupe?.bas, AIR_ENTETE, 4),
       `sous l'avatar ${(v.rangee?.y - v.avatar?.bas)?.toFixed?.(1)} · au-dessus ${(v.avatar?.y - v.groupe?.bas)?.toFixed?.(1)}`);
-    verif("§5-b — l'air sous la rangée = l'air standard entre deux blocs (la bio ajoute ses quatre pixels)",
-      proche(v.bio?.y - v.rangee?.bas, AIR_BLOC + 4, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC, 1),
-      `sous la rangée ${(v.bio?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
-    verif("§5 — l'ordre : nom, rangée, bio, site, styles, techniques, adresse",
-      v.h1.y < v.rangee.y && v.rangee.bas <= v.bio.y && v.bio.bas <= v.site.y && v.site.bas <= v.styles.y
-      && v.styles.bas <= v.pratiques.y && v.pratiques.bas <= v.adresse.y,
-      JSON.stringify({ nom: v.h1?.y, rangee: v.rangee?.y, bio: v.bio?.y, site: v.site?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
+    verif("§5-b — l'air sous la rangée = l'air standard entre deux blocs (la première ligne est le booking)",
+      proche(v.booking?.y - v.rangee?.bas, AIR_BLOC, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC, 1),
+      `sous la rangée ${(v.booking?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
+    verif("§3 (nº 871) — l'ordre : nom, rangée, booking, site, bio, styles, techniques, adresse",
+      v.h1.y < v.rangee.y && v.rangee.bas <= v.booking.y && v.booking.bas <= v.site.y && v.site.bas <= v.bio.y
+      && v.bio.bas <= v.styles.y && v.styles.bas <= v.pratiques.y && v.pratiques.bas <= v.adresse.y,
+      JSON.stringify({ nom: v.h1?.y, rangee: v.rangee?.y, booking: v.booking?.y, site: v.site?.y, bio: v.bio?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
   } catch (e) {
     verif(`déroulement du banc 870 (§1-§5 ${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -224,8 +246,8 @@ for (const mode of ["doigt", "web"]) {
       proche(n.rangee?.w, n.largeurColonne, 2) && proche(n.actions[1].d, n.rangee.d, 1),
       `${(n.actions ?? []).map((a) => a.cle).join(" · ")} · rangée ${n.rangee?.w} / colonne ${n.largeurColonne}`);
     verif("§3 — sans site, aucune ligne de site n'apparaît", n.site === null || n.site === undefined, JSON.stringify(n.site));
-    verif("§5-b — sans rien d'autre, la bio reste à l'air standard sous la rangée",
-      proche(n.bio?.y - n.rangee?.bas, AIR_BLOC + 4, 1), `${(n.bio?.y - n.rangee?.bas)?.toFixed?.(1)}`);
+    verif("§5-b — sans site, c'est le booking qui ouvre la liste, à l'air standard sous la rangée",
+      proche(n.booking?.y - n.rangee?.bas, AIR_BLOC, 1), `${(n.booking?.y - n.rangee?.bas)?.toFixed?.(1)}`);
   } catch (e) {
     verif("déroulement du banc 870 (§2 états)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -255,7 +277,7 @@ for (const mode of ["doigt", "web"]) {
         return { trait: B(trait), segment: B(segment), fond: trait ? getComputedStyle(trait).backgroundColor : null,
           mot: actif.textContent.trim(), encre: { w: +encre.width.toFixed(1), centre: +((encre.left + encre.right) / 2).toFixed(1) } };
       });
-      verif("§1 — le trait y fait aussi la largeur du libellé plus huit de chaque côté",
+      verif("§1 — le trait y fait aussi la largeur du libellé plus vingt-huit de chaque côté",
         proche(v.trait?.w, v.encre.w + 2 * DEBORD_TRAIT, 2), `trait ${v.trait?.w} · libellé « ${v.mot} » ${v.encre.w}`);
       verif("§1 — centré sous lui, et plus court que son segment",
         proche(v.trait?.centre, v.encre.centre, 2) && v.trait?.w < v.segment?.w, `${v.trait?.centre} contre ${v.encre.centre} · ${v.trait?.w} < ${v.segment?.w}`);
@@ -284,17 +306,23 @@ for (const mode of ["doigt", "web"]) {
       await page.waitForTimeout(1500);
       const avant = await lireProfil(page);
       const badge = avant.actions?.find((a) => a.cle === "follow");
-      verif(`au départ : « ${suiviAuDepart ? "Following" : "Follow"} », la robe des badges d'action`,
-        badge?.mot === (suiviAuDepart ? "Following" : "Follow") && badge?.presse === String(suiviAuDepart) && badge?.fond === CARTE_CLAIR,
-        JSON.stringify(badge && { mot: badge.mot, presse: badge.presse, fond: badge.fond }));
+      verif(`au départ : « ${suiviAuDepart ? "Following" : "Follow"} », ${suiviAuDepart ? "l'aplat d'action et la coche" : "le blanc et le plus"}`,
+        badge?.mot === (suiviAuDepart ? "Following" : "Follow") && badge?.presse === String(suiviAuDepart)
+        && badge?.fond === (suiviAuDepart ? CARTE_CLAIR : BLANC_FOND)
+        && badge?.icone?.chemin === (suiviAuDepart ? COCHE : PLUS),
+        JSON.stringify(badge && { mot: badge.mot, fond: badge.fond, chemin: badge.icone?.chemin }));
       const surLeProfil = await etat(page);
       await page.locator('[data-rangee-actions] [data-action-fiche="follow"]').tap();
       await page.waitForTimeout(1800);
       const apres = await lireProfil(page);
       const bascule = apres.actions?.find((a) => a.cle === "follow");
-      verif(`l'appui bascule le mot et le dessin (la robe, elle, ne change pas)`,
-        bascule?.mot === (suiviAuDepart ? "Follow" : "Following") && bascule?.presse === String(!suiviAuDepart) && bascule?.fond === CARTE_CLAIR,
-        JSON.stringify(bascule && { mot: bascule.mot, presse: bascule.presse, fond: bascule.fond }));
+      verif("l'appui bascule le mot, LE DESSIN et LA ROBE (nº 871)",
+        bascule?.mot === (suiviAuDepart ? "Follow" : "Following") && bascule?.presse === String(!suiviAuDepart)
+        && bascule?.fond === (suiviAuDepart ? BLANC_FOND : CARTE_CLAIR)
+        && bascule?.icone?.chemin === (suiviAuDepart ? PLUS : COCHE),
+        JSON.stringify(bascule && { mot: bascule.mot, fond: bascule.fond, chemin: bascule.icone?.chemin }));
+      verif("… et l'icône reste collée au mot, le couple centré", proche((bascule.icone.x + bascule.motD) / 2, (bascule.x + bascule.d) / 2, 1),
+        `${((bascule.icone.x + bascule.motD) / 2).toFixed(1)} contre ${((bascule.x + bascule.d) / 2).toFixed(1)}`);
       verif("… et la largeur des deux grands badges n'a pas bougé", proche(bascule?.w, apres.actions[1]?.w, 0.6),
         `${bascule?.w} contre ${apres.actions?.[1]?.w}`);
       const enBase = await lire("tatoueurs_suivis", `utilisateur_id=eq.${U.id}`);

@@ -1334,6 +1334,36 @@ export function ContenuFiche({
       <span className="min-w-0 truncate">{libelle}</span>
     </a>
   );
+  /**
+   * ██ §2 et §3 (nº 871) — LE BOOKING OUVRE LES LIGNES D'INFORMATION ██
+   * ==================================================================
+   * Il vivait dans le bloc du nom depuis la nº 869 (sous le type) ; le
+   * propriétaire l'en sort : LE BLOC DU NOM REVIENT À L'ÉTAT D'AVANT LA
+   * nº 869 — avatar, nom, type — et l'état des carnets devient LA
+   * PREMIÈRE LIGNE D'INFORMATION du profil, au-dessus du site.
+   * SON ÉCRITURE NE CHANGE PAS D'UN PIXEL, et c'est ce qui la rend
+   * naturelle à cette place : c'était déjà celle des lignes d'un profil
+   * — la colonne de 22 px pour le glyphe, l'icône en GRIS (nº 392) et
+   * le texte en BLANC (nº 552-§1). Le gris vit sur la RANGÉE, donc
+   * l'icône le prend et le mot le recouvre : une seule classe de
+   * couleur par élément (piège nº 389).
+   * ⚠️ LA MARGE HAUTE S'EN VA (`mt-2`) : elle la séparait du type dans
+   * le bloc du nom ; dans la liste, c'est la LISTE qui écarte ses
+   * rangées (son `gap-y-6`), et une marge de plus se serait ajoutée à
+   * l'écart commun (piège nº 378/379).
+   */
+  const ligneDuBooking = etatDesCarnets && (
+    <p
+      data-booking-fiche={tatoueur.booking}
+      className={`flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} items-start gap-2.5`}
+    >
+      <span className={BOITE_ICONE_LIGNE}>
+        <IconeCalendrier taille={20} />
+      </span>
+      <span className="min-w-0 text-sombre-texte">{etatDesCarnets}</span>
+    </p>
+  );
+
   const ligneDuSite = tatoueur.site_web && (
     lienEnLigne(
       "site",
@@ -2133,33 +2163,16 @@ export function ContenuFiche({
               <p className="mt-2 text-[14px] font-semibold uppercase tracking-[0.12em] text-sombre-texte-doux">
                 {sousLeNom(tatoueur)}
               </p>
-              {/*  ██ §2 (nº 870) — L'ÉTAT DES CARNETS, SOUS LE TYPE ██
-                   L'ICÔNE ET LE TEXTE, la ligne d'avant la nº 869 (voir
-                   `etatDesCarnets`) : le point de couleur s'en va, le
-                   calendrier revient. Elle garde la place que la nº 869
-                   lui a donnée — dans le bloc du nom, à droite de
-                   l'avatar — et retrouve l'écriture des lignes d'un
-                   profil : la colonne de 22 px pour le glyphe, gris
-                   (nº 392), et le texte en BLANC (nº 552-§1) ; c'est la
-                   RANGÉE qui porte le gris, donc l'icône le prend et le
-                   mot le recouvre — une seule classe de couleur par
-                   élément (piège nº 389).
-                   ⚠️ LE BLOC RESTE CENTRÉ SUR L'AVATAR tant qu'il est
-                   moins haut que lui (nº 241-§2) : nom, type et cette
-                   ligne tiennent dans ses 92 px. */}
-              {etatDesCarnets && (
-                <p
-                  data-booking-fiche={tatoueur.booking}
-                  className={`mt-2 flex items-start gap-2.5 ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE}`}
-                >
-                  <span className={BOITE_ICONE_LIGNE}>
-                    <IconeCalendrier taille={20} />
-                  </span>
-                  <span className="min-w-0 text-sombre-texte">
-                    {etatDesCarnets}
-                  </span>
-                </p>
-              )}
+              {/*  ██ §2 (nº 871) — LE BLOC DU NOM SE REFERME ██
+                   L'AVATAR, LE NOM, LE TYPE — RIEN D'AUTRE, l'état
+                   d'avant la nº 869. L'état des carnets, que la nº 869
+                   avait posé ici et que la nº 870 y avait laissé, ouvre
+                   désormais LES LIGNES D'INFORMATION, plus bas (§3) : il
+                   décrit le portfolio, il ne nomme pas la personne.
+                   ⚠️ CE QUE ÇA REND, ET C'EST LE POINT : le bloc
+                   redevient DEUX lignes dans les 92 px de l'avatar
+                   (nº 241-§2), donc parfaitement centré sur lui — il
+                   l'était déjà à trois, mais tout juste. */}
             </div>
           </div>
 
@@ -2174,12 +2187,15 @@ export function ContenuFiche({
           {/* ==========================================================
               LA LISTE — la bio, les styles, les techniques, l'adresse
               ==========================================================
-              §5 (nº 869), REPRIS PAR LA §3 (nº 870) — L'ORDRE DU
-              PROPRIÉTAIRE, de haut en bas : le bloc du nom (avatar, nom,
-              type, état des carnets), la rangée d'actions, LA BIO, LE
-              SITE, LES STYLES, LES TECHNIQUES, l'adresse, puis les
-              horaires (qui vivent dans les sections du bas et ne bougent
-              pas). Les deux GRILLES de liens qui ouvraient cette liste
+              §3 (nº 871) — L'ORDRE DU PROPRIÉTAIRE, de haut en bas : le
+              bloc du nom (avatar, nom, type), la rangée d'actions, LE
+              BOOKING, LE SITE, LA BIO, LES STYLES, LES TECHNIQUES,
+              l'adresse, puis les horaires (qui vivent dans les sections
+              du bas et ne bougent pas). Deux choses bougent depuis la
+              nº 870 : le booking descend du bloc du nom pour ouvrir
+              cette liste, et LA BIO PASSE DERRIÈRE LE SITE — les deux
+              lignes courtes d'abord, le paragraphe ensuite.
+              Les deux GRILLES de liens qui ouvraient cette liste
               (nº 233-§5, 384, 407, 408) ne sont pas revenues : le site
               est seul de sa ligne, il n'a pas de colonne voisine.
               §2 (nº 490) — LA GARDE INTERROGE LES LISTES, PLUS LES
@@ -2187,8 +2203,9 @@ export function ContenuFiche({
               JSX existe même vide — on teste les longueurs, qui sont la
               vérité (une fiche sans bio, sans technique et sans style
               n'ouvre pas ce conteneur pour rien). */}
-          {(Boolean(tatoueur.bio) ||
+          {(Boolean(ligneDuBooking) ||
             Boolean(ligneDuSite) ||
+            Boolean(tatoueur.bio) ||
             aDesPratiques ||
             aDesStyles) && (
             <div
@@ -2214,38 +2231,41 @@ export function ContenuFiche({
                    partout ailleurs dans la liste. */
               className="mt-6 flex w-full flex-col items-start gap-y-6"
             >
-              {/*  ██ §5 (nº 868) — LA BIOGRAPHIE MONTE DANS LA LISTE ██
-                   L'ORDRE DU PROPRIÉTAIRE, de haut en bas : les liens
-                   (booking, Instagram), le site, LA BIO, les STYLES, les
-                   TECHNIQUES, l'adresse, puis les horaires (qui vivent
-                   dans les sections du bas et ne bougent pas). Elle
-                   vivait SOUS la liste depuis toujours ; elle en devient
-                   une rangée, à sa place.
+              {/*  ██ §2 et §3 (nº 871) — LE BOOKING OUVRE LA LISTE ██
+                   La ligne d'état des carnets (voir `ligneDuBooking`)
+                   descend du bloc du nom et devient la PREMIÈRE
+                   information du profil. Elle est une rangée comme les
+                   autres : aucun air propre, c'est le `gap-y-6` de la
+                   liste qui l'écarte de ce qui suit. */}
+              {ligneDuBooking}
+              {/*  ██ §3 (nº 870, REPRIS PAR LA nº 871) — LE SITE ██
+                   Sa ligne d'avant la nº 869 (voir `ligneDuSite`) : la
+                   nº 870 l'avait posée sous la bio, la nº 871 la met
+                   AU-DESSUS — les deux lignes courtes ouvrent, le
+                   paragraphe suit. Une rangée de la liste comme les
+                   autres, sans grille : un lien seul n'a pas de colonne
+                   voisine, et sa case se borne d'elle-même
+                   (`max-w-full` + `truncate`, nº 391/407). */}
+              {ligneDuSite}
+              {/*  ██ §5 (nº 868) — LA BIOGRAPHIE EST UNE RANGÉE DE LA
+                   LISTE ██ Elle vivait SOUS la liste depuis toujours ;
+                   la nº 868 l'y a fait entrer, la nº 871 la place APRÈS
+                   le booking et le site (l'ordre du propriétaire).
                    ⚠️ SON AIR NE CHANGE PAS D'UN PIXEL, et c'est le sens
                    du rembourrage vertical d'un cran : la liste écarte
                    ses rangées de 24 px, la bio était séparée de 28
                    (`mt-7`) — quatre de plus en haut comme en bas la lui
-                   rendent, sans toucher au reste. Le rythme de la note
-                   du dessus tient : 24 entre deux lignes, 28 autour de
-                   la bio, 40 entre deux sections.
+                   rendent, sans toucher au reste. Le rythme tient : 24
+                   entre deux lignes, 28 autour de la bio, 40 entre deux
+                   sections.
                    ⚠️ ET SA LARGEUR NON PLUS : cette colonne aligne ses
                    enfants à gauche (`items-start`), une rangée doit donc
-                   réclamer la largeur — les deux grilles au-dessus le
-                   font déjà. */}
+                   réclamer la largeur. */}
               {tatoueur.bio && (
                 <p className="my-1 w-full text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                   {tatoueur.bio}
                 </p>
               )}
-              {/*  ██ §3 (nº 870) — LE SITE, SOUS LA BIO ██
-                   Sa ligne d'avant la nº 869 (voir `ligneDuSite`), à la
-                   place que le propriétaire lui donne : entre la bio et
-                   les styles. Elle est UNE RANGÉE DE LA LISTE comme les
-                   autres — donc séparée d'elles par le seul `gap-y-6` du
-                   conteneur, et sans grille : un lien seul n'a pas de
-                   colonne voisine, et sa case se borne d'elle-même
-                   (`max-w-full` + `truncate`, nº 391/407). */}
-              {ligneDuSite}
               {/*  §5 (nº 868) — LES STYLES PASSENT DEVANT LES TECHNIQUES
                    (l'ordre du propriétaire) : ce sont eux qu'on cherche
                    d'abord sur un portfolio. Les deux lignes ne changent

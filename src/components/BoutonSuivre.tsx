@@ -7,7 +7,9 @@ import { FenetreInvitationCompte } from "@/components/FenetreInvitationCompte";
 //  §4 (nº 870) — LE BADGE DE LA RANGÉE (icône à gauche du mot) :
 //  l'écriture unique des trois actions d'un profil, et ses deux dessins.
 import { ActionDeFiche } from "@/components/ActionDeFiche";
-import { IconeSuivi, IconeSuivre } from "@/components/Icones";
+//  §6 (nº 871) — LE PLUS ET LA COCHE, les deux signes du site (trait
+//  1,8 sur la grille de 24) : le personnage de la nº 869 s'en va.
+import { IconeCocheListe, IconePlus } from "@/components/Icones";
 import { useUtilisateur } from "@/lib/use-utilisateur";
 import {
   amorcer,
@@ -35,14 +37,24 @@ import {
  * — partagé avec « Instagram » et « Share ». Ce fichier ne dessine
  * plus rien : il ne garde que L'ÉTAT et LE GESTE, qui n'ont pas changé
  * d'une ligne depuis la nº 208.
- *  · « Follow » — le personnage avec un « + » ;
- *  · « Following » — le même personnage avec une COCHE.
- * ⛔ DE L'HISTOIRE : la capsule (nº 206 → nº 528, blanc plein pour
- * « Suivre », gris plein pour « Suivi »), ses deux réglages de boîte
- * (`pleineLargeur`, `classeBoite`, nº 589) et le carré de la nº 869
- * sont partis — ils n'ont plus de lecteur (règle nº 386).
- * ⚠️ LES DEUX ÉTATS PORTENT LA MÊME ROBE (nº 870) : c'est l'icône et le
- * mot qui les séparent, la note du badge le dit et le pourquoi est là.
+ *  · « Follow » — un simple « + », SUR LE BLANC de la charte (§5,
+ *    nº 871 : la robe de la nº 528 est rendue à cet état, le seul appel
+ *    à l'action d'un profil) ;
+ *  · « Following » — une COCHE, sur l'aplat gris des badges d'action.
+ * ⛔ LES DEUX PERSONNAGES DE LA nº 869 (une tête, des épaules, et le
+ * signe à droite) SONT PARTIS avec la nº 871-§6 : le propriétaire veut
+ * LE SIGNE SEUL. Ils n'ont plus de lecteur, donc plus de place dans le
+ * dépôt (règle nº 386) ; les deux signes qui les remplacent existaient
+ * déjà (`IconePlus` du formulaire, `IconeCocheListe` des listes) — on
+ * n'en dessine aucun de neuf.
+ * ⛔ DE L'HISTOIRE : la capsule (nº 206 → nº 528) et ses deux réglages
+ * de boîte (`pleineLargeur`, `classeBoite`, nº 589) sont partis avec la
+ * nº 870, le carré de la nº 869 avec eux (règle nº 386). Ce qui revient
+ * à la nº 871 n'est pas la capsule, c'est SA COULEUR — portée par le
+ * badge, dont la note dit les deux robes.
+ * ⚠️ LA NUANCE DE LA nº 870 QUI TOMBE : les deux états ne portent plus
+ * la même robe. L'icône et le mot les séparaient déjà ; la couleur les
+ * sépare de nouveau, comme avant la nº 869.
  *
  * PAS CONNECTÉ ? Même règle que le cœur : on mène à la connexion en
  * gardant la page (`?suite=`) ET le geste, rejoué au retour.
@@ -158,36 +170,46 @@ export function BoutonSuivre({
         }
         /*  ██ §2 (nº 506) — L'ATTENTE NE DIT RIEN ██
             Tant que l'état n'est pas connu, le bouton ne peut annoncer
-            NI « Follow » NI « Following » : il garde SA BOÎTE — le badge
-            et sa robe, la même dans les deux états, qui ne promet donc
-            rien — et se tait, icône et mot invisibles. Il est aussi sans
-            effet pendant ce moment (voir `basculer`). */
+            NI « Follow » NI « Following » : il garde SA BOÎTE et se
+            tait, icône et mot invisibles. Il est aussi sans effet
+            pendant ce moment (voir `basculer`).
+            §5 (nº 871) — ET IL ATTEND EN GRIS, jamais en blanc : le
+            blanc est un APPEL À L'ACTION, donc une promesse — « suivez
+            ce portfolio ». On ne la fait pas à quelqu'un qui le suit
+            peut-être déjà. L'aplat d'action est neutre, et c'est le
+            raisonnement de la nº 506, transposé à la couleur. */
         muet={!etatConnu}
+        blanche={etatConnu && !suivi}
         /*  §4 (nº 870) — VINGT PIXELS, l'icône d'une ligne du site, à
             gauche d'un mot de quatorze : la mesure des icônes qui
-            accompagnent un texte (les liens d'un profil, le booking). */
-        icone={suivi ? <IconeSuivi taille={20} /> : <IconeSuivre taille={20} />}
-        mot={
-          /*  ⚠️ LES DEUX LIBELLÉS OCCUPENT LA MÊME LARGEUR (nº 208-§1) :
-               ils sont posés dans la même case de grille, le plus long
-               réservant la place. Le mot ne change donc pas d'un pixel
-               entre « Follow » et « Following ».
-               §4 (nº 870) — LA BOÎTE N'EN DÉPEND PLUS (c'est la rangée
-               qui donne au badge sa part de largeur), MAIS L'INTÉRIEUR
-               SI : sans cette réserve, l'icône et le mot, centrés
-               ensemble, se décaleraient à chaque bascule. */
-          <span className="grid text-center">
-            <span className="col-start-1 row-start-1">
-              {suivi ? "Following" : "Follow"}
-            </span>
-            <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
-              Follow
-            </span>
-            <span aria-hidden="true" className="col-start-1 row-start-1 invisible">
-              Following
-            </span>
-          </span>
+            accompagnent un texte (les liens d'un profil, le booking).
+            §6 (nº 871) — et le SIGNE seul : le plus, puis la coche. */
+        icone={
+          suivi ? <IconeCocheListe taille={20} /> : <IconePlus taille={20} />
         }
+        /*  ██ §5 (nº 871) — L'ICÔNE ET LE MOT, CENTRÉS ENSEMBLE ██
+            ==============================================================
+            CE QUE LE PROPRIÉTAIRE VOIT : en « Follow », l'icône reste où
+            elle serait pour « Following » et UN TROU se creuse à droite
+            du mot — le couple n'est pas centré dans son badge.
+            LA CAUSE, ET ELLE ÉTAIT VOULUE AILLEURS : la RÉSERVE DE
+            LARGEUR de la nº 208-§1 — deux libellés invisibles empilés
+            sous le mot visible, pour que le plus long tienne la place.
+            Elle existait quand LA BOÎTE se taillait sur son contenu :
+            sans elle, le bouton changeait de largeur à chaque bascule et
+            poussait ses voisins. DEPUIS LA nº 870, LA BOÎTE NE DÉPEND
+            PLUS DU MOT : c'est la rangée qui donne au badge sa part
+            (`flex-1`, une part égale). La réserve n'empêche donc plus
+            rien de bouger — elle ne fait qu'empêcher le centrage.
+            ELLE PART, et le badge centre son contenu comme les deux
+            autres.
+            ⚠️ « FOLLOWING » NE BOUGE PAS D'UN PIXEL, et c'est
+            mécanique : c'est LE PLUS LONG des deux mots, donc la réserve
+            valait exactement sa largeur — le couple y était déjà centré.
+            Seul « Follow », plus court, se recentre.
+            ⚠️ RIEN NE POUSSE AUTOUR : la largeur du badge est celle de sa
+            part de rangée, elle ne se mesure pas sur le mot. */
+        mot={suivi ? "Following" : "Follow"}
       />
       {/*  §1 (nº 396) — L'INVITATION, POSÉE PAR LE BOUTON LUI-MÊME.
            « Suivre » n'existe qu'à UN endroit du code (ContenuFiche),
