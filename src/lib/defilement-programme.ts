@@ -219,6 +219,8 @@ type GardeDePosition = {
   annulations: number;
   /** §2 (nº 881) — voir `armerLaGardeDePosition`. */
   ecartMax?: number;
+  /** §1 (nº 882) — voir `armerLaGardeDePosition`. */
+  tenirJusquAuGeste?: boolean;
 };
 let garde: GardeDePosition | null = null;
 let veilleusePosee = false;
@@ -246,7 +248,25 @@ export function armerLaGardeDePosition(
    * malentendu exact ; le plafond est ce qui manquait pour distinguer
    * les deux, sans avoir à deviner qui appelle.
    */
-  ecartMax?: number
+  ecartMax?: number,
+  /**
+   * ██ §1 (nº 882) — TENIR JUSQU'AU PREMIER GESTE, ET PAS DOUZE FOIS ██
+   * ------------------------------------------------------------------
+   * LA GARDE ABANDONNE APRÈS DOUZE ANNULATIONS (`RECALAGES_ANNULES_MAX`)
+   * : c'est un garde-fou contre une boucle, et il vaut pour tous ses
+   * appelants d'origine. SUR UNE ARRIVÉE DE PAGE, IL NE SUFFIT PAS —
+   * WebKit (les navigateurs de l'iPhone) recale le défilement à chaque
+   * étape tardive de la mise en page : la barre d'adresse qui se replie,
+   * les polices qui arrivent, `visualViewport` qui change de taille.
+   * Douze annulations peuvent partir en une seconde, et le treizième
+   * recalage passe. Le propriétaire le mesure : « la page bouge encore
+   * vers le haut au doigt ».
+   * AVEC CE DRAPEAU, la garde ne compte plus : elle tient jusqu'au
+   * PREMIER GESTE du visiteur (le vrai relâchement, `auDebutDuGeste`),
+   * jusqu'au changement d'adresse, ou jusqu'au premier écart plus grand
+   * que son plafond — trois sorties, toutes franches.
+   */
+  tenirJusquAuGeste?: boolean
 ): void {
   if (typeof window === "undefined") return;
   garde = {
@@ -255,6 +275,7 @@ export function armerLaGardeDePosition(
     adresse: window.location.pathname + window.location.search,
     annulations: 0,
     ecartMax,
+    tenirJusquAuGeste,
   };
   poserLaVeilleuse();
   //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
@@ -335,7 +356,9 @@ function surDefilementSousGarde(): void {
     return;
   }
   g.annulations += 1;
-  if (g.annulations > RECALAGES_ANNULES_MAX) {
+  //  §1 (nº 882) — le compte ne vaut que pour les gardes ordinaires :
+  //  celle d'une arrivée tient jusqu'au geste (voir son drapeau).
+  if (!g.tenirJusquAuGeste && g.annulations > RECALAGES_ANNULES_MAX) {
     garde = null;
     return;
   }

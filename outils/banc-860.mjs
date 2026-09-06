@@ -108,12 +108,31 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
         quelques styles, sa page est plus courte. On descend AUSSI LOIN
         QUE LA PAGE LE PERMET, et l'on vérifie que CE nombre-là revient —
         la règle est l'indépendance, pas un chiffre. */
+    /*  ⚠️ ON DESCEND COMME UN VISITEUR — LA MOLETTE D'ABORD, LA POSITION
+        ENSUITE (mise au pas de la nº 882, motif des bancs 875 et 882).
+        DEUX RAISONS, et la seconde est nouvelle :
+         · un `scrollTo` programmé n'est pas un geste : la garde du haut
+           (armée sur TOUTE arrivée depuis la nº 882) le prend pour un
+           recalage de navigateur et repose zéro, à raison ;
+         · `window.scrollTo(0, y)` SANS `behavior` hérite du défilement
+           doux global du site : il descend par petits pas, et le premier
+           pas tient dans le plafond de quarante pixels de la garde —
+           qui l'annule avant qu'il ne s'éloigne. La molette lève la
+           garde (c'est un geste), et la pose exacte est instantanée.
+        La règle mesurée ici — chaque page garde SA position — ne change
+        pas d'un pixel. */
     const bas = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-    await page.evaluate((c) => window.scrollTo(0, c), Math.min(800, bas));
-    await page.waitForTimeout(700);
-    const surTattoo = await page.evaluate(() => Math.round(window.scrollY));
+    const descendre = async (y) => {
+      await page.mouse.wheel(0, Math.max(60, y));
+      await page.waitForTimeout(400);
+      await page.evaluate((c) => window.scrollTo({ top: c, left: 0, behavior: "instant" }), y);
+      await page.waitForTimeout(500);
+      return page.evaluate(() => Math.round(window.scrollY));
+    };
+    const surTattoo = await descendre(Math.min(800, bas));
     verif("on descend dans Tattoo", surTattoo > 100, `${surTattoo} px (page défilable sur ${bas})`);
 
+    const etapesAvant = await page.evaluate(() => history.length);
     const aller = async (vers) => {
       await page.locator(`[data-va-et-vient-nature] a[href='${vers}']`).tap();
       await page.waitForFunction((c) => location.pathname === c, vers, { timeout: 20000 });
@@ -123,22 +142,32 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
     const arriveeFlash = await aller("/flash");
     verif("Flash s'ouvre EN HAUT : la position de Tattoo ne l'a pas suivi",
       arriveeFlash === 0, `${arriveeFlash} px`);
-    await page.evaluate(() => window.scrollTo(0, 300));
-    await page.waitForTimeout(700);
+    await descendre(300);
     const retourTattoo = await aller("/");
     verif("revenir à Tattoo rend SA place, pas celle de Flash",
       retourTattoo === surTattoo, `${retourTattoo} px (laissé à ${surTattoo})`);
     const retourFlash = await aller("/flash");
     verif("et revenir à Flash rend la sienne",
       retourFlash === 300, `${retourFlash} px (laissé à 300)`);
-    /*  ET LE RETOUR DU NAVIGATEUR MARCHE COMME PARTOUT : ce sont deux
-        pages, l'historique les traverse. */
-    await page.goBack();
-    await page.waitForTimeout(1600);
-    const arriere = await sonder(page);
-    verif("le retour du navigateur ramène à l'autre page, à sa place",
-      arriere.adresse === "/" && arriere.y === surTattoo,
-      `${arriere.adresse} à ${arriere.y} px`);
+    /*  ██ MISE AU PAS DE LA nº 875 (faite à la nº 882) ██
+        CE QUI ÉTAIT ÉCRIT ICI : « le retour du navigateur ramène à
+        l'autre page, à sa place — ce sont deux pages, l'historique les
+        traverse ». CETTE ATTENTE EST MORTE À LA nº 875, et c'est une
+        règle du propriétaire : changer d'onglet REMPLACE l'étape, il
+        n'en ajoute jamais — trois allers-retours ne coûtent donc AUCUNE
+        étape, et le retour ramène à ce qu'il y avait AVANT l'accueil
+        (ici : rien, le banc y est arrivé par une adresse tapée).
+        POURQUOI ELLE PASSAIT ENCORE : le toucher du va-et-vient posait,
+        à son insu, le CRAN du filet de retour (RetourGaranti) — une
+        étape de plus, à l'adresse de l'accueil, que ce `goBack` prenait
+        pour « l'autre page ». C'est exactement le défaut que le
+        propriétaire a mesuré sur son iPhone à la nº 882 (le retour qui
+        repasse par chaque onglet visité), et il est fermé.
+        CE QU'ON MESURE DÉSORMAIS, et c'est la vraie règle : les trois
+        touchers n'ont coûté aucune étape. */
+    verif("les trois touchers du va-et-vient n'ont coûté aucune étape (nº 875)",
+      (await page.evaluate(() => history.length)) === etapesAvant,
+      `${etapesAvant} → ${await page.evaluate(() => history.length)}`);
   } catch (e) {
     verif("déroulement du banc 860 (§2)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

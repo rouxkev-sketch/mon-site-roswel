@@ -266,6 +266,17 @@ export function RetourGaranti() {
       if (etat?.[MARQUE]) {
         return;
       }
+      /*  §2 (nº 882) — UN SEUL CRAN PAR DOCUMENT, ET C'EST DÉJÀ CE QUE
+          CE FICHIER DIT (§4 nº 352 : « le CRAN vit avec le DOCUMENT »).
+          Le drapeau existait, il n'était que CONSTATÉ (la ligne du
+          journal, plus bas) — jamais opposé. Or le test au-dessus ne
+          suffit plus depuis que le routeur jette la marque à chaque
+          remplacement (§1 nº 423) : sans ce garde-fou, un second cran
+          peut se poser dans le même document dès que la question du
+          plancher redit « rien derrière moi ». */
+      if (cranPoseDansCeDocument) {
+        return;
+      }
       /*  ██ §2 (nº 438) — PAS DE CRAN PAR-DESSUS L'ÉTAPE D'UNE SURFACE ██
           ------------------------------------------------------------
           C'EST LE DOUBLON DU RELEVÉ nº 438. À pile SATURÉE (100, le
@@ -400,6 +411,50 @@ export function RetourGaranti() {
      * GESTE QUI NE NAVIGUE PAS N'ÉCRIT RIEN DANS L'HISTORIQUE. Le cran
      * est une entrée d'historique posée au nom du visiteur ; on ne la
      * pose pas sur un bouton qui ne fait que changer un état.
+     *
+     * ██ §2 (nº 882) — NI SUR UN GESTE QUI REMPLACE L'ÉTAPE ██
+     * ------------------------------------------------------------------
+     * LA RÉGRESSION DU PROPRIÉTAIRE, sur son iPhone : depuis un profil,
+     * le retour repassait par CHAQUE onglet visité (Profile, Portfolio,
+     * Flash) avant de revenir au fil des cartes — la règle de la nº 875
+     * (« changer d'onglet REMPLACE l'étape ») semblait morte. Elle ne
+     * l'est pas : le banc 875 la mesure encore verte (45 vérifications,
+     * Chromium). C'ÉTAIT LE CRAN, et voici la chaîne, mesurée à cette
+     * passe (sonde 882d) :
+     *  1. le toucher d'un onglet est un APPUI FRANC : cet écouteur pose
+     *     le cran, en capture, JUSTE AVANT le clic du lien (nº 350) ;
+     *  2. le lien remplace ensuite l'étape du sommet — c'est-à-dire LE
+     *     CRAN qu'on vient de poser. La pile a gagné une étape, à
+     *     l'adresse du nouvel onglet ;
+     *  3. le routeur de Next, en remplaçant, JETTE la marque du cran
+     *     (`preserveCustomHistoryState: false`, voir le §1 nº 423) : le
+     *     premier test de `decider` ne voit plus rien ;
+     *  4. il reste `aucunePageDuSiteDerriere` pour retenir le geste
+     *     suivant — et elle le fait sur Chromium, où la pile a grandi
+     *     au-dessus du plancher. SUR SAFARI, NON : une arrivée de
+     *     DOCUMENT relève le plancher à la hauteur du moment (nº 349),
+     *     et Safari fait des arrivées de document là où Chromium garde
+     *     une navigation douce (mesuré nº 868). La réponse redevient
+     *     « rien derrière moi », et l'onglet suivant repose un cran.
+     * Un onglet touché, une étape de plus : exactement ce que le
+     * propriétaire décrit.
+     * LA RÈGLE, ET ELLE PROLONGE CELLE DE LA nº 868 SANS LA CONTREDIRE :
+     * un geste qui n'AJOUTE PAS d'étape — parce qu'il ne navigue pas,
+     * ou parce qu'il REMPLACE celle-ci — n'a rien à écrire dans
+     * l'historique. Les liens des va-et-vient portent donc le même
+     * marqueur (`data-sans-cran`, posé dans OngletsLigne) ; le cran
+     * attend, comme toujours, l'appui franc SUIVANT.
+     * ⚠️ CE QU'ON N'A PAS TOUCHÉ, ET POURQUOI : la vraie racine est le
+     * PLANCHER qui se relève au milieu d'une visite continue. La nº 867
+     * l'avait corrigé là, et la nº 868 l'a ANNULÉ sur ordre du
+     * propriétaire, après une régression grave sur son téléphone —
+     * « NE PAS LA REMETTRE SANS LE PROPRIÉTAIRE » (lib/bas-de-la-pile).
+     * On répare donc en aval, sans y toucher.
+     * ⚠️ CE QUE ÇA COÛTE, dit franchement : sur une page ouverte par un
+     * lien partagé (rien du site derrière), un visiteur qui ne toucherait
+     * QUE des onglets n'aurait pas de cran — un retour le sortirait du
+     * site. C'est le comportement normal du web avant le premier geste
+     * (nº 350), et le premier appui ailleurs le rétablit.
      * COMMENT : le bouton se NOMME (`data-sans-cran`, chez lui), et cet
      * écouteur ne lit pas les gestes qui commencent ou finissent
      * dedans. Le composant ne connaît ni le bouton ni sa forme — il ne

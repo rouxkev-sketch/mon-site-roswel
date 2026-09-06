@@ -15,6 +15,14 @@ import {
 //  §1 (nº 661) — la garde de position : le mécanisme du site qui TIENT
 //  une pose tant qu'aucun geste ne reprend la main (nº 427/626).
 import { armerLaGardeDePosition } from "@/lib/defilement-programme";
+//  §1 (nº 882) — la pose de zéro dans ses deux écritures, le maintien
+//  du haut aux moments tardifs de WebKit, et le plafond qu'ils
+//  partagent avec la garde (une seule écriture pour les trois).
+import {
+  ECART_DE_RECALAGE_PX,
+  poserLeHaut,
+  tenirLeHautDeLaPage,
+} from "@/lib/arrivee-en-haut";
 import { souscrireAdresse } from "@/lib/adresse-courante";
 //  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
 //  (nº 652), et le journal des sondes.
@@ -74,111 +82,115 @@ import { estLaMosaique } from "@/lib/chemin-recherche";
  * ⚠️ ADRESSE DÉJÀ COMMISE (rechargement, routeur en avance) : la
  * remontée part tout de suite, exactement comme avant cette passe.
  */
-function remonterALAdresseCommise(
-  chemin: string,
+function remonterALAdresseCommise(chemin: string): () => void {
   /**
-   * ██ §1 (nº 661) — LE HAUT EST-IL GARANTI, OU SEULEMENT POSÉ ? ██
-   * ------------------------------------------------------------------
-   * LE DÉFAUT MESURÉ (boîte noire du propriétaire, 27-08 12:42) : la
-   * remontée joue à l'instant de la navigation, sur un document ENCORE
-   * COURT — 788 px depuis « Ma sélection » vide. Vingt-sept
-   * millisecondes plus tard, le contenu de l'accueil arrive, le
-   * document passe à 1790, et la page se retrouve à 1002 px SANS
-   * qu'aucun mécanisme du site n'ait signé de pose : c'est le
-   * navigateur qui recale (restauration native de l'entrée
-   * d'historique, ou ancrage). Poser le haut ne suffit pas ; il faut
-   * le TENIR le temps que le contenu arrive.
-   * QUAND ON LE GARANTIT : quand l'arrivée en haut a été DÉCLARÉE
-   * (nº 429 + nº 446) — c'est-à-dire sur un geste qui va EN AVANT, et
-   * jamais sur un retour. La distinction reste posée par le geste,
-   * jamais déduite de l'adresse (la règle du propriétaire, nº 330).
-   * AVEC QUOI : la GARDE DE POSITION (lib/defilement-programme,
-   * nº 427/626) — le mécanisme du site dont c'est déjà tout le
-   * travail : « après une pose du site, la position TIENT tant que
-   * l'utilisateur n'a pas repris la main ». Elle se lève au premier
-   * geste, meurt si l'adresse change, et cède au bout de douze
-   * recalages. Rien n'est inventé ici.
+   * ██ §1 (nº 661 · nº 875 · nº 881 · nº 882) — POSER NE SUFFIT PAS ██
+   * ==================================================================
+   * L'HISTOIRE DE CETTE LIGNE, ÉCRITE UNE FOIS POUR TOUTES — quatre
+   * passes ont tourné autour, et la suivante ne doit pas recommencer.
    *
-   * ██ §2 (nº 875) — ET ELLE RESTE BORNÉE AUX ARRIVÉES DÉCLARÉES ██
-   * ------------------------------------------------------------------
-   * ESSAYÉ, MESURÉ, ÉCARTÉ — pour que la passe suivante n'ait pas à le
-   * refaire. La 875 a armé la garde sur TOUTE remontée d'arrivée, pour
-   * fermer la fenêtre où le document grandit après la pose (le défaut
-   * de la nº 661, plus haut). LE COÛT EST TROP LARGE : la garde ne
-   * distingue pas un recalage du navigateur d'un DÉFILEMENT PROGRAMMÉ
-   * légitime, et tant que le visiteur n'a pas fait un geste, tout
-   * défilement programmé se fait annuler — `scrollIntoView` (le champ
-   * de localité, ChampLocalisation), une pose brute du site
-   * (GrilleTatoueurs rend sa place à la réouverture d'une fenêtre),
-   * et jusqu'aux outils du navigateur. Relevé au banc : trois bancs
-   * existants (868, 869, 873) sont tombés d'un coup, tous sur un
-   * défilement programmé avant le premier geste.
-   * LA CAUSE DU DÉFAUT DE LA nº 875 ÉTAIT AILLEURS, et elle est
-   * fermée : la mémoire rangeait et rendait des places de quelques
-   * pixels (voir PLANCHER_DE_POSITION_PX, lib/navigation-session).
-   * ⚠️ ET LA RESTAURATION NATIVE DU NAVIGATEUR N'EST PAS EN CAUSE SUR
-   * UNE OUVERTURE NEUVE : « auto » (nº 363) ne rend une position que
-   * sur un retour, une avance ou un rechargement — sur un « navigate »,
-   * elle n'a rien à rendre. Vingt ouvertures, web et doigt, à zéro
-   * (banc 875).
+   * nº 661 — LE DÉFAUT MESURÉ (boîte noire du propriétaire, 27-08
+   * 12:42) : la remontée joue à l'instant de la navigation, sur un
+   * document ENCORE COURT — 788 px depuis « Ma sélection » vide. Vingt-
+   * sept millisecondes plus tard, le contenu arrive, le document passe
+   * à 1790, et la page se retrouve à 1002 px SANS qu'aucun mécanisme du
+   * site n'ait signé de pose : c'est le navigateur qui recale. Poser le
+   * haut ne suffit pas ; il faut le TENIR le temps que le contenu
+   * arrive. D'où la GARDE DE POSITION (lib/defilement-programme,
+   * nº 427/626), dont c'est tout le travail.
+   *
+   * nº 875 — ARMÉE PARTOUT, SANS PLAFOND : trois bancs sont tombés
+   * d'un coup (868, 869, 873), tous sur un DÉFILEMENT PROGRAMMÉ
+   * légitime avant le premier geste (`scrollIntoView` du champ de
+   * localité, une place que GrilleTatoueurs repose). La garde ne
+   * distinguait pas un recalage d'une intention. On l'avait donc
+   * bornée aux seules arrivées DÉCLARÉES (nº 429 + nº 446).
+   *
+   * nº 881 — LE PLAFOND EST CE QUI MANQUAIT : quarante pixels
+   * (`ECART_DE_RECALAGE_PX`). Un recalage de moteur se compte en
+   * pixels, une intention en centaines — la garde n'a plus besoin de
+   * deviner qui appelle, et les trois bancs de la nº 875 tiennent.
+   *
+   * nº 882 — DONC ELLE EST ARMÉE SUR TOUTE ARRIVÉE QUI POSE ZÉRO, et
+   * la borne « seulement les arrivées déclarées » tombe : c'est la
+   * consigne du propriétaire, mesurée sur son iPhone (Safari ET
+   * Chrome — les deux sont WebKit), où le défaut se voit sur TOUTES
+   * les pages et pas seulement sur les fiches. Trois pièces, et il en
+   * faut trois :
+   *  · LA POSE, dans ses deux écritures (`poserLeHaut`) ;
+   *  · LA GARDE, qui répond aux événements `scroll`, tenue jusqu'au
+   *    PREMIER GESTE et plus seulement douze recalages ;
+   *  · LE MAINTIEN (`tenirLeHautDeLaPage`), qui répond aux MOMENTS où
+   *    WebKit recale sans qu'aucun `scroll` ne parte : après la
+   *    peinture, à `load`, à `fonts.ready`, à chaque redimensionnement
+   *    de `visualViewport`.
+   * Les trois visent la même valeur — zéro — et se lèvent aux mêmes
+   * trois sorties : le premier geste, un changement d'adresse, un
+   * écart plus grand que le plafond.
+   *
+   * ⚠️ CE QUI N'EST PAS EN CAUSE, et qu'il est inutile de re-suspecter :
+   * la restauration native (`scrollRestoration = "auto"`, nº 363) ne
+   * rend une position que sur un retour, une avance ou un rechargement
+   * — sur une ouverture neuve elle n'a rien à rendre (vingt ouvertures
+   * mesurées, banc 875) ; et la mémoire par adresse ne range plus les
+   * places de quelques pixels (PLANCHER_DE_POSITION_PX, nº 875).
    */
-  garantirLeHaut: boolean,
-  /** §2 (nº 881) — le plafond de la garde, quand elle est armée. */
-  ecartMaximalDefendu?: number
-): (() => void) | undefined {
+  let relacherLeHaut: () => void = () => {};
   const remonter = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    poserLeHaut();
     //  §1 (nº 661) — LA GARDE EST ARMÉE ICI, ET PAS AVANT : à cet
     //  instant l'adresse est commise (c'est toute la raison d'être de
     //  cette fonction), donc la garde retient la BONNE page. Armée
     //  plus tôt, elle aurait retenu celle qu'on quitte et serait morte
     //  au changement d'adresse.
-    if (garantirLeHaut) {
-      armerLaGardeDePosition(
-        0,
-        "arrival at the top intended (no. 446)",
-        //  §2 (nº 881) — LA GARDE NE DÉFEND QUE LES PETITS ÉCARTS ici :
-        //  le défaut est « quelques pixels » (un recalage tardif du
-        //  navigateur), et un mouvement plus ample est VOULU — le site
-        //  qui repose une place, un banc qui mesure. Quarante pixels :
-        //  large pour un recalage, dérisoire pour une intention. Sans ce
-        //  plafond, la garde annulait le défilement programmé d'une page
-        //  Portfolio (banc 873, relevé à cette passe).
-        ecartMaximalDefendu
-      );
-    }
+    armerLaGardeDePosition(
+      0,
+      "arrival at the top (no. 882)",
+      ECART_DE_RECALAGE_PX,
+      true
+    );
+    relacherLeHaut = tenirLeHautDeLaPage();
+  };
+  let retirerLesEcoutes: () => void = () => {};
+  /** LE RANGEMENT RENDU À REACT : les écoutes d'adresse ET le maintien
+      du haut. Appelé au démontage — donc à chaque changement de page. */
+  const ranger = () => {
+    retirerLesEcoutes();
+    relacherLeHaut();
   };
   if (window.location.pathname === chemin) {
     remonter();
-    return undefined;
+    return ranger;
   }
-  let retirer: () => void = () => {};
   let fait = false;
   const desAConfirmation = () => {
     if (fait || window.location.pathname !== chemin) return;
     fait = true;
-    retirer();
+    retirerLesEcoutes();
     remonter();
   };
   const desabonner = souscrireAdresse(desAConfirmation);
-  //  LE FILET : deux images au plus, puis tout est retiré — aucune
-  //  écoute ne survit à son battement. (Adresse jamais commise —
-  //  navigation abandonnée : on ne remonte rien, la garde d'adresse
-  //  protège la page où l'on est resté.)
+  //  LE FILET : deux images au plus, puis toutes les ÉCOUTES sont
+  //  retirées — aucune ne survit à son battement. (Le maintien du
+  //  haut, lui, vit plus longtemps : c'est sa raison d'être ; il ne
+  //  part qu'au rangement, au premier geste ou au changement
+  //  d'adresse.) Adresse jamais commise — navigation abandonnée : on
+  //  ne remonte rien, la garde d'adresse protège la page où l'on est
+  //  resté.
   let secondeImage = 0;
   const premiereImage = requestAnimationFrame(() => {
     desAConfirmation();
     secondeImage = requestAnimationFrame(() => {
       desAConfirmation();
-      retirer();
+      retirerLesEcoutes();
     });
   });
-  retirer = () => {
+  retirerLesEcoutes = () => {
     desabonner();
     cancelAnimationFrame(premiereImage);
     cancelAnimationFrame(secondeImage);
   };
-  return retirer;
+  return ranger;
 }
 
 /**
@@ -226,15 +238,6 @@ function remonterALAdresseCommise(
  * peinture — il n'y a plus d'intervalle où quoi que ce soit puisse
  * s'afficher de travers.
  */
-
-/**
- * §2 (nº 881) — L'AMPLITUDE QU'UN RECALAGE DE NAVIGATEUR PEUT AVOIR.
- * Le propriétaire décrit « quelques pixels » ; quarante est large pour
- * un recalage et dérisoire pour une intention (un défilement voulu se
- * compte en centaines). Au-delà, la garde s'efface — voir
- * `armerLaGardeDePosition`.
- */
-const ECART_DEFENDU_PX = 40;
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
 const useEffetAvantPeinture =
@@ -382,22 +385,26 @@ export function DefilementEnHaut() {
        * LE TROU ÉTAIT ENTRE 5 ET 1 : on posait zéro UNE FOIS, puis on
        * lâchait. Tout recalage tardif du navigateur (cas 1) tombait
        * alors sans opposition — d'où « quelques pixels », et pas la
-       * position entière. LA GARDE DE POSITION (nº 661) existe
-       * précisément pour cela : elle tient la valeur posée douze cents
-       * millisecondes, et LE PREMIER GESTE la lève (lib/defilement-
-       * programme). On l'arme donc ici.
-       * ⚠️ ICI, ET PAS SUR TOUTES LES ARRIVÉES : la nº 875 l'avait armée
-       * partout et trois bancs étaient tombés (868, 869, 873) — la garde
-       * ne distingue pas un recalage du navigateur d'un défilement
-       * programmé légitime. SUR UNE FICHE, IL N'Y EN A AUCUN : cette
-       * branche est atteinte quand rien n'est à restituer (les quatre
-       * lectures ci-dessus ont toutes dit non), et une fiche n'ouvre ni
-       * champ de localité, ni liste à faire venir à l'écran. C'est
-       * l'écart exact entre « armer partout » et « armer là où le
-       * propriétaire mesure le défaut ».
+       * position entière.
+       *
+       * ██ §1 (nº 882) — ET LE CAS 1 N'ARRIVE PAS UNE FOIS, MAIS SIX ██
+       * --------------------------------------------------------------
+       * CE QUE LA nº 881 N'AVAIT PAS VU, et que le propriétaire mesure
+       * sur son iPhone (Safari ET Chrome — les deux sont WebKit) : le
+       * défaut est sur TOUTES les pages, pas seulement sur les fiches,
+       * et le moteur ne recale pas à un instant mais à CHAQUE étape
+       * tardive de la mise en page — le repli de la barre d'adresse,
+       * `visualViewport` qui change de taille, les polices qui
+       * arrivent, le rebond élastique, les images qui prennent leur
+       * place. Certaines n'émettent MÊME PAS d'événement `scroll` : la
+       * garde, qui n'écoute que celui-là, ne se réveille jamais.
+       * LA RÉPONSE EST DANS `remonterALAdresseCommise` (en-tête) et
+       * elle vaut désormais pour TOUTES les arrivées : la pose dans ses
+       * deux écritures, la garde tenue jusqu'au premier geste, et le
+       * maintien du haut à chacun de ces moments-là.
        */
       //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-      return remonterALAdresseCommise(chemin, true, ECART_DEFENDU_PX);
+      return remonterALAdresseCommise(chemin);
     }
 
     /*  ██ nº 812 — SAUF SI L'ARRIVÉE EN HAUT EST DÉCLARÉE ██
@@ -455,16 +462,27 @@ export function DefilementEnHaut() {
     // La fenêtre de fiche est ouverte (ou vient de changer l'adresse) :
     // la grille reste où elle est.
     if (document.documentElement.dataset.fenetreFiche) return;
-    //  §1 (nº 653) — LA REMONTÉE, ÉCRITE ELLE AUSSI : c'est la ligne
-    //  qui doit MANQUER quand on passe de l'accueil à la recherche.
-    /*  §1 (nº 661) — LA DÉCLARATION EST LUE, PAS CONSOMMÉE. C'est la
-        règle de la chaîne depuis la nº 446 : ce composant LIT,
-        `MemoireNavigation` — dernier de la chaîne — CONSOMME. Deux
-        consommateurs pour un jeton, ce serait une garantie perdue sur
-        deux. */
-    const voulue = arriveeEnHautVoulue();
+    /*  §1 (nº 882) — TOUTE ARRIVÉE QUI POSE ZÉRO TIENT SON ZÉRO.
+        ==============================================================
+        CE QUI ÉTAIT ÉCRIT ICI : la déclaration d'arrivée en haut
+        (nº 446) était LUE — jamais consommée — et ne servait qu'à
+        décider si la pose serait TENUE (`garantirLeHaut`). Une arrivée
+        non déclarée posait zéro et lâchait aussitôt.
+        POURQUOI LA LECTURE S'EN VA. Le propriétaire mesure le défaut
+        sur TOUTES les pages, déclarées ou non : la distinction ne
+        décrivait pas le défaut, elle décrivait la prudence de la
+        nº 875 (armer la garde partout SANS plafond cassait trois
+        bancs). Le plafond de la nº 881 a réglé cela une bonne fois ;
+        il n'y a plus rien à borner ici. Ce qui NE change pas : les
+        quatre sorties ci-dessus — restitution demandée, mémoire,
+        script d'avant peinture, fenêtre de fiche — décident toujours
+        seules SI l'on pose. On ne pose que faute de position
+        mémorisée ; c'est très exactement la règle du propriétaire.
+        ⚠️ ET LA DÉCLARATION RESTE LUE PLUS HAUT (le mouvement
+        accueil ↔ recherche) : c'est `MemoireNavigation`, dernier de la
+        chaîne, qui la CONSOMME — jamais ce composant (nº 446). */
     //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-    return remonterALAdresseCommise(chemin, voulue);
+    return remonterALAdresseCommise(chemin);
   }, [chemin]);
 
   return null;

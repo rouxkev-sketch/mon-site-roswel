@@ -385,6 +385,29 @@ export function OngletsLigne({
                * non — la mémoire ne voit aucune différence.
                */
               replace
+              /**
+               * ██ §1 (nº 882) — ET IL NE POSE PAS LE CRAN DU FILET ██
+               * ==========================================================
+               * LA RÉGRESSION QUE CE MARQUEUR FERME, mesurée par le
+               * propriétaire sur son iPhone : depuis un profil, le retour
+               * repassait par CHAQUE onglet visité avant de revenir au
+               * fil des cartes. Le `replace` juste au-dessus n'était pas
+               * en cause (banc 875, 45 vérifications, toujours vert) :
+               * c'est le CRAN du filet de retour (RetourGaranti) qui se
+               * posait sur le toucher de l'onglet — appui franc, capture,
+               * juste avant le clic — et que ce même clic REMPLAÇAIT
+               * ensuite. Une étape de plus par onglet touché. La chaîne
+               * complète, avec sa moitié WebKit, est écrite là-bas
+               * (§2 nº 882).
+               * LA RÈGLE : un geste qui REMPLACE l'étape n'en ajoute pas
+               * une. Le va-et-vient est le seul lien du site qui remplace
+               * — il porte donc le marqueur que la nº 868 a créé pour les
+               * gestes sans navigation, et pour la même raison de fond.
+               * ⚠️ LE MARQUEUR EST NOMMÉ, PAS COPIÉ : `RetourGaranti` ne
+               * connaît ni ce composant ni sa forme, il ne lit que
+               * l'attribut (sa note le dit depuis la nº 868).
+               */
+              data-sans-cran=""
               onClick={option.surClic}
               aria-current={actif ? "page" : undefined}
               aria-label={option.nom}
