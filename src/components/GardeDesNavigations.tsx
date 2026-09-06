@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+//  nº 885 — le journal du diagnostic : désarmé, un test de booléen.
+import { noterDiag } from "@/lib/journal-diagnostic";
 
 /**
  * ██ LA GARDE DES NAVIGATIONS — ce qui reste du signe de chargement ██
@@ -52,6 +54,31 @@ import { usePathname, useSearchParams } from "next/navigation";
     navigation de document, réponse perdue) ne doit pas devenir une
     attente fantôme qui avalerait un clic légitime bien plus tard. */
 const ATTENTE_MAXIMALE_MS = 12000;
+
+/**
+ * ██ §1 (nº 885) — L'AVALEMENT NE DURE PLUS DOUZE SECONDES ██
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE A MESURÉ SUR SON IPHONE (relevé nº 884) : sur
+ * une page qui vient d'arriver, les touchers sur Portfolio, Flash et
+ * le logo sont REÇUS par les bons éléments — et aucune navigation ne
+ * part. La loupe, elle, répond : c'est le seul lien du site marqué
+ * `data-sans-navigation`, donc le seul que cette garde laisse passer
+ * sans rien armer.
+ * CE QUE CETTE GARDE FAIT DE CE DÉFAUT : elle l'AMPLIFIE. Une première
+ * navigation qui se perd laisse son attente armée ; tout re-clic vers
+ * la même destination est alors AVALÉ (`preventDefault` +
+ * `stopPropagation`) — pendant DOUZE SECONDES. L'utilisateur, lui,
+ * touche deux ou trois fois : il ne voit qu'une barre morte. Deux
+ * passes ont déjà payé ce fantôme (nº 627 « la barre paraissait
+ * morte », nº 772 « rien pendant douze secondes »).
+ * LA RÈGLE : l'avalement ne couvre que L'IMPATIENCE — deux touchers
+ * du même lien à quelques dixièmes d'intervalle. Au-delà, un second
+ * toucher est une INTENTION, et il doit passer, quitte à poser un
+ * doublon d'historique (le risque que la nº 772 avait déjà accepté).
+ * ⚠️ L'ATTENTE, ELLE, GARDE SES DOUZE SECONDES : c'est son garde-fou
+ * de nettoyage, il ne fait de mal à personne.
+ */
+const AVALEMENT_MAXIMAL_MS = 1500;
 
 export function GardeDesNavigations() {
   /*  La frontière <Suspense> est ICI, dans le composant : la mise en
@@ -127,6 +154,7 @@ function Garde() {
     ) {
       return;
     }
+    if (attente.current) noterDiag(`NAVIGATION ABOUTIE · ${ici}`);
     attente.current = null;
     window.clearTimeout(minuteurLimite.current);
   }, [pathname, parametres]);
@@ -210,14 +238,16 @@ function Garde() {
       if (
         enRoute &&
         enRoute.adresse === adresse &&
-        Date.now() - enRoute.depuis < ATTENTE_MAXIMALE_MS
+        Date.now() - enRoute.depuis < AVALEMENT_MAXIMAL_MS
       ) {
+        noterDiag(`CLIC AVALÉ · ${adresse} déjà en route depuis ${Date.now() - enRoute.depuis} ms`);
         evenement.preventDefault();
         evenement.stopPropagation();
         return;
       }
       //  L'armement reste SYNCHRONE (l'avalement du re-clic de la 441
       //  ne perd pas une milliseconde)…
+      noterDiag(`NAVIGATION ARMÉE · ${adresse}`);
       demarrer(adresse, adresseVisee.pathname);
       //  §1 (nº 442) — …mais à la FIN du clic, on lit qui a pris la
       //  navigation. Le Link de Next et les cartes préviennent le

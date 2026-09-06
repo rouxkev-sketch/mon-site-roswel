@@ -21,6 +21,7 @@ import { armerLaGardeDePosition } from "@/lib/defilement-programme";
 import {
   DUREE_DE_LA_GARDE_MS,
   ECART_DE_RECALAGE_PX,
+  neutraliserLeDefilementAvantDeQuitter,
   poserLeHaut,
   tenirLeHautDeLaPage,
 } from "@/lib/arrivee-en-haut";
@@ -281,6 +282,13 @@ export function DefilementEnHaut() {
     window.addEventListener("popstate", marquer);
     return () => window.removeEventListener("popstate", marquer);
   }, []);
+
+  /*  §1 (nº 885) — ON QUITTE UNE PAGE À ZÉRO quand elle n'était
+      descendue que de quelques pixels : l'entrée d'historique naît
+      alors en haut, et aucun moteur n'a plus rien à restituer. C'est
+      la MÊME question que celle de ce composant — l'arrivée en haut —,
+      prise à l'autre bout ; elle vit donc ici, avec lui. */
+  useEffect(() => neutraliserLeDefilementAvantDeQuitter(), []);
 
   useEffetAvantPeinture(() => {
     /*  §1 (nº 653) — LE CHEMIN D'OÙ L'ON VIENT, RELEVÉ AVANT TOUTE

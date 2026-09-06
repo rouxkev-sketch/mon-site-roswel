@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { souscrireAdresse } from "@/lib/adresse-courante";
 import { estCourrielAdmin } from "@/lib/courriel-admin";
+import { positionGardee } from "@/lib/defilement-programme";
 import {
   armerLeDiagnostic,
   auJournalDiagnostic,
   diagnosticArme,
+  LIGNES_GARDEES,
   lignesDuDiagnostic,
   nommerLeNoeud,
   noterDiag,
@@ -229,6 +231,104 @@ export function BandeauDiagnostic() {
       setReleve(relever());
       setJournal(lignesDuDiagnostic());
     };
+    /*  ██ §1 (nº 885) — LES TROIS JOURNAUX QUE LE PROPRIÉTAIRE DEMANDE ██
+        ==============================================================
+        « Ajoute au diag le journal des événements click, des appels de
+        navigation et de tout changement de scrollY après extinction de
+        la garde. » Les voici, tous posés ICI — donc jamais posés quand
+        le bandeau n'est pas armé.
+        CE QUE CHACUN TRANCHE :
+         · LE CLIC, lu DEUX FOIS — en capture au document (avant tout
+           le monde) et en bulle à la fenêtre (après tout le monde) :
+           si la ligne de capture existe sans celle de bulle, quelqu'un
+           a ARRÊTÉ la propagation ; si les deux existent avec
+           « empêché », quelqu'un a prévenu le geste ; s'il n'y a
+           AUCUNE ligne, le moteur n'a pas fabriqué de clic du tout —
+           et c'est alors le toucher qui a été converti en défilement ;
+         · LA FIN DU TOUCHER (`touchend` / `touchcancel`) : un
+           `touchcancel` dit que le moteur a repris le geste — la
+           signature exacte d'un tap avalé par un défilement ;
+         · LES APPELS DE NAVIGATION : `pushState`, `replaceState`
+           (enveloppés le temps du diagnostic), `popstate`, et chaque
+           changement d'adresse effectif. Un clic suivi d'aucun appel
+           dit que le routeur n'a pas été saisi ; un appel suivi
+           d'aucun changement d'adresse dit qu'il a échoué en silence ;
+         · LE DÉFILEMENT APRÈS LA GARDE : chaque changement de `scrollY`
+           est noté avec l'état de la garde — « garde 0 » quand elle
+           défend encore, « APRÈS GARDE » quand elle a rendu la main.
+           C'est là que se lisent les 31 px de WebKit. */
+    const surClicCapture = (evenement: MouseEvent) => {
+      const cible = evenement.target as Element | null;
+      const lien = cible?.closest?.("a[href]") as HTMLAnchorElement | null;
+      noterDiag(
+        `CLIC (capture) · ${nommerLeNoeud(cible)}` +
+          `${lien ? ` → ${lien.getAttribute("href")}` : " (aucun lien)"}` +
+          `${evenement.defaultPrevented ? " · DÉJÀ EMPÊCHÉ" : ""}`
+      );
+    };
+    const surClicBulle = (evenement: MouseEvent) => {
+      noterDiag(
+        `CLIC (bulle) · ${evenement.defaultPrevented ? "empêché (le site a pris la main)" : "NON empêché"}`
+      );
+    };
+    const surFinDeToucher = (evenement: TouchEvent) => {
+      noterDiag(
+        `${evenement.type === "touchcancel" ? "TOUCHER ANNULÉ PAR LE MOTEUR" : "TOUCHER FINI"} · ${
+          nommerLeNoeud(evenement.target as Element | null)
+        }`
+      );
+    };
+    const surTraversee = () => {
+      noterDiag(`POPSTATE · ${window.location.pathname}${window.location.search}`);
+    };
+    const surAdresse = () => {
+      noterDiag(`ADRESSE · ${window.location.pathname}${window.location.search}`);
+    };
+    let yPrecedent = Math.round(window.scrollY);
+    const surDefilement = () => {
+      const y = Math.round(window.scrollY);
+      if (y === yPrecedent) return;
+      const gardee = positionGardee();
+      noterDiag(
+        `DÉFILEMENT · ${yPrecedent} → ${y} · ${
+          gardee === null ? "APRÈS GARDE (plus personne ne défend)" : `garde sur ${gardee}`
+        }`
+      );
+      yPrecedent = y;
+    };
+    document.addEventListener("click", surClicCapture, true);
+    window.addEventListener("click", surClicBulle);
+    window.addEventListener("touchend", surFinDeToucher, { passive: true, capture: true });
+    window.addEventListener("touchcancel", surFinDeToucher, { passive: true, capture: true });
+    window.addEventListener("popstate", surTraversee);
+    window.addEventListener("scroll", surDefilement, { passive: true });
+    const quitterLAdresse = souscrireAdresse(surAdresse);
+    /*  LES APPELS DE NAVIGATION, ENVELOPPÉS LE TEMPS DU DIAGNOSTIC :
+        on appelle TOUJOURS l'original, on note ce qu'il a fait, et une
+        exception (le navigateur qui refuse, la limite d'appels de
+        WebKit) est écrite au lieu d'être perdue. Rendu à l'identique
+        au démontage. */
+    const originaux = {
+      pushState: window.history.pushState,
+      replaceState: window.history.replaceState,
+    };
+    for (const nom of ["pushState", "replaceState"] as const) {
+      const original = originaux[nom];
+      window.history[nom] = function (
+        this: History,
+        ...arguments_: Parameters<History["pushState"]>
+      ) {
+        const vers = arguments_[2];
+        try {
+          const retour = original.apply(this, arguments_);
+          noterDiag(`${nom.toUpperCase()} · ${vers ?? "(même adresse)"}`);
+          return retour;
+        } catch (erreur) {
+          noterDiag(`${nom.toUpperCase()} A ÉCHOUÉ · ${String(erreur).slice(0, 90)}`);
+          throw erreur;
+        }
+      };
+    }
     rafraichir();
     const minuteur = window.setInterval(rafraichir, RYTHME_MS);
     const quitterLeJournal = auJournalDiagnostic(rafraichir);
@@ -244,6 +344,15 @@ export function BandeauDiagnostic() {
       window.removeEventListener("resize", rafraichir);
       vv?.removeEventListener("resize", rafraichir);
       vv?.removeEventListener("scroll", rafraichir);
+      document.removeEventListener("click", surClicCapture, true);
+      window.removeEventListener("click", surClicBulle);
+      window.removeEventListener("touchend", surFinDeToucher, true);
+      window.removeEventListener("touchcancel", surFinDeToucher, true);
+      window.removeEventListener("popstate", surTraversee);
+      window.removeEventListener("scroll", surDefilement);
+      quitterLAdresse();
+      window.history.pushState = originaux.pushState;
+      window.history.replaceState = originaux.replaceState;
     };
   }, [actif]);
 
@@ -345,7 +454,7 @@ export function BandeauDiagnostic() {
             </div>
           ))}
           <div style={{ color: "#94a3b8", margin: "6px 0 2px" }}>
-            journal ({journal.length}/20)
+            journal ({journal.length}/{LIGNES_GARDEES})
           </div>
           {journal.map((ligne, rang) => (
             <div key={`${rang}-${ligne}`} style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>

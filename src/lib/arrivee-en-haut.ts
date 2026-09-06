@@ -80,6 +80,9 @@ import { auDebutDuGeste, unDoigtEstPose } from "@/lib/geste-toucher";
 //  nº 884 — le journal du diagnostic : désarmé, il ne coûte qu'un test
 //  de booléen (voir sa note).
 import { diagnosticArme, noterDiag } from "@/lib/journal-diagnostic";
+//  §1 (nº 885) — le site annonce ses propres mouvements (la barre fixe
+//  ne doit pas lire un geste dans une remise à zéro).
+import { annoncerMouvementDuSite } from "@/lib/defilement-programme";
 
 /**
  * ██ L'AMPLITUDE QU'UN RECALAGE DE MOTEUR PEUT AVOIR (nº 881-§2) ██
@@ -124,6 +127,90 @@ export function poserLeHaut(): void {
   if (diagnosticArme()) {
     noterDiag(`POSE ZÉRO · y ${avant} → ${Math.round(window.scrollY)}`);
   }
+}
+
+/**
+ * ██ §1 (nº 885) — ON NE COMBAT PLUS LES PIXELS : ON LES SUPPRIME ██
+ * ==================================================================
+ * CE QUE LE RELEVÉ DU PROPRIÉTAIRE MONTRE (Safari, iPhone, nº 884) :
+ * à l'arrivée d'une page, WebKit tente QUATRE FOIS de reposer la page
+ * à 31 px ; la garde annule les quatre ; la garde s'éteint au bout de
+ * sa seconde, et WebKit repose ses 31 px — d'où le « léger
+ * défilement » que l'œil voit.
+ *
+ * D'OÙ VIENNENT CES 31 PIXELS. De la page qu'on QUITTE : elle était
+ * défilée de 31 px, et une navigation douce crée sa nouvelle entrée
+ * d'historique AVEC LA POSITION DU MOMENT. WebKit la considère comme
+ * la position à restituer, et la repose dès qu'une mise en page
+ * tardive lui en donne l'occasion. Ce n'est ni une hauteur d'élément,
+ * ni un ancrage : c'est le défilement HÉRITÉ (mesuré à l'atelier :
+ * aucun déplacement au-dessus de la ligne de flottaison dans les
+ * 2,4 s qui suivent une arrivée — rien ne bouge, donc rien n'ancre).
+ *
+ * LA NEUTRALISATION, ET ELLE EST À LA SOURCE : si l'on quitte une page
+ * qui n'était descendue que de QUELQUES PIXELS (le même plafond que
+ * partout, `ECART_DE_RECALAGE_PX`), on la remet exactement en haut
+ * AVANT que l'adresse ne change. L'entrée naît alors à zéro : aucun
+ * moteur n'a plus rien à restituer, il n'y a plus rien à combattre —
+ * et la garde de l'arrivée n'a plus une seule pose à faire.
+ * ⚠️ SEULEMENT SOUS LE PLAFOND, et c'est ce qui rend le geste sûr : la
+ * nº 361 a montré qu'un saut de plusieurs CENTAINES de pixels sur la
+ * page qu'on quitte fait photographier un fond non rasterisé — l'écran
+ * noir du glissement retour. Quarante pixels ne peuvent pas produire
+ * cela : les tuiles autour de la position courante sont déjà peintes.
+ * ⚠️ ET C'EST UNE PAGE QU'ON QUITTE : à moins de quarante pixels, elle
+ * était, pour l'œil, en haut. Le retour l'y ramènera — le site ne
+ * range d'ailleurs pas les places de moins de vingt-quatre pixels
+ * (PLANCHER_DE_POSITION_PX, nº 875).
+ */
+export function neutraliserLeDefilementAvantDeQuitter(): () => void {
+  if (typeof window === "undefined") return () => {};
+  const surClic = (evenement: MouseEvent) => {
+    if (
+      evenement.defaultPrevented ||
+      evenement.button !== 0 ||
+      evenement.metaKey ||
+      evenement.ctrlKey ||
+      evenement.shiftKey ||
+      evenement.altKey
+    ) {
+      return;
+    }
+    const cible = evenement.target;
+    const lien =
+      cible instanceof Element
+        ? (cible.closest("a[href]") as HTMLAnchorElement | null)
+        : null;
+    if (!lien) return;
+    const fenetre = lien.getAttribute("target");
+    if ((fenetre && fenetre !== "_self") || lien.hasAttribute("download")) return;
+    //  Un lien qui ne navigue pas (la loupe de la barre, nº 627) ne
+    //  quitte rien : il n'y a aucune entrée à faire naître.
+    if (lien.closest("[data-sans-navigation]")) return;
+    let visee: URL;
+    try {
+      visee = new URL(lien.href, window.location.href);
+    } catch {
+      return;
+    }
+    if (visee.origin !== window.location.origin) return;
+    if (
+      visee.pathname === window.location.pathname &&
+      visee.search === window.location.search
+    ) {
+      return;
+    }
+    const y = Math.round(window.scrollY);
+    if (y === 0 || y > ECART_DE_RECALAGE_PX) return;
+    noterDiag(`DÉPART À ZÉRO · la page quittée passe de ${y} à 0 (nº 885)`);
+    //  Le site annonce son mouvement : la barre fixe ne doit pas lire
+    //  un geste dans cette remise à zéro (nº 154-§6A).
+    annoncerMouvementDuSite();
+    poserLeHaut();
+  };
+  //  CAPTURE : avant le Link de Next, donc avant l'écriture d'adresse.
+  document.addEventListener("click", surClic, true);
+  return () => document.removeEventListener("click", surClic, true);
 }
 
 /**

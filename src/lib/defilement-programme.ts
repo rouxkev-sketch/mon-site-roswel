@@ -316,6 +316,16 @@ function veillerParImage(): void {
   veilleParImage = requestAnimationFrame(regarder);
 }
 
+/**
+ * §1 (nº 885) — LA GARDE EST-ELLE ENCORE LÀ, ET SUR QUELLE POSITION ?
+ * Le bandeau de diagnostic le demande pour distinguer les défilements
+ * qui tombent PENDANT la garde de ceux qui viennent APRÈS son
+ * extinction — la question du propriétaire. Lecture pure.
+ */
+export function positionGardee(): number | null {
+  return garde ? garde.position : null;
+}
+
 /** DÉSARMER LA GARDE — pour une surface qui déplace la page POUR
     ELLE-MÊME (le gel d'une fiche, l'ouverture de la page de
     recherche) : la position gardée ne décrit plus l'écran, la

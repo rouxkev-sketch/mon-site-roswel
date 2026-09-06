@@ -36,8 +36,13 @@
  * rien : il observe.
  */
 
-/** Vingt lignes, comme demandé : les vingt DERNIÈRES. */
-const LIGNES_GARDEES = 20;
+/**
+ * QUARANTE LIGNES DEPUIS LA nº 885 (vingt à la nº 884). Le journal
+ * enregistre désormais aussi les CLICS, les appels de NAVIGATION et
+ * les défilements d'après la garde : vingt lignes se remplissaient en
+ * un seul geste, et la cause partait par le haut avant d'être lue.
+ */
+export const LIGNES_GARDEES = 40;
 
 let arme = false;
 const lignes: string[] = [];
