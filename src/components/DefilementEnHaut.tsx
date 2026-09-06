@@ -325,10 +325,57 @@ export function DefilementEnHaut() {
         }
         return;
       }
+      /**
+       * ██ §2 (nº 881) — UNE FICHE QUI ARRIVE EN HAUT Y RESTE ██
+       * ==============================================================
+       * CE QUE LE PROPRIÉTAIRE MESURE SUR SON TÉLÉPHONE, et la nº 875
+       * n'y a pas suffi : recherche défilée de quelques pixels →
+       * ouvrir une carte → le profil s'ouvre DÉJÀ DESCENDU d'autant.
+       * Idem vers Portfolio et Flash.
+       *
+       * L'ANALYSE, ÉCRITE UNE FOIS POUR TOUTES — tout ce qui peut poser
+       * une position à l'arrivée d'une page, et ce que chacun fait ici :
+       *  1. LA RESTAURATION NATIVE (`scrollRestoration = "auto"`,
+       *     nº 363) — ne rend une position que sur un retour, une
+       *     avance ou un rechargement. Sur une ouverture neuve, elle
+       *     n'a rien à rendre… mais elle peut REVENIR sur sa décision
+       *     quand le document grandit après coup (les images du profil,
+       *     le fil de galeries qui se monte) : c'est le seul mécanisme
+       *     qui agit APRÈS nous ;
+       *  2. LA MÉMOIRE PAR ADRESSE (MemoireNavigation) — ne rend que ce
+       *     qu'elle a rangé, et elle ne range plus les positions de
+       *     quelques pixels depuis la nº 875 (PLANCHER_DE_POSITION_PX) ;
+       *  3. LA DEMANDE DE RESTITUTION (`restaurationDemandeePour`) — un
+       *     va-et-vient ou un retour la pose ; elle est lue juste
+       *     au-dessus, et l'on s'efface alors devant elle ;
+       *  4. LE SCRIPT D'AVANT PEINTURE — pose la position d'une reprise
+       *     de session ; `positionDejaPosee` le dit, et on s'efface ;
+       *  5. CE COMPOSANT — pose zéro, ici, entre le DOM et la peinture ;
+       *  6. LA HAUTEUR DE LA BARRE FIXE, LES ANCRES, `scrollIntoView`
+       *     AU MONTAGE — aucun sur une fiche : rien n'y défile de
+       *     lui-même ;
+       *  7. LE CORPS QUI GARDE LE DÉFILEMENT DE LA PAGE PRÉCÉDENTE en
+       *     navigation douce — c'est ce que la pose de zéro annule.
+       *
+       * LE TROU ÉTAIT ENTRE 5 ET 1 : on posait zéro UNE FOIS, puis on
+       * lâchait. Tout recalage tardif du navigateur (cas 1) tombait
+       * alors sans opposition — d'où « quelques pixels », et pas la
+       * position entière. LA GARDE DE POSITION (nº 661) existe
+       * précisément pour cela : elle tient la valeur posée douze cents
+       * millisecondes, et LE PREMIER GESTE la lève (lib/defilement-
+       * programme). On l'arme donc ici.
+       * ⚠️ ICI, ET PAS SUR TOUTES LES ARRIVÉES : la nº 875 l'avait armée
+       * partout et trois bancs étaient tombés (868, 869, 873) — la garde
+       * ne distingue pas un recalage du navigateur d'un défilement
+       * programmé légitime. SUR UNE FICHE, IL N'Y EN A AUCUN : cette
+       * branche est atteinte quand rien n'est à restituer (les quatre
+       * lectures ci-dessus ont toutes dit non), et une fiche n'ouvre ni
+       * champ de localité, ni liste à faire venir à l'écran. C'est
+       * l'écart exact entre « armer partout » et « armer là où le
+       * propriétaire mesure le défaut ».
+       */
       //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-      //  §1 (nº 661) — une fiche s'ouvre en haut par nature (nº 191) :
-      //  aucune déclaration n'est en jeu, aucune garde à armer.
-      return remonterALAdresseCommise(chemin, false);
+      return remonterALAdresseCommise(chemin, true);
     }
 
     /*  ██ nº 812 — SAUF SI L'ARRIVÉE EN HAUT EST DÉCLARÉE ██

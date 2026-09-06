@@ -879,8 +879,28 @@ html[data-zoom] [data-mosaique] {
     touchée puis retiré au rangement —, il cesse donc de rogner.
     ⚠️ IL NE S'AGIT QUE DE LA CARTE DU FIL (`data-cadre-de-fil`) : le
     reste du site garde ses coupes intactes, au repos comme en geste. */
-[data-pincement] [data-cadre-de-fil] {
+[data-pincement] [data-cadre-de-fil],
+[data-pincement] [data-cadre-de-galerie] {
   overflow: visible !important;
+}
+
+/*  ET LA PHOTO PINCÉE PASSE DEVANT LES BARRES, SUR UN PROFIL AUSSI
+    (nº 881-§1)
+    -------------------------------------------------------------------
+    LA MOSAÏQUE A CETTE RÈGLE DEPUIS LA nº 209 (plus haut) : son plan
+    monte au-dessus de la barre fixe le temps d'un zoom, sans quoi
+    l'image agrandie glisse SOUS elle — et une image dont le haut passe
+    sous une barre opaque, c'est exactement « la photo reste rognée ».
+    LE FIL DE GALERIES N'AVAIT PAS LA SIENNE : ses cartes n'ont reçu le
+    pincement qu'à la nº 880, et la question ne s'était donc jamais
+    posée. Elle se pose maintenant, et la réponse est celle de la
+    mosaïque, mot pour mot.
+    ⚠️ RIEN AU REPOS : sans `data-zoom` (posé par ZoomPincement le temps
+    du geste), le fil n'a ni plan ni rang — il ne peut donc pas passer
+    devant quoi que ce soit en dehors d'un pincement. */
+html[data-zoom] [data-fil-de-galerie] {
+  position: relative;
+  z-index: 60;
 }
 
 /*  « EFFACER » ET « VALIDER » S'EFFACENT DÈS QU'UNE LISTE EST OUVERTE
