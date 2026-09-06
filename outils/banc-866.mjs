@@ -4,7 +4,9 @@
 //   1. LE FIL DE GALERIES (doigt) — REPRIS PAR LA nº 873-§3 : la page
 //      Portfolio EST le fil (trois cartes, les galeries de tattoos) et la
 //      page Flash aussi (trois cartes de flashs), une carte par galerie,
-//      dans l'ordre du profil, sous leurs titres ; glisser dans une carte
+//      dans l'ordre du profil, sous leurs titres — SANS SURTITRE et avec
+//      le compteur SUR LA LIGNE DU TITRE depuis la nº 874-§4 (la pastille
+//      dans la photo s'en va) ; glisser dans une carte
 //      ne fait défiler QUE ses photos. ⛔ Plus de bandes par style au
 //      doigt, plus de carte « ouverte » sur une photo touchée, plus de
 //      retour « sur la bonne photo » : ces mécanismes sont partis avec
@@ -50,7 +52,10 @@ const SONDE_FIL = `() => {
     const cadre = li.querySelector("[data-cadre-de-galerie]");
     const pastille = [...(cadre?.querySelectorAll("*") ?? [])].map((e) => e.textContent.trim()).find((t) => /^\\d+\\/\\d+$/.test(t)) ?? null;
     const pied = li.querySelector("[data-pied-de-fil]");
+    //  nº 874-§4 — le compteur a quitté la photo pour la ligne du titre.
+    const compteur = li.querySelector("[data-compteur-galerie]");
     return { serie: li.dataset.galerieSerie, ouverte: li.hasAttribute("data-carte-ouverte"),
+      compteur: compteur?.textContent.trim() ?? null, compteurBoite: B(compteur),
       surtitre: li.querySelector("[data-surtitre-galerie]")?.textContent.trim(), titre: li.querySelector("[data-titre-galerie]")?.textContent.trim(),
       pastille, points: pied ? pied.querySelectorAll("button[aria-label^='View photo']").length : 0,
       pied: Boolean(pied), cadre: B(cadre), titreBoite: B(li.querySelector("[data-titre-galerie]")),
@@ -116,10 +121,14 @@ const BLANC = "rgb(242, 242, 244)";
     verif("TROIS CARTES — une par galerie de tattoos, dans l'ordre du profil (les flashs ont leur page)",
       fil.fil !== "none" && fil.cartes.length === 3 && fil.cartes.map((c) => c.serie).join(" ") === SERIES_TATTOO.join(" "),
       `${fil.fil} · ${fil.cartes.length} carte(s) : ${fil.cartes.map((c) => c.serie).join(" ")}`);
-    verif("chaque carte porte le TITRE de sa galerie — « Tattoos », puis le style et son rendu",
-      fil.cartes.every((c) => c.surtitre === "Tattoos" && c.titre === TITRES[STYLES[fil.cartes.indexOf(c)]]), fil.cartes.map((c) => `${c.surtitre} / ${c.titre}`).join(" · "));
-    verif("… son pied, ses points de position, et ses photos qui glissent (pastille « 1/N » au repos)",
-      fil.cartes.every((c, k) => c.pied && c.points > 0 && c.pastille === `1/${TAILLES.tatouage[STYLES[k]]}`), fil.cartes.map((c) => `${c.pastille} · ${c.points} points`).join(" · "));
+    verif("chaque carte porte le SEUL titre de sa galerie — le surtitre « Tattoos » est parti (nº 874-§4)",
+      fil.cartes.every((c) => c.surtitre === undefined && c.titre === TITRES[STYLES[fil.cartes.indexOf(c)]]), fil.cartes.map((c) => `${c.surtitre} / ${c.titre}`).join(" · "));
+    verif("… son pied, ses points, et LE COMPTEUR SUR LA LIGNE DU TITRE (« 1/N ») — plus rien dans la photo",
+      fil.cartes.every((c, k) => c.pied && c.points > 0 && c.compteur === `1/${TAILLES.tatouage[STYLES[k]]}` && c.pastille === null),
+      fil.cartes.map((c) => `${c.compteur} (photo ${c.pastille}) · ${c.points} points`).join(" · "));
+    verif("… à l'opposé du titre, sur sa ligne, contre la marge droite (nº 874-§4)",
+      fil.cartes.every((c) => c.compteurBoite && c.titreBoite && Math.abs(c.compteurBoite.y - c.titreBoite.y) <= 3 && c.compteurBoite.g > c.titreBoite.d && Math.round(c.compteurBoite.d) === 374),
+      JSON.stringify(fil.cartes.map((c) => [c.titreBoite?.d, c.compteurBoite?.g, c.compteurBoite?.d])));
     verif("la page s'ouvre en haut, la colonne de lecture affichée (ce n'est pas une vue photo)",
       fil.y === 0 && !fil.vuePhoto && fil.lecture !== "none" && !fil.enTeteFil && !fil.ligneSousLePied, `page à ${fil.y} · vue photo ${fil.vuePhoto} · lecture ${fil.lecture}`);
     //  nº 873-§3 — plus d'avatar : le titre à seize du bord, douze
@@ -133,8 +142,8 @@ const BLANC = "rgb(242, 242, 244)";
     verif("le carrousel de la carte 3 répond au glissement", await glisser(page, 2, 1));
     await page.waitForTimeout(900);
     const apres = await sonderFil(page);
-    verif("la carte 3 est passée à « 2/6 »", apres.cartes[2].pastille === "2/6", apres.cartes[2].pastille);
-    verif("… et les deux autres n'ont pas bougé", apres.cartes.every((c, k) => k === 2 || c.pastille === fil.cartes[k].pastille), apres.cartes.map((c) => c.pastille).join(" "));
+    verif("la carte 3 est passée à « 2/6 »", apres.cartes[2].compteur === "2/6", apres.cartes[2].compteur);
+    verif("… et les deux autres n'ont pas bougé", apres.cartes.every((c, k) => k === 2 || c.compteur === fil.cartes[k].compteur), apres.cartes.map((c) => c.compteur).join(" "));
     verif("… la page non plus", apres.y === fil.y, `${apres.y} / ${fil.y}`);
 
     titre("866 · §1 (nº 873) — la page Flash : trois cartes de flashs");
@@ -142,9 +151,9 @@ const BLANC = "rgb(242, 242, 244)";
     await page.waitForFunction(() => document.querySelectorAll("[data-carte-de-galerie]").length >= 3, null, { timeout: 15000 });
     await page.waitForTimeout(1200);
     const flash = await sonderFil(page);
-    verif("TROIS CARTES — une par galerie de flashs, « Flash » en surtitre, « 1/3 » chacune",
-      flash.cartes.length === 3 && flash.cartes.map((c) => c.serie).join(" ") === SERIES_FLASH.join(" ") && flash.cartes.every((c) => c.surtitre === "Flash" && c.pastille === "1/3"),
-      `${flash.cartes.map((c) => `${c.serie} ${c.surtitre} ${c.pastille}`).join(" · ")}`);
+    verif("TROIS CARTES — une par galerie de flashs, sans surtitre, « 1/3 » sur la ligne du titre",
+      flash.cartes.length === 3 && flash.cartes.map((c) => c.serie).join(" ") === SERIES_FLASH.join(" ") && flash.cartes.every((c) => c.surtitre === undefined && c.compteur === "1/3"),
+      `${flash.cartes.map((c) => `${c.serie} ${c.compteur}`).join(" · ")}`);
   } catch (e) {
     verif("déroulement du banc 866 (§1)", false, String(e).slice(0, 500));
   } finally { await nav.close(); }

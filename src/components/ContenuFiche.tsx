@@ -400,18 +400,32 @@ function capsulesQuiTiennent(
   return placees;
 }
 
+/**
+ * ██ §3 (nº 874) — UNE LIGNE PEUT PORTER DEUX FAMILLES ██
+ * ------------------------------------------------------------------
+ * Elle recevait UNE famille (des slugs) et le moyen de la nommer. Elle
+ * reçoit désormais DES CAPSULES DÉJÀ NOMMÉES — chacune sa clé et son
+ * mot — et LES MARQUEURS de ce qu'elle porte : la fusion des styles et
+ * des compétences (moins de trois styles, voir `ligneDesCapsules`)
+ * n'est alors qu'une liste mise bout à bout, et rien du dessin, du
+ * compteur ou de la coupe à deux lignes n'est réécrit pour elle.
+ * ⚠️ LA CLÉ PORTE SA FAMILLE (« style:blackwork ») : un style et une
+ * compétence peuvent partager un slug, et deux enfants de même clé se
+ * marcheraient dessus au remontage.
+ */
 function LigneDeCapsules({
-  marqueur,
-  valeurs,
-  libelle,
+  marqueurs,
+  capsules,
   fond,
 }: {
-  marqueur: string;
-  valeurs: readonly string[];
-  libelle: (slug: string) => string;
+  /** Les marques de relevé posées sur la ligne — une par famille
+      qu'elle porte réellement (`data-styles-fiche`,
+      `data-pratique-fiche`), plus celle de la fusion s'il y a lieu. */
+  marqueurs: readonly string[];
+  capsules: ReadonlyArray<{ cle: string; mot: string }>;
   fond: string;
 }) {
-  const [montrees, setMontrees] = useState(valeurs.length);
+  const [montrees, setMontrees] = useState(capsules.length);
   const [deplie, setDeplie] = useState(false);
   //  Le seul rôle de cet état : faire retourner la mesure quand le
   //  conteneur change de taille. Sa valeur ne sert à personne.
@@ -434,28 +448,28 @@ function LigneDeCapsules({
   //  jusqu'à ce que plus rien ne soit rogné.
   useEffetDeMiseEnPage(() => {
     const boite = zone.current;
-    if (!boite || valeurs.length === 0 || deplie) return;
+    if (!boite || capsules.length === 0 || deplie) return;
     const enfants = Array.from(boite.children) as HTMLElement[];
 
     //  Une AUTRE fiche est passée sous le composant : on repart de
     //  zéro plutôt que de couper avec les mesures de la précédente.
-    if (montrees > valeurs.length) {
+    if (montrees > capsules.length) {
       largeurs.current = [];
       largeurMesuree.current = -1;
-      setMontrees(valeurs.length);
+      setMontrees(capsules.length);
       return;
     }
     //  LES LARGEURS NE SE RELÈVENT QUE TOUT RENDU, et ne se gardent
     //  que si elles sont plausibles (voir la note, nº 491-§2).
-    if (montrees === valeurs.length && enfants.length >= valeurs.length) {
+    if (montrees === capsules.length && enfants.length >= capsules.length) {
       const relevees = enfants
-        .slice(0, valeurs.length)
+        .slice(0, capsules.length)
         .map((enfant) => enfant.offsetWidth);
       if (relevees.every((largeur) => largeur > 0)) largeurs.current = relevees;
     }
     //  Le compteur est le dernier enfant quand il y en a un : sa
     //  largeur réelle remplace la valeur de départ.
-    if (montrees < valeurs.length && enfants.length === montrees + 1) {
+    if (montrees < capsules.length && enfants.length === montrees + 1) {
       const large = enfants[montrees].offsetWidth;
       if (large > 0) largeurCompteur.current = large;
     }
@@ -466,11 +480,11 @@ function LigneDeCapsules({
     //  proposerait de remettre ce que le filet vient de retirer.
     if (dispo !== largeurMesuree.current) {
       largeurMesuree.current = dispo;
-      if (largeurs.current.length === valeurs.length) {
+      if (largeurs.current.length === capsules.length) {
         const sansCompteur = capsulesQuiTiennent(largeurs.current, dispo, 0);
         const cible =
-          sansCompteur >= valeurs.length
-            ? valeurs.length
+          sansCompteur >= capsules.length
+            ? capsules.length
             : Math.max(
                 1,
                 capsulesQuiTiennent(
@@ -483,10 +497,10 @@ function LigneDeCapsules({
           setMontrees(cible);
           return;
         }
-      } else if (montrees !== valeurs.length) {
+      } else if (montrees !== capsules.length) {
         //  Rien de fiable en mémoire : on remet tout pour pouvoir
         //  mesurer. Le CSS coupe pendant ce temps, le filet suit.
-        setMontrees(valeurs.length);
+        setMontrees(capsules.length);
         return;
       }
     }
@@ -500,12 +514,12 @@ function LigneDeCapsules({
     }
   });
 
-  if (valeurs.length === 0) return null;
-  const restant = valeurs.length - montrees;
-  const visibles = deplie ? valeurs : valeurs.slice(0, montrees);
+  if (capsules.length === 0) return null;
+  const restant = capsules.length - montrees;
+  const visibles = deplie ? capsules : capsules.slice(0, montrees);
   return (
     <p
-      {...{ [marqueur]: "" }}
+      {...Object.fromEntries(marqueurs.map((marque) => [marque, ""]))}
       /*  ██ §1 (nº 869) — PLUS D'ICÔNE EN TÊTE DE LIGNE ██
            Décision du propriétaire : les badges d'un profil s'écrivent
            TEXTE SEUL, contour, gris. La boîte de 22 px qui ouvrait la
@@ -528,9 +542,9 @@ function LigneDeCapsules({
             : { maxHeight: HAUTEUR_CAPSULE * 2 + ECART_CAPSULES }
         }
       >
-        {visibles.map((slug) => (
+        {visibles.map(({ cle, mot }) => (
           <span
-            key={slug}
+            key={cle}
             /*  §1 (nº 547) — LE TEXTE S'ÉCLAIRCIT. Les capsules ne
                  portaient AUCUNE couleur à elles : elles héritaient du
                  gris doux de la ligne (`LIGNE_GRISE`, posé sur le `p`
@@ -572,7 +586,7 @@ function LigneDeCapsules({
                 sienne. */
             className={`px-2.5 py-1 text-[13.5px] leading-[18px] text-sombre-texte-doux ${fond}`}
           >
-            {libelle(slug)}
+            {mot}
           </span>
         ))}
         {restant > 0 && (
@@ -1460,7 +1474,33 @@ export function ContenuFiche({
   const ligneDuBooking = etatDesCarnets && (
     <p
       data-booking-fiche={tatoueur.booking}
-      className={`mt-10 flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} items-start gap-2.5`}
+      /*  ██ §1 (nº 874) — LES DEUX AIRS DE L'EN-TÊTE, ÉGAUX À L'ŒIL ██
+          ------------------------------------------------------------------
+          LE PROPRIÉTAIRE VOIT LE SECOND PLUS GRAND, et il a raison : les
+          deux sont pourtant écrits `mt-10` — quarante pixels de BOÎTE à
+          BOÎTE, au-dessus comme au-dessous de cette ligne (le relevé le
+          confirme : 40,0 et 40,0). CE QUE L'ŒIL MESURE, LUI, C'EST
+          L'ENCRE, et l'encre de cette ligne n'est pas centrée dans sa
+          boîte : relevé sur les pixels d'une capture au doigt (DPR 2),
+          l'air vaut 41,5 px sous l'avatar et 43,0 px sous le booking.
+          LA CAUSE, ET ELLE EST STRUCTURELLE : la boîte de cette ligne
+          fait 20,6 px (la boîte d'icône, `1.375em`) pour une encre de
+          16 px — le glyphe du calendrier est dessiné en retrait dans sa
+          grille de 24, et le texte n'a ici aucun jambage. Il reste donc
+          1,5 px de vide au-dessus de l'encre et 3,1 px en dessous : 1,6
+          px d'écart, exactement ce que le propriétaire voit.
+          LE REMÈDE, ET IL EST POSÉ SUR LA LIGNE QUI PORTE LE DÉFAUT :
+          elle rend DEUX PIXELS par le bas (le pixel entier le plus
+          proche des 1,6 mesurés — la grille du site, et un demi-pixel
+          d'écart résiduel, invisible même à DPR 2). Ce qui la suit —
+          la rangée des badges aujourd'hui — remonte d'autant, et les
+          deux airs se lisent à 41,5 px l'un comme l'autre.
+          ⚠️ POURQUOI PAS SUR LA RANGÉE : elle n'est pas la cause, et
+          elle n'est pas seule à suivre cette ligne (une fiche sans
+          Instagram, un aperçu, une fenêtre : la rangée change, la ligne
+          du booking non). La correction appartient à la boîte qui a le
+          vide, pas à sa voisine. */
+      className={`mt-10 -mb-[2px] flex ${ECRITURE_LIGNE_FICHE} ${LIGNE_GRISE} items-start gap-2.5`}
     >
       <span className={BOITE_ICONE_LIGNE}>
         <IconeCalendrier taille={20} />
@@ -1761,9 +1801,40 @@ export function ContenuFiche({
    */
   const aDesPratiques = capsulesPratique.length > 0;
   const aDesStyles = tatoueur.styles.length > 0;
-  const ligneDesPratiques = (
+  /*  ██ §3 (nº 874) — SOUS TROIS STYLES, LES DEUX BLOCS N'EN FONT QU'UN ██
+      ==================================================================
+      DÉCISION DU PROPRIÉTAIRE : un profil qui déclare MOINS DE TROIS
+      styles ne montre plus deux lignes de badges mais UNE SEULE — les
+      styles, puis les compétences, à la suite. Au-delà de deux lignes,
+      la seconde finit par « +N ⌄ », le mécanisme existant (nº 491), sans
+      un mot de plus : c'est la MÊME ligne, avec deux familles au lieu
+      d'une (voir `LigneDeCapsules`).
+      POURQUOI TROIS, ET POURQUOI CE SENS : un ou deux styles ne
+      remplissent pas leur ligne — la seconde ligne, en dessous,
+      ressemblait alors à un second bloc pour rien. À partir de trois, la
+      ligne des styles se tient toute seule et les deux familles restent
+      séparées, comme depuis la nº 868.
+      ⚠️ LES MARQUES DE RELEVÉ DISENT LA VÉRITÉ : la ligne fusionnée porte
+      `data-styles-fiche` ET `data-pratique-fiche` — elle contient bien
+      les deux — plus `data-capsules-fusionnees`, qui dit l'état. Une
+      famille absente ne pose pas sa marque : une fiche sans compétence
+      n'annonce pas une ligne de compétences.
+      ⚠️ LA CLÉ D'UNE CAPSULE PORTE SA FAMILLE : un style et une
+      compétence peuvent partager un slug (voir `LigneDeCapsules`). */
+  const capsulesDesStyles = tatoueur.styles.map((slug) => ({
+    cle: `style:${slug}`,
+    mot: libelleStyle(slug),
+  }));
+  const capsulesDesPratiques = capsulesPratique.map((slug) => ({
+    cle: `pratique:${slug}`,
+    mot: libelleFiltre(slug),
+  }));
+  const fusionnees = tatoueur.styles.length < 3;
+  const marqueDesStyles = aDesStyles ? ["data-styles-fiche"] : [];
+  const marqueDesPratiques = aDesPratiques ? ["data-pratique-fiche"] : [];
+  const ligneDesPratiques = fusionnees ? null : (
     <LigneDeCapsules
-      marqueur="data-pratique-fiche"
+      marqueurs={marqueDesPratiques}
       /*  ██ §1 (nº 869) — PLUS D'ICÔNE EN TÊTE DE LIGNE ██
           Décision du propriétaire : les badges d'un profil s'écrivent
           texte seul, contour, gris. L'étoile (techniques) et la goutte
@@ -1772,17 +1843,24 @@ export function ContenuFiche({
           n'avait plus de lecteur et a quitté IconeReseau (règle nº 386).
           Les deux lignes se distinguent par leur ordre (les styles
           d'abord, nº 868-§5) et par leurs mots. */
-      valeurs={capsulesPratique}
-      libelle={libelleFiltre}
+      capsules={capsulesDesPratiques}
       fond={FOND_CAPSULE}
     />
   );
   const ligneDesStyles = (
     <LigneDeCapsules
-      marqueur="data-styles-fiche"
+      marqueurs={[
+        ...marqueDesStyles,
+        //  §3 (nº 874) — fusionnée : elle porte aussi les compétences,
+        //  et le dit.
+        ...(fusionnees ? [...marqueDesPratiques, "data-capsules-fusionnees"] : []),
+      ]}
       //  §1 (nº 869) — sans icône, comme la ligne des techniques.
-      valeurs={tatoueur.styles}
-      libelle={libelleStyle}
+      capsules={
+        fusionnees
+          ? [...capsulesDesStyles, ...capsulesDesPratiques]
+          : capsulesDesStyles
+      }
       /*  ██ §1 (nº 504) — LES DEUX FAMILLES AU MÊME FOND ██
           Les styles étaient un cran plus clair que les techniques
           (`eleve-clair` contre `eleve`) : deux gris séparés par 0,022
@@ -2317,13 +2395,35 @@ export function ContenuFiche({
             aDesPratiques ||
             aDesStyles) && (
             <div
-              /*  §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ : 16 px
+              /*  ██ §2 (nº 874) — L'AIR STANDARD DE LA LISTE EST VINGT-HUIT ██
+                   ==========================================================
+                   LE PROPRIÉTAIRE DÉFINIT L'AIR STANDARD ENTRE BLOCS comme
+                   « l'air entre la bio et les badges de styles » — vingt-huit
+                   pixels, mesurés. C'était la seule valeur JUSTE de la liste,
+                   et c'était une EXCEPTION : l'écart valait vingt-quatre, et
+                   la bio ajoutait quatre pixels de rembourrage de part et
+                   d'autre (nº 868-§5) pour atteindre ses vingt-huit.
+                   DEUX VALEURS POUR UN MÊME AIR, DONC, et un site où l'air
+                   « standard » dépendait du voisin : le rembourrage de la bio
+                   s'en va, l'écart de la liste PREND la valeur nommée, et il
+                   n'y a plus qu'un seul air entre deux blocs — le site, la
+                   bio, les styles, les techniques, l'adresse, tous à
+                   vingt-huit, présents ou absents.
+                   ⚠️ CE QUE CELA DÉPLACE, ET JE LE DIS : l'air entre les
+                   styles et les techniques passe de 24 à 28 (quand les deux
+                   lignes existent — sous trois styles elles n'en font plus
+                   qu'une, §3), et l'air sous la rangée d'actions suit, par la
+                   règle de la nº 870-§5b qui le veut ÉGAL à l'air standard :
+                   son `mt-7` est la jumelle du `gap-y-7`, écrite à côté de
+                   lui pour qu'elles ne puissent pas diverger (piège nº 378).
+                   §5 (nº 389, REPRIS À LA nº 538) — L'ÉCART PARTAGÉ : 16 px
                    à la nº 389, 20 puis VINGT-QUATRE depuis la nº 538. C'est
                    le SEUL endroit qui l'écrit — aucune marge n'est posée
                    sur les lignes elles-mêmes ; c'est la LISTE qui commande,
                    et une ligne absente ne laisse donc aucun vide. Le rythme
                    tient : 24 entre deux lignes, 28 autour de la bio
-                   (nº 868). Les plaques et leurs mentions (nº 496-497) ne
+                   (nº 868) — VINGT-HUIT PARTOUT depuis la nº 874 (voir
+                   ci-dessus). Les plaques et leurs mentions (nº 496-497) ne
                    sont pas dans cette liste.
                    ██ §5-b (nº 870) — L'AIR SOUS LA RANGÉE D'ACTIONS ██
                    Il valait 40 (la marge basse d'un en-tête, nº 241) ; le
@@ -2331,23 +2431,14 @@ export function ContenuFiche({
                    BLOCS DU PROFIL — celui que cette liste écarte
                    elle-même entre la bio, le site, les styles et
                    l'adresse. C'est donc la MÊME VALEUR QUE SON PROPRE
-                   `gap-y-6`, VINGT-QUATRE, et elle est écrite ici, une
-                   fois, à côté de lui : les deux ne peuvent plus
-                   diverger (piège nº 378). Mesuré à l'écran, la première
-                   ligne tombe donc à 24 de la rangée — 28 quand c'est la
-                   bio, qui ajoute ses 4 px de part et d'autre comme
-                   partout ailleurs dans la liste. */
-              className="mt-6 flex w-full flex-col items-start gap-y-6"
+                   `gap-y-7` depuis la nº 874, VINGT-HUIT, et elle est
+                   écrite ici, une fois, à côté de lui : les deux ne
+                   peuvent plus diverger (piège nº 378). Mesuré à
+                   l'écran, la première ligne de la liste tombe donc à 28
+                   de la rangée, quelle qu'elle soit — la bio n'a plus de
+                   rembourrage à ajouter. */
+              className="mt-7 flex w-full flex-col items-start gap-y-7"
             >
-              {/*  ██ §3 (nº 870, REPRIS PAR LA nº 871) — LE SITE ██
-                   Sa ligne d'avant la nº 869 (voir `ligneDuSite`) : la
-                   nº 870 l'avait posée sous la bio, la nº 871 la met
-                   AU-DESSUS — les deux lignes courtes ouvrent, le
-                   paragraphe suit. Une rangée de la liste comme les
-                   autres, sans grille : un lien seul n'a pas de colonne
-                   voisine, et sa case se borne d'elle-même
-                   (`max-w-full` + `truncate`, nº 391/407). */}
-              {ligneDuSite}
               {/*  ██ §5 (nº 868) — LA BIOGRAPHIE EST UNE RANGÉE DE LA
                    LISTE ██ Elle vivait SOUS la liste depuis toujours ;
                    la nº 868 l'y a fait entrer, la nº 871 la place APRÈS
@@ -2361,12 +2452,29 @@ export function ContenuFiche({
                    sections.
                    ⚠️ ET SA LARGEUR NON PLUS : cette colonne aligne ses
                    enfants à gauche (`items-start`), une rangée doit donc
-                   réclamer la largeur. */}
+                   réclamer la largeur.
+                   ⚠️ SON REMBOURRAGE DE QUATRE PIXELS EST PARTI À LA
+                   nº 874-§2 : il servait à porter SON air à vingt-huit
+                   quand la liste en écartait vingt-quatre ; la liste les
+                   écarte tous de vingt-huit désormais, il en ferait
+                   trente-deux. */}
               {tatoueur.bio && (
-                <p className="my-1 w-full text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
+                <p className="w-full text-[15px] leading-relaxed text-sombre-texte whitespace-pre-line [overflow-wrap:anywhere]">
                   {tatoueur.bio}
                 </p>
               )}
+              {/*  ██ §2 (nº 874) — LE SITE PASSE SOUS LA BIO ██
+                   Décision du propriétaire : l'ordre devient bio → site →
+                   styles. La nº 870 l'avait posé sous la bio, la nº 871
+                   au-dessus ; il y retourne, avec l'air standard de la
+                   liste au-dessus comme en dessous — c'est ce que le
+                   propriétaire demande, et ce que la liste donne
+                   désormais à tous ses blocs sans exception (voir la note
+                   de l'écart, plus haut). Une rangée de la liste comme
+                   les autres, sans grille : un lien seul n'a pas de
+                   colonne voisine, et sa case se borne d'elle-même
+                   (`max-w-full` + `truncate`, nº 391/407). */}
+              {ligneDuSite}
               {/*  §5 (nº 868) — LES STYLES PASSENT DEVANT LES TECHNIQUES
                    (l'ordre du propriétaire) : ce sont eux qu'on cherche
                    d'abord sur un portfolio. Les deux lignes ne changent

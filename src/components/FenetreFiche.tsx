@@ -428,6 +428,27 @@ export function FenetreFiche({
       « • Noir et gris » passe en graisse normale. Deux éléments, deux
       classes — jamais deux graisses sur un même élément (piège 389).
       La puce vit DANS la garde : aucune puce orpheline, jamais. */
+  /**
+   * ██ §7 (nº 874) — LE TITRE HORS CADRE S'ATTÉNUE ██
+   * ------------------------------------------------------------------
+   * DÉFAUT DU PROPRIÉTAIRE : « Trash Polka • Color », en bas à gauche
+   * hors du cadre, est TROP BLANC sur le voile sombre. Il était en
+   * `text-white` — le blanc pur, le seul du site à cet endroit.
+   * IL PREND LE GRIS CLAIR DES SOUS-TITRES (`sombre-texte-doux`,
+   * #A8A8B0), celui des villes sous un nom et des mentions du site :
+   * c'est la première des deux valeurs que le propriétaire propose, et
+   * la seule qui atténue vraiment (le blanc cassé de la charte,
+   * #F2F2F4, n'aurait rien changé à l'œil).
+   * CONTRASTE VÉRIFIÉ, sur le voile (`bg-black/80` au-dessus du fond du
+   * site) : 8,8:1 — au-dessus du seuil AAA (7:1) pour un texte normal,
+   * et loin au-dessus de AA (4,5:1). Le blanc pur y valait 20,5:1.
+   * ⚠️ LES DEUX RENDUS DU TITRE LE PARTAGENT, et c'est pour cela qu'il
+   * est écrit ICI : le titre hors cadre (deux colonnes) et son jumeau
+   * DANS LE FLUX (une colonne, nº 617) sont le MÊME titre à deux
+   * largeurs — ils ne peuvent pas diverger (piège nº 378).
+   */
+  const ECRITURE_TITRE_FENETRE = "text-[16px] font-bold text-sombre-texte-doux";
+
   const finDuTitre = partiesDuTitre?.rendu ? (
     <span className="font-normal">
       {SEPARATEUR_GALERIE}
@@ -920,13 +941,13 @@ export function FenetreFiche({
                     la prolonge vers le haut, sans couture visible et
                     sans une seule couleur neuve — sans fond, on verrait
                     le voile au travers.
-                 APPARENCE : `text-[16px] font-bold text-white`, les
-                 trois classes du titre large, mot pour mot. */}
+                 APPARENCE : `ECRITURE_TITRE_FENETRE`, l'écriture du
+                 titre large — c'est la MÊME constante, plus une copie
+                 (nº 874-§7). */}
             {partiesDuTitre && (
               <p
                 data-titre-fenetre-flux=""
-                className="lg:hidden mobile:hidden bg-sombre-fond px-5 sm:px-6 pt-4
-                           text-[16px] font-bold text-white"
+                className={`lg:hidden mobile:hidden bg-sombre-fond px-5 sm:px-6 pt-4 ${ECRITURE_TITRE_FENETRE}`}
               >
                 {partiesDuTitre.style}
                 {finDuTitre}
@@ -1134,10 +1155,11 @@ export function FenetreFiche({
                sur mobile » : c'est cette seconde garde qui le tient.
 
                APPARENCE : 16 px (nº 394 — c'était 20 à la nº 393, le
-               propriétaire l'a trouvé trop imposant), gras, blanc plein
-               — contre les 13 px du fil d'Ariane en `text-white/70`.
-               L'écart reste net : +23 % de corps, plus le gras et le
-               blanc plein contre un gris.
+               propriétaire l'a trouvé trop imposant), gras, et LE GRIS
+               CLAIR DES SOUS-TITRES depuis la nº 874-§7 (il était blanc
+               plein : trop blanc sur le voile) — contre les 13 px du fil
+               d'Ariane en `text-white/70`. L'écart reste net : +23 % de
+               corps, plus le gras.
                ⚠️ SEUL LE CORPS CHANGE : même ancrage, même `mt-2`, même
                couleur, même graisse — et la fenêtre ne bouge pas d'un
                pixel, pour la raison dite juste au-dessus (ce texte est
@@ -1159,7 +1181,7 @@ export function FenetreFiche({
               }}
               className={`pointer-events-auto absolute top-full left-0 mt-2
                          w-max max-w-full hidden lg:block mobile:hidden
-                         text-[16px] font-bold text-white${
+                         ${ECRITURE_TITRE_FENETRE}${
                            habillageEfface ? " invisible" : ""
                          }`}
             >

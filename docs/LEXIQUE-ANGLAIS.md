@@ -622,3 +622,18 @@ mot : elle déplace et rhabille ce que la nº 846 avait posé.
 > **Les données en base** : aucune de ces phrases n'y vit — les titres
 > des galeries viennent des styles (`suggestions_style.label` pour les
 > styles ajoutés, déjà relus à la nº 807) ; rien à corriger en SQL.
+
+## Passe nº 874 — le profil : sept retouches
+
+Aucun texte anglais n'est ajouté ni modifié par cette passe : elle ne
+déplace que des airs, des places et des couleurs.
+
+| ce qui change à l'écran | ce que le texte devient | où |
+| --- | --- | --- |
+| **TATTOOS** / **FLASH** au-dessus de chaque titre de galerie | rien — le surtitre disparaît (la page dit déjà la catégorie, nº 873) ; il ne reste que **Blackwork • Black** | `TitreDeGalerie` (PortfolioDeLAffiche) |
+| **1/20** dans l'image, au doigt | **1/20** sur la ligne du titre, à son opposé — les mots ne changent pas, la place et la couleur oui (le gris des sous-titres, comme au web) | `CompteurDeGalerie`, FilDeGalerie |
+| les styles et les compétences sur deux lignes | sous trois styles, une seule ligne : **Blackwork · Realism · Fine line…** — mêmes mots, mêmes capsules, un seul bloc ; **+2** garde son rôle | `LigneDeCapsules` (ContenuFiche) |
+
+> **Les données en base** : les libellés des styles ajoutés vivent en base
+> (`suggestions_style.label`, relus à la nº 807) et s'affichent ici tels
+> quels — cette passe ne les touche pas, il n'y a rien à corriger en SQL.

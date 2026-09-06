@@ -7,9 +7,10 @@
 //   2. L'AIR SOUS LE VA-ET-VIENT passe à SEIZE pixels (accueil, « Ma
 //      sélection »), et le squelette le promet.
 //   3. LE FIL DE LA GALERIE — REPRIS PAR LA nº 873-§3 : la page Portfolio
-//      du doigt EST le fil ; la carte porte le titre et le sous-titre de
-//      la galerie au-dessus de l'image, le pied du fil dessous, pas de
-//      ligne sous le pied, la pastille « 1/11 ».
+//      du doigt EST le fil ; la carte porte LE TITRE de la galerie
+//      au-dessus de l'image (le surtitre est parti à la nº 874-§4), le
+//      pied du fil dessous, pas de ligne sous le pied, et le compteur
+//      « 1/11 » sur la ligne du titre (nº 874-§4).
 //   4. DEPUIS UN LIEN PARTAGÉ, la vue de la nº 862 ne change pas.
 //   5. ⛔ (nº 873) LA MÉMOIRE DE LA BANDE DU PROFIL (8/11 → ouvrir → retour
 //      → 8/11) n'a plus d'objet : il n'y a plus de bande au doigt, ni de
@@ -191,19 +192,23 @@ const sonderCarte = (page, racine) => page.evaluate(([S, r]) => new Function("re
         //  nº 873 — le pied de la vue photo est rendu (et caché) dans la
         //  colonne de la photo : on ne compte que les pieds qui se voient.
         piedsDeFil: [...document.querySelectorAll("[data-pied-de-fil]")].filter(visible).length,
-        pastille: [...document.querySelectorAll("[data-carte-de-galerie] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null };
+        //  nº 874-§4 — le compteur est sur la ligne du titre ; la photo
+        //  n'en porte plus.
+        pastille: [...document.querySelectorAll("[data-carte-de-galerie] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null,
+        compteur: document.querySelector("[data-carte-de-galerie] [data-compteur-galerie]")?.textContent.trim() ?? null };
     });
     verif("la page Portfolio est le fil de galeries, avec UNE carte — une par galerie, et la fiche n'en a qu'une (nº 866/873)",
       fil.url === `/artist/${SLUG}/portfolio` && fil.fil !== "none" && fil.cartes === 1, `${fil.url} · ${fil.fil} · ${fil.cartes} carte(s)`);
-    verif("la carte s'ouvre sur sa première photo (« 1/11 »), la page en haut", fil.pastille === "1/11" && fil.y === 0, `${fil.pastille} · page à ${fil.y}`);
+    verif("la carte s'ouvre sur sa première photo — « 1/11 » sur la ligne du titre, rien dans la photo —, la page en haut",
+      fil.compteur === "1/11" && fil.pastille === null && fil.y === 0, `${fil.compteur} (photo ${fil.pastille}) · page à ${fil.y}`);
     verif("ni en-tête avatar / badge, ni ligne « Blackwork • Black » sous le pied, ni photo de tête, ni bande par style",
       !fil.enTeteFil && !fil.ligneSousLePied && !fil.photoDeTete && fil.bandes === 0, `en-tête ${fil.enTeteFil} · ligne ${fil.ligneSousLePied} · photo ${fil.photoDeTete} · bandes ${fil.bandes}`);
     verif("ce n'est pas une vue photo : la colonne de lecture est affichée", !fil.vuePhoto && fil.lecture !== "none");
     verif("la carte porte son pied (un seul pied)", fil.piedsDeFil === 1, String(fil.piedsDeFil));
 
     const carte = await sonderCarte(page, "[data-carte-de-galerie]");
-    verif("au-dessus de l'image : le TITRE et le SOUS-TITRE de la galerie",
-      carte.surtitre?.texte === "Tattoos" && carte.titre?.texte === "Blackwork • Black", `« ${carte.surtitre?.texte} » / « ${carte.titre?.texte} »`);
+    verif("au-dessus de l'image : LE TITRE de la galerie, et lui seul (nº 874-§4)",
+      carte.surtitre === null && carte.titre?.texte === "Blackwork • Black", `« ${carte.surtitre?.texte} » / « ${carte.titre?.texte} »`);
     //  nº 873-§3 — plus d'avatar : le titre à seize du bord.
     verif("… dans la boîte de l'en-tête du fil : à seize du bord, douze au-dessus de l'image",
       carte.titreBoite && Math.round(carte.titreBoite.g) === 16 && carte.cadre && Math.round(carte.cadre.y - carte.titreBoite.bas) === 12,

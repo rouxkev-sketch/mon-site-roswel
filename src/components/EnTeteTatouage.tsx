@@ -1244,7 +1244,36 @@ export function EnTeteTatouage({
                 au doigt (le standard tactile), 40 au web, inchangé.
                 L'attribut de style qui la posait est parti — il ne
                 savait pas dire « selon l'appareil ». */
-            className={`flex ${CIBLE_GESTE_BARRE} ${rangeeLibre ? "" : "lg:hidden "}shrink-0 items-center justify-center rounded-full
+            /*  ██ §6 (nº 874) — SEPT PIXELS DE MOINS À SA DROITE, AU DOIGT ██
+                ------------------------------------------------------------
+                LE DÉFAUT DU PROPRIÉTAIRE : « trop d'air » entre la loupe
+                et le globe (ou le fanion), comparé à l'air qui sépare ce
+                voisin de l'avatar du compte.
+                CE QUE LES BOÎTES DISENT, ET POURQUOI ELLES MENTENT ICI :
+                les trois sont écartées du MÊME `gap-3` (12 px) — mais
+                l'œil ne voit pas des boîtes, il voit de l'ENCRE. Or les
+                deux glyphes vivent dans une cible tactile de 46 px
+                (`CIBLE_GESTE_BARRE`) où ils n'occupent que 26, tandis que
+                l'avatar du compte REMPLIT son rond de 28. Relevé au banc,
+                au doigt, connecté : 39,8 px d'encre entre la loupe et le
+                fanion, 32,98 px entre le fanion et le rond du compte —
+                6,8 px d'écart, exactement ce que le propriétaire voit.
+                LE REMÈDE : la loupe rend SEPT PIXELS par la droite (le
+                pixel entier le plus proche des 6,8 mesurés), et les deux
+                airs se lisent à 32,8 et 32,98 — égaux à deux dixièmes,
+                soit moins d'un demi-pixel d'écran.
+                ⚠️ SUR LA LOUPE, PAS SUR LE `gap` : l'écart de la rangée
+                est partagé par les trois (piège nº 378/379) — le toucher
+                aurait rapproché l'avatar du fanion d'autant.
+                ⚠️ AU DOIGT SEULEMENT (règle nº 60) : au web, la cible
+                tombe à 40 px et l'accès au compte n'est pas le même
+                dessin ; rien n'y est demandé.
+                ⚠️ LA CIBLE TACTILE NE RÉTRÉCIT PAS : c'est une MARGE, la
+                boîte de 46 px reste entière — le doigt garde sa surface.
+                ⚠️ LE SQUELETTE SUIT AU PIXEL, sans une ligne de plus : il
+                peint CETTE boîte-ci en rond gris (nº 815, globals.css),
+                marge comprise. */
+            className={`flex ${CIBLE_GESTE_BARRE} mobile:-mr-[7px] ${rangeeLibre ? "" : "lg:hidden "}shrink-0 items-center justify-center rounded-full
                        transition-opacity duration-200 ${ETATS_ROND_BARRE}
                        text-sombre-texte
                        focus-visible:outline-2 focus-visible:outline-offset-2

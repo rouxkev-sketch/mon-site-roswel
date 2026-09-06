@@ -122,15 +122,18 @@ const onglets = (page) => page.evaluate(() =>
     await page.waitForTimeout(1200);
     const cartes = await page.evaluate((S) => { const B = new Function("return " + S)();
       return [...document.querySelectorAll("[data-carte-de-galerie]")].map((li) => {
-        const surtitre = li.querySelector("[data-surtitre-galerie]");
-        const entete = surtitre?.parentElement;
-        return { rond: entete ? entete.querySelectorAll("img, svg, [class*='rounded-full']").length : null, surtitre: B(surtitre),
+        //  nº 874-§4 — plus de surtitre : l'en-tête d'une carte est son
+        //  premier enfant (la boîte des marges du fil), et la rangée du
+        //  titre vit dedans.
+        const entete = li.firstElementChild;
+        return { rond: entete ? entete.querySelectorAll("img, svg, [class*='rounded-full']").length : null,
+          surtitre: B(li.querySelector("[data-surtitre-galerie]")),
           titre: B(li.querySelector("[data-titre-galerie]")), entete: B(entete), cadre: B(li.querySelector("[data-cadre-de-galerie]")) };
       }); }, B);
     verif("aucune carte ne porte de rond : l'avatar de la nº 867-§3 est parti (nº 873-§3)",
       cartes.length > 0 && cartes.every((c) => c.rond === 0), JSON.stringify(cartes.map((c) => c.rond)));
-    verif("… le titre et le sous-titre commencent à seize du bord (plus de 16 + 40 + 12)",
-      cartes.every((c) => c.titre.g === 16 && c.surtitre.g === 16), JSON.stringify(cartes.map((c) => [c.surtitre.g, c.titre.g])));
+    verif("… le titre commence à seize du bord (plus de 16 + 40 + 12), et il n'y a plus de surtitre (nº 874-§4)",
+      cartes.every((c) => c.titre.g === 16 && c.surtitre === null), JSON.stringify(cartes.map((c) => [c.surtitre, c.titre.g])));
     verif("… l'en-tête garde ses douze pixels au-dessus de l'image",
       cartes.every((c) => Math.round(c.cadre.y - c.entete.bas) === 0 && Math.round(c.cadre.y - c.titre.bas) === 12),
       JSON.stringify(cartes.map((c) => Math.round(c.cadre.y - c.titre.bas))));

@@ -239,10 +239,13 @@ const etat = (page) => page.evaluate(() => ({
           de badges n'ont plus d'icône (§1). L'ordre se lit donc à
           partir de la rangée, et les deux dessins ne sont plus là — le
           banc 869 mesure le nouvel en-tête ; celui-ci garde le gris. */
-      verif("§5 — l'ordre (nº 871) : la rangée d'actions (Instagram), LE SITE, la bio, les styles, les techniques, l'adresse",
+      /*  §2 (nº 874) — LE SITE EST PASSÉ SOUS LA BIO : l'ordre du
+          propriétaire est désormais rangée → bio → site → styles →
+          techniques → adresse. */
+      verif("§5 — l'ordre (nº 871, revu nº 874-§2) : la rangée (Instagram), LA BIO, LE SITE, les styles, les techniques, l'adresse",
         v.instagram !== null && v.site !== null && v.bio !== null && v.adresse !== null &&
-        v.instagram < v.site && v.site < v.bio && v.bio < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
-        JSON.stringify({ instagram: v.instagram, site: v.site, bio: v.bio, styles: v.styles.y, techniques: v.pratiques.y, adresse: v.adresse }));
+        v.instagram < v.bio && v.bio < v.site && v.site < v.styles.y && v.styles.y < v.pratiques.y && v.pratiques.y < v.adresse,
+        JSON.stringify({ instagram: v.instagram, bio: v.bio, site: v.site, styles: v.styles.y, techniques: v.pratiques.y, adresse: v.adresse }));
       verif("§6 (repris nº 869-§1) — plus aucun dessin en tête des deux lignes",
         v.styles.chemin === null && v.pratiques.chemin === null && v.styles.taille === null && v.pratiques.taille === null,
         `${String(v.styles.chemin).slice(0, 40)} · ${String(v.pratiques.chemin).slice(0, 40)}`);

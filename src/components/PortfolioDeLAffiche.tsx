@@ -9,10 +9,7 @@ import {
   cleDeGalerie,
   oublierLesAutresGaleries,
 } from "@/lib/memoire-galeries";
-import {
-  CATEGORIES_EXPLORER,
-  ECRITURE_TITRE_SECTION,
-} from "@/config/tatouage";
+import { CATEGORIES_EXPLORER } from "@/config/tatouage";
 import {
   NATURE_PAR_DEFAUT,
   RENDU_PAR_DEFAUT,
@@ -297,12 +294,15 @@ function seriesDeLaCategorie(
   return series;
 }
 
-/** UNE GALERIE DU PORTFOLIO : sa série, la nature (« tatouage »,
-    « flash ») et le titre de sa catégorie (« Tattoos », « Flash »). */
+/** UNE GALERIE DU PORTFOLIO : sa série et sa nature (« tatouage »,
+    « flash »).
+    ⛔ §4 (nº 874) — LE TITRE DE SA CATÉGORIE (« Tattoos », « Flash »)
+    est parti avec le surtitre qui l'affichait : plus personne ne le
+    lit (règle nº 386). La nature, elle, sert encore — elle nomme la
+    galerie (`data-galerie-serie`) et voyage dans les liens de partage. */
 export type GalerieDuPortfolio = {
   serie: SeriePubliee;
   nature: string;
-  titre: string;
 };
 
 /**
@@ -342,14 +342,12 @@ export function galeriesDuPortfolio(
   groupes: StyleGalerie[],
   nature: string
 ): GalerieDuPortfolio[] {
-  const categorie = CATEGORIES_EXPLORER.find(
-    (candidate) => candidate.nature === nature
-  );
-  if (!categorie) return [];
+  if (!CATEGORIES_EXPLORER.some((candidate) => candidate.nature === nature)) {
+    return [];
+  }
   return seriesDeLaCategorie(groupes, nature).map((serie) => ({
     serie,
     nature,
-    titre: categorie.titre,
   }));
 }
 
@@ -380,31 +378,20 @@ export function galeriesDuPortfolio(
  * `casesDe` et `surtitre`, eux, sont APPELÉS (jamais montés) : une
  * fonction appelée rend des éléments, elle ne crée aucun type.
  */
-/**
- * §2 (nº 375, DÉPLACÉ AU MODULE PAR LA nº 747) — LE SURTITRE D'UNE
- * GALERIE — « RÉALISATIONS » ou « FLASHS », écrit une fois pour les
- * deux appareils.
- * ------------------------------------------------------------------
- * MÊME ÉCRITURE QU'HIER, AU CHEVEU : `ECRITURE_TITRE_SECTION`, la
- * classe que portait le `<h2>` — mêmes capitales, même gris, mêmes
- * 13 px, même graisse, même espacement de lettres. On ne la recopie
- * pas, on la consomme ; il n'y a donc rien à faire diverger.
- * L'ÉLÉMENT CHANGE (`<p>` et non `<h2>`) et c'est voulu : ce n'est
- * plus le titre d'une section, c'est la catégorie de la galerie qui
- * suit, répétée autant de fois qu'il y a de galeries. Un `<h2>`
- * répété cinq fois avec le même texte mentirait au plan du document
- * et aux lecteurs d'écran.
- * ⚠️ AUCUNE MARGE : le surtitre est collé au titre de sa galerie —
- * c'est ce qui les fait lire comme un seul bloc, et c'est ce qui
- * garantit qu'aucun espace neuf n'entre dans le portfolio.
- */
-function surtitre(titre: string) {
-  return (
-    <p data-surtitre-galerie="" className={ECRITURE_TITRE_SECTION}>
-      {titre}
-    </p>
-  );
-}
+/*  ⛔ §4 (nº 874) — LE SURTITRE D'UNE GALERIE EST SUPPRIMÉ, CODE COMPRIS.
+    ------------------------------------------------------------------
+    « TATTOOS » / « FLASH » coiffait chaque titre de galerie depuis la
+    nº 375 (c'était alors le titre d'une SECTION, et les deux catégories
+    se suivaient sur la même page). Le propriétaire le retire : depuis
+    la nº 873, le portfolio et les flashs sont DEUX PAGES — la catégorie
+    est déjà dite par l'onglet ouvert, et la répéter au-dessus de chaque
+    galerie ne disait plus rien. Il ne reste que le titre :
+    « Trash Polka • Color ».
+    Partent avec lui : la fonction qui l'écrivait, sa marque de relevé
+    (`data-surtitre-galerie`) et le titre de catégorie que chaque
+    galerie transportait (`GalerieDuPortfolio.titre`) — plus personne ne
+    le lit (règle nº 386 : pas de code mort). `ECRITURE_TITRE_SECTION`
+    reste, elle, l'écriture des étiquettes de BlocLieux. */
 
 /**
  * ██ §1 (nº 521) — LA TÊTE D'UNE GALERIE, AVEC SON COMPTEUR ██
@@ -443,32 +430,63 @@ function surtitre(titre: string) {
  * deux, pour ne mettre en commun qu'une barre oblique.
  */
 /**
+ * ██ §4 (nº 874) — LE COMPTEUR D'UNE GALERIE, ÉCRIT UNE SEULE FOIS ██
+ * ------------------------------------------------------------------
+ * « 1/20 », au bout de la ligne du titre, à l'opposé de lui. Il vivait
+ * dans le seul `TeteDeGalerie` (le profil du web) ; LE FIL DU DOIGT LE
+ * PORTE AUSSI depuis cette passe (la pastille dans la photo s'en va,
+ * §4) et le propriétaire le veut « même couleur, même corps que sur le
+ * web, à l'identique ». Il est donc écrit ICI, une fois, et les deux
+ * surfaces le montent — elles ne peuvent plus diverger (piège nº 378).
+ * L'écriture est celle de la nº 521/522, au cheveu : 14 px (un cran
+ * sous la ligne du titre qu'il accompagne), graisse normale, le gris
+ * des textes secondaires, et les chiffres à largeur fixe
+ * (`tabular-nums`) pour que passer de « 9/20 » à « 10/20 » ne fasse pas
+ * frémir la ligne. Il n'est jamais vide : le rang part de zéro, et
+ * l'affichage ajoute un.
+ */
+export function CompteurDeGalerie({
+  rang,
+  total,
+}: {
+  rang: number;
+  total: number;
+}) {
+  return (
+    <p
+      data-compteur-galerie=""
+      className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
+    >
+      {rang + 1}/{total}
+    </p>
+  );
+}
+
+/**
  * ██ §3 (nº 863) — LE TITRE D'UNE GALERIE, ÉCRIT UNE FOIS ██
  * ------------------------------------------------------------------
- * Le surtitre (« TATTOOS »), puis la ligne du titre (« Blackwork •
- * Black ») et ce qu'on veut poser à son bout — le compteur « 1/20 »
- * sur le profil, rien sur une carte du fil de galerie. La vue photo
- * ouverte depuis l'onglet Portfolio (FilDeGalerie) doit porter ce
- * titre « même couleur, même corps, même graisse que sur le profil »
- * (décision du propriétaire) : c'est donc LE MÊME COMPOSANT qui
- * l'écrit aux deux endroits, pas deux classes qu'on tiendrait d'accord.
+ * La ligne du titre (« Blackwork • Black ») et ce qu'on pose à son
+ * bout — le compteur « 1/20 », aux deux appareils depuis la nº 874-§4.
+ * Le fil du doigt (FilDeGalerie) porte ce titre « même couleur, même
+ * corps, même graisse que sur le profil » (décision du propriétaire) :
+ * c'est donc LE MÊME COMPOSANT qui l'écrit aux deux endroits, pas deux
+ * classes qu'on tiendrait d'accord.
+ * ⛔ LE SURTITRE (« TATTOOS ») EST PARTI À LA nº 874-§4 : voir la note
+ * en tête de fichier.
  * ⚠️ AU MODULE, comme `TeteDeGalerie` (nº 747) : un type stable, aucun
  * remontage de la galerie voisine à chaque rendu.
  */
 export function TitreDeGalerie({
-  nature,
   titre,
   compteur,
 }: {
-  nature: string;
   titre: string;
-  /** Ce qui s'assoit au bout de la ligne du titre — le compteur du
-      profil. Absent : la ligne s'arrête au titre. */
+  /** Ce qui s'assoit au bout de la ligne du titre — le compteur.
+      Absent : la ligne s'arrête au titre. */
   compteur?: React.ReactNode;
 }) {
   return (
     <>
-      {surtitre(nature)}
       {/*  `items-baseline` : le nombre s'assoit sur la même ligne
            d'écriture que le style, quelle que soit la casse. */}
       <div className="flex items-baseline gap-3">
@@ -490,12 +508,10 @@ export function TitreDeGalerie({
 }
 
 function TeteDeGalerie({
-  nature,
   titre,
   total,
   galerie,
 }: {
-  nature: string;
   titre: string;
   total: number;
   galerie: (surRang: (rang: number) => void) => React.ReactNode;
@@ -503,29 +519,14 @@ function TeteDeGalerie({
   const [rang, setRang] = useState(0);
   return (
     <>
-      {/*  §3 (nº 863) — le surtitre et la ligne du titre vivent chez
-           `TitreDeGalerie`, partagé avec le fil de galerie ; ce
-           composant-ci n'y ajoute que son compteur et sa galerie. */}
+      {/*  §3 (nº 863) — la ligne du titre vit chez `TitreDeGalerie`,
+           partagé avec le fil de galerie ; ce composant-ci n'y ajoute
+           que son compteur et sa galerie. */}
+      {/*  §4 (nº 874) — le compteur est écrit une seule fois, plus haut
+           (`CompteurDeGalerie`) : le fil du doigt porte le même. */}
       <TitreDeGalerie
-        nature={nature}
         titre={titre}
-        compteur={
-          /*  LE COMPTEUR — 15 px comme la ligne qu'il accompagne, le
-              GRIS des textes secondaires (le jeton de la nº 466), et
-              la graisse NORMALE : il accompagne le style, il ne le
-              concurrence pas.
-              §1 (nº 522) — UN CRAN PLUS PETIT : 15 → 14 px. Il
-              accompagne la ligne du style, il ne la double pas — et
-              c'est la valeur que la ligne d'information d'une carte
-              porte déjà (nº 480), pas un nombre neuf. Le gris, la
-              graisse et la place ne bougent pas. */
-          <p
-            data-compteur-galerie=""
-            className="shrink-0 text-[14px] font-normal tabular-nums text-sombre-texte-doux"
-          >
-            {rang + 1}/{total}
-          </p>
-        }
+        compteur={<CompteurDeGalerie rang={rang} total={total} />}
       />
       {galerie(setRang)}
     </>
@@ -598,14 +599,27 @@ export function PanneauPortfolio({
       <li
         key={photo.cle}
         data-case-galerie={rang}
-        /*  LA LARGEUR D'UNE CASE — deux photos pleines, 10 % de la
-             troisième, son bord droit collé au bord droit du cadre :
-             `2,1 × case + 2 × écart = 100 %`, d'où
-             `case = (100 % − 6px) / 2,1` avec l'écart de 3 px. `100 %`
+        /*  ██ §5 (nº 874) — LES GALERIES DU WEB S'AGRANDISSENT ██
+             ------------------------------------------------------
+             DÉCISION DU PROPRIÉTAIRE : la rangée montrait DEUX photos
+             pleines et 10 % de la troisième ; elle en montre désormais
+             UNE PLEINE et 60 % DE LA SUIVANTE — des images nettement
+             plus grandes, et il reste assez de la voisine pour qu'on
+             voie qu'il y en a d'autres.
+             LA RÈGLE EST LA MÊME, avec un autre nombre :
+             `1,6 × case + 1 × écart = 100 %`, d'où
+             `case = (100 % − 3px) / 1,6` avec l'écart de 3 px. `100 %`
              est la boîte de CONTENU de la rangée — au doigt, le
              rembourrage du débord n'en fait donc pas partie, et la
-             règle tient telle quelle sur les deux appareils. Aucune
-             largeur en dur.
+             règle tient telle quelle aux deux largeurs. Aucune largeur
+             en dur.
+             ⚠️ « WEB SEULEMENT », ET C'EST DÉJÀ LE CAS : depuis la
+             nº 873-§3, ce panneau ne se montre plus au doigt (les pages
+             Portfolio et Flash y sont le fil de galeries) — ses deux
+             blocs, « doigt » et « web », sont deux largeurs d'un même
+             ORDINATEUR. Une seule écriture les sert (piège nº 378).
+             ⚠️ LE CALCUL D'ORIGINE, POUR MÉMOIRE : deux photos pleines
+             et 10 % de la troisième, `2,1 × case + 2 × écart = 100 %`.
              §2 (nº 310) — `grow` : ET C'ÉTAIT ÇA, LA MARGE DE DROITE.
              ------------------------------------------------------
              LA CAUSE, DÉCODÉE AU PIXEL : cette largeur est calculée
@@ -644,7 +658,7 @@ export function PanneauPortfolio({
              et cette galerie n'a jamais porté de badge de comptage. */
         className={`${
           serie.photos.length > 1 ? "grow " : ""
-        }shrink-0 snap-start basis-[calc((100%_-_6px)/2.1)]`}
+        }shrink-0 snap-start basis-[calc((100%_-_3px)/1.6)]`}
       >
         {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
              UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),
@@ -784,7 +798,7 @@ export function PanneauPortfolio({
            étaient déjà des réglages, comme l'écart et la taille des
            chevrons. Aucun second dessin. */}
       <div data-galeries="doigt" className="mt-10 lg:hidden">
-        {galeries.map(({ serie, nature, titre }) => (
+        {galeries.map(({ serie, nature }) => (
           <div
             /*  §2 (nº 375) — LA NATURE ENTRE DANS LA CLÉ, et il le
                  faut : la liste est APLATIE, or un même style dans
@@ -796,7 +810,6 @@ export function PanneauPortfolio({
             className="mt-7 first:mt-0"
           >
             <TeteDeGalerie
-              nature={titre}
               titre={titreDeGalerie(serie.label, serie.rendu)}
               total={serie.photos.length}
               galerie={(surRang) => (
@@ -885,7 +898,7 @@ export function PanneauPortfolio({
            celle de la colonne, et `snap-start` s'aligne dessus
            sans qu'on ait rien à corriger. */}
       <div data-galeries="web" className="mt-10 hidden lg:block">
-        {galeries.map(({ serie, nature, titre }) => (
+        {galeries.map(({ serie, nature }) => (
           <div
             //  §2 (nº 375) — la nature dans la clé, même raison
             //  qu'au doigt : la liste est aplatie.
@@ -897,7 +910,6 @@ export function PanneauPortfolio({
                  « FLASHS », l'écriture de l'ancien titre de
                  section, collée au titre de la galerie. */}
             <TeteDeGalerie
-              nature={titre}
               titre={titreDeGalerie(serie.label, serie.rendu)}
               total={serie.photos.length}
               galerie={(surRang) => (

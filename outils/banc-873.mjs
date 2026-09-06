@@ -85,11 +85,19 @@ const SONDE_PAGE = `() => {
     const cadre = li.querySelector("[data-cadre-de-galerie]");
     const pastille = [...(cadre?.querySelectorAll("*") ?? [])].map((e) => e.textContent.trim()).find((t) => /^\\d+\\/\\d+$/.test(t)) ?? null;
     const pied = li.querySelector("[data-pied-de-fil]");
-    const surtitre = li.querySelector("[data-surtitre-galerie]"); const entete = surtitre?.parentElement;
-    return { serie: li.dataset.galerieSerie, surtitre: surtitre?.textContent.trim(), titre: li.querySelector("[data-titre-galerie]")?.textContent.trim(),
-      pastille, points: pied ? pied.querySelectorAll("button[aria-label^='View photo']").length : 0, pied: Boolean(pied),
+    //  nº 874-§4 — plus de surtitre : l'en-tête est la boîte du titre, et
+    //  le compteur s'assoit sur sa ligne.
+    const titre = li.querySelector("[data-titre-galerie]");
+    const compteur = li.querySelector("[data-compteur-galerie]");
+    //  L'EN-TÊTE de la carte : la boîte qui porte les marges du fil,
+    //  c'est-à-dire le premier enfant de la carte — jamais la rangée du
+    //  titre, qui vit dedans.
+    const entete = li.firstElementChild;
+    return { serie: li.dataset.galerieSerie, surtitre: li.querySelector("[data-surtitre-galerie]")?.textContent.trim(), titre: titre?.textContent.trim(),
+      pastille, compteur: compteur?.textContent.trim() ?? null,
+      points: pied ? pied.querySelectorAll("button[aria-label^='View photo']").length : 0, pied: Boolean(pied),
       avatar: entete ? entete.querySelectorAll("img, svg").length : null, enTeteX: entete ? Math.round(entete.getBoundingClientRect().left) : null,
-      titreX: surtitre ? Math.round(surtitre.getBoundingClientRect().left) : null, liens: cadre ? cadre.querySelectorAll("a").length : null,
+      titreX: titre ? Math.round(titre.getBoundingClientRect().left) : null, liens: cadre ? cadre.querySelectorAll("a").length : null,
       cadreG: cadre ? Math.round(cadre.getBoundingClientRect().left) : null, cadreD: cadre ? Math.round(cadre.getBoundingClientRect().right) : null };
   });
   const bandes = [...document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]')];
@@ -105,6 +113,17 @@ const SONDE_PAGE = `() => {
 }`;
 const sonderPage = (page) => page.evaluate((S) => new Function("return " + S)()(), SONDE_PAGE);
 const onglet = (page, mot) => page.locator(`${NAV} a`).filter({ hasText: new RegExp(`^${mot}$`) }).first();
+/*  ██ TOUCHER UN ONGLET SANS DÉPLACER LA PAGE ██
+    `tap()` et `click()` amènent d'abord leur cible « à l'écran »
+    (`scrollIntoViewIfNeeded`) : sur une rangée COLLANTE — déjà visible,
+    par construction —, le navigateur défile quand même, en douceur (la
+    feuille du site pose `scroll-behavior: smooth`). Mesuré : la page
+    passait de 600 à 451 AVANT le clic, et le site mémorisait 451 — ce
+    qui est juste, mais ce n'est pas ce que le banc voulait éprouver.
+    On envoie donc l'événement de clic directement : c'est le même clic
+    pour le lien (le routeur et `surClic` s'en saisissent), sans le
+    défilement d'approche. Un vrai doigt, lui, ne déplace pas la page. */
+const toucherLOnglet = (page, mot) => onglet(page, mot).dispatchEvent("click");
 const proche = (a, b, marge = 1.5) => a !== null && a !== undefined && b !== null && b !== undefined && Math.abs(a - b) <= marge;
 //  UN BALAYAGE, à la main (le navigateur d'un banc n'a pas de doigt) : les
 //  touchers que la page écoute (lib/glissement-lateral), d'un point de la
@@ -182,7 +201,7 @@ for (const mode of ["doigt", "web"]) {
 
     titre(`873 · §1 — ${mode} : la navigation douce, et chaque page garde sa position`);
     await page.evaluate(() => { window.__banc873 = "vivant"; });
-    if (mode === "doigt") await onglet(page, "Portfolio").tap(); else await onglet(page, "Portfolio").click();
+    await toucherLOnglet(page, "Portfolio");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio` && document.querySelector('nav[aria-label="Profile, portfolio or flash"] a[aria-current="page"]')?.textContent.trim() === "Portfolio", SLUG, { timeout: 15000 });
     await page.waitForTimeout(1200);
     const doux = await page.evaluate(() => ({ vivant: window.__banc873 === "vivant", y: Math.round(scrollY), titre: document.title }));
@@ -200,17 +219,17 @@ for (const mode of ["doigt", "web"]) {
     const CIBLE = Math.min(600, max);
     await page.waitForTimeout(700);
     verif(`la page Portfolio se défile à ${CIBLE} (course ${max})`, CIBLE >= 100 && (await position()) === CIBLE, `${await position()} / ${CIBLE}`);
-    if (mode === "doigt") await onglet(page, "Flash").tap(); else await onglet(page, "Flash").click();
+    await toucherLOnglet(page, "Flash");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/flash`, SLUG, { timeout: 15000 });
     await page.waitForTimeout(1200);
     const surFlash = await position();
     verif("Flash s'ouvre en haut (sa position à elle : jamais visitée)", surFlash === 0, `${surFlash}`);
-    if (mode === "doigt") await onglet(page, "Portfolio").tap(); else await onglet(page, "Portfolio").click();
+    await toucherLOnglet(page, "Portfolio");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio`, SLUG, { timeout: 15000 });
     await page.waitForTimeout(1500);
     const retourOnglet = await position();
     verif(`RETOUR PAR L'ONGLET : Portfolio retrouve ${CIBLE}`, retourOnglet === CIBLE, `${retourOnglet} / ${CIBLE}`);
-    if (mode === "doigt") await onglet(page, "Flash").tap(); else await onglet(page, "Flash").click();
+    await toucherLOnglet(page, "Flash");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/flash`, SLUG, { timeout: 15000 });
     await page.waitForTimeout(1000);
     await page.goBack();
@@ -259,13 +278,14 @@ for (const mode of ["doigt", "web"]) {
     if (mode === "doigt") {
       verif("LE FIL DE GALERIES est la page : six cartes, les six galeries de TATTOOS, dans l'ordre du profil",
         p.filVisible && p.cartes.map((c) => c.serie).join(" ") === TATTOOS.join(" "), `${p.filVisible} · ${p.cartes.map((c) => c.serie).join(" ")}`);
-      verif("… coiffées de leur titre et sous-titre (« TATTOOS » / « Blackwork • Black »), SANS avatar",
-        p.cartes.every((c) => c.surtitre === "Tattoos" && c.avatar === 0) && p.cartes[0]?.titre === "Blackwork • Black" && p.cartes[2]?.titre === "Realism • Black",
+      verif("… coiffées de leur SEUL titre (« Blackwork • Black »), sans avatar ni surtitre (nº 874-§4)",
+        p.cartes.every((c) => c.surtitre === undefined && c.avatar === 0) && p.cartes[0]?.titre === "Blackwork • Black" && p.cartes[2]?.titre === "Realism • Black",
         JSON.stringify(p.cartes.map((c) => [c.surtitre, c.titre, c.avatar])));
       verif("… le titre à seize du bord, dans la boîte de l'en-tête du fil (plus de rond)", p.cartes.every((c) => c.titreX === 16 && c.enTeteX === 0), JSON.stringify(p.cartes.map((c) => [c.enTeteX, c.titreX])));
-      verif("la galerie de cinq : la pastille « 1/5 », les points, le pied", p.cartes[0]?.pastille === "1/5" && p.cartes[0].points === 5 && p.cartes[0].pied, JSON.stringify(p.cartes[0]));
-      verif("LA GALERIE D'UNE PHOTO : même carte, pastille cachée, pas de points, le pied gardé",
-        p.cartes[2] && p.cartes[2].pastille === null && p.cartes[2].points === 0 && p.cartes[2].pied && p.cartes[2].cadreG === 0 && p.cartes[2].cadreD === 390, JSON.stringify(p.cartes[2]));
+      verif("la galerie de cinq : le compteur « 1/5 » sur la ligne du titre, rien dans la photo, les points, le pied",
+        p.cartes[0]?.compteur === "1/5" && p.cartes[0].pastille === null && p.cartes[0].points === 5 && p.cartes[0].pied, JSON.stringify(p.cartes[0]));
+      verif("LA GALERIE D'UNE PHOTO : même carte, aucun compteur, pas de points, le pied gardé",
+        p.cartes[2] && p.cartes[2].compteur === null && p.cartes[2].pastille === null && p.cartes[2].points === 0 && p.cartes[2].pied && p.cartes[2].cadreG === 0 && p.cartes[2].cadreD === 390, JSON.stringify(p.cartes[2]));
       verif("plus de bandes par style au doigt", p.bandesVisibles === 0, `${p.bandesVisibles} visible(s) sur ${p.bandes}`);
       verif("quarante pixels d'air entre la rangée du va-et-vient (son trait) et le fil", p.filY !== null && p.navBas !== null && p.filY - p.navBas === 40, `${p.filY} − ${p.navBas}`);
       verif("aucune photo n'est un lien", p.cartes.every((c) => c.liens === 0), JSON.stringify(p.cartes.map((c) => c.liens)));
@@ -301,8 +321,8 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1200);
     const f = await sonderPage(page);
     if (mode === "doigt") {
-      verif("une carte : la galerie de FLASHS, « FLASH / Blackwork • Black », pastille « 1/3 »",
-        f.filVisible && f.cartes.length === 1 && f.cartes[0].serie === "flash·blackwork·black" && f.cartes[0].surtitre === "Flash" && f.cartes[0].pastille === "1/3" && f.cartes[0].avatar === 0,
+      verif("une carte : la galerie de FLASHS, « Blackwork • Black », compteur « 1/3 » sur la ligne du titre",
+        f.filVisible && f.cartes.length === 1 && f.cartes[0].serie === "flash·blackwork·black" && f.cartes[0].surtitre === undefined && f.cartes[0].compteur === "1/3" && f.cartes[0].avatar === 0,
         JSON.stringify(f.cartes));
     } else {
       verif("la galerie de flashs seule, par style", f.webVisibles.join(" ") === "flash·blackwork·black" && !f.filVisible, `${f.webVisibles.join(" ")}`);

@@ -36,7 +36,11 @@ const CARTE_CLAIR = "rgb(32, 38, 45)";    // carteClair  #20262D
 const BLEU = "rgb(127, 169, 238)";        // lien  #7FA9EE
 //  L'air de référence : celui qui sépare le va-et-vient du haut de
 //  l'avatar (le `mt-10` du bloc du nom) et celui de la liste (`gap-y-6`).
-const AIR_ENTETE = 40, AIR_BLOC = 24, DEBORD_TRAIT = 28, HAUTEUR_BADGE = 40;
+const AIR_ENTETE = 40, DEBORD_TRAIT = 28, HAUTEUR_BADGE = 40;
+//  §2 (nº 874) — l'air standard de la liste, nommé par le propriétaire :
+//  VINGT-HUIT, entre TOUS ses blocs (il valait 24, et la bio ajoutait
+//  ses quatre pixels de part et d'autre pour atteindre 28 chez elle).
+const AIR_BLOC_874 = 28;
 //  §5 (nº 871) — la robe blanche de la nº 528 : l'aplat `sombre-texte`
 //  et le fond de page en texte.
 const BLANC_FOND = "rgb(242, 242, 244)", FOND_PAGE = "rgb(11, 15, 20)";
@@ -184,9 +188,13 @@ for (const mode of ["doigt", "web"]) {
     verif("§3 — le site a sa ligne, son icône et le titre choisi",
       v.site?.texte === "Mon site à moi" && v.site?.svg === 1 && v.site?.cible === "_blank", JSON.stringify(v.site && { texte: v.site.texte, svg: v.site.svg }));
     verif("§3 — son lien est BLEU (ce qui sort du site)", v.site?.couleur === BLEU, v.site?.couleur);
-    verif("§3 (nº 872) — le site ouvre les lignes, sous la rangée et au-dessus de la bio",
-      v.bio && v.site && v.rangee && v.rangee.bas <= v.site.y && v.site.bas <= v.bio.y,
-      JSON.stringify({ rangee: v.rangee?.bas, site: v.site?.y, bio: v.bio?.y }));
+    /*  §2 (nº 874) — LE SITE EST PASSÉ SOUS LA BIO (décision du
+        propriétaire) : la nº 870 l'avait posé là, la nº 871 l'avait
+        remonté, la nº 874 l'y remet. Sa ligne, son icône et son bleu
+        (le §3 de la nº 870) ne changent pas — c'est sa PLACE qui bouge. */
+    verif("§3 (nº 874) — le site est SOUS LA BIO, et sous la rangée",
+      v.bio && v.site && v.rangee && v.rangee.bas <= v.bio.y && v.bio.bas <= v.site.y,
+      JSON.stringify({ rangee: v.rangee?.bas, bio: v.bio?.bas, site: v.site?.y }));
     verif("§3 — et il n'est plus un badge de la rangée",
       (v.actions ?? []).every((a) => a.cle !== "website"), (v.actions ?? []).map((a) => a.cle).join(" · "));
     //  §4 — LES TROIS BADGES
@@ -224,15 +232,22 @@ for (const mode of ["doigt", "web"]) {
     verif("§2 (nº 872) — l'air entre le bas de l'avatar et LE BOOKING = celui du va-et-vient au haut de l'avatar",
       proche(v.booking?.y - v.avatar?.bas, AIR_ENTETE, 1) && proche(v.avatar?.y - v.groupe?.bas, AIR_ENTETE, 4),
       `sous l'avatar ${(v.booking?.y - v.avatar?.bas)?.toFixed?.(1)} · au-dessus ${(v.avatar?.y - v.groupe?.bas)?.toFixed?.(1)}`);
-    verif("§5-a — la rangée garde le même air, mesuré depuis le booking",
-      proche(v.rangee?.y - v.booking?.bas, AIR_ENTETE, 1), `${(v.rangee?.y - v.booking?.bas)?.toFixed?.(1)}`);
-    verif("§5-b — l'air sous la rangée = l'air standard entre deux blocs (la première ligne est le site)",
-      proche(v.site?.y - v.rangee?.bas, AIR_BLOC, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC, 1),
-      `sous la rangée ${(v.site?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
-    verif("§2 (nº 872) — l'ordre : nom, booking, rangée, site, bio, styles, techniques, adresse",
-      v.h1.y < v.booking.y && v.booking.bas <= v.rangee.y && v.rangee.bas <= v.site.y && v.site.bas <= v.bio.y
-      && v.bio.bas <= v.styles.y && v.styles.bas <= v.pratiques.y && v.pratiques.bas <= v.adresse.y,
-      JSON.stringify({ nom: v.h1?.y, booking: v.booking?.y, rangee: v.rangee?.y, site: v.site?.y, bio: v.bio?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
+    /*  §1 (nº 874) — L'AIR DE BOÎTE SOUS LE BOOKING VAUT DEUX PIXELS DE
+        MOINS, et c'est voulu : la ligne du booking rend ces deux pixels
+        par le bas (`-mb-[2px]`) pour que son air À L'ŒIL — d'encre à
+        encre — égale celui qui la précède. Le banc 874 mesure l'encre ;
+        celui-ci mesure la boîte, et dit la valeur qui en découle. */
+    verif("§5-a (repris nº 874-§1) — l'air de boîte sous le booking : deux pixels de moins que l'en-tête",
+      proche(v.rangee?.y - v.booking?.bas, AIR_ENTETE - 2, 1), `${(v.rangee?.y - v.booking?.bas)?.toFixed?.(1)} (attendu ${AIR_ENTETE - 2})`);
+    /*  §2 (nº 874) — L'AIR STANDARD DE LA LISTE EST VINGT-HUIT partout :
+        sous la rangée comme entre deux lignes de badges. */
+    verif("§5-b (repris nº 874-§2) — l'air sous la rangée = l'air standard entre deux blocs, vingt-huit",
+      proche(v.bio?.y - v.rangee?.bas, AIR_BLOC_874, 1) && proche(v.pratiques?.y - v.styles?.bas, AIR_BLOC_874, 1),
+      `sous la rangée ${(v.bio?.y - v.rangee?.bas)?.toFixed?.(1)} · entre deux lignes ${(v.pratiques?.y - v.styles?.bas)?.toFixed?.(1)}`);
+    verif("§2 (nº 872, ordre revu nº 874-§2) — nom, booking, rangée, BIO, SITE, styles, techniques, adresse",
+      v.h1.y < v.booking.y && v.booking.bas <= v.rangee.y && v.rangee.bas <= v.bio.y && v.bio.bas <= v.site.y
+      && v.site.bas <= v.styles.y && v.styles.bas <= v.pratiques.y && v.pratiques.bas <= v.adresse.y,
+      JSON.stringify({ nom: v.h1?.y, booking: v.booking?.y, rangee: v.rangee?.y, bio: v.bio?.y, site: v.site?.y, styles: v.styles?.y, techniques: v.pratiques?.y, adresse: v.adresse?.y }));
   } catch (e) {
     verif(`déroulement du banc 870 (§1-§5 ${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -261,8 +276,10 @@ for (const mode of ["doigt", "web"]) {
       proche(n.rangee?.w, n.largeurColonne, 2) && proche(n.actions[1].d, n.rangee.d, 1),
       `${(n.actions ?? []).map((a) => a.cle).join(" · ")} · rangée ${n.rangee?.w} / colonne ${n.largeurColonne}`);
     verif("§3 — sans site, aucune ligne de site n'apparaît", n.site === null || n.site === undefined, JSON.stringify(n.site));
-    verif("§5-b — sans site, c'est la bio qui ouvre la liste (ses quatre pixels en plus, comme partout)",
-      proche(n.bio?.y - n.rangee?.bas, AIR_BLOC + 4, 1), `${(n.bio?.y - n.rangee?.bas)?.toFixed?.(1)}`);
+    /*  §2 (nº 874) — la bio n'a plus ses quatre pixels : l'air standard
+        de la liste vaut vingt-huit pour tous ses blocs. */
+    verif("§5-b (repris nº 874-§2) — sans site, la bio ouvre la liste au même air standard",
+      proche(n.bio?.y - n.rangee?.bas, AIR_BLOC_874, 1), `${(n.bio?.y - n.rangee?.bas)?.toFixed?.(1)}`);
     verif("§2 (nº 872) — et le booking y est toujours au-dessus des badges",
       n.booking && n.rangee && n.booking.bas <= n.rangee.y, JSON.stringify({ booking: n.booking?.y, rangee: n.rangee?.y }));
   } catch (e) {

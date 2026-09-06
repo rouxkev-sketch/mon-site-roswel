@@ -5,6 +5,7 @@ import { MARGES_EN_TETE_DE_FIL, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import {
+  CompteurDeGalerie,
   TitreDeGalerie,
   type GalerieDuPortfolio,
 } from "@/components/PortfolioDeLAffiche";
@@ -206,7 +207,7 @@ function CarteDeGalerie({
   vues?: number | null;
   apercu: boolean;
 }) {
-  const { serie, nature, titre } = galerie;
+  const { serie, nature } = galerie;
   const [indice, setIndice] = useState(0);
   /** La première carte est celle qu'on regarde à l'arrivée : son image
       ne se diffère pas. Les autres attendent qu'on défile jusqu'à
@@ -228,13 +229,25 @@ function CarteDeGalerie({
       data-carte-de-galerie={rang}
       data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
     >
-      {/*  §3 (nº 873) — LES DEUX LIGNES DU TITRE, SEULES, dans la boîte
-           de l'en-tête du fil (seize de côté, douze au-dessus de
-           l'image) : l'avatar de la nº 867-§3 est parti. */}
+      {/*  §3 (nº 873) — LE TITRE SEUL, dans la boîte de l'en-tête du fil
+           (seize de côté, douze au-dessus de l'image) : l'avatar de la
+           nº 867-§3 est parti.
+           ██ §4 (nº 874) — LE SURTITRE S'EN VA, LE COMPTEUR ARRIVE ██
+           « TATTOOS » ne coiffe plus le titre (la page le dit déjà), et
+           « 1/20 » quitte la photo pour LA LIGNE DU TITRE, à son opposé
+           — le compteur du profil du web, le même composant, donc le
+           même gris et le même corps « à l'identique » (décision du
+           propriétaire). Une galerie d'une seule photo n'en a pas : il
+           n'y a rien à compter (`serie.photos.length > 1`, la règle de
+           la pastille qu'il remplace). */}
       <div className={MARGES_EN_TETE_DE_FIL}>
         <TitreDeGalerie
-          nature={titre}
           titre={titreDeGalerie(serie.label, serie.rendu)}
+          compteur={
+            serie.photos.length > 1 ? (
+              <CompteurDeGalerie rang={indice} total={serie.photos.length} />
+            ) : undefined
+          }
         />
       </div>
       <div
@@ -252,6 +265,22 @@ function CarteDeGalerie({
             surChangement={setIndice}
             variante="carte"
             eveilPastille="page"
+            /*  ██ §4 (nº 874) — PLUS DE PASTILLE DANS LA PHOTO ██
+                Décision du propriétaire : au doigt, « 1/20 » ne se pose
+                plus SUR l'image — il s'écrit sur la ligne du titre,
+                au-dessus (voir l'en-tête). Le carrousel sait déjà se
+                taire : `sansCompteur` existe depuis la nº 284 et
+                n'avait plus d'appelant depuis que la fenêtre de
+                carrousel a été supprimée (nº 602) — il en retrouve un,
+                et le dessin de la pastille reste écrit une seule fois
+                (PastilleCompteur, nº 844).
+                ⚠️ LES POINTS DE POSITION NE SONT PAS TOUCHÉS : ils
+                vivent dans le PIED de la carte (PiedDeFil), pas dans
+                l'image, et le propriétaire n'en parle pas.
+                ⚠️ LES CARTES DES RÉSULTATS NON PLUS : elles gardent leur
+                pastille (CarteTatoueur) — c'est la carte d'un PROFIL
+                qui change ici, pas celle d'une recherche. */
+            sansCompteur
             prioritaire={premiere}
             approchee={approchee}
           />
