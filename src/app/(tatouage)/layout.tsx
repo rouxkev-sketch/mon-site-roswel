@@ -28,7 +28,7 @@ import {
   MARQUE_YOKOFOLIO,
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
-import { DefilementEnHaut } from "@/components/DefilementEnHaut";
+import { ArriveeEnHaut } from "@/components/ArriveeEnHaut";
 //  nº 884 — le bandeau de diagnostic : invisible et inerte pour tout
 //  le monde, sauf l'administration sur une adresse portant `?diag=1`.
 import { BandeauDiagnostic } from "@/components/BandeauDiagnostic";
@@ -294,9 +294,15 @@ export default async function MiseEnPageTatouage({
           retour : le balayage depuis le bord ramène à la mosaïque au
           lieu de ne rien faire. N'affiche rien. */}
       <RetourGaranti />
-      {/* Chaque navigation ouvre sa page TOUT EN HAUT (n'affiche rien,
-          voir le composant pour la cause du bug qu'il corrige). */}
-      <DefilementEnHaut />
+      {/* ██ nº 889 — UNE PAGE NEUVE S'OUVRE EN HAUT, ET C'EST TOUT ██
+          `DefilementEnHaut` se tenait ici depuis la nº 328 : il
+          remontait chaque page, puis défendait sa pose, puis attendait
+          l'adresse commise, puis remettait l'origine à zéro… Il est
+          remplacé par UN effet, sans garde ni mémoire ni seuil — le
+          routeur de Next ne pose PAS zéro tout seul, contrairement à ce
+          qu'on croyait (la mesure et le pourquoi sont dans le composant
+          et dans docs/DEFILEMENT-889-INVENTAIRE.md). N'affiche rien. */}
+      <ArriveeEnHaut />
       {/* ██ LE DIAGNOSTIC DU PROPRIÉTAIRE (nº 884) ██ Chrome iOS bloque
           la barre fixe à l'arrivée d'une page, et l'atelier ne peut pas
           le reproduire : ce bandeau relève, SUR SON TÉLÉPHONE, qui

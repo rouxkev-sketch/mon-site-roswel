@@ -1,30 +1,24 @@
-//  ██ BANC 882 — TOUTE ARRIVÉE COMMENCE EN HAUT, ET Y RESTE ██
-//   §1 — LE MÉCANISME : un recalage qu'aucun geste n'explique est repris,
-//        autant de fois qu'il en faut et aussi tard qu'il arrive ; un
-//        GRAND écart est laissé (il est voulu) ; et le PREMIER GESTE du
-//        visiteur rend la main pour de bon.
-//   §2 — LES PAGES : cinq à six arrivées d'affilée (profil, portfolio,
-//        flash, accueil, Ma sélection, accueil) depuis une origine
-//        défilée, pour trois amplitudes, aux deux appareils.
-//   §3 — LE VA-ET-VIENT NE POSE PLUS LE CRAN DU FILET DE RETOUR : cinq
-//        onglets touchés AU DOIGT, ZÉRO étape de plus, et UN SEUL
-//        retour ramène au fil des cartes. Le filet, lui, garde son
-//        rôle : un appui franc ailleurs pose bien le cran, une fois.
+//  ██ BANC 882 — LE VA-ET-VIENT ET LE FILET DE RETOUR (AU DOIGT) ██
+//   Cinq onglets touchés POUR DE VRAI (`pointerdown`/`pointerup`, ce
+//   que le filet de retour écoute et que le banc 875 ne produit
+//   jamais) : ZÉRO étape de plus (nº 875 §1), et UN SEUL retour ramène
+//   au fil des cartes. Le filet, lui, garde son rôle : un appui franc
+//   AILLEURS pose bien le cran, une fois.
 //
-//  ⚠️ CE QUE CE BANC NE PEUT PAS FAIRE, ET IL FAUT LE DIRE : le défaut du
-//  propriétaire est WEBKIT (Safari et Chrome sur iPhone sont le même
-//  moteur), et cet atelier n'a que Chromium (le socle sait ouvrir WebKit
-//  — `moteur: "webkit"` — mais son binaire n'est pas installé ici). Ce
-//  qui est éprouvé ci-dessous est donc LE MÉCANISME, moteur par moteur
-//  identique : « un déplacement que personne n'a demandé est repris ».
-//  Les trois RÉVEILS propres à WebKit (`load`, `fonts.ready`,
-//  `visualViewport`) sont câblés et lisibles dans lib/arrivee-en-haut ;
-//  seul l'iPhone peut dire qu'ils tombent au bon moment.
+//  ██ CE QUE LA nº 889 A RETIRÉ DE CE BANC ██
+//   §1 — LE MÉCANISME DE LA GARDE DE POSITION (« un recalage sans geste
+//        est repris, un grand écart est laissé, le premier geste rend la
+//        main »). La garde est partie avec toute la mécanique de
+//        défilement — il n'y a plus de mécanisme à éprouver.
+//   §2 — LES TRENTE-TROIS ARRIVÉES À ZÉRO. Elles n'ont pas disparu :
+//        elles sont mesurées par le BANC 889 §1, dans la même forme et
+//        avec une amplitude de plus (39 px, le cas du relevé). Deux
+//        bancs pour une règle finiraient par diverger (piège nº 378).
+//   Voir docs/DEFILEMENT-889-INVENTAIRE.md.
 import { BASE, ouvrir, verif, titre, bilan, lire, ranger } from "./banc-socle.mjs";
 
 const T = Date.now();
 const SLUG = `banc882-${T}`;
-const U = { id: `c882${String(T).slice(-8)}-0000-4000-8000-000000000882`, email: `banc882-${T}@exemple.test` };
 const PHOTO = (k, i) => `5282${k}00${i.toString(16)}-0000-4000-8000-${String(i).padStart(12, "0")}`;
 {
   const gabarit = (await lire("tatoueurs", "slug=eq.demo-blackwork-12"))[0];
@@ -78,181 +72,6 @@ const CLIQUER = `(selecteur, texte) => {
 }`;
 const cliquer = (page, selecteur, texte = null) =>
   page.evaluate(([C, s, t]) => new Function("return " + C)()(s, t), [CLIQUER, selecteur, texte]);
-
-//  ══ 1 · LE MÉCANISME ═══════════════════════════════════════════════
-/*  ██ MISE AU PAS DE LA nº 883 ██
-    CE QUI A CHANGÉ SOUS CE §1 : la garde d'arrivée ne tient plus
-    « jusqu'au premier geste » (nº 882) mais UNE SECONDE. La nº 882
-    l'avait faite sans fin ; sur Chrome iOS, où le repli de la barre
-    d'adresse fait pleuvoir les événements de viewport, elle tournait en
-    boucle et AVALAIT LES TOUCHERS — barre fixe et va-et-vient bloqués.
-    Les mesures se font donc DANS cette seconde, et la fin de la garde
-    est mesurée par le banc 883.
-    ⚠️ ON PART D'UNE NAVIGATION DOUCE, et c'est ce qui rend le chrono
-    possible : après un `goto`, l'attente du réseau brouille l'instant
-    de l'arrivée.
-    ⚠️ ET LA DESTINATION EST UNE GALERIE, PAS UNE LISTE DE RECHERCHE :
-    une liste NEUVE se pose elle-même en haut à son arrivée
-    (`laListeServieEstArrivee`, lib/liste-neuve) et arme une garde
-    ORDINAIRE — sans plafond, celle-là : elle défendrait AUSSI l'écart
-    de 300 px, et la mesure ne parlerait plus de la garde d'arrivée
-    (relevé de cette passe). Trois galeries donnent la hauteur qu'il
-    faut. */
-const rafale = (page, combien, pas) =>
-  page.evaluate(async ([n, ms]) => {
-    for (let i = 0; i < n; i += 1) {
-      window.scrollTo({ top: 6 + (i % 7), left: 0, behavior: "instant" });
-      await new Promise((r) => setTimeout(r, ms));
-    }
-  }, [combien, pas]);
-
-for (const mode of ["doigt", "web"]) {
-  const { nav, page } = await ouvrir(mode, { session: U });
-  try {
-    /** ARRIVER SUR UNE LISTE LONGUE, EN DOUCEUR — et rendre la main à
-        l'instant précis où la garde vient d'être armée. */
-    const arriver = async () => {
-      await page.goto(`${BASE}/artist/${SLUG}`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector(ONGLETS, { timeout: 20000, state: "attached" });
-      await attendre(page, 1500);
-      await page.evaluate(([s]) => {
-        const c = [...document.querySelectorAll(s)].find((n) => n.textContent.trim() === "Portfolio");
-        if (c) c.click();
-      }, [ONGLETS]);
-      await page.waitForFunction(() => location.pathname.endsWith("/portfolio"), null, { timeout: 20000 });
-    };
-
-    titre(`882 · §1 — ${mode} : un recalage sans geste est REPRIS, dans la seconde`);
-    await arriver();
-    /*  TREIZE RECALAGES D'AFFILÉE, ET EN PREMIER — au-delà des douze
-        annulations après lesquelles une garde ORDINAIRE cède
-        (RECALAGES_ANNULES_MAX) : une garde d'arrivée ne les compte pas,
-        elle est bornée par le temps (nº 883). Envoyés en UN aller-retour
-        et serrés, pour tenir dans la seconde. */
-    await rafale(page, 13, 15);
-    verif("treize recalages d'affilée : toujours zéro", (await ou(page)) === 0,
-      String(await ou(page)));
-    await recaler(page, 12);
-    await attendre(page, 150);
-    verif("… un recalage de 12 px de plus est repris", (await ou(page)) === 0,
-      String(await ou(page)));
-    let hauteur = await page.evaluate(
-      () => document.documentElement.scrollHeight - window.innerHeight
-    );
-    verif("la galerie d'arrivée peut défiler bien au-delà du seuil",
-      hauteur > 100, `${hauteur} px`);
-
-    titre(`882 · §1 — ${mode} : un GRAND écart est voulu — on ne le combat pas`);
-    await arriver();
-    /*  ⚠️ L'ÉCART ÉPROUVÉ EST LE PLUS GRAND QUE LA PAGE PERMETTE, borné
-        à trois cents : la même galerie mesure 1286 px au doigt et 110 au
-        web (les cartes s'y étalent). LA RÈGLE EST LE PLAFOND DE QUARANTE,
-        pas un chiffre — au-delà, le mouvement est voulu, et rien ne doit
-        le combattre. */
-    /*  ⚠️ MIS AU PAS DE LA nº 887 : le plafond a rejoint le seuil unique
-        du site — cent pixels (« sous cent, ce n'est pas une place »).
-        L'écart éprouvé doit donc le dépasser franchement ; la galerie
-        du web ne le permet pas (110 px de course en tout, ses cartes
-        s'étalent), on l'y remplace par la liste de recherche, ouverte
-        à son adresse : rien n'y arme d'autre garde tant qu'aucune
-        liste NEUVE n'arrive. */
-    if (hauteur < 260) {
-      await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "domcontentloaded" });
-      await page.waitForSelector("[data-carte]", { timeout: 20000 });
-      await attendre(page, 1500);
-      hauteur = await page.evaluate(
-        () => document.documentElement.scrollHeight - window.innerHeight
-      );
-    }
-    const grand = Math.min(300, Math.max(0, hauteur - 10));
-    verif("l'écart éprouvé dépasse largement le seuil", grand > 150, `${grand} px`);
-    await recaler(page, grand);
-    await attendre(page, 500);
-    verif("un grand défilement tient (le plafond des 40 px)",
-      (await ou(page)) === grand, `${await ou(page)} / ${grand}`);
-
-    titre(`882 · §1 — ${mode} : le PREMIER GESTE rend la main, définitivement`);
-    await arriver();
-    await page.mouse.wheel(0, 120);
-    await attendre(page, 300);
-    await recaler(page, 12);
-    await attendre(page, 500);
-    verif("après un geste, douze pixels TIENNENT (le visiteur a le dernier mot)",
-      (await ou(page)) === 12, String(await ou(page)));
-  } catch (e) {
-    verif(`déroulement du banc 882 (§1 ${mode})`, false, String(e).slice(0, 300));
-  } finally { await nav.close(); }
-}
-
-//  ══ 2 · CINQ ARRIVÉES D'AFFILÉE, TROIS AMPLITUDES ═════════════════
-/*  ⚠️ DEUX PRÉCAUTIONS, ET ELLES DISENT CE QUE LA RÈGLE VEUT DIRE.
-    1. LA MÉMOIRE EST VIDÉE ENTRE DEUX TOURNÉES. La règle du
-       propriétaire porte sur les arrivées SANS POSITION MÉMORISÉE ;
-       revenir sur une adresse qu'on a quittée défilée doit, elle,
-       rendre la place (nº 328-§3). Sans ce vidage, la deuxième tournée
-       éprouverait la règle inverse — et la troisième la contredirait
-       (relevé : la galerie Portfolio revenait à 40, sa place de la
-       tournée précédente : c'est le site qui a RAISON).
-    2. LE WEB N'OUVRE PAS LES FICHES EN PAGE. Un clic sur une carte de
-       la mosaïque y ouvre la FENÊTRE SUPERPOSÉE (nº 506) : le corps
-       est gelé derrière un voile, la grille doit rester exactement où
-       elle est, et `DefilementEnHaut` s'efface (`data-fenetre-fiche`).
-       Ce n'est donc pas une arrivée de page — mesuré à cette passe :
-       le logo de l'en-tête est alors COUVERT par le voile
-       (`elementFromPoint` rend le voile, jamais le lien), aucun
-       visiteur ne peut naviguer de là. Le web part donc du profil
-       lui-même, ouvert à son adresse. */
-const DEPARTS = [6, 40, 700];
-for (const mode of ["doigt", "web"]) {
-  const { nav, page } = await ouvrir(mode, { session: U });
-  try {
-    titre(`882 · §2 — ${mode} : toutes les sortes de pages arrivent à zéro`);
-    const fautes = [];
-    let arrivees = 0;
-    for (const depart of DEPARTS) {
-      if (mode === "doigt") {
-        await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "networkidle" });
-        await page.waitForSelector("[data-carte]", { timeout: 20000 });
-      } else {
-        /*  ⚠️ `domcontentloaded`, PAS `networkidle` : la page de profil du
-            web garde une connexion ouverte, et l'attente du silence
-            réseau expire (mesuré à cette passe). On attend ce qui compte
-            — le va-et-vient, qui porte les liens du saut suivant. */
-        await page.goto(`${BASE}/artist/${SLUG}`, { waitUntil: "domcontentloaded" });
-        await page.waitForSelector(ONGLETS, { timeout: 20000 });
-      }
-      await page.evaluate(() => { try { localStorage.clear(); } catch { /* rien */ } });
-      await attendre(page, 900);
-      /*  LES SAUTS : chacun part d'une page DÉFILÉE et doit arriver en
-          haut. Au doigt, un toucher sur la photo ne fait rien (nº 873)
-          — c'est l'en-tête de la carte qui mène au profil. */
-      const sauts = [
-        ...(mode === "doigt"
-          ? [["profil", `[data-lien-profil-de-fil][href*="${SLUG}"]`, null, `/artist/${SLUG}`]]
-          : []),
-        ["portfolio", ONGLETS, "Portfolio", `/artist/${SLUG}/portfolio`],
-        ["flash", ONGLETS, "Flash", `/artist/${SLUG}/flash`],
-        ["accueil", '[aria-label$="home"]', null, "/"],
-        ["Ma sélection", '[aria-label="My favorites"]', null, "/my-favorites"],
-        ["accueil (depuis Ma sélection)", '[aria-label$="home"]', null, "/"],
-      ];
-      for (const [nom, selecteur, texte, adresse] of sauts) {
-        const partiDe = await defilerCommeUnVisiteur(page, depart);
-        if (!(await cliquer(page, selecteur, texte))) { fautes.push(`${nom} : lien introuvable`); continue; }
-        await page.waitForFunction((a) => location.pathname === a, adresse, { timeout: 20000 }).catch(() => {});
-        await attendre(page, 1600);
-        arrivees += 1;
-        const ici = await ou(page);
-        if (ici !== 0) fautes.push(`${nom} (départ ${depart}, parti de ${partiDe}) → ${ici}`);
-      }
-    }
-    verif(`${mode} : les ${arrivees} arrivées sont à zéro, au pixel`,
-      fautes.length === 0 && arrivees === DEPARTS.length * (mode === "doigt" ? 6 : 5),
-      fautes.slice(0, 8).join(" | ") || `${arrivees} arrivées à zéro`);
-  } catch (e) {
-    verif(`déroulement du banc 882 (§2 ${mode})`, false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
 
 //  ══ 3 · LE VA-ET-VIENT ET LE CRAN DU FILET DE RETOUR ═══════════════
 /*  CE QUE CE §3 MESURE, ET POURQUOI LE BANC 875 NE LE VOYAIT PAS. La
@@ -359,12 +178,22 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForFunction(() => location.pathname.startsWith("/artist/"), null, { timeout: 20000 });
     await attendre(page, 1500);
     const avant = await page.evaluate(() => history.length);
+    /*  ██ nº 889 — ET CHAQUE ONGLET ROUVRE EN HAUT ██ La nº 873 §1-§2
+        rendait à chaque onglet SA position ; le propriétaire l'a retiré
+        à la nº 889. On le mesure ICI, avec de vrais touchers, plutôt
+        que dans un second banc (piège nº 378). */
+    const pasEnHaut = [];
     for (const mot of ["Portfolio", "Flash", "Profile", "Portfolio", "Flash"]) {
       const boite = await page.locator(ONGLETS).filter({ hasText: new RegExp(`^${mot}$`) }).first().boundingBox();
       if (!boite) continue;
+      await defilerCommeUnVisiteur(page, 180);
       await page.touchscreen.tap(boite.x + boite.width / 2, boite.y + boite.height / 2);
-      await attendre(page, 1200);
+      await attendre(page, 1300);
+      const ici = await ou(page);
+      if (ici !== 0) pasEnHaut.push(`${mot}=${ici}`);
     }
+    verif("les cinq onglets touchés rouvrent EN HAUT (nº 889)",
+      pasEnHaut.length === 0, pasEnHaut.join(" ") || "les cinq à zéro");
     const apres = await page.evaluate(() => history.length);
     verif("cinq onglets touchés depuis le fil : zéro étape de plus", apres === avant, `${avant} → ${apres}`);
     await page.goBack();
@@ -372,8 +201,14 @@ for (const mode of ["doigt", "web"]) {
     verif("un seul retour ramène au fil des cartes",
       (await page.evaluate(() => location.pathname)) === "/search",
       await page.evaluate(() => location.pathname + location.search));
-    verif("… et la liste est rendue à sa place", Math.abs((await ou(page)) - place) <= 2,
-      `${await ou(page)} / ${place}`);
+    /*  ██ MISE AU PAS DE LA nº 889 ██ La place était rendue AU PIXEL
+        par la mémoire du site, qui attendait que le contenu soit
+        arrivé (lib/pose-sur-contenu). Les deux sont parties : c'est le
+        NAVIGATEUR qui repose, « auto » (nº 363), et il ne sait pas
+        attendre les cartes. On mesure donc ce qui compte — il REND une
+        place, il ne remet pas à zéro. */
+    verif("… et le navigateur rend la place de la liste (nº 889)",
+      (await ou(page)) > 100, `${await ou(page)} / ${place}`);
   } catch (e) {
     verif("déroulement du banc 882 (§3 retour)", false, String(e).slice(0, 300));
   } finally { await nav.close(); }

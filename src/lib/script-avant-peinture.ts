@@ -12,26 +12,15 @@ import {
 } from "@/lib/colonnes-mosaique";
 import {
   AGE_MAXIMUM_MS,
-  AGE_POSITION_MS,
   CLE_DEPART_VOULU,
   CLE_JOURNAL,
   CLE_ONGLET,
   CLE_RATTRAPAGE_FILET,
-  CLE_RESTAURER,
-  PLANCHER_DE_POSITION_PX,
-  PREFIXE_DEFILEMENT,
 } from "@/lib/navigation-session";
 //  §1 (nº 335) — la marque « nais avec la rangée repliée », écrite une
 //  seule fois (lib/reserve-barre) et lue par la barre à sa naissance.
 import {
-  MARQUE_RANGEE,
-  RESERVE_LOGO,
-  VARIABLE_RESERVE_REPLIEE,
 } from "@/lib/reserve-barre";
-//  §1 (nº 337) — « on ne pose une position que sur du contenu ». Le
-//  script ne peut pas appeler la règle : elle lui rend sa boucle TOUTE
-//  FAITE, à partir des mêmes constantes. Aucune copie à la main.
-import { boucleDAttentePourLeScript } from "@/lib/pose-sur-contenu";
 //  §1 et §2 (nº 343) — l'armement DURABLE des sondes, et le journal de
 //  l'historique qui commence avant tout code d'application. Les deux
 //  textes sont FABRIQUÉS par les modules qui portent la règle : aucune
@@ -154,8 +143,6 @@ import { blocMemoireSelectionPourLeScript } from "@/lib/memoire-selection";
 export function scriptAvantPeinture(): string {
   const journal = JSON.stringify(CLE_JOURNAL);
   const onglet = JSON.stringify(CLE_ONGLET);
-  const restaurer = JSON.stringify(CLE_RESTAURER);
-  const prefixe = JSON.stringify(PREFIXE_DEFILEMENT);
   const fond = JSON.stringify(COULEURS_SOMBRE.fond);
   //  §2 (nº 428) — le filet de réparation du repli de navigation.
   const rattrapage = JSON.stringify(CLE_RATTRAPAGE_FILET);
@@ -306,15 +293,6 @@ var nav=(performance.getEntriesByType("navigation")[0]||{}).type||"navigate";
 var jour=function(c,s){try{var b=s.getItem(c);return b?JSON.parse(b):null}catch(e){return null}};
 var maintenant=Date.now();
 var age=${AGE_MAXIMUM_MS};
-/* La POSITION, elle, ne vit qu'une demi-heure (nº 181-§1c). */
-var agePosition=${AGE_POSITION_MS};
-/* §2 (nº 875) — LE PLANCHER D'UNE POSITION, lu au module et jamais
-   recopié : ce qui vaut pour la mémoire du site vaut pour ce script,
-   qui pose la position AVANT elle. Sans lui, une note de six pixels
-   ouvrait la page six pixels plus bas, avant la premiere image — le
-   defaut du proprietaire, dans sa forme exacte. Voir le bloc
-   PLANCHER_DE_POSITION_PX (lib/navigation-session). */
-var plancherPosition=${PLANCHER_DE_POSITION_PX};
 
 /* 3. LA REPRISE DE SESSION, AVANT TOUTE PEINTURE. */
 var memoireOnglet=jour(${onglet},sessionStorage)||{};
@@ -399,58 +377,27 @@ pd.forEach(function(v,n){if(!(${conditionDeReglagePourLeScript("n")}))pleine=tru
    elle, ne change pas d'une virgule : c'est la ligne ci-dessous. */
 if(nue&&pleine){vers=derniereOnglet}}
 if(vers){
-try{sessionStorage.setItem(${restaurer},vers)}catch(e){}
+/* nº 889 — la marque de restitution n'est plus posee : le bloc 4 qui
+   la consommait est parti, et le navigateur rend la position seul. */
 r.style.visibility="hidden";
 setTimeout(function(){r.style.visibility=""},3000);
 location.replace(vers);
 return}
 
-/* 4. LA POSITION, RÉSERVE COMPRISE.
-   ██ §1 (nº 660) — ET CHAQUE PAS S'ÉCRIT DANS LA BOÎTE NOIRE ██
-   Ce bloc-ci pose une position AVANT LA PREMIÈRE PEINTURE, donc avant
-   que le moindre composant ne soit monté : s'il agit, aucun journal de
-   React ne peut le voir. Il ne disait rien ; il dit désormais ce qu'il
-   lit et ce qu'il fait — la demande nommée, la clé canonique, la note
-   trouvée, et la pose. AUCUNE DÉCISION NE CHANGE : les appels « bn »
-   sont posés à côté des tests, sur les mêmes chemins.
-   ⚠️ PAS UN SEUL ACCENT GRAVE DANS CE TEXTE : nous sommes DANS un
-   littéral de gabarit, et un accent grave le fermerait net. */
-var demande=null;try{demande=sessionStorage.getItem(${restaurer})}catch(e){}
-var attendue=demande&&(demande==="1"||demande===adresse);
-if(attendue){try{sessionStorage.removeItem(${restaurer})}catch(e){}}
-if(nav==="navigate"&&!attendue){return}
-/* ⚠️ LA CLÉ EST L'ADRESSE CANONIQUE DE LA RECHERCHE (nº 184-§2) :
-   critères compris, réglages de sonde exclus, paramètres triés.
-   §1 (nº 335) — LA CONDITION CI-DESSOUS EST FABRIQUÉE PAR
-   lib/adresse-recherche, à partir des MÊMES constantes que le reste
-   du site : il n'y a plus deux copies de la règle à tenir d'accord. */
-var p=new URLSearchParams(location.search);var noms=[];
-p.forEach(function(v,n){noms.push(n)});
-for(var i=0;i<noms.length;i++){var n=noms[i];
-if(${conditionDeReglagePourLeScript('n')})p.delete(n)}
-p.sort();var q=p.toString();
-var cle=location.pathname+(q?"?"+q:"");
-var note=jour(${prefixe}+cle,localStorage);
-if(!note||!note.y||note.y<plancherPosition||maintenant-(note.date||0)>agePosition){return}
-r.dataset.positionPosee=String(note.y);
-/* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
-   place gardée porte les deux (lib/navigation-session) ; la barre
-   lit cette marque à sa naissance (lib/reserve-barre). Sans elle,
-   la réserve renaît dépliée et tout le contenu descend d'un cran. */
-if(note.p){r.style.setProperty(${JSON.stringify(VARIABLE_RESERVE_REPLIEE)},${JSON.stringify(`${RESERVE_LOGO}px`)});r.dataset[${JSON.stringify(MARQUE_RANGEE)}]="1"}
-/* §1 (nº 337) — ON ATTEND QUE LE CONTENU SOIT LÀ. La réserve de
-   hauteur et le défilement ne sont plus posés sur-le-champ : sur un
-   document qui n'a pas fini d'arriver, ils rendaient le document
-   grand et VIDE, et l'on se posait à 900 px devant rien. La boucle
-   d'attente est celle de lib/pose-sur-contenu — pas une copie : ce
-   texte EST fabriqué par elle. Le défilement reste IMMÉDIAT (point 4
-   de l'en-tête) : c'est l'instant qui change, pas la manière. */
-${boucleDAttentePourLeScript(
-  "note.y",
-  `r.style.minHeight=(note.y+innerHeight)+"px";scrollTo({top:note.y,left:0,behavior:"instant"})`
-)};
-/* FILET : si React ne démarre jamais, la réserve part quand même. */
-setTimeout(function(){if(r.dataset.positionPosee){r.style.minHeight="";delete r.dataset.positionPosee}},6000);
+/* ██ 4. LA POSITION — RETIRÉE À LA nº 889 ██
+   CE QUE CE BLOC FAISAIT, de la nº 181 à la nº 887 : au rechargement
+   ou au retour de document, il relisait la place rangée sous l'adresse
+   canonique, reservait la hauteur qu'il fallait sur <html>, attendait
+   que le contenu atteigne cette hauteur (lib/pose-sur-contenu), puis
+   posait le defilement AVANT LA PREMIERE PEINTURE.
+   POURQUOI IL PART. Le proprietaire a tranche (nº 889) : le site ne
+   memorise plus aucune position de page. Le navigateur les rend deja
+   lui-meme — history.scrollRestoration vaut « auto » depuis la
+   nº 363, juste au-dessus, et c'est desormais la SEULE autorite sur
+   les retours et les rechargements.
+   CE QU'IL EMPORTE : la marque de rangee repliee (note.p, nº 335)
+   naissait de la meme note. Elle n'a plus d'objet — une page qui
+   s'ouvre en haut a sa rangee depliee, par construction. */
 }catch(e){}
 })();`;
 }

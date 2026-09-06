@@ -62,17 +62,10 @@ const MARQUEUR = "defilementProgramme";
     `sessionStorage` par POSE — jamais par image, jamais dans une
     boucle d'animation (voir `defilerEnDouceur`, qui ne signe que son
     arrivée). */
-//  §2 (nº 427) — le témoin du geste : la garde de position ne défend
-//  une pose que contre les mouvements qu'AUCUN doigt n'explique.
-//  §1 (nº 626) — `appareilTactile` n'est plus importé : la garde ne
-//  demande plus l'appareil (voir sa note). La fonction reste exportée
-//  par geste-toucher, où d'autres la lisent.
-import {
-  auDebutDuGeste,
-  gesteDeDefilementPlausible,
-  unDoigtEstPose,
-} from "@/lib/geste-toucher";
 //  nº 884 — le journal du diagnostic (désarmé : un test de booléen).
+//  nº 889 — le témoin du geste (lib/geste-toucher) n'est plus importé
+//  ici : il ne servait qu'à la garde de position, qui est partie. Il
+//  reste vivant pour la barre fixe, qui le lit.
 import { noterDiag } from "@/lib/journal-diagnostic";
 
 /** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
@@ -107,332 +100,43 @@ export function defilerSansGeste(
 ): void {
   if (typeof window === "undefined") return;
   document.documentElement.dataset[MARQUEUR] = "1";
-  const cible = typeof options.top === "number" ? Math.round(options.top) : null;
+  //  §3 (nº 426) — AUCUN POSEUR ANONYME : la pose écrit sa ligne, avec
+  //  sa signature et sa cible. Désarmé, le journal ne coûte rien.
+  noterDiag(
+    `POSE · vers ${typeof options.top === "number" ? Math.round(options.top) : "?"} · ${signature}`
+  );
   window.scrollTo({ behavior: "instant", ...options });
   lever(FENETRE_MS);
-  /*  §2 (nº 427) — LA POSE ARME LA GARDE : ce qui vient d'être posé
-      sera TENU tant qu'aucun geste ne reprend la main (voir le bloc de
-      la garde plus bas). Sur la CIBLE, pas sur l'obtenu : si le
-      document n'était pas encore assez haut, la première annulation
-      s'alignera d'elle-même sur ce qui existe. Une pose douce
-      (`smooth`) n'arme rien : sa position finale appartient au
-      navigateur, on ne saurait pas quoi défendre. */
-  if (cible !== null && options.behavior !== "smooth") {
-    armerLaGardeDePosition(cible, signature);
-  }
+  /*  nº 889 — LA POSE NE S'ARME PLUS. Elle armait la garde de position
+      (nº 427), qui la tenait contre l'ancrage de WebKit tant qu'aucun
+      geste ne reprenait la main. La garde est partie (voir le bloc
+      ci-dessous) : cette fonction ne fait plus que poser, et annoncer
+      que c'est le site qui a posé. */
 }
 
-/**
- * ██ §2 (nº 427) — LA GARDE DE POSITION : UNE POSE TIENT SANS DOIGT ██
- * ==================================================================
- * LE RELEVÉ QUI L'A RENDUE NÉCESSAIRE (iPhone, sonde de la nº 426) :
- * une recherche validée, la liste neuve posée à 0… puis « RANGÉE ·
- * delta 1730 px ignoré (mouvement du site) » — SANS AUCUNE LIGNE POSE
- * entre les deux. C'est l'ancrage de WebKit qui recale le défilement
- * après le rendu de la nouvelle liste, APRÈS notre pose. La ligne
- * « ignoré » protégeait le volet ; PERSONNE ne corrigeait la
- * position : l'ancre gagnait, et la recherche s'ouvrait en bas.
- * `overflow-anchor: none` est posé partout depuis la nº 150 — WebKit
- * est le seul moteur à l'ignorer (mesuré nº 424), et il n'offre aucun
- * autre interrupteur.
- *
- * LA RÈGLE, POSÉE PAR LE PROPRIÉTAIRE : après une pose du site, la
- * position TIENT tant que l'utilisateur n'a pas repris la main. Tout
- * déplacement sans toucher ni lancée plausible (lib/geste-toucher) est
- * REPOSÉ sur-le-champ, et s'écrit — « RECALAGE D'ANCRE ANNULÉ ». La
- * garde se lève au premier début de geste : un doigt, une molette, une
- * touche de défilement.
- *
- * ██ §1 (nº 626) — ELLE VIT PARTOUT, ET LA BORNE TACTILE ÉTAIT FAUSSE ██
- * ------------------------------------------------------------------
- * CE QUI ÉTAIT ÉCRIT ICI : « elle ne vit que sur écran tactile —
- * ailleurs, l'ascenseur défile sans émettre le moindre événement de
- * toucher, la garde y lirait un recalage et collerait la page ; et
- * l'ancrage y est déjà coupé par le CSS, que tous les moteurs sauf
- * WebKit honorent ».
- * LES DEUX MOITIÉS ONT CESSÉ D'ÊTRE VRAIES, ET LE RELEVÉ DU
- * PROPRIÉTAIRE (Mac, 1665 px, nº 626) le prouve mot pour mot :
- *     POSE DE DÉFILEMENT · vers 0 · par liste neuve, à son arrivée
- *     rendu mosaïque · 16 cartes
- *     RANGÉE · delta 972 px ignoré (mouvement du site)
- *     ADRESSE pushState +1 image · cartes 16 · PAGE À 972
- * — la même signature qu'à la nº 427 : notre pose, puis un saut SANS
- * AUCUNE LIGNE POSE entre les deux. C'est l'ancre, et elle recale sur
- * un ORDINATEUR : SAFARI SUR MAC EST WEBKIT. « Web » n'a jamais voulu
- * dire « pas WebKit » — la borne supposait le contraire.
- * ET L'ASCENSEUR N'EST PLUS UN DANGER : la nº 428 a ajouté `mousedown`
- * aux sources de geste (voir lib/geste-toucher). Traîner l'ascenseur,
- * cliquer, tourner la molette, presser une touche de défilement —
- * chacun lève la garde AVANT que la page ne bouge. La phrase d'origine
- * décrivait un module qui n'écoutait que les touchers ; il en écoute
- * quatre depuis.
- * ⚠️ ET LE PIRE CAS RESTE BORNÉ, comme avant : au-delà de douze
- * recalages annulés, la garde cède (voir juste dessous) — se battre
- * contre un mécanisme inconnu ferait pire que le laisser faire.
- * ⚠️ ELLE NE SE FIE PAS AU DRAPEAU ci-dessus : le relevé montre le
- * recalage tombant EN PLEIN DANS la fenêtre du drapeau (6 ms après le
- * rendu). Elle compare des POSITIONS : notre propre pose retombe
- * exactement sur la position gardée — un recalage, non.
- * ⚠️ ELLE MEURT AVEC SA PAGE : l'adresse est retenue à l'armement ;
- * si elle a changé, la position gardée ne décrit plus rien et la
- * garde se tait.
- */
-const TOLERANCE_DE_GARDE_PX = 2;
-/**
- * ██ §1 (nº 661) — LA GARDE NE PEUT PLUS DORMIR ██
- * ==================================================================
- * LE DÉFAUT, MESURÉ PAR LE PROPRIÉTAIRE (boîte noire, 27-08 12:42).
- * Clic « Explorer les styles » depuis un document COURT (788 px) :
- *   12:42:37.511  DÉFILEMENT EN HAUT · remontée · /
- *   12:42:37.538  MÉMOIRE · page à 1002
- * Vingt-sept millisecondes, mille deux pixels — et l'observateur des
- * déplacements (nº 660) annonce « 0 déplacement ». La page a donc
- * bougé SANS QU'AUCUN ÉVÉNEMENT `scroll` NE SOIT ÉMIS : c'est la
- * signature d'un recalage appliqué PENDANT LA MISE EN PAGE, quand le
- * document grandit (788 → 1790 en attrapant le contenu de l'accueil)
- * — restauration native de l'entrée d'historique, ou ancrage.
- * CE QUE ÇA DIT DE LA GARDE : elle était réveillée par le seul
- * événement `scroll`. Sans événement, elle ne se réveillait jamais —
- * elle tenait une position que personne ne venait lui contester, et
- * la page partait quand même.
- * LE REMÈDE, ET IL NE CHANGE AUCUNE DÉCISION : une VEILLE PAR IMAGE,
- * bornée dans le temps, qui appelle EXACTEMENT le même juge
- * (`surDefilementSousGarde`). Ni tolérance nouvelle, ni règle nouvelle
- * — un second réveil pour un juge qui existait déjà.
- * ⚠️ BORNÉE, ET COURTE : mille deux cents millisecondes après
- * l'armement. C'est la fenêtre pendant laquelle un document grandit et
- * pose ses images ; au-delà, l'événement `scroll` suffit — c'est lui
- * qu'émet un vrai geste. Une veille perpétuelle ferait tourner une
- * boucle d'images pour rien sur chaque page du site.
- * ⚠️ CE QU'ELLE COÛTE AU REPOS : un `Math.round(window.scrollY)` par
- * image pendant ces 1,2 s. Le juge sort à la première ligne quand
- * l'écart tient dans la tolérance.
- */
-const VEILLE_PAR_IMAGE_MS = 1200;
-let veilleParImage = 0;
-/** Au-delà, on cède : un mécanisme inconnu repose en boucle, et se
-    battre contre lui ferait pire que le laisser faire. Chaque
-    annulation s'écrit — le journal montrera qui c'était. */
-const RECALAGES_ANNULES_MAX = 12;
+/* ██████████████████████████████████████████████████████████████████
+   ██  LA GARDE DE POSITION EST PARTIE À LA nº 889              ██
+   ██████████████████████████████████████████████████████████████████
+   CE QU'ELLE FAISAIT, de la nº 427 à la nº 888 : après une pose du
+   site, elle TENAIT la position tant que l'utilisateur n'avait pas
+   repris la main — tout déplacement sans toucher ni lancée plausible
+   (lib/geste-toucher) était reposé sur-le-champ. Elle a été écrite
+   contre l'ANCRAGE de WebKit, qui recale le défilement après un rendu
+   et que `overflow-anchor: none` ne coupe pas sur ce moteur.
 
-type GardeDePosition = {
-  position: number;
-  signature: string;
-  adresse: string;
-  annulations: number;
-  /** §2 (nº 881) — voir `armerLaGardeDePosition`. */
-  ecartMax?: number;
-  /** §1 (nº 883) — l'instant où elle s'éteint d'elle-même. */
-  finA?: number;
-};
-let garde: GardeDePosition | null = null;
-let veilleusePosee = false;
+   POURQUOI ELLE PART. Elle défendait des poses que le site ne fait
+   plus : la mémoire de position, les restitutions d'onglets, les
+   arrivées à zéro — tout cela est retiré à la nº 889 (voir
+   docs/DEFILEMENT-889-INVENTAIRE.md). Une garde sans pose à défendre
+   ne fait plus qu'une chose : se tromper. C'est elle, bornée à trois
+   secondes, qui mangeait les touchers de Chrome iOS.
 
-/** ARMER LA GARDE sur `position`. Appelée par chaque pose instantanée
-    de ce module, et par les deux poses brutes de PageRechercheMobile.
-    §1 (nº 626) — SUR TOUS LES APPAREILS : la borne tactile est levée,
-    voir le bloc ci-dessus. */
-export function armerLaGardeDePosition(
-  position: number,
-  signature: string,
-  /**
-   * ██ §2 (nº 881) — JUSQU'OÙ ELLE DÉFEND, ET PAS AU-DELÀ ██
-   * ------------------------------------------------------------------
-   * SANS PLAFOND (le comportement d'origine, et celui de tous les
-   * appelants d'avant cette passe) : la garde annule TOUT écart qu'aucun
-   * geste n'explique, quelle que soit son ampleur.
-   * AVEC PLAFOND : elle ne défend QUE LES PETITS ÉCARTS et s'efface
-   * devant un grand. LA RAISON, MESURÉE À LA nº 881 : le défaut que le
-   * propriétaire décrit est « quelques pixels » — un recalage tardif du
-   * navigateur quand le document grandit après la pose. Un mouvement de
-   * plusieurs centaines de pixels, lui, est VOULU : c'est le site qui
-   * repose une place, ou un banc qui mesure. La nº 875 avait armé la
-   * garde partout SANS plafond et trois bancs étaient tombés sur ce
-   * malentendu exact ; le plafond est ce qui manquait pour distinguer
-   * les deux, sans avoir à deviner qui appelle.
-   */
-  ecartMax?: number,
-  /**
-   * ██ §1 (nº 883) — COMBIEN DE TEMPS, ET LA nº 882 N'EN DISAIT RIEN ██
-   * ------------------------------------------------------------------
-   * LA GARDE ABANDONNE APRÈS DOUZE ANNULATIONS (`RECALAGES_ANNULES_MAX`)
-   * : un garde-fou contre une boucle, et il vaut pour tous ses appelants
-   * d'origine. SUR UNE ARRIVÉE DE PAGE, IL NE SUFFIT PAS — WebKit
-   * recale le défilement à chaque étape tardive de la mise en page, et
-   * douze annulations peuvent partir en une seconde. La nº 882 a donc
-   * fait tenir la garde d'arrivée « jusqu'au premier geste ».
-   * CE QUE CELA A COÛTÉ, MESURÉ PAR LE PROPRIÉTAIRE SUR CHROME iOS :
-   * une garde sans fin, réveillée en continu par le repli de la barre
-   * d'adresse, qui AVALAIT LES TOUCHERS — la barre fixe et le
-   * va-et-vient ne répondaient plus tant qu'on n'avait pas fait défiler.
-   * LA RÈGLE DU PROPRIÉTAIRE (nº 883) : une DURÉE, jamais « jusqu'au
-   * geste ». Passé ce délai, la garde s'éteint d'elle-même, quoi qu'il
-   * arrive ; le premier geste, un changement d'adresse et un écart plus
-   * grand que le plafond l'éteignent plus tôt, comme avant.
-   * ⚠️ SANS ARGUMENT, RIEN NE CHANGE : les appelants d'origine gardent
-   * le compte des douze annulations, et aucune limite de temps.
-   */
-  dureeMaxMs?: number
-): void {
-  if (typeof window === "undefined") return;
-  garde = {
-    position: Math.round(position),
-    signature,
-    adresse: window.location.pathname + window.location.search,
-    annulations: 0,
-    ecartMax,
-    finA: dureeMaxMs === undefined ? undefined : performance.now() + dureeMaxMs,
-  };
-  noterDiag(
-    `GARDE ARMÉE · ${Math.round(position)} px · ${signature}` +
-      `${ecartMax === undefined ? "" : ` · plafond ${ecartMax}`}` +
-      `${dureeMaxMs === undefined ? "" : ` · ${dureeMaxMs} ms`}`
-  );
-  poserLaVeilleuse();
-  //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
-  //  annulera : le propriétaire doit pouvoir vérifier que la garde
-  //  était bien en place au moment où la page a bougé.
-  veillerParImage();
-}
-
-/**
- * §1 (nº 661) — LA VEILLE PAR IMAGE, redémarrée à chaque armement.
- * Elle ne juge rien : elle réveille le juge. Voir le bloc de
- * `VEILLE_PAR_IMAGE_MS` pour la mesure qui l'a rendue nécessaire.
- */
-function veillerParImage(): void {
-  cancelAnimationFrame(veilleParImage);
-  const limite = performance.now() + VEILLE_PAR_IMAGE_MS;
-  const regarder = () => {
-    //  Garde levée (un geste, un changement d'adresse) ou fenêtre
-    //  écoulée : la veille s'arrête d'elle-même.
-    if (!garde || performance.now() > limite) {
-      veilleParImage = 0;
-      return;
-    }
-    surDefilementSousGarde();
-    veilleParImage = requestAnimationFrame(regarder);
-  };
-  veilleParImage = requestAnimationFrame(regarder);
-}
-
-/**
- * §1 (nº 885) — LA GARDE EST-ELLE ENCORE LÀ, ET SUR QUELLE POSITION ?
- * Le bandeau de diagnostic le demande pour distinguer les défilements
- * qui tombent PENDANT la garde de ceux qui viennent APRÈS son
- * extinction — la question du propriétaire. Lecture pure.
- */
-export function positionGardee(): number | null {
-  return garde ? garde.position : null;
-}
-
-/** DÉSARMER LA GARDE — pour une surface qui déplace la page POUR
-    ELLE-MÊME (le gel d'une fiche, l'ouverture de la page de
-    recherche) : la position gardée ne décrit plus l'écran, la
-    défendre combattrait la surface. Le dégel et la sortie re-arment
-    en reposant. */
-export function desarmerLaGardeDePosition(): void {
-  garde = null;
-}
-
-function poserLaVeilleuse(): void {
-  if (veilleusePosee) return;
-  veilleusePosee = true;
-  //  « La garde se lève au premier vrai toucher » — et il n'a même pas
-  //  besoin de faire défiler : dès que l'utilisateur a la main, la
-  //  position lui appartient.
-  auDebutDuGeste((source) => {
-    if (!garde) return;
-    noterDiag(`GARDE ÉTEINTE · un geste (${source})`);
-    garde = null;
-  });
-  window.addEventListener("scroll", surDefilementSousGarde, {
-    passive: true,
-  });
-}
-
-function surDefilementSousGarde(): void {
-  const g = garde;
-  if (!g) return;
-  //  La page a changé d'adresse depuis l'armement : cette position ne
-  //  décrit plus rien ici, on se tait.
-  if (window.location.pathname + window.location.search !== g.adresse) {
-    noterDiag("GARDE ÉTEINTE · l'adresse a changé");
-    garde = null;
-    return;
-  }
-  //  §1 (nº 883) — LA DURÉE EST ÉCOULÉE : la garde s'efface, et la
-  //  position appartient au visiteur (voir `dureeMaxMs`, à l'armement).
-  if (g.finA !== undefined && performance.now() > g.finA) {
-    noterDiag("GARDE ÉTEINTE · la durée est écoulée (nº 883)");
-    garde = null;
-    return;
-  }
-  const y = Math.round(window.scrollY);
-  const ecart = y - g.position;
-  if (Math.abs(ecart) <= TOLERANCE_DE_GARDE_PX) return;
-  //  §2 (nº 881) — UN GRAND ÉCART N'EST PAS UN RECALAGE : il est voulu,
-  //  et la garde s'efface (voir `ecartMax`, à l'armement).
-  if (g.ecartMax !== undefined && Math.abs(ecart) > g.ecartMax) {
-    noterDiag(`GARDE ÉTEINTE · écart ${ecart} px au-delà du plafond`);
-    garde = null;
-    return;
-  }
-  //  Un mouvement porté par un geste : l'utilisateur a la main, la
-  //  garde n'a plus rien à défendre. (Le doigt était peut-être déjà
-  //  posé avant l'armement — l'abonnement au DÉBUT du geste ne l'a
-  //  alors pas vu passer ; ce second chemin le couvre.)
-  //  §1-b (nº 883) — ET UN DOIGT POSÉ SUFFIT, MÊME IMMOBILE : « aucune
-  //  pose de zéro ne doit jamais interrompre un toucher » (règle du
-  //  propriétaire). `gesteDeDefilementPlausible` ne voit qu'un doigt
-  //  qui a BOUGÉ ; un doigt posé juste avant l'armement — on garde le
-  //  doigt sur l'écran pendant que la page arrive — passait entre les
-  //  deux, et la re-pose annulait son toucher.
-  if (gesteDeDefilementPlausible() || unDoigtEstPose()) {
-    noterDiag(
-      `GARDE ÉTEINTE · ${unDoigtEstPose() ? "un doigt est posé" : "un geste porte le mouvement"}`
-    );
-    garde = null;
-    return;
-  }
-  g.annulations += 1;
-  //  §1 (nº 883) — le compte ne vaut que pour les gardes SANS durée :
-  //  celle d'une arrivée est bornée par le temps (voir `dureeMaxMs`), et
-  //  douze recalages peuvent tomber dans sa seconde sans qu'elle ait à
-  //  céder.
-  if (g.finA === undefined && g.annulations > RECALAGES_ANNULES_MAX) {
-    noterDiag(`GARDE ÉTEINTE · ${g.annulations} recalages annulés, on cède`);
-    garde = null;
-    return;
-  }
-  //  LE RECALAGE EST ANNULÉ : on repose la position gardée, en
-  //  l'annonçant (la barre ne doit pas lire NOTRE re-pose comme un
-  //  geste). `scrollTo` « instant » est synchrone : l'événement que ce
-  //  re-pose déclenchera retombera exactement sur la position gardée,
-  //  et repassera ici sans rien faire — aucune boucle possible.
-  /*  ██ §3 (nº 888) — D'OÙ VIENT CE RECALAGE ? ██
-      LA DEMANDE DU PROPRIÉTAIRE : « journalise l'origine de chaque
-      recalage annulé si possible (scroll natif vs script) ». Le site
-      ANNONCE ses propres mouvements (l'attribut de ce module) : un
-      écart qui tombe pendant cette annonce vient du SITE ; un écart
-      qui tombe hors d'elle, sans geste plausible et sans doigt posé,
-      ne peut venir que du NAVIGATEUR — c'est la réapplication que le
-      propriétaire voit sur Chrome iOS. On le dit, avec le compte : le
-      quatrième recalage d'affilée ne se lit pas comme le premier. */
-  noterDiag(
-    `RECALAGE ANNULÉ nº ${g.annulations} · y ${y} → ${g.position} (écart ${ecart}) · ` +
-      `${
-        estDefilementProgramme()
-          ? "pendant un mouvement du site (script)"
-          : "hors mouvement du site — LE NAVIGATEUR"
-      }`
-  );
-  document.documentElement.dataset[MARQUEUR] = "1";
-  window.scrollTo({ top: g.position, left: 0, behavior: "instant" });
-  const obtenu = Math.round(window.scrollY);
-  if (Math.abs(obtenu - g.position) > 1) g.position = obtenu;
-  lever(FENETRE_MS);
-}
+   ⚠️ CE QUI RESTE DE CE MODULE, ET QUI N'A JAMAIS ÉTÉ LA GARDE : le
+   MARQUEUR de mouvement du site (`defilerSansGeste`,
+   `annoncerMouvementDuSite`, `estDefilementProgramme`). Il ne repose
+   rien ; il dit seulement à la barre fixe « ce mouvement vient du
+   site, ne le lis pas comme un geste » (nº 154-§6A). Sans lui, la
+   rangée de recherche se replierait toute seule. */
 
 /**
  * ██ §1 (nº 426) — LE SITE ANNONCE AUSSI SES CHANGEMENTS DE HAUTEUR ██
@@ -530,10 +234,6 @@ export function defilerEnDouceur(cible: number): void {
   //  quoi que ce soit du document : sa réserve est déjà rendue, la
   //  hauteur qu'on s'apprête à lire est donc la vraie.
   finirAnimation?.();
-  //  §2 (nº 427) — l'animation va produire une pluie de positions
-  //  intermédiaires : aucune n'est « la » position à défendre. La
-  //  garde se tait pendant le trajet, et se re-arme à l'arrivée.
-  desarmerLaGardeDePosition();
   const depart = window.scrollY;
   const distance = cible - depart;
   document.documentElement.dataset[MARQUEUR] = "1";
@@ -577,7 +277,6 @@ export function defilerEnDouceur(cible: number): void {
     finirAnimation = relacher;
     requestAnimationFrame(relacher);
     lever(FENETRE_MS);
-    armerLaGardeDePosition(cible, "smooth scroll");
     return;
   }
 
@@ -632,10 +331,6 @@ export function defilerEnDouceur(cible: number): void {
     }
     clore(true);
     lever(FENETRE_MS);
-    //  §2 (nº 427) — arrivé au bout du trajet, ce qui est posé se
-    //  défend comme toute pose. (Une interruption par un geste, elle,
-    //  n'arme rien : le doigt a la main.)
-    armerLaGardeDePosition(cible, "smooth scroll");
   };
   animationEnCours = requestAnimationFrame(avancer);
 }

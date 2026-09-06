@@ -29,8 +29,20 @@
  *  3. Un écran neuf s'ouvre en haut. Un écran où l'on revient se pose
  *     là où on l'avait quitté. C'est le CHEMIN qui décide, jamais
  *     l'écran.
+ *     ⚠️ nº 889 — LA RÈGLE NE CHANGE PAS, CELUI QUI L'APPLIQUE, SI.
+ *     Le site ne mémorise ni ne restitue plus AUCUNE position de page :
+ *     le haut d'un écran neuf est posé par le ROUTEUR, et la place d'un
+ *     écran où l'on revient est rendue par le NAVIGATEUR
+ *     (history.scrollRestoration = "auto", nº 363). Ce qui se perd, et
+ *     que le propriétaire a accepté : les onglets d'un profil (nº 873)
+ *     et le va-et-vient Tattoo/Flash (nº 860) rouvrent en haut — un
+ *     lien qui remplace son entrée d'historique n'est pas un retour
+ *     pour le navigateur.
  *  4. La position se lit toujours par la fonction qui sait lire sous
- *     le gel, jamais par la valeur brute.
+ *     le gel, jamais par la valeur brute (`positionSousLeGel`).
+ *     ⚠️ nº 889 — IL N'EN RESTE QU'UN LECTEUR : le gel lui-même, qui
+ *     retient sa place au gel et la rend au dégel. Tous les autres
+ *     écrivaient dans la mémoire de position, qui est partie.
  *  5. L'état d'un écran vit dans l'adresse, pas dans React.
  *  6. Un lien interne vers un autre portfolio n'affiche pas la photo
  *     en haut. Une arrivée depuis une carte ou un lien de partage
@@ -57,10 +69,13 @@
  *     derrière ? (notre propre marque : la profondeur relevée à
  *     l'arrivée) ; une page ÉTRANGÈRE derrière ? (le référent, seul
  *     témoin qui distingue une entrée fantôme d'Instagram).
- * 10. UNE PLACE, C'EST UNE POSITION **ET** L'ÉTAT DE LA BARRE QUI
- *     ALLAIT AVEC ; on range les deux, on rend les deux (nº 335-§1,
- *     lib/reserve-barre). Rendre la position seule, c'était le « cran »
- *     de 58 px et les cartes qui remontent après s'être affichées.
+ * 10. CADUC DEPUIS LA nº 889. « Une place, c'est une position ET
+ *     l'état de la barre qui allait avec ; on range les deux, on rend
+ *     les deux » (nº 335-§1). Il n'y a plus de place rangée, donc plus
+ *     d'état de barre à ranger avec elle : une page qui s'ouvre en haut
+ *     a sa rangée dépliée, par construction. Ce qui reste chez
+ *     lib/reserve-barre : la survie de l'état au REMONTAGE dans le même
+ *     document (nº 430), qui n'a jamais rien eu à voir avec une place.
  * 11. QUAND LA DÉCISION N'EST PAS « QUOI AFFICHER » MAIS « QUELLE PAGE
  *     SERVIR », C'EST LE SERVEUR QUI TRANCHE, d'après l'adresse
  *     (nº 335-§2 ; son seul module, lib/appareil-serveur, est parti
@@ -77,14 +92,21 @@
  *     routeur À SA NAISSANCE, et au navigateur ensuite. S'en remettre
  *     à un seul des deux, c'est ouvrir une surface sur une adresse
  *     qu'on est en train de quitter — et plus rien ne la referme.
- * 13. ON NE POSE UNE POSITION QUE SUR DU CONTENU (nº 337-§1,
- *     lib/pose-sur-contenu). Poser une place dans un document qui n'a
- *     pas fini d'arriver, c'est se retrouver à 900 px dans une réserve
- *     de hauteur VIDE — et c'est cet écran nu que le propriétaire
- *     voyait à chaque retour depuis une position descendue. On attend,
- *     masqués, que le contenu réel atteigne la position, puis on pose
- *     la réserve ET le défilement dans la même image, avant sa
- *     peinture.
+ * 13. CADUC DEPUIS LA nº 889. « On ne pose une position que sur du
+ *     contenu » (nº 337-§1) : le site ne pose plus de position, et
+ *     lib/pose-sur-contenu est parti. Ce que le navigateur fait à notre
+ *     place au rechargement est moins fin — il ne sait pas attendre que
+ *     les cartes arrivent — et c'est le prix assumé du standard.
+ *
+ * 14. LE ROUTEUR NE POSE PAS ZÉRO TOUT SEUL, ET IL FAUT LE SAVOIR
+ *     (nº 889). Le défaut documenté de `<Link>` : il GARDE la position
+ *     quand le haut du contenu de la page qui arrive est encore visible
+ *     dans la fenêtre — donc précisément quand la page qu'on quitte
+ *     était LÉGÈREMENT défilée. C'est le bug que huit passes (881-888)
+ *     ont attribué à WebKit. Ce qui le corrige : `scroll-padding-top`
+ *     (globals.css), que Next lit lui-même pour ce test. Voir
+ *     docs/DEFILEMENT-889-INVENTAIRE.md, avec la mesure et le code du
+ *     routeur.
  *
  * ------------------------------------------------------------------
  * POURQUOI ELLE VIT ICI, ET PAS AILLEURS. Ce module portait déjà LA
@@ -104,9 +126,9 @@
  *    `useEtapeQuiSeReferme` (lib/etape-refermable), qui pose l'étape,
  *    referme au `popstate`, et ne reprend son étape que si elle est
  *    encore la sienne.
- *  · 3 — `DefilementEnHaut` (l'arrivée, avant la peinture),
- *    `MemoireNavigation` (la mémorisation, et le filet après),
- *    `gel-du-corps` (le dégel, avec sa réserve depuis la nº 329-§2) et
+ *  · 3 — le ROUTEUR (l'arrivée d'une page neuve) et le NAVIGATEUR (les
+ *    retours) depuis la nº 889 ; `gel-du-corps` (le dégel, avec sa
+ *    réserve depuis la nº 329-§2) et
  *    `ouvrirLaListeEnHaut` (lib/liste-neuve) — L'ÉCRITURE UNIQUE de
  *    « une liste neuve commence en haut », appelée par le filtre de
  *    « Ma sélection » (`poserSelection`) ET par la recherche
@@ -397,93 +419,16 @@
  * ██████████████████████████████████████████████████████████████████
  */
 
-import { adresseDeRecherche } from "@/lib/adresse-recherche";
-//  §1 (nº 335) — la règle du « cran » du retour, écrite une seule fois.
-import { rangeeReplieeMaintenant } from "@/lib/reserve-barre";
-import { diagnosticArme, noterDiag } from "@/lib/journal-diagnostic";
+/*  nº 889 — CE MODULE N'IMPORTE PLUS RIEN. Il lisait l'adresse
+    canonique d'une recherche (lib/adresse-recherche), l'état de la
+    rangée (lib/reserve-barre) et le journal du diagnostic : les trois
+    ne servaient qu'à la mémoire de position, qui est partie. */
 
 export const CLE_JOURNAL = "yokofolio:pages-visitees";
 const CLE = CLE_JOURNAL;
 
 /** Douze heures × 2 : au-delà, le journal est considéré périmé */
 export const AGE_MAXIMUM_MS = 24 * 3600 * 1000;
-
-/**
- * L'ÂGE MAXIMUM D'UNE POSITION DE DÉFILEMENT — TRENTE MINUTES
- * (passe nº 181-§1c)
- * ------------------------------------------------------------------
- * Une position n'est pas une préférence : c'est l'endroit où l'on était
- * il y a un instant. Relevé du propriétaire : une position de 4964 px
- * réclamée après 8646 secondes — près de deux heures et demie. Entre
- * temps la mosaïque avait changé, la page n'avait plus la même hauteur,
- * et la demande ne pouvait qu'échouer.
- * Au-delà d'une demi-heure, on l'oublie : la page s'ouvre en haut,
- * franchement, plutôt que de viser un endroit qui n'existe plus.
- * (Les 24 heures ci-dessus restent celles du JOURNAL des pages
- * visitées et de la reprise de session — deux choses différentes.)
- */
-export const AGE_POSITION_MS = 30 * 60 * 1000;
-
-/**
- * ██ §2 (nº 875) — LE PLANCHER D'UNE POSITION : SOUS 24 px, C'EST LE
- * HAUT ██
- * ==================================================================
- * LE DÉFAUT DU PROPRIÉTAIRE : « une page fraîche s'ouvre parfois déjà
- * descendue de quelques pixels ». QUELQUES PIXELS — c'est la forme du
- * symptôme, et c'est elle qui désigne le coupable : rien dans le site
- * ne vise « quelques pixels », mais TOUT ce qui rend une place rend
- * fidèlement ce qu'on lui a rangé. Or on lui rangeait des riens :
- * `memoriserDefilement` écrivait N'IMPORTE QUEL `y` non nul — un
- * rebond élastique en fin de défilement, la barre d'adresse d'un
- * téléphone qui se replie, un doigt qui effleure la page avant de
- * partir. Relevé pendant le diagnostic de la nº 874 : une note de
- * SIX PIXELS rangée pour « /flash ». La visite suivante la rendait —
- * six pixels, exactement le symptôme.
- * LA RÈGLE : une place sous ce plancher N'EST PAS UNE PLACE. On ne
- * l'écrit pas (on efface, comme le fait déjà `memoriserColonne` pour
- * zéro), et on ne la lit pas (les notes d'avant cette passe meurent
- * donc d'elles-mêmes, sans rien à purger).
- * ██ §1 (nº 887) — CENT PIXELS, ET C'EST LE SEUL SEUIL DU SITE ██
- * ------------------------------------------------------------------
- * CE QUE LE JOURNAL DE LA nº 886 A MONTRÉ, ET QUI CLÔT L'ENQUÊTE : le
- * « défilement à l'ouverture » que le propriétaire poursuivait depuis
- * la nº 881 n'était pas un recalage de moteur. C'était le site
- * lui-même, restituant FIDÈLEMENT une petite place mémorisée —
- * quarante-sept pixels, au retour sur un onglet de portfolio (la règle
- * nº 873). Tout fonctionnait comme écrit ; c'est la RÈGLE qui était
- * trop basse.
- * LA RÈGLE DU PROPRIÉTAIRE (nº 887) : UNE POSITION SOUS CENT PIXELS
- * N'EST NI MÉMORISÉE NI RESTITUÉE — la page rouvre à zéro. Pour TOUS
- * les mécanismes, sans exception : la mémoire par adresse, la demande
- * explicite de restitution, la colonne de lecture du web. Au-delà de
- * cent pixels, rien ne change : la place décrit un vrai déplacement,
- * et elle est rendue comme depuis toujours.
- * POURQUOI CENT : sous cent pixels, restituer ne rend RIEN que l'œil
- * puisse reconnaître — on ne retrouve aucun contenu, on ne fait que ne
- * pas être en haut. C'est à peu près la hauteur de la barre fixe : en
- * dessous, le premier écran est le même à quelques lignes près.
- * ⚠️ IL REMPLACE LES DEUX ANCIENS SEUILS, et il n'en reste qu'un dans
- * tout le site : le plancher des places (24, nº 875) et le seuil du
- * départ à zéro (40, nº 885 — `ECART_DE_RECALAGE_PX`, qui lit
- * désormais cette valeur-ci).
- * ⚠️ ÉCRIT UNE SEULE FOIS, ET LE SCRIPT D'AVANT PEINTURE LIT CETTE
- * VALEUR-CI (lib/script-avant-peinture l'injecte dans son texte) :
- * les deux poseurs de position du site ne peuvent pas se désaccorder
- * sur ce qu'est « le haut » (piège nº 378).
- */
-export const PLANCHER_DE_POSITION_PX = 100;
-
-/**
- * §3 (nº 887) — L'INSTANT DE LA DERNIÈRE NAVIGATION, pour que CHAQUE
- * écriture de mémoire puisse dire au diagnostic combien de temps la
- * séparait du changement d'adresse (la demande du propriétaire). Posé
- * par MemoireNavigation, à l'arrivée.
- */
-let derniereNavigationA = 0;
-export function signalerNavigation(): void {
-  derniereNavigationA =
-    typeof performance === "undefined" ? 0 : performance.now();
-}
 
 type PagesVisitees = {
   courante: string | null;
@@ -527,223 +472,11 @@ export function noterPageVisitee(url: string) {
   }
 }
 
-/** La page du site visitée juste avant celle-ci (null : aucune) */
-export function lirePagePrecedente(): string | null {
-  return lire().precedente;
-}
-
-/** La DERNIÈRE page notée au journal. Au montage d'une nouvelle
-    page, elle n'est pas encore remplacée : c'est la page d'où l'on
-    VIENT (la liste s'en sert pour reconnaître un retour de fiche,
-    même quand tous les autres signaux ont été perdus — PWA iPhone
-    relancée, API de performance absente en mode plein écran…). */
-export function lirePageCourante(): string | null {
-  return lire().courante;
-}
-
-/* ------------------------------------------------------------
- * POSITIONS DE DÉFILEMENT (persistantes, par adresse)
- * ------------------------------------------------------------ */
-
-export const PREFIXE_DEFILEMENT = "yokofolio:defilement:";
-
-/**
- * ⚠️ UNE POSITION APPARTIENT À UNE RECHERCHE PRÉCISE (nº 184-§2).
- * ------------------------------------------------------------------
- * LE DÉFAUT, relevé sur l'iPhone du propriétaire : la position prise
- * dans la mosaïque complète — 10965 px — était réclamée sur une page
- * filtrée qui ne mesure que 1338 px, et la page retombait à 132.
- * La clé passe donc par l'adresse CANONIQUE de la recherche : les
- * critères en font partie, les réglages de sonde n'en font pas partie
- * (voir lib/adresse-recherche, et la même logique en clair dans le
- * script d'avant peinture).
- *
- * ██ §3 (nº 653) — CE QUE LE DÉMÉNAGEMENT DE LA RECHERCHE Y CHANGE ██
- * ------------------------------------------------------------------
- * RIEN, et ce n'est pas une formule : la clé contient LE CHEMIN, parce
- * que l'adresse canonique le contient. Depuis la nº 652, une recherche
- * se range donc sous « yokofolio:defilement:/search?style=… » et
- * l'accueil sous « yokofolio:defilement:/ ». DEUX CLÉS QUI NE PEUVENT PAS
- * SE CONFONDRE — c'est exactement la garantie que la nº 184 cherchait,
- * et le déménagement la renforce au lieu de l'entamer.
- * ⚠️ CE QUI SE PERD, ET C'EST SANS CONSÉQUENCE : les positions écrites
- * AVANT la nº 652 sous « /?style=… » ne seront plus retrouvées — leur
- * clé n'existe plus. Elles s'effacent d'elles-mêmes (une position ne
- * vit qu'une demi-heure) et le pire qu'elles coûtent est un retour en
- * haut, une fois, sur une recherche d'avant la mise en ligne.
- * ⚠️ ET LE SCRIPT D'AVANT PEINTURE FABRIQUE LA MÊME CLÉ, de la même
- * façon (`location.pathname` + critères triés) : les deux ne peuvent
- * pas se désaccorder sur ce point non plus.
- */
-function cleDePosition(url: string): string {
-  return `${PREFIXE_DEFILEMENT}${adresseDeRecherche(url)}`;
-}
-
-/**
- * §1 (nº 335) — UNE PLACE, C'EST UNE POSITION **ET** UN ÉTAT DE RANGÉE.
- * ------------------------------------------------------------------
- * La règle du « cran » du retour (nº 218-§4) vit désormais dans UN SEUL
- * module — `lib/reserve-barre` — et elle a changé de nature : on ne
- * calcule plus un écart, on RANGE L'ÉTAT DE LA RANGÉE avec la position
- * et on rend les deux ensemble. Ce fichier ne fait que ranger et
- * relire ; c'est `lib/restitution-position` qui rend l'un et l'autre.
- * Le pourquoi est écrit en tête de `lib/reserve-barre`.
- */
-
-/** Ce qu'on garde d'une page qu'on quitte. `p` : la rangée de recherche
-    était-elle repliée ? (absent : la question n'avait pas de sens —
-    web, pas de barre… ou note écrite avant la nº 335). */
-export type PlaceGardee = { y: number; p?: boolean; date: number };
-
-/** Mémorise la place d'une adresse : la position ET l'état de la rangée */
-export function memoriserDefilement(url: string, y: number) {
-  try {
-    /*  §3 (nº 887) — CHAQUE ÉCRITURE S'ÉCRIT : la clé, la valeur, et le
-        temps écoulé depuis la dernière navigation. C'est la ligne qui
-        aurait montré le défaut du premier coup — une note posée sous
-        l'adresse de la destination, quelques dizaines de millisecondes
-        après le changement d'adresse. Désarmé, cela ne coûte qu'un test
-        de booléen (lib/journal-diagnostic). */
-    if (diagnosticArme()) {
-      const depuis =
-        derniereNavigationA === 0
-          ? "?"
-          : `${Math.round(performance.now() - derniereNavigationA)} ms`;
-      noterDiag(
-        `MÉMOIRE · ${url} ← ${Math.round(y)} px · ${depuis} après la navigation` +
-          `${Math.round(y) < PLANCHER_DE_POSITION_PX ? " · SOUS LE SEUIL, effacée" : ""}`
-      );
-    }
-    //  §2 (nº 875) — SOUS LE PLANCHER, IL N'Y A RIEN À RANGER : on
-    //  EFFACE (l'idiome de `memoriserColonne` pour zéro), sans quoi une
-    //  note de six pixels survivrait à la note juste qu'elle remplace.
-    if (Math.round(y) < PLANCHER_DE_POSITION_PX) {
-      localStorage.removeItem(cleDePosition(url));
-      return;
-    }
-    const repliee = rangeeReplieeMaintenant();
-    const place: PlaceGardee = { y: Math.round(y), date: Date.now() };
-    //  ⚠️ LA POSITION EST BRUTE (nº 335-§1) : plus aucun écart n'y est
-    //  ajouté. C'est l'état ci-dessous qui porte la différence, et il
-    //  la porte sans arithmétique — donc sans valeur en dur.
-    if (repliee !== null) place.p = repliee;
-    localStorage.setItem(cleDePosition(url), JSON.stringify(place));
-  } catch {
-    // stockage indisponible : la page reviendra simplement en haut
-  }
-}
-
-/**
- * §1 (nº 330) — OUBLIER LA POSITION D'UNE PAGE, EXPLICITEMENT.
- * ------------------------------------------------------------------
- * Quand une liste est REFAITE (un filtre posé, une recherche lancée),
- * la place qu'on avait mémorisée pour elle ne décrit plus rien : la
- * liste qu'elle décrivait n'existe plus. On l'EFFACE, plutôt que d'y
- * écrire zéro — `memoriserDefilement` ajoute l'écart de réserve de la
- * barre à ce qu'on lui donne, et zéro n'y resterait donc pas zéro.
- * Seul appelant : `ouvrirLaListeEnHaut` (lib/liste-neuve).
- */
-export function oublierDefilementDe(url: string) {
-  try {
-    localStorage.removeItem(cleDePosition(url));
-  } catch {
-    // stockage indisponible : il n'y avait rien à oublier
-  }
-}
-
-/** La place mémorisée pour une adresse (null : aucune, ou trop
-    ancienne). Un seul lecteur : `rendreLaPlace`
-    (lib/restitution-position), qui rend la position et la rangée
-    ensemble — les séparer, c'est rouvrir le défaut de la nº 335-§1. */
-export function lireLaPlace(url: string): PlaceGardee | null {
-  try {
-    const brut = localStorage.getItem(cleDePosition(url));
-    if (!brut) return null;
-    const place = JSON.parse(brut) as PlaceGardee;
-    //  ⚠️ TRENTE MINUTES, et plus vingt-quatre heures (nº 181-§1c).
-    if (Date.now() - (place.date ?? 0) > AGE_POSITION_MS) return null;
-    //  §2 (nº 875) — LE PLANCHER SE LIT AUSSI, et pas seulement à
-    //  l'écriture : les notes rangées AVANT cette passe sont encore là
-    //  pour une demi-heure, et ce sont elles qui ouvriraient une page
-    //  à six pixels. Elles meurent ici, sans purge à écrire.
-    if (!place.y || place.y < PLANCHER_DE_POSITION_PX) return null;
-    return place;
-  } catch {
-    return null;
-  }
-}
-
-/** La position mémorisée seule (0 si aucune). Pour ce qui n'a que faire
-    de la rangée — la sonde, un banc. Le retour, lui, passe par
-    `rendreLaPlace`. */
-export function lireDefilement(url: string): number {
-  return lireLaPlace(url)?.y ?? 0;
-}
-
-/* ------------------------------------------------------------
- * LA RÈGLE UNIQUE DE RESTITUTION
- * ------------------------------------------------------------
- * QUELLE QUE SOIT LA FAÇON DONT ON ARRIVE SUR UNE PAGE, SI UNE
- * POSITION A ÉTÉ MÉMORISÉE POUR ELLE, ON LA REND.
- * Une seule exception, et elle est évidente : une navigation NEUVE et
- * VOULUE — un lien touché, une adresse tapée, un favori — ouvre la page
- * en haut. C'est ce que dit le navigateur avec son type « navigate ».
- *
- * TOUT LE RESTE RESTITUE :
- *  · « back_forward » — le retour arrière, MAIS AUSSI LE RETOUR EN
- *    AVANT. La mémoire ne traitait que le premier : revenir en avant
- *    vers une fiche la rouvrait n'importe où (souvent tout en bas, la
- *    position mémorisée étant rabotée par une page pas encore montée à
- *    sa hauteur définitive).
- *  · « reload » — et c'est le cas de la RÉOUVERTURE DU NAVIGATEUR :
- *    quand le système a tué l'application, l'onglet ressuscité se
- *    recharge. On atterrissait systématiquement en haut.
- *  · une demande explicite (`demanderRestaurationPosition`), posée par
- *    la reprise de session quand elle ramène l'utilisateur sur sa page.
- *
- * Le jugement est rendu UNE FOIS par document et gardé : le type de
- * navigation ne change pas en cours de route, et deux composants le
- * consultent (la mémoire de navigation, et la remontée en haut de page
- * qui doit s'effacer devant lui).
- */
-
-let arriveeJugee: boolean | null = null;
-
-export function arriveeQuiRestitue(): boolean {
-  if (arriveeJugee === null) {
-    try {
-      const [navigation] = performance.getEntriesByType(
-        "navigation"
-      ) as PerformanceNavigationTiming[];
-      arriveeJugee = (navigation?.type ?? "navigate") !== "navigate";
-    } catch {
-      arriveeJugee = false; // API absente : on ne restitue pas
-    }
-  }
-  return arriveeJugee;
-}
-
-/** Fait le ménage des positions trop anciennes (appelé au chargement) */
-export function purgerDefilementsAnciens() {
-  try {
-    const aSupprimer: string[] = [];
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const cle = localStorage.key(i);
-      if (!cle?.startsWith(PREFIXE_DEFILEMENT)) continue;
-      try {
-        const { date } = JSON.parse(localStorage.getItem(cle) ?? "{}") as {
-          date?: number;
-        };
-        if (Date.now() - (date ?? 0) > AGE_POSITION_MS) aSupprimer.push(cle);
-      } catch {
-        aSupprimer.push(cle); // entrée illisible : on la retire
-      }
-    }
-    for (const cle of aSupprimer) localStorage.removeItem(cle);
-  } catch {
-    // stockage indisponible : rien à nettoyer
-  }
-}
+/*  nº 889 — `lirePagePrecedente` et `lirePageCourante` sont parties :
+    aucun appelant dans le site, vérifié. Elles accompagnaient la
+    mémoire de position, qui est partie avec elles. Le journal, lui,
+    reste écrit — c'est le bouton retour d'une fiche qui le lit, par
+    lib/bas-de-la-pile. */
 
 /* ------------------------------------------------------------
  * NAVIGATION DE L'ONGLET EN COURS
@@ -844,59 +577,6 @@ export function laRepriseVientDuSite(): boolean {
     Date.now() - repriseDuSiteAnnonceeLe < 2000;
   repriseDuSiteAnnonceeLe = 0;
   return annoncee;
-}
-
-/**
- * §1 (nº 446) — « CETTE ARRIVÉE VEUT LE HAUT » : LA SORTIE CONFIRMÉE
- * ==================================================================
- * LE DÉFAUT QU'ELLE FERME (relevé du propriétaire, mobile) : sur la
- * fiche de création (/become-an-artist/portfolio), quitter par le bouton
- * « précédent » ouvre la fenêtre de confirmation (la sentinelle de
- * GardeSaisie) ; « Quitter sans enregistrer » repart alors par
- * `history.go(-2)` — une VRAIE traversée d'historique. À l'arrivée
- * sur l'accueil, MemoireNavigation y lit un retour (popstate,
- * `vraieTraversee`) et RESTITUE la position mémorisée — celle du bas
- * de la page, notée quand on avait quitté l'accueil. Or une SORTIE
- * CONFIRMÉE est une navigation EN AVANT dans la tête du visiteur :
- * elle doit arriver EN HAUT, quel que soit le mécanisme qui la porte.
- *
- * LA RÈGLE — le modèle des déclarations nº 429 et nº 438 : le geste
- * qui SAIT (le « Quitter sans enregistrer » de la fenêtre) déclare
- * l'intention juste avant de partir ; l'arrivée la lit et n'y
- * restitue rien. Les vrais retours (bouton « précédent » sans
- * confirmation, fermeture de fenêtre nº 438) ne déclarent RIEN : les
- * restitutions légitimes — recherche nº 423, place de la mosaïque,
- * restitution datée nº 426, note finale nº 431 — ne rencontrent
- * jamais ce drapeau.
- *
- * ⚠️ LA LECTURE EST NON DESTRUCTIVE, ET LA CONSOMMATION UNIQUE — la
- * leçon de la nº 426 (« deux consommateurs pour un jeton, c'est une
- * restitution perdue sur deux ») : DefilementEnHaut LIT (avant la
- * peinture, pour remonter), MemoireNavigation LIT PUIS CONSOMME (le
- * dernier de la chaîne, après la peinture). Trois secondes de
- * validité au plus : un drapeau qui traînerait ne peut pas manger un
- * vrai retour fait juste après.
- */
-let arriveeEnHautVoulueLe = 0;
-
-/** À appeler juste avant une SORTIE CONFIRMÉE (le « Quitter sans
-    enregistrer » de la garde de saisie) — quelle que soit sa
-    mécanique : history.go, router.push, location. Jamais un frein. */
-export function declarerArriveeEnHaut() {
-  arriveeEnHautVoulueLe = Date.now();
-}
-
-/** Lecture NON destructive : l'arrivée en cours veut-elle le haut ? */
-export function arriveeEnHautVoulue(): boolean {
-  return (
-    arriveeEnHautVoulueLe !== 0 && Date.now() - arriveeEnHautVoulueLe < 3000
-  );
-}
-
-/** La consommation, par le DERNIER lecteur de la chaîne
-    (MemoireNavigation) : une déclaration sert UNE arrivée. */
-export function consommerArriveeEnHaut() {
-  arriveeEnHautVoulueLe = 0;
 }
 
 /*  §1 (nº 478) — LA SUSPENSION DE LA RESTAURATION NATIVE EST PARTIE.
@@ -1001,173 +681,3 @@ export function lireDerniereAdresseOnglet(): string | null {
   return lireOnglet().derniere;
 }
 
-/* ------------------------------------------------------------
- * HYDRATATION TERMINÉE ?
- * ------------------------------------------------------------
- * Faux pendant le TOUT PREMIER rendu (le navigateur affiche le
- * HTML du serveur : le premier rendu client doit être identique,
- * sous peine d'erreur d'hydratation). Vrai ensuite : les
- * navigations internes rendent tout côté client — les composants
- * peuvent alors lire leur mémoire (pagination…) dès le premier
- * rendu, AVANT la première peinture, sans risque.
- */
-
-let hydratationTerminee = false;
-
-export function marquerHydratation() {
-  hydratationTerminee = true;
-}
-
-export function estHydrate(): boolean {
-  return hydratationTerminee;
-}
-
-/* ------------------------------------------------------------
- * SIGNAL DE TRAVERSÉE (retour/avant) PARTAGÉ
- * ------------------------------------------------------------
- * Posé par MemoireNavigation au popstate, consommé par la liste de
- * résultats pour restaurer SA propre position de défilement
- * interne (le moteur de recherche étant fixe, la liste défile dans
- * sa colonne — la mémoire de la fenêtre ne la voit pas).
- */
-
-let traverseePendante = false;
-
-export function signalerTraversee() {
-  traverseePendante = true;
-}
-
-/** Vrai une seule fois après un retour/avant du navigateur */
-export function consommerTraversee(): boolean {
-  const traversee = traverseePendante;
-  traverseePendante = false;
-  return traversee;
-}
-
-/* ------------------------------------------------------------
- * RESTAURATION APRÈS UN RETOUR « RECONSTRUIT »
- * ------------------------------------------------------------
- * Quand l'historique du navigateur a été perdu (application PWA
- * relancée après une longue inactivité…), le bouton retour NAVIGUE
- * vers la liste au lieu de revenir en arrière. Ce drapeau demande
- * à la page d'arrivée de restaurer quand même la position.
- */
-
-export const CLE_RESTAURER = "yokofolio:restaurer-position";
-
-/** Sans adresse : demande « libre », consommée par la PROCHAINE page
-    (le bouton retour reconstruit). Avec adresse : demande RÉSERVÉE à
-    cette adresse — la page qui lance une reprise de session
-    (RepriseSession) vit encore un instant après son location.replace,
-    et ses propres effets ne doivent pas consommer la demande à la
-    place de la page d'arrivée. */
-export function demanderRestaurationPosition(adresse?: string) {
-  try {
-    sessionStorage.setItem(CLE_RESTAURER, adresse ?? "1");
-  } catch {
-    // sans stockage : la liste s'ouvrira simplement en haut
-  }
-}
-
-/** EFFACE la demande, sans rien restituer (nº 194-§1).
-    ⚠️ TOUT GESTE L'ANNULE : un clic sur le logo, un défilement au
-    doigt, une touche. Une demande qui survit à un geste se réapplique
-    et ramène l'utilisateur à sa place enregistrée alors qu'il vient
-    justement de la quitter — la page « remonte puis redescend ». */
-export function oublierRestaurationPosition() {
-  try {
-    sessionStorage.removeItem(CLE_RESTAURER);
-  } catch {
-    // rien à oublier
-  }
-}
-
-/**
- * LA MÊME QUESTION, SANS CONSOMMER (§3, nº 328).
- * ------------------------------------------------------------------
- * `DefilementEnHaut` doit savoir, AVANT LA PEINTURE, s'il a le droit
- * de remonter la page — c'est-à-dire si une restitution est attendue.
- * Il ne peut pas appeler `consommerRestaurationPosition` pour cela :
- * il MANGERAIT la demande que `MemoireNavigation` doit consommer un
- * instant plus tard, et la position ne serait jamais rendue.
- * Cette lecture-ci ne retire rien. Elle répond à « une demande est-elle
- * posée pour CETTE adresse ? », et rien d'autre.
- */
-export function restaurationDemandeePour(url: string): boolean {
-  try {
-    const brut = sessionStorage.getItem(CLE_RESTAURER);
-    if (!brut) return false;
-    return brut === "1" || brut === url;
-  } catch {
-    return false;
-  }
-}
-
-/** Consomme la demande (vrai une seule fois — et uniquement sur la
-    page à qui elle est destinée, quand elle est adressée) */
-export function consommerRestaurationPosition(): boolean {
-  try {
-    const brut = sessionStorage.getItem(CLE_RESTAURER);
-    if (!brut) return false;
-    if (brut !== "1" && brut !== location.pathname + location.search) {
-      return false;
-    }
-    sessionStorage.removeItem(CLE_RESTAURER);
-    return true;
-  } catch {
-    // rien
-  }
-  return false;
-}
-
-/* ------------------------------------------------------------
- * ██ §1 (nº 873) — LA PLACE DE LA COLONNE DE LECTURE, PAR PAGE (WEB) ██
- * ------------------------------------------------------------
- * « Chaque page garde sa position de défilement » — le profil, le
- * portfolio et les flashs d'un artiste (ContenuFiche). AU DOIGT, la
- * page défile : la mémoire ci-dessus fait le travail seule
- * (`memoriserDefilement`, écrite au départ vers une fiche par
- * MemoireNavigation, rendue par `rendreLaPlace`). AU WEB, ce n'est pas
- * la page qui défile mais LA COLONNE DE LECTURE (`data-colonne-lecture`,
- * FicheTatoueur — `window.scrollY` y vaut zéro), et la colonne est
- * REMONTÉE à chaque page : sa place doit donc se retenir à part, sous
- * l'adresse de la page, et se rendre au montage de la suivante.
- * ⚠️ MÊME ÂGE QUE LES POSITIONS DE PAGE (`AGE_POSITION_MS`), et la
- * session pour support : une place de colonne n'a pas à survivre à
- * l'onglet. Zéro n'est pas retenu — rien à rendre, on efface.
- */
-export const PREFIXE_COLONNE = "yokofolio:colonne:";
-
-/** Retient la place de la colonne d'une page (sous le plancher : on
-    efface — §2 nº 875, la même règle que les places de page). */
-export function memoriserColonne(url: string, y: number) {
-  try {
-    if (y < PLANCHER_DE_POSITION_PX) {
-      sessionStorage.removeItem(PREFIXE_COLONNE + url);
-      return;
-    }
-    sessionStorage.setItem(
-      PREFIXE_COLONNE + url,
-      JSON.stringify({ y: Math.round(y), date: Date.now() })
-    );
-  } catch {
-    // sans stockage : la colonne s'ouvrira simplement en haut
-  }
-}
-
-/** La place retenue pour la colonne d'une page (0 : aucune, ou trop
-    ancienne). */
-export function lireColonne(url: string): number {
-  try {
-    const brut = sessionStorage.getItem(PREFIXE_COLONNE + url);
-    if (!brut) return 0;
-    const note = JSON.parse(brut) as { y?: number; date?: number };
-    if (Date.now() - (note.date ?? 0) > AGE_POSITION_MS) return 0;
-    //  §2 (nº 875) — le plancher, ici aussi : une colonne de web qui
-    //  rouvrirait trois pixels plus bas est le même défaut.
-    const y = note.y || 0;
-    return y < PLANCHER_DE_POSITION_PX ? 0 : y;
-  } catch {
-    return 0;
-  }
-}

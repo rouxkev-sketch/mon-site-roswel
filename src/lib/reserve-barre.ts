@@ -146,10 +146,6 @@ export const CIBLE_GESTE_BARRE =
     posés par l'attribut `taille` de l'icône). */
 export const DESSIN_GESTE_BARRE = "mobile:h-[26px] mobile:w-[26px]";
 
-/** La marque posée sur `<html>` : « nais avec la rangée repliée ».
-    Un attribut de document, parce que le script d'avant peinture doit
-    pouvoir l'écrire avant que React n'existe. */
-export const MARQUE_RANGEE = "rangeeRepliee";
 
 /**
  * LA HAUTEUR DE LA RÉSERVE REPLIÉE, DONNÉE À LA FEUILLE DE STYLE.
@@ -187,15 +183,7 @@ export const VARIABLE_RESERVE_REPLIEE = "--rw-reserve-repliee";
  */
 export const VARIABLE_RANGEE_COLLANTE = "--rw-rangee-collante";
 
-/** La marque qui coupe l'animation de hauteur, le temps d'un retour :
-    une réserve qui s'anime pendant qu'on repose la position, c'est le
-    contenu qui glisse sous l'œil. Voir globals.css. */
-export const MARQUE_IMMEDIATE = "rangeeImmediate";
 
-/** L'événement par lequel le retour prévient la barre, quand celle-ci
-    est déjà née (retour en navigation de client : la barre n'est pas
-    remontée, elle ne relira jamais la marque toute seule). */
-export const EVENEMENT_RANGEE = "yokofolio:rangee-a-rendre";
 
 /**
  * ██ §1 (nº 430) — L'ÉTAT DU VOLET SURVIT AU REMONTAGE ██
@@ -239,79 +227,16 @@ export function etatDeRangeeMemorise(): boolean | null {
   return dernierEtatDeRangee;
 }
 
-/**
- * LA RANGÉE EST-ELLE REPLIÉE EN CE MOMENT ?
- * `null` quand la question n'a pas de sens : pas de barre, pas de
- * réserve, ou le web. On ne range alors aucun état.
- */
-export function rangeeReplieeMaintenant(): boolean | null {
-  if (typeof document === "undefined") return null;
-  if (document.documentElement.dataset.appareil !== "mobile") return null;
-  const reserve = document.querySelector<HTMLElement>("[data-reserve-barre]");
-  if (!reserve) return null;
-  const posee = Number(reserve.dataset.reservePosee);
-  const depliee = Number(reserve.dataset.reserveDepliee);
-  if (!Number.isFinite(posee) || !Number.isFinite(depliee)) return null;
-  //  Une page sans rangée annonce deux fois la même hauteur : il n'y a
-  //  rien à replier, donc rien à rendre.
-  return posee < depliee;
-}
-
-/**
- * RENDRE L'ÉTAT DE LA RANGÉE, EN MÊME TEMPS QUE LA POSITION.
- * À n'appeler que depuis la restitution (lib/restitution-position) :
- * c'est le seul moment où le site a le droit de décider de l'état de la
- * rangée à la place du doigt.
- *
- * ⚠️ TOUT SE PASSE DANS LA MÊME TÂCHE que la pose du défilement, et
- * c'est ce qui fait qu'aucune image intermédiaire n'est peinte : React
- * vide sa file avant la peinture suivante, la réserve et le défilement
- * changent donc pour le même rendu.
- */
-export function rendreLEtatDeRangee(repliee: boolean | null | undefined) {
-  if (typeof document === "undefined") return;
-  if (repliee === null || repliee === undefined) return;
-  const racine = document.documentElement;
-  if (racine.dataset.appareil !== "mobile") return;
-  //  §1 (nº 430) — la mémoire de module suit : un remontage juste après
-  //  ce retour doit renaître dans l'état RENDU, pas dans un plus vieux.
-  memoriserEtatDeRangee(repliee);
-  //  La hauteur ne s'anime pas pendant un retour (voir globals.css).
-  racine.dataset[MARQUE_IMMEDIATE] = "1";
-  if (repliee) {
-    racine.style.setProperty(VARIABLE_RESERVE_REPLIEE, `${RESERVE_LOGO}px`);
-    racine.dataset[MARQUE_RANGEE] = "1";
-  } else {
-    delete racine.dataset[MARQUE_RANGEE];
-  }
-  window.dispatchEvent(
-    new CustomEvent(EVENEMENT_RANGEE, { detail: { repliee } })
-  );
-  //  Deux images plus tard, l'animation reprend ses droits et la marque
-  //  s'efface : le retour est fini, les replis suivants sont ceux du
-  //  doigt, et c'est React qui tient la hauteur.
-  //  ⚠️ LA MARQUE NE DOIT PAS SURVIVRE AU RETOUR : elle force la
-  //  hauteur repliée par la feuille de style ; laissée en place, elle
-  //  empêcherait la rangée de se déplier au prochain geste vers le haut.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      delete racine.dataset[MARQUE_IMMEDIATE];
-      delete racine.dataset[MARQUE_RANGEE];
-    });
-  });
-}
-
-/**
- * CE QUE LA BARRE DOIT ADOPTER À SA NAISSANCE — la marque laissée par
- * le script d'avant peinture, sur un document neuf né d'un retour.
- * `null` : rien n'a été demandé, la barre garde sa règle habituelle.
- * ⚠️ ELLE SE CONSOMME : une marque qui traîne replierait la rangée à la
- * navigation suivante, celle-là même que personne n'a demandée.
- */
-export function rangeeNaitRepliee(): boolean | null {
-  if (typeof document === "undefined") return null;
-  const racine = document.documentElement;
-  if (!(MARQUE_RANGEE in racine.dataset)) return null;
-  delete racine.dataset[MARQUE_RANGEE];
-  return true;
-}
+/*  ██ nº 889 — TROIS FONCTIONS SONT PARTIES AVEC LA RESTITUTION ██
+    `rangeeReplieeMaintenant` (lire l'état pour le RANGER avec une
+    place), `rendreLEtatDeRangee` (le rendre en même temps que la
+    position) et `rangeeNaitRepliee` (l'adopter à la naissance, sur la
+    marque du script d'avant peinture) ne servaient QU'À la mémoire de
+    position, retirée à la nº 889 — avec elles sont parties les deux
+    marques (`rangeeRepliee`, `rangeeImmediate`), l'événement de retour
+    et les deux règles de globals.css qui les lisaient.
+    ⚠️ CE QUI RESTE, ET QUI N'A JAMAIS ÉTÉ UNE PLACE : la survie de
+    l'état au REMONTAGE dans le même document (nº 430, ci-dessus) — une
+    variable de module, écrite à chaque bascule réelle, lue à la
+    naissance de la barre. Une page NEUVE naît toujours dépliée : elle
+    s'ouvre en haut, la rangée y est ouverte, par construction. */

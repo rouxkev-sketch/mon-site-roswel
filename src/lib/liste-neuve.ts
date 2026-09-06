@@ -2,55 +2,39 @@
 
 import { defilerSansGeste } from "@/lib/defilement-programme";
 import { laPositionDuGelRepartDeZero } from "@/lib/gel-du-corps";
-import {
-  oublierDefilementDe,
-  oublierRestaurationPosition,
-} from "@/lib/navigation-session";
-//  §1 (nº 424) — le cinquième geste : tuer la restitution en vol.
-import { annulerLaRestitutionEnCours } from "@/lib/restitution-position";
 
 /**
  * UNE LISTE NEUVE COMMENCE EN HAUT — L'ÉCRITURE UNIQUE
  * ==================================================================
- * (passe nº 330, §1 et §2)
+ * (passe nº 330 §1-§2, RAMENÉE À SON OS À LA nº 889)
  *
  * C'est le POINT 3 de la règle de navigation (lib/navigation-session) :
- * un écran NEUF s'ouvre en haut. Une liste qu'on vient de filtrer ou de
- * rechercher est un écran neuf — on ne l'a jamais parcourue, il n'y a
- * donc aucune place à y retrouver.
+ * un écran NEUF s'ouvre en haut. Une liste qu'on vient de filtrer est
+ * un écran neuf — on ne l'a jamais parcourue, il n'y a donc aucune
+ * place à y retrouver.
  *
- * ⚠️ POURQUOI UNE ÉCRITURE ET PAS DEUX. La nº 329-§5 avait posé un
- * simple `defilerSansGeste` dans `poserSelection`. Il suffisait au
- * menu du web ; il ne suffisait PAS au panneau du bas du smartphone,
- * ni au moteur de recherche. Trois surfaces, trois façons d'échouer —
- * et un correctif par surface aurait fini par diverger. Tout ce qui
- * ouvre une liste neuve appelle DONC cette fonction, et rien d'autre.
+ * ██ CE QUI A DISPARU À LA nº 889, ET POURQUOI ██
+ * ------------------------------------------------------------------
+ * Ce module portait CINQ gestes, et quatre d'entre eux servaient une
+ * mécanique qui n'existe plus : oublier une demande de restitution
+ * (nº 431), effacer la position mémorisée de la liste qui arrive
+ * (nº 332), tuer une restitution en vol (nº 424), et surtout METTRE LA
+ * REMONTÉE EN ATTENTE quand la liste neuve était AILLEURS — la
+ * remontée jouée à l'arrivée (nº 334) puis, depuis les squelettes, au
+ * squelette (nº 722).
  *
- * ELLE FAIT CINQ GESTES, ET C'EST L'ENSEMBLE QUI TIENT (le cinquième,
- * nº 424 : tuer la restitution en vol — voir son bloc plus bas) :
+ * Cette attente-là n'a plus d'objet : quand la liste est ailleurs, on
+ * NAVIGUE, et c'est le routeur qui pose le haut de la nouvelle page —
+ * une fois, par son propre chemin (voir `scroll-padding-top` dans
+ * globals.css et docs/DEFILEMENT-889-INVENTAIRE.md). Le site n'a plus
+ * à guetter l'arrivée de quoi que ce soit.
  *
- *  1. ELLE OUBLIE LA DEMANDE DE RESTITUTION. Une demande nommée
- *     (`demanderRestaurationPosition`) posée juste avant survivrait à
- *     la remontée et reposerait l'ancienne place au rendu suivant.
- *  2. ELLE EFFACE LA POSITION MÉMORISÉE DE LA LISTE QUI VA S'AFFICHER.
- *     C'est l'annulation explicite : la place écrite pour cet écran-là
- *     ne décrit plus rien — la liste qu'elle décrivait n'existe plus.
- *     ⚠️ DE LA LISTE QUI ARRIVE, ET SURTOUT PAS DE CELLE QU'ON QUITTE.
- *     C'est le §2 de la nº 332… et le défaut que la nº 330 avait
- *     introduit sans le voir. MESURÉ : sur l'accueil descendu à 900 px,
- *     une recherche validée effaçait `yokofolio:defilement:/` — l'adresse
- *     courante AU MOMENT DU GESTE est encore celle de l'accueil, pas
- *     celle des résultats. Le retour rendait donc 0 au lieu de 900.
- *     `poserSelection` (un filtre) écrit son adresse AVANT d'appeler :
- *     l'adresse courante y est déjà la bonne, et elle ne passe rien.
- *     `chercher` (une recherche) appelle AVANT de naviguer : elle
- *     PASSE la destination, et l'accueil garde sa place.
- *  3. ELLE DIT AU GEL DE REPARTIR DE ZÉRO. Sans cela, le panneau du
- *     bas qui se referme repose l'ancienne position par-dessus tout le
- *     reste — c'est le défaut relevé par le propriétaire à la nº 330.
- *  4. ELLE FAIT DÉFILER, sans geste. Utile hors gel (le menu du web,
- *     le moteur) ; sans effet sous le gel, où le corps est figé — et
- *     c'est le point 3 qui prend alors le relais.
+ * ██ CE QUI RESTE, ET QUI N'EST PAS DÉLÉGABLE ██
+ * ------------------------------------------------------------------
+ * LE FILTRE SUR PLACE. Un filtre écrit son adresse par `replaceState`
+ * (les critères changent, la page non) : le routeur ne fait AUCUN
+ * défilement dans ce cas — il n'y a pas de navigation. C'est donc
+ * encore au geste de remonter, et c'est le seul cas.
  *
  * ⚠️ `defilerSansGeste`, ET JAMAIS `window.scrollTo` : la barre du site
  * surveille le défilement pour replier sa rangée de recherche, et elle
@@ -58,136 +42,29 @@ import { annulerLaRestitutionEnCours } from "@/lib/restitution-position";
  * leçon de la nº 154-§6A).
  *
  * ⚠️ ELLE EST APPELÉE PAR LE GESTE, JAMAIS DÉDUITE DE L'ADRESSE. C'est
- * une exigence du propriétaire, et elle protège la nº 329-§2 : un
- * RETOUR arrive lui aussi avec une requête dans l'adresse, et lui doit
- * garder sa position. Rendre `DefilementEnHaut` sensible à la requête
- * casserait le retour ; poser la remontée sur le clic, non.
+ * une exigence du propriétaire (nº 330) : un RETOUR arrive lui aussi
+ * avec une requête dans l'adresse, et lui doit garder sa position.
  */
-/**
- * §1 (nº 334) — LA REMONTÉE NE DOIT PAS SE VOIR SUR LA PAGE QU'ON
- * QUITTE.
- * ==================================================================
- * CE QUE LE PROPRIÉTAIRE A VU, ET QUI DIT TOUT : « au moment où je
- * valide ma recherche, LA PAGE REMONTE — je vois le haut de l'accueil,
- * PUIS les résultats s'affichent ». La remontée s'appliquait à l'écran
- * qu'on quitte, sous ses yeux.
- *
- * ET CE N'EST PAS QU'UNE QUESTION DE CONFORT — c'est la cause du défaut
- * de position. Faire remonter l'accueil déclenche un événement de
- * défilement ; `MemoireNavigation` l'entend et écrit la position
- * courante — 0 — SOUS L'ADRESSE ENCORE AFFICHÉE, c'est-à-dire celle de
- * l'accueil. Le 900 px qu'on venait d'y quitter était donc écrasé par
- * un zéro, quelques millisecondes avant que le routeur ne change
- * d'adresse. La nº 333 avait empêché l'EFFACEMENT explicite ; elle
- * n'avait pas vu cette écriture-là, qui passe par la porte d'à côté.
- *
- * LA RÈGLE : on ne fait remonter que la page où l'on EST. Si la liste
- * neuve est AILLEURS, la remontée est mise EN ATTENTE et jouée à son
- * arrivée — avant la première peinture de la nouvelle liste, donc sans
- * que personne ne voie ni l'ancienne remonter, ni la nouvelle sauter.
- *
- * ⚠️ ELLE RESTE POSÉE PAR LE GESTE. C'est le clic qui l'arme ; un
- * RETOUR n'arme rien, et ne trouvera donc rien à consommer. La règle
- * que le propriétaire a posée à la nº 330 — « jamais déduite de
- * l'adresse » — tient exactement comme avant.
- */
-let remonteeEnAttente = false;
-/** L'adresse pour laquelle la remontée attend — c'est elle qui permet
-    au squelette (nº 722) de savoir si l'adresse est DÉJÀ commise. */
-let cibleEnAttente = "";
-
 export function ouvrirLaListeEnHaut(
   /** L'adresse de la liste QUI VA S'AFFICHER, quand elle n'est pas
       encore l'adresse courante (une recherche appelle avant de
       naviguer). Omise : l'adresse courante — c'est déjà la bonne pour
-      un filtre, qui a écrit la sienne juste avant. */
+      un filtre, qui a écrit la sienne juste avant.
+      ⚠️ ELLE RESTE DANS LA SIGNATURE bien qu'on n'en fasse plus qu'une
+      comparaison : c'est elle qui distingue le filtre (ici même) de la
+      recherche (ailleurs), et les appelants la passent déjà. */
   adresseDeLaListe?: string
 ): void {
   if (typeof window === "undefined") return;
   const ici = window.location.pathname + window.location.search;
   const cible = adresseDeLaListe ?? ici;
-  oublierRestaurationPosition();
-  oublierDefilementDe(cible);
+  //  §3 (nº 330) — LE GEL REPART DE ZÉRO. Sans cela, le panneau du bas
+  //  qui se referme repose l'ancienne position par-dessus tout le
+  //  reste — le défaut relevé par le propriétaire à la nº 330.
   laPositionDuGelRepartDeZero();
-  /*  §1 (nº 424) — LE CINQUIÈME GESTE : TUER LA RESTITUTION EN VOL.
-      ------------------------------------------------------------------
-      LE DÉFAUT, constaté en ligne : un RETOUR venait de rendre sa place
-      à une longue liste — un travail DIFFÉRÉ (`poserLaPosition` attend
-      jusqu'à 2,5 s que le contenu atteigne la position, et la réserve
-      de hauteur vit 5 s). Une recherche validée PENDANT cette fenêtre
-      remontait bien sa liste neuve… puis la vieille pose se déclenchait
-      — le nouveau contenu venait d'atteindre la position guettée — et
-      redescendait tout en bas. Les quatre gestes ci-dessus effacent les
-      MÉMOIRES ; aucun ne touchait au travail DÉJÀ LANCÉ. */
-  annulerLaRestitutionEnCours();
-  if (cible === ici) {
-    //  LA LISTE NEUVE EST ICI MÊME (un filtre : l'adresse a été écrite
-    //  par `replaceState`, la page ne change pas). On remonte tout de
-    //  suite — c'est ce que le propriétaire a validé à la nº 330-§1.
-    defilerSansGeste({ top: 0, left: 0 }, "fresh list, right here (filter)");
-    return;
-  }
-  //  LA LISTE NEUVE EST AILLEURS : on n'y touche pas maintenant.
-  remonteeEnAttente = true;
-  cibleEnAttente = cible;
-}
-
-/**
- * ██ §2 (nº 722) — « LE SQUELETTE DE LA LISTE EST LÀ » ██
- * ==================================================================
- * LE DÉFAUT MESURÉ (banc de la passe) : accueil défilé → clic sur une
- * carte de style → le squelette de `/search` s'affiche… À L'ANCIENNE
- * HAUTEUR (26 relevés à y=136 sur ~2 s), et la remontée ne joue qu'à
- * l'arrivée des cartes. La règle nº 334 — « la remontée est jouée à
- * l'arrivée, pour ne pas se voir sur la page qu'on quitte » — date
- * d'AVANT les squelettes (nº 706) : entre le clic et l'arrivée, c'était
- * l'ANCIENNE page qui restait à l'écran, et la faire remonter sous les
- * yeux était le défaut. Depuis les squelettes, il existe un TROISIÈME
- * instant : le MONTAGE du squelette de segment — l'ancienne page est
- * DÉMONTÉE, la nouvelle (grise) est là, et l'adresse est commise. À cet
- * instant, remonter ne montre remonter PERSONNE : le squelette démarre
- * en haut, comme la page qu'il annonce.
- *
- * ⚠️ SEULEMENT SI L'ADRESSE COMMISE EST LA CIBLE ARMÉE. Le routeur rend
- * parfois AVANT de commettre (mesure nº 336) : remonter alors ferait
- * écrire « 0 » par la mémoire de navigation SOUS L'ANCIENNE ADRESSE
- * (son écriture part deux images après le défilement) — c'est-à-dire
- * effacer la place que `ouvrirLaListeEnHaut` préserve exprès
- * (nº 332-§2). Adresse pas encore là : on ne touche à rien, l'arrivée
- * (`laListeServieEstArrivee`) jouera comme avant. Aucun cas ne perd la
- * remontée, un seul la gagne plus tôt.
- * ⚠️ ET TOUJOURS RIEN SANS GESTE : un RETOUR n'arme rien, et le
- * squelette d'un retour (il n'y en a pas : la réserve du routeur sert
- * les retours, nº 706) ne trouverait de toute façon rien à consommer.
- * ⚠️ LA SUPERPOSITION MÊME SEGMENT (IndexTatoueurs, `enChantier`) NE
- * L'APPELLE PAS, et c'est voulu : pendant `enTransition`, l'adresse est
- * ENCORE l'ancienne (le commentaire de `enChantier` le mesure) — la
- * garde ci-dessus refuserait, et l'arrivée reste le bon moment (nº 334).
- * Au doigt, le gel repart déjà de zéro (geste 3) : le squelette y est
- * en haut sans nous.
- */
-export function leSqueletteDeLaListeEstLa(): void {
-  if (typeof window === "undefined") return;
-  if (!remonteeEnAttente) return;
-  const ici = window.location.pathname + window.location.search;
-  if (ici !== cibleEnAttente) return;
-  remonteeEnAttente = false;
-  defilerSansGeste(
-    { top: 0, left: 0 },
-    "fresh list, from its skeleton (no. 722)"
-  );
-}
-
-/**
- * « LA LISTE DEMANDÉE EST ARRIVÉE » — à appeler par la liste elle-même,
- * AVANT LA PEINTURE de son nouveau contenu (un effet de mise en page).
- * Elle consomme la remontée mise en attente, et rien d'autre : sans
- * geste préalable, elle ne fait rien du tout — un retour passe donc au
- * travers sans être déplacé.
- */
-export function laListeServieEstArrivee(): void {
-  if (typeof window === "undefined") return;
-  if (!remonteeEnAttente) return;
-  remonteeEnAttente = false;
-  defilerSansGeste({ top: 0, left: 0 }, "fresh list, on arrival (search)");
+  if (cible !== ici) return;
+  //  LA LISTE NEUVE EST ICI MÊME (un filtre : l'adresse a été écrite
+  //  par `replaceState`, la page ne change pas). On remonte tout de
+  //  suite — c'est ce que le propriétaire a validé à la nº 330-§1.
+  defilerSansGeste({ top: 0, left: 0 }, "fresh list, right here (filter)");
 }

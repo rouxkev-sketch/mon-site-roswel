@@ -25,9 +25,6 @@ import {
   RESERVE_LOGO,
   RESERVE_RANGEE,
 } from "@/lib/reserve-barre";
-//  §2 (nº 722) — la remontée armée par le geste se joue dès le montage
-//  du squelette de segment : voir le grand bloc de lib/liste-neuve.
-import { leSqueletteDeLaListeEstLa } from "@/lib/liste-neuve";
 //  nº 819 — le squelette-mémoire de « Ma sélection » : cartes grises
 //  seulement si ce compte en avait (lib/memoire-selection), posé avant
 //  la peinture du squelette quand la navigation est douce.
@@ -673,14 +670,15 @@ function MosaiqueGrise({
   selection?: boolean;
   fil?: boolean;
 }) {
-  /*  §2 (nº 722) — AVANT LA PEINTURE du squelette, la remontée armée
-      par le geste (carte de style, recherche) se joue : le squelette
-      démarre en haut, comme la page qu'il annonce. Un RETOUR n'arme
-      rien et ne passe pas par ici (réserve du routeur) : il ne peut
-      rien consommer. C'est le SEUL effet de ce fichier — l'en-tête de
-      la barre squelette reste, lui, sans état ni lecture. */
+  /*  ██ nº 889 — LA REMONTÉE DU SQUELETTE N'EST PLUS ICI ██
+      La nº 722 jouait ici la remontée armée par le geste, parce que le
+      squelette s'affichait À L'ANCIENNE HAUTEUR entre le clic et
+      l'arrivée des cartes. C'est le ROUTEUR qui pose désormais le haut
+      d'une page neuve, et il le fait pour le squelette comme pour la
+      liste (voir `scroll-padding-top`, globals.css, et
+      docs/DEFILEMENT-889-INVENTAIRE.md). Il ne reste de cet effet que
+      la mémoire de « Ma sélection ». */
   useEffetAvantPeinture(() => {
-    leSqueletteDeLaListeEstLa();
     /*  nº 819 — LA MÉMOIRE DE « MA SÉLECTION », AVANT LA PEINTURE DU
         SQUELETTE. Au chargement complet, le script d'avant peinture a
         déjà posé `html[data-selection-memoire]` ; à une navigation

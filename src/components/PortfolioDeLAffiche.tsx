@@ -209,8 +209,9 @@ function renduDe(photo: PhotoGalerie): string {
  * SUR UNE PAGE PUBLIQUE (`adresses` fournies), les onglets sont des
  * LIENS entre les trois pages d'un portfolio — la navigation douce de
  * l'accueil (nº 860), la même bascule de nature d'`OngletsLigne` ;
- * `surDepart` est ce que ContenuFiche déclare avant de partir (la
- * place de la page visée). SANS ADRESSES — la fenêtre superposée du
+ * ⚠️ `surDepart` EST PARTI À LA nº 889 : ContenuFiche y déclarait la
+ * place de la page visée, et il n'y a plus de place à déclarer — les
+ * onglets rouvrent en haut. SANS ADRESSES — la fenêtre superposée du
  * web, qui n'a pas d'adresse à elle, et l'aperçu « Ma fiche » —, ce
  * sont des boutons, et `surChoix` change le contenu sur place, comme
  * depuis la nº 197.
@@ -219,7 +220,6 @@ export function SelecteurOngletAffiche({
   valeur,
   surChoix,
   adresses,
-  surDepart,
 }: {
   valeur: VueDeFiche;
   /** Le choix, quand les onglets sont des boutons (pas d'adresses). */
@@ -227,8 +227,6 @@ export function SelecteurOngletAffiche({
   /** Les adresses des trois vues (`adressesDesVues`) : les onglets
       deviennent des liens. */
   adresses?: Record<VueDeFiche, string>;
-  /** Ce qu'il faut déclarer avant de suivre un lien d'onglet. */
-  surDepart?: (onglet: VueDeFiche) => void;
 }) {
   return (
     <OngletsLigne
@@ -237,7 +235,6 @@ export function SelecteurOngletAffiche({
           ? ONGLETS.map((onglet) => ({
               ...onglet,
               href: adresses[onglet.cle],
-              surClic: () => surDepart?.(onglet.cle),
             }))
           : ONGLETS
       }

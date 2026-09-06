@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { souscrireAdresse } from "@/lib/adresse-courante";
 import { estCourrielAdmin } from "@/lib/courriel-admin";
-import { positionGardee } from "@/lib/defilement-programme";
 import {
   armerLeDiagnostic,
   auJournalDiagnostic,
@@ -278,10 +277,14 @@ export function BandeauDiagnostic() {
            changement d'adresse effectif. Un clic suivi d'aucun appel
            dit que le routeur n'a pas été saisi ; un appel suivi
            d'aucun changement d'adresse dit qu'il a échoué en silence ;
-         · LE DÉFILEMENT APRÈS LA GARDE : chaque changement de `scrollY`
-           est noté avec l'état de la garde — « garde 0 » quand elle
-           défend encore, « APRÈS GARDE » quand elle a rendu la main.
-           C'est là que se lisent les 31 px de WebKit. */
+         · LE DÉFILEMENT : chaque changement de `scrollY`, avec son
+           avant et son après.
+           ⚠️ nº 889 — IL NE DIT PLUS L'ÉTAT DE LA GARDE, qui est
+           partie avec toute la mécanique de position. La question
+           qu'elle servait à trancher est close : les recalages que le
+           propriétaire voyait n'étaient pas ceux du moteur, c'était le
+           routeur qui gardait la position de la page quittée (voir
+           docs/DEFILEMENT-889-INVENTAIRE.md). */
     const surClicCapture = (evenement: MouseEvent) => {
       const cible = evenement.target as Element | null;
       const lien = cible?.closest?.("a[href]") as HTMLAnchorElement | null;
@@ -313,12 +316,7 @@ export function BandeauDiagnostic() {
     const surDefilement = () => {
       const y = Math.round(window.scrollY);
       if (y === yPrecedent) return;
-      const gardee = positionGardee();
-      noterDiag(
-        `DÉFILEMENT · ${yPrecedent} → ${y} · ${
-          gardee === null ? "APRÈS GARDE (plus personne ne défend)" : `garde sur ${gardee}`
-        }`
-      );
+      noterDiag(`DÉFILEMENT · ${yPrecedent} → ${y}`);
       yPrecedent = y;
     };
     document.addEventListener("click", surClicCapture, true);

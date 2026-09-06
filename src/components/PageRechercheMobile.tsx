@@ -2,14 +2,6 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-//  §2 (nº 427) — la garde de position : l'OUVERTURE la désarme (cette
-//  page déplace le défilement pour elle-même, la garde combattrait le
-//  scrollTo vers 0 ci-dessous) ; la SORTIE l'arme sur la place rendue
-//  (l'ancrage de WebKit peut recaler après le retour aux résultats).
-import {
-  armerLaGardeDePosition,
-  desarmerLaGardeDePosition,
-} from "@/lib/defilement-programme";
 import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §3 (nº 330) — l'étape d'historique, écriture unique des quatre
 //  surfaces qui couvrent l'écran.
@@ -301,11 +293,6 @@ export function PageRechercheMobile({
       document.documentElement.dataset.recherche = "ouverte";
       setPhase("posee");
       // Le document ne contient plus qu'elle : on repart de son haut.
-      //  §2 (nº 427) — une garde encore armée (une restitution, une
-      //  liste neuve) défendrait l'ancienne position CONTRE ce
-      //  scrollTo : cette page déplace le défilement pour elle-même,
-      //  la garde n'a plus rien à y défendre.
-      desarmerLaGardeDePosition();
       //  §3 (nº 426) — la pose s'écrit (aucun poseur anonyme).
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     });
@@ -373,10 +360,9 @@ export function PageRechercheMobile({
       voyait remonter.
       MAINTENANT : on rend le document à la place où il était, dans les
       DEUX cas. La liste NEUVE, elle, est posée en haut par
-      `laListeServieEstArrivee` (lib/liste-neuve), à son arrivée et AVANT
-      SA PEINTURE — jamais sur celle qu'on quitte. Une liste neuve
-      s'ouvre en haut parce qu'elle est neuve, pas parce qu'on a fait
-      remonter l'ancienne sous les yeux de quelqu'un. */
+      le ROUTEUR, à son arrivée — jamais sur celle qu'on quitte. Une
+      liste neuve s'ouvre en haut parce qu'elle est neuve, pas parce
+      qu'on a fait remonter l'ancienne sous les yeux de quelqu'un. */
   useLayoutEffect(() => {
     if (phase !== "part") return;
     delete document.documentElement.dataset.recherche;
@@ -389,16 +375,14 @@ export function PageRechercheMobile({
       left: 0,
       behavior: "instant",
     });
-    /*  §2 (nº 427) — la place rendue se DÉFEND, comme toute pose : les
-        cartes des résultats rechargent leurs images derrière la
-        glissade, et l'ancrage de WebKit peut recaler. Une validation
-        re-armera la garde sur 0 quand la liste neuve posera la sienne
-        (lib/liste-neuve) — la dernière pose gagne, c'est l'ordre
-        naturel. */
-    armerLaGardeDePosition(
-      place,
-      "PageRechercheMobile (sortie — la place d'avant l'ouverture)"
-    );
+    /*  ██ nº 889 — LA PLACE RENDUE NE SE DÉFEND PLUS ██
+        La nº 427 armait ici la garde de position : les cartes des
+        résultats rechargent leurs images derrière la glissade, et
+        l'ancrage de WebKit pouvait recaler. La garde est partie avec
+        toute la mécanique de défilement (nº 889) ; ce `scrollTo` est
+        celui d'une SURFACE qui se referme sur sa propre page, il ne
+        traverse aucune navigation, et le navigateur n'a personne à
+        contredire. */
   }, [phase, validerEnSortant]);
 
   /** LA CROIX ET « VALIDER » — ils glissent, et rien d'autre : c'est le

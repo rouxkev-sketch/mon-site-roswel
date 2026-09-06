@@ -199,7 +199,7 @@ for (const mode of ["doigt", "web"]) {
     verif("… sous l'onglet actif (Profile), d'un bord à l'autre de l'onglet",
       v.trait && v.liens?.[0] && proche(v.trait.x, v.liens[0].x, 0.6) && proche(v.trait.d, v.liens[0].d, 0.6), `${v.trait?.x}→${v.trait?.d} contre ${v.liens?.[0]?.x}→${v.liens?.[0]?.d}`);
 
-    titre(`873 · §1 — ${mode} : la navigation douce, et chaque page garde sa position`);
+    titre(`873 · §1 — ${mode} : la navigation douce, et chaque onglet rouvre EN HAUT (nº 889)`);
     await page.evaluate(() => { window.__banc873 = "vivant"; });
     await toucherLOnglet(page, "Portfolio");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio` && document.querySelector('nav[aria-label="Profile, portfolio or flash"] a[aria-current="page"]')?.textContent.trim() === "Portfolio", SLUG, { timeout: 15000 });
@@ -228,7 +228,15 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio`, SLUG, { timeout: 15000 });
     await page.waitForTimeout(1500);
     const retourOnglet = await position();
-    verif(`RETOUR PAR L'ONGLET : Portfolio retrouve ${CIBLE}`, retourOnglet === CIBLE, `${retourOnglet} / ${CIBLE}`);
+    /*  ██ MISE AU PAS DE LA nº 889 ██ « RETOUR PAR L'ONGLET : Portfolio
+        retrouve sa position » était la demande de la nº 873 §1-§2, et
+        elle tenait par la mémoire de position du site (la page au
+        doigt, la colonne de lecture au web). Le propriétaire l'a
+        RETIRÉE à la nº 889 : les trois onglets rouvrent en haut, comme
+        toute page neuve. La perte est assumée — voir
+        docs/DEFILEMENT-889-INVENTAIRE.md. */
+    verif("REVENIR PAR L'ONGLET : Portfolio rouvre EN HAUT (nº 889)",
+      retourOnglet === 0, `${retourOnglet} (laissé à ${CIBLE})`);
     /*  ██ §1 (nº 875) — LE RETOUR NE PROMÈNE PLUS DANS LES ONGLETS ██
         CE QUE CE BANC ÉPROUVAIT ICI, ET QUI N'A PLUS COURS : « chaque
         onglet suivi a posé une entrée — quatre retours rendent le

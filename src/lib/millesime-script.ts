@@ -60,4 +60,4 @@
  * servi, et faire bouger le numéro pour rien ferait mentir le témoin.
  * C'est ici, et nulle part ailleurs, que le numéro s'écrit.
  */
-export const MILLESIME_SCRIPT = "887";
+export const MILLESIME_SCRIPT = "889";

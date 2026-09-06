@@ -170,17 +170,6 @@ import {
   VUES_DE_FICHE,
   type VueDeFiche,
 } from "@/lib/lien-interne";
-//  §1 (nº 873) — la mémoire de position du site : la place de la page
-//  visée (au doigt) et celle de la colonne de lecture (au web), rendues
-//  quand on revient sur un onglet — voir `avantDePartir`.
-import {
-  demanderRestaurationPosition,
-  lireColonne,
-  lireLaPlace,
-  memoriserColonne,
-  memoriserDefilement,
-} from "@/lib/navigation-session";
-import { positionSousLeGel } from "@/lib/gel-du-corps";
 //  §1 (nº 718) — la variante d'avatar à servir : la règle de
 //  nommage et le repli vivent dans lib/avatar-variantes.
 import { AVATAR_MOYEN, sourceAvatar } from "@/lib/avatar-variantes";
@@ -1050,65 +1039,18 @@ export function ContenuFiche({
     ouvrirLOngletAuDebut();
   }
 
-  /**
-   * ██ §1 (nº 873) — « CHAQUE PAGE GARDE SA POSITION DE DÉFILEMENT » ██
-   * ==================================================================
-   * LA DEMANDE : Portfolio à 600 → Flash → retour → 600. Deux surfaces
-   * défilent, selon l'appareil, et chacune a sa mémoire :
-   *  · AU DOIGT, LA PAGE. C'est la mémoire de navigation du site, sans
-   *    une ligne de plus pour écrire : au clic d'un lien vers une fiche
-   *    depuis une fiche, MemoireNavigation note la place de la page
-   *    qu'on quitte (nº 230-§3) — un onglet est exactement ce lien. Il
-   *    manquait de la RENDRE : une navigation en avant arrive en haut,
-   *    c'est la règle ; l'exception a un mot, celui de l'accueil
-   *    (nº 860-§2) — `demanderRestaurationPosition(adresse)`, « la
-   *    prochaine arrivée à CETTE adresse rend sa place ». On ne la pose
-   *    QUE SI UNE PLACE EXISTE pour la page visée : une première visite
-   *    arrive en haut, nette et instantanée (DefilementEnHaut), au lieu
-   *    de s'en remettre au recalage du routeur. Nominative, la demande
-   *    ne peut pas repeindre une autre page ; tout geste l'annule.
-   *  · AU WEB, LA COLONNE DE LECTURE (`data-colonne-lecture`, l'enveloppe
-   *    de ce contenu — `window.scrollY` y vaut zéro), et la colonne est
-   *    REMONTÉE avec chaque page. Sa place se retient donc à part, sous
-   *    l'adresse de la page, à mesure qu'elle défile (`memoriserColonne`,
-   *    une image par écriture), et se rend au montage de la page
-   *    suivante — avant la peinture, pour qu'aucune image ne montre la
-   *    colonne en haut. Un retour ou une avance du navigateur passent
-   *    par le même montage : ils la rendent aussi.
-   * ⚠️ RIEN N'EST FAIT HORS D'UNE PAGE PUBLIQUE : la fenêtre du web et
-   * l'aperçu changent d'onglet sur place, et gardent leur remontée
-   * (`ouvrirLOngletAuDebut`).
-   */
-  function avantDePartir(cible: VueDeFiche) {
-    if (!adresses) return;
-    if (lireLaPlace(adresses[cible])) {
-      demanderRestaurationPosition(adresses[cible]);
-    }
-  }
-  useLayoutEffect(() => {
-    if (!enPages) return;
-    const colonne =
-      rangeeDuHaut.current?.closest<HTMLElement>("[data-colonne-lecture]") ??
-      null;
-    if (!colonne) return;
-    //  L'adresse est la nôtre dès ce montage : FicheSelonLAdresse ne
-    //  monte la fiche qu'une fois l'arrivée commise (nº 360).
-    const ici = window.location.pathname + window.location.search;
-    const retenue = lireColonne(ici);
-    if (retenue > 0) colonne.scrollTop = retenue;
-    let image = 0;
-    const retenir = () => {
-      cancelAnimationFrame(image);
-      image = requestAnimationFrame(() =>
-        memoriserColonne(ici, colonne.scrollTop)
-      );
-    };
-    colonne.addEventListener("scroll", retenir, { passive: true });
-    return () => {
-      cancelAnimationFrame(image);
-      colonne.removeEventListener("scroll", retenir);
-    };
-  }, [enPages]);
+  /*  ██ nº 889 — LES ONGLETS NE GARDENT PLUS LEUR POSITION ██
+      LA nº 873 §1-§2 tenait ici deux mémoires : la place de la PAGE au
+      doigt (une demande nominative de restitution, nº 431) et celle de
+      la COLONNE DE LECTURE au web (`data-colonne-lecture`, où
+      `window.scrollY` vaut zéro). Le propriétaire a tranché à la
+      nº 889 : Profile / Portfolio / Flash rouvrent EN HAUT, comme
+      toute page neuve, et la perte est assumée. Les deux mémoires
+      partent avec la mécanique de position (voir
+      docs/DEFILEMENT-889-INVENTAIRE.md). Ce qui NE change pas : un
+      onglet REMPLACE l'entrée d'historique (nº 875 §1), donc un seul
+      retour ramène toujours au fil. */
+
 
   /**
    * ██ §2 (nº 527) — UN GLISSEMENT HORIZONTAL CHANGE D'ONGLET ██
@@ -1136,15 +1078,10 @@ export function ContenuFiche({
    *    commencer. On ne bascule pas un va-et-vient invisible, et
    *    aucune garde n'a eu à le dire.
    *
-   * ⚠️ ET C'EST LE MÊME CHEMIN QUE LE TOUCHER D'UN ONGLET, jamais une
-   * seconde écriture (nº 873-§1) :
+   * ⚠️ ET C'EST LE MÊME CHEMIN QUE LE TOUCHER D'UN ONGLET :
    *  · SUR UNE PAGE PUBLIQUE, le geste NAVIGUE vers la page voisine —
    *    l'ordre est celui du va-et-vient (`VUES_DE_FICHE`) : vers la
-   *    gauche, l'onglet suivant ; vers la droite, le précédent. Un
-   *    glissement n'est pas un clic : la mémoire de navigation n'a pas
-   *    vu partir la page, on écrit donc sa place nous-mêmes (ce que
-   *    MemoireNavigation fait au clic d'un lien de fiche, nº 230-§3),
-   *    puis on déclare et on part comme l'onglet (`avantDePartir`).
+   *    gauche, l'onglet suivant ; vers la droite, le précédent.
    *    §1 (nº 875) — ET IL REMPLACE L'ÉTAPE, comme le toucher d'un
    *    onglet : `router.replace`, jamais `push`. Le geste et le clic
    *    mènent au même endroit, ils doivent coûter le même historique —
@@ -1169,11 +1106,6 @@ export function ContenuFiche({
     const cible = VUES_DE_FICHE[VUES_DE_FICHE.indexOf(onglet) + sens];
     if (!cible) return;
     if (adresses) {
-      memoriserDefilement(
-        window.location.pathname + window.location.search,
-        positionSousLeGel()
-      );
-      avantDePartir(cible);
       //  §1 (nº 875) — REMPLACER, jamais empiler (voir la note).
       router.replace(adresses[cible]);
       return;
@@ -2161,7 +2093,6 @@ export function ContenuFiche({
           valeur={onglet}
           surChoix={adresses ? undefined : choisirOnglet}
           adresses={adresses ?? undefined}
-          surDepart={avantDePartir}
         />
         {/*  ██ §4 (nº 869) — PLUS DE PARTAGE NI DE « SUIVRE » ICI ██
              Les deux gestes (nº 458 → nº 868 : le partage en habillage

@@ -74,9 +74,7 @@ import { ouvrirRecherche } from "@/lib/recherche-mobile";
 //  vivent dans UN SEUL module. Voir l'en-tête de lib/reserve-barre.
 import {
   etatDeRangeeMemorise,
-  EVENEMENT_RANGEE,
   memoriserEtatDeRangee,
-  rangeeNaitRepliee,
   RESERVE_LOGO,
   RESERVE_RANGEE,
 } from "@/lib/reserve-barre";
@@ -713,19 +711,14 @@ export function EnTeteTatouage({
         Sur un document NEUF, la mémoire est vide : la
         marque du script d'avant-peinture décide, comme depuis la
         nº 335 (le repli réparé de la nº 428 passe par elle). */
+    /*  nº 889 — SUR UN DOCUMENT NEUF, PLUS RIEN À LIRE. La marque du
+        script d'avant peinture (`rangeeNaitRepliee`) et l'événement de
+        restitution sont partis avec la mémoire de position : une page
+        neuve s'ouvre EN HAUT, donc sa rangée est dépliée. Seule reste
+        la mémoire de module, pour le REMONTAGE dans le même document
+        (nº 430). */
     const souvenir = etatDeRangeeMemorise();
-    if (souvenir !== null) {
-      setMoteurReplie(souvenir);
-    } else {
-      const naissance = rangeeNaitRepliee();
-      if (naissance !== null)
-        poserReplie(naissance);
-    }
-    const auRetourDUnePlace = (evenement: Event) => {
-      const detail = (evenement as CustomEvent<{ repliee?: boolean }>).detail;
-      poserReplie(Boolean(detail?.repliee));
-    };
-    window.addEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
+    if (souvenir !== null) setMoteurReplie(souvenir);
     const lire = () => {
       const y = window.scrollY;
       const delta = y - yPrecedent;
@@ -799,7 +792,6 @@ export function EnTeteTatouage({
     window.addEventListener("scroll", lire, { passive: true });
     return () => {
       window.removeEventListener("scroll", lire);
-      window.removeEventListener(EVENEMENT_RANGEE, auRetourDUnePlace);
     };
   }, []);
 

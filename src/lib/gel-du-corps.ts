@@ -1,9 +1,7 @@
-//  §2 (nº 427) — geler, c'est mettre le défilement à zéro SANS geste :
-//  la garde de position y lirait un recalage d'ancre et combattrait la
-//  surface. Elle est donc désarmée au gel ; le dégel re-arme en
-//  reposant (poserLaPosition → defilerSansGeste).
-import { desarmerLaGardeDePosition } from "@/lib/defilement-programme";
-import { poserLaPosition } from "@/lib/restitution-position";
+//  §1 (nº 889) — LE DÉGEL POSE LUI-MÊME, ET SANS GESTE : la barre du
+//  site lirait un `scrollTo` nu comme un geste de l'utilisateur et
+//  replierait sa rangée (la leçon de la nº 154-§6A).
+import { defilerSansGeste } from "@/lib/defilement-programme";
 //  §1 (nº 660) — la trace permanente : ce déplacement se signe.
 
 /**
@@ -120,9 +118,6 @@ export function gelerLeCorps(
   const corps = document.body.style;
   surfacesQuiGelent += 1;
   if (surfacesQuiGelent === 1) {
-    //  §2 (nº 427) — voir l'import : le gel déplace le défilement pour
-    //  lui-même, la garde n'a plus rien à y défendre.
-    desarmerLaGardeDePosition();
     positionRetenue = position;
     //  §1 (nº 660) — LE GEL DÉPLACE LA PAGE, même s'il ne défile pas :
     //  le corps passe en `position: fixed; top: -Ypx`, et `scrollY`
@@ -174,29 +169,40 @@ export function gelerLeCorps(
       return;
     }
     cheminDuGel = null;
-    /*  §2 (nº 329) — LA POSITION EST RENDUE AVEC SA RÉSERVE DE HAUTEUR.
+    /*  §2 (nº 329, RÉÉCRIT nº 889) — LA POSITION EST RENDUE AVEC SA
+        RÉSERVE DE HAUTEUR.
         ------------------------------------------------------------------
-        CE QUI ÉTAIT ÉCRIT : un `scrollTo` NU. Il suppose que le
-        document a déjà sa hauteur définitive — or au moment où une
-        surface se referme, la page dessous vient d'être rendue et ses
-        images ne sont pas encore posées. Le document est donc PLUS
+        CE QUI ÉTAIT ÉCRIT AVANT LA nº 329 : un `scrollTo` NU. Il suppose
+        que le document a déjà sa hauteur définitive — or au moment où
+        une surface se referme, la page dessous vient d'être rendue et
+        ses images ne sont pas encore posées. Le document est donc PLUS
         COURT qu'il ne sera, et le navigateur RABOTE la demande à ce
         qu'il peut : on retombe « presque en haut », jamais à la place
-        quittée. C'est exactement le défaut décrit au §2 de la nº 329.
-        `poserLaPosition` fait les deux gestes dans le bon ordre —
-        réserver la hauteur sur <html>, puis poser —, et libère la
-        réserve dès que le contenu réel l'atteint. C'est l'écriture
-        unique de la restitution depuis la nº 191 : le gel la rejoint
-        au lieu d'en garder une seconde.
-        ⚠️ SANS CLÉ D'ADRESSE : `poserLaPosition` refuse une position
-        dont la clé ne correspond plus à la page. Ici la question est
-        déjà tranchée juste au-dessus, par `cheminDuGel` — et la
-        position d'un gel n'appartient pas à une RECHERCHE, elle
-        appartient à la page qu'on a figée.
+        quittée.
+        ⚠️ CE QUI CHANGE À LA nº 889, ET SEULEMENT CELA : ces deux gestes
+        passaient par `poserLaPosition` (lib/restitution-position), qui
+        est partie avec toute la mécanique de restitution par adresse.
+        Ce dégel-ci n'a jamais eu besoin de ce qu'elle faisait en plus —
+        attendre que le contenu atteigne la position, masquer l'écran,
+        vérifier une clé d'adresse : la page est DÉJÀ là, c'est la même,
+        on ne l'a jamais quittée. Les deux gestes qui comptent sont donc
+        écrits ici, en clair, et ne servent que le gel.
         ⚠️ UNE POSITION NULLE NE DÉCLENCHE RIEN, et c'est juste : le gel
         avait mis la page à zéro, elle y est encore. */
-    //  §1 (nº 660) — et le DÉGEL rend cette position : la pose qui suit
-    //  s'écrit dans `poserLaPosition`, celle-ci dit d'où elle vient.
-    poserLaPosition(positionRetenue, undefined, "unfreezing a surface");
+    if (positionRetenue <= 0) return;
+    const racine = document.documentElement;
+    racine.style.minHeight = `${positionRetenue + window.innerHeight}px`;
+    defilerSansGeste(
+      { top: positionRetenue, left: 0 },
+      "unfreezing a surface"
+    );
+    //  La réserve ne survit pas au retour : deux images suffisent au
+    //  navigateur pour honorer la pose, et la laisser traîner rendrait
+    //  la page artificiellement longue.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        racine.style.minHeight = "";
+      });
+    });
   };
 }

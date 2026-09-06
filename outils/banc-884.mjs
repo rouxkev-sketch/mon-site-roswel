@@ -113,13 +113,20 @@ for (const mode of ["doigt", "web"]) {
     /*  UNE NAVIGATION DOUCE VERS UNE VRAIE PAGE : elle doit s'écrire, et
         arriver à zéro.
         ⚠️ AU WEB, ON PASSE PAR LE LOGO : un clic sur une carte y ouvre
-        la FENÊTRE SUPERPOSÉE (nº 506), où `DefilementEnHaut` s'efface
-        volontairement (la grille doit rester où elle est) — il n'y a
-        donc ni arrivée, ni pose, ni garde à écrire, et c'est juste. */
+        la FENÊTRE SUPERPOSÉE (nº 506) — l'adresse change sans que la
+        page bouge, il n'y a donc aucune pose à écrire, et c'est juste. */
     const versUnePage = mode === "doigt"
       ? `[data-lien-profil-de-fil][href*="${SLUG}"]`
       : '[aria-label$="home"]';
     const attendue = mode === "doigt" ? "/artist/" : "/";
+    /*  ⚠️ ON DESCEND D'ABORD, ET C'EST NÉCESSAIRE DEPUIS LA nº 889 : la
+        pose d'une page neuve ne s'écrit que s'il y a quelque chose à
+        poser. Partant de zéro, `ArriveeEnHaut` s'abstient — à raison —
+        et le journal n'a rien à dire. */
+    await page.mouse.wheel(0, 160);
+    await attendre(page, 400);
+    await page.evaluate(() => window.scrollTo({ top: 120, left: 0, behavior: "instant" }));
+    await attendre(page, 400);
     await page.evaluate((s) => {
       const lien = document.querySelector(s);
       if (lien) lien.click();
@@ -132,10 +139,23 @@ for (const mode of ["doigt", "web"]) {
     const apres = await bandeau(page);
     verif("le bandeau SURVIT à la navigation (l'armement vit avec l'onglet)",
       apres !== null);
-    verif("l'arrivée s'écrit au journal", (apres?.texte ?? "").includes("ARRIVÉE"),
-      (apres?.texte ?? "").slice(-160));
-    verif("… la pose de zéro aussi", (apres?.texte ?? "").includes("POSE ZÉRO"));
-    verif("… et la garde armée", (apres?.texte ?? "").includes("GARDE ARMÉE"));
+    /*  ██ MISE AU PAS DE LA nº 889 ██ Le journal portait trois lignes
+        de la mécanique retirée — « ARRIVÉE », « POSE ZÉRO », « GARDE
+        ARMÉE ». Ce qu'il porte maintenant, c'est l'ARRIVÉE À ZÉRO,
+        quel que soit celui qui l'a posée — et c'est justement ce que le
+        propriétaire lira sur son téléphone :
+         · « POSE · vers 0 · new page (no. 889) » quand c'est le SITE
+           (ArriveeEnHaut) qui a posé — le cas du web, mesuré ;
+         · « DÉFILEMENT · 120 → 0 » seul quand c'est le ROUTEUR qui a
+           posé avant nous, et que le site s'est donc abstenu — le cas
+           du doigt, mesuré lui aussi.
+        LES DEUX SONT JUSTES : le site est un FILET, pas un doublon. Ce
+        qui compte, et qui doit s'écrire, c'est que la page est arrivée
+        en haut. */
+    verif("l'arrivée à zéro s'écrit au journal (le site OU le routeur)",
+      /POSE · vers 0 · new page/.test(apres?.texte ?? "")
+        || /DÉFILEMENT · \d+ → 0/.test(apres?.texte ?? ""),
+      (apres?.texte ?? "").slice(-200));
     verif("… l'arrivée est bien à zéro, bandeau ou pas",
       (await page.evaluate(() => Math.round(window.scrollY))) === 0);
 

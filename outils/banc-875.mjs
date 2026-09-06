@@ -162,7 +162,7 @@ for (const mode of ["doigt", "web"]) {
     }
     verif("vingt ouvertures de document : toutes à zéro", hors.length === 0, hors.join(" "));
 
-    titre(`875 · §2 — ${mode} : une place de quelques pixels n'en est plus une`);
+    titre(`875 · §2 — ${mode} : MIS AU PAS DE LA nº 889 — plus AUCUNE place n'est rangée`);
     /*  LA CAUSE, NOMMÉE ET ÉPROUVÉE SUR SON VRAI CHEMIN. On descend la
         page de SIX PIXELS — ce qu'écrivent un rebond élastique, une
         barre d'adresse qui se replie, un doigt qui effleure —, puis on
@@ -189,17 +189,26 @@ for (const mode of ["doigt", "web"]) {
     verif("la page est descendue de six pixels", (await position(page)) === 6, String(await position(page)));
     await page.goto(`${BASE}/about`, { waitUntil: "domcontentloaded" });
     await attendre(page, 900);
-    verif("… six pixels ne sont pas rangés comme une place",
-      (await places())["yokofolio:defilement:/"] === undefined, JSON.stringify(await places()));
+    /*  ██ MISE AU PAS DE LA nº 889 ██ La nº 875 avait posé un PLANCHER
+        (24 px, puis 100 à la nº 887) : sous lui, une note n'était pas
+        une place. Le plancher n'a plus d'objet — le site ne range plus
+        AUCUNE place, quelle que soit son amplitude. La vérification
+        devient donc plus forte, pas plus faible. */
+    verif("… et RIEN n'est rangé, à aucune adresse (nº 889)",
+      Object.keys(await places()).length === 0, JSON.stringify(await places()));
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
     await attendre(page, 1800);
     verif("… et l'ouverture neuve de cette adresse est à zéro", (await position(page)) === 0, String(await position(page)));
     verif("… le script d'avant peinture n'a rien posé",
       (await page.evaluate(() => document.documentElement.dataset.positionPosee ?? null)) === null);
 
-    titre(`875 · §2 — ${mode} : une VRAIE place est rendue, comme avant`);
-    /*  LA CONTRE-ÉPREUVE, sur une page qui défile vraiment : le plancher
-        ne doit RIEN changer au-dessus de lui. */
+    titre(`875 · §2 — ${mode} : une VRAIE place n'est pas rangée non plus — c'est le NAVIGATEUR qui rend`);
+    /*  ██ MISE AU PAS DE LA nº 889 ██ LA CONTRE-ÉPREUVE A CHANGÉ DE
+        SENS. Elle disait : « une place au-dessus du plancher est rangée
+        par le site, et rendue au rechargement ». Le site ne range plus
+        rien ; c'est `history.scrollRestoration = "auto"` (nº 363) qui
+        rend la position d'un rechargement, et lui seul. On mesure donc
+        les deux moitiés : AUCUNE clé rangée, ET une position rendue. */
     await page.goto(`${BASE}${LISTE}`, { waitUntil: "domcontentloaded" });
     await attendre(page, 2000);
     await page.mouse.wheel(0, 600);
@@ -208,10 +217,29 @@ for (const mode of ["doigt", "web"]) {
     verif("la liste est descendue bien au-delà du plancher", quittee > 100, String(quittee));
     await page.reload({ waitUntil: "domcontentloaded" });
     await attendre(page, 2500);
-    verif("… la place est rangée", Object.values(await places()).some((y) => Math.abs(y - quittee) <= 2),
-      JSON.stringify(await places()));
+    verif("… le site n'a rangé AUCUNE place (nº 889)",
+      Object.keys(await places()).length === 0, JSON.stringify(await places()));
     const rendue = await position(page);
-    verif("… et rendue au rechargement", proche(rendue, quittee, 40), `${rendue} / ${quittee}`);
+    const course = await page.evaluate(
+      () => document.documentElement.scrollHeight - window.innerHeight
+    );
+    /*  ██ CE QUE LE PROPRIÉTAIRE PERD AU RECHARGEMENT, CHIFFRÉ ██
+        MESURE DE LA nº 889 : quittée à 600 px, la liste rouvre à 10.
+        Ce n'est pas un défaut du navigateur — c'est ce que « auto »
+        peut faire. Il repose la position À L'INSTANT OÙ IL RECRÉE LE
+        DOCUMENT, quand les cartes ne sont pas encore arrivées : le
+        document est court, et il RABOTE la demande à ce qu'il peut.
+        C'est précisément ce que lib/pose-sur-contenu (nº 337) faisait
+        pour lui, en attendant le contenu sous un masque — et qui est
+        parti à la nº 889 avec la mémoire de position.
+        CE QU'ON MESURE DONC ICI, et qui reste vrai quoi qu'il arrive :
+        le site n'a rien rangé (au-dessus), et la position rendue est
+        BORNÉE par ce que le document permet — jamais un saut au
+        hasard. Le chiffre exact, lui, est écrit dans le détail : c'est
+        lui qui documente la perte, pas une attente. */
+    verif("… et la position du rechargement reste bornée par le document",
+      rendue >= 0 && rendue <= Math.max(course, quittee) + 5,
+      `rendue ${rendue} · quittée à ${quittee} · course au rechargement ${course}`);
   } finally {
     await nav.close();
   }

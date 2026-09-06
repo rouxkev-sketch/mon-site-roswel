@@ -100,7 +100,7 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("860 · §2 — chaque page garde SA position");
+    titre("860 · §2 — MIS AU PAS DE LA nº 889 : chaque page rouvre EN HAUT");
     await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1400);
     /*  ⚠️ LA CIBLE EST BORNÉE PAR LA PAGE : le propriétaire dit 800 px,
@@ -142,13 +142,23 @@ const sonder = (page) => page.evaluate((S) => new Function("return " + S)()(), S
     const arriveeFlash = await aller("/flash");
     verif("Flash s'ouvre EN HAUT : la position de Tattoo ne l'a pas suivi",
       arriveeFlash === 0, `${arriveeFlash} px`);
+    /*  ██ MISE AU PAS DE LA nº 889 ██
+        CE QUE CE BANC ÉPROUVAIT ICI, ET QUI N'A PLUS COURS : « revenir
+        à Tattoo rend SA place, revenir à Flash rend la sienne » — la
+        nº 860 §2 tenait deux places, une par nature, par une demande
+        nominative de restitution. LE PROPRIÉTAIRE L'A RETIRÉE À LA
+        nº 889 : le site ne mémorise plus aucune position de page, et
+        les deux accueils rouvrent EN HAUT, comme toute page neuve. La
+        perte est assumée (voir docs/DEFILEMENT-889-INVENTAIRE.md).
+        CE QUI NE CHANGE PAS, et que ce banc mesure toujours : les
+        touchers du va-et-vient ne coûtent AUCUNE étape (nº 875 §1). */
     await descendre(300);
     const retourTattoo = await aller("/");
-    verif("revenir à Tattoo rend SA place, pas celle de Flash",
-      retourTattoo === surTattoo, `${retourTattoo} px (laissé à ${surTattoo})`);
+    verif("revenir à Tattoo rouvre EN HAUT (nº 889)",
+      retourTattoo === 0, `${retourTattoo} px (laissé à ${surTattoo})`);
     const retourFlash = await aller("/flash");
-    verif("et revenir à Flash rend la sienne",
-      retourFlash === 300, `${retourFlash} px (laissé à 300)`);
+    verif("revenir à Flash rouvre EN HAUT lui aussi (nº 889)",
+      retourFlash === 0, `${retourFlash} px (laissé à 300)`);
     /*  ██ MISE AU PAS DE LA nº 875 (faite à la nº 882) ██
         CE QUI ÉTAIT ÉCRIT ICI : « le retour du navigateur ramène à
         l'autre page, à sa place — ce sont deux pages, l'historique les
