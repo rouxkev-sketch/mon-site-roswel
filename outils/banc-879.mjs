@@ -172,10 +172,22 @@ for (const mode of ["web", "doigt"]) {
     const v = await page.evaluate((A) => new Function("return " + A)()(), AIRS);
     const air1 = v.titres[0] ? +(v.titres[0].y - v.bande.bas).toFixed(1) : null;
     const air2 = v.titres[1] ? +(v.titres[1].y - v.cartes[0].bas).toFixed(1) : null;
-    verif(`${mode} : les deux airs sont ÉGAUX (va-et-vient → 1er titre, et bas de carte → titre suivant)`,
-      proche(air1, air2, 0.5), `air 1 ${air1} · air 2 ${air2}`);
-    verif(`${mode} : et ils valent la gouttière de la liste (${v.gouttiere})`,
-      proche(air1, parseFloat(v.gouttiere), 0.5) && v.margeDuFil === v.gouttiere,
+    /*  ⚠️ nº 880-§1 — LES DEUX APPAREILS ONT CESSÉ DE DIRE LA MÊME
+        VALEUR. Le propriétaire a trouvé les vingt-quatre trop petits sur
+        son téléphone : l'air y monte d'un cran de l'échelle (28), et le
+        web garde les siens (24, la gouttière de la liste). Ce banc-ci
+        tient donc, par appareil, ce que la nº 879 avait posé et ce que
+        la nº 880 lui ajoute — le banc 880 mesure les deux valeurs. */
+    const attenduDeLAir = mode === "doigt" ? 28 : 24;
+    verif(`${mode} : l'air au-dessus de la première carte vaut ${attenduDeLAir} px`,
+      proche(air1, attenduDeLAir, 0.5), `air 1 ${air1} · air 2 ${air2}`);
+    verif(
+      mode === "web"
+        ? `web : il vaut toujours la gouttière de la liste (${v.gouttiere}) — la nº 879 intacte`
+        : `doigt : il est PLUS GRAND que la gouttière (${v.gouttiere}) — le cran de la nº 880`,
+      mode === "web"
+        ? proche(air1, parseFloat(v.gouttiere), 0.5) && v.margeDuFil === v.gouttiere
+        : air1 > parseFloat(v.gouttiere),
       `air 1 ${air1} · gouttière ${v.gouttiere} · marge du fil ${v.margeDuFil}`);
     const air1Tot = tot.titres[0] ? +(tot.titres[0].y - tot.bande.bas).toFixed(1) : null;
     verif(`${mode} : AUCUN SAUT — l'air est le même au premier rendu et une fois tout arrivé`,

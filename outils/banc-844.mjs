@@ -358,8 +358,16 @@ const REPOS = 3400;
       `vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree} · lecture masquée ${vue.lectureMasquee}`);
     verif("LA PLAQUE DU PROFIL EST LÀ (rétablie nº 845)", vue.plaque === true);
     verif("et la croix de la nº 844 n'y est plus (nº 845 : doublon avec la plaque)", vue.croix === false);
-    verif("elle s'ouvre sur la photo partagée, pastille éteinte",
-      vue.pastille.texte === "3/6" && vue.pastille.opacite === 0,
+    /*  ⚠️ nº 880-§4 — LA PASTILLE EST DÉSORMAIS ALLUMÉE À L'ARRIVÉE, et
+        c'est la demande du propriétaire : la vue photo n'en montrait
+        AUCUNE au doigt (elle demandait l'éveil « souris », qui se tait
+        sur un téléphone), si bien que rien ne disait plus « 3/6 ».
+        Elle s'allume à l'ouverture et s'éteint trois secondes plus
+        tard — la règle de la nº 852-§4, étendue à cette vue. Le relevé
+        est pris à 1,8 s : elle est donc encore là. Son extinction est
+        mesurée par le banc 880. */
+    verif("elle s'ouvre sur la photo partagée, PASTILLE ALLUMÉE (nº 880-§4)",
+      vue.pastille.texte === "3/6" && vue.pastille.opacite === 1,
       `${vue.pastille.texte} · opacité ${vue.pastille.opacite}`);
 
     //  LE CHEMIN DU RETOUR EST LA PLAQUE (nº 845).

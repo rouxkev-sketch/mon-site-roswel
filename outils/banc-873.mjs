@@ -296,7 +296,11 @@ for (const mode of ["doigt", "web"]) {
           SÉPARE DEUX CARTES — la gouttière de la liste (`gap-y-6`),
           mesurée aux deux appareils. C'est le seul nombre qui change
           ici ; le banc 879 compare les deux airs l'un à l'autre. */
-      verif("vingt-quatre pixels d'air entre la rangée du va-et-vient (son trait) et le fil (nº 879-§3)", p.filY !== null && p.navBas !== null && p.filY - p.navBas === 24, `${p.filY} − ${p.navBas}`);
+      /*  ⚠️ nº 880-§1 — VINGT-HUIT AU DOIGT : le propriétaire a trouvé
+          les vingt-quatre de la nº 879 trop petits sur son téléphone, et
+          l'air y monte d'un cran de l'échelle. LE WEB GARDE SES
+          VINGT-QUATRE (le banc 880 tient les deux valeurs). */
+      verif("vingt-huit pixels d'air entre la rangée du va-et-vient (son trait) et le fil (nº 880-§1)", p.filY !== null && p.navBas !== null && p.filY - p.navBas === 28, `${p.filY} − ${p.navBas}`);
       verif("aucune photo n'est un lien", p.cartes.every((c) => c.liens === 0), JSON.stringify(p.cartes.map((c) => c.liens)));
       titre("873 · §3 — doigt : toucher une photo ne fait rien");
       const avant = await page.evaluate(() => location.pathname + location.search + " " + Math.round(scrollY));
