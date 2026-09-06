@@ -90,7 +90,31 @@
  * nº 378).
  */
 export const RESERVE_RANGEE = 116;
-export const RESERVE_LOGO = 64;
+/**
+ * ██ §1 (nº 886) — SOIXANTE-QUATRE ÉTAIT FAUX DE SIX PIXELS ██
+ * ------------------------------------------------------------------
+ * LE DÉFAUT DU PROPRIÉTAIRE, ENFIN NOMMÉ : « à l'ouverture d'une page,
+ * la barre fixe ne bouge pas, mais LE CONTENU est placé quelques
+ * pixels trop haut, sous la barre » — et le diagnostic disait
+ * `scrollY = 0`. Ce n'était donc pas un défilement : c'était CETTE
+ * CONSTANTE. Relevé à l'atelier, au doigt, sur les cinq sortes de
+ * pages :
+ *      accueil       barre 116 · réserve 116   ✓
+ *      Ma sélection  barre 116 · réserve 116   ✓
+ *      recherche     barre  70 · réserve  64   ✗  −6
+ *      profil        barre  70 · réserve  64   ✗  −6
+ *      portfolio     barre  70 · réserve  64   ✗  −6
+ * Sur toute page dont la barre n'a que la ligne du logo, le contenu
+ * commençait SIX PIXELS SOUS la barre. La barre a grandi en chemin
+ * (les cibles tactiles de 46 px, nº 821 ; les airs de la nº 874) et la
+ * constante ne l'a pas suivie — personne ne mesurait ce couple-là.
+ * ⚠️ ET C'EST LA DERNIÈRE FOIS QU'ELLE PEUT DÉRIVER : la barre MESURE
+ * désormais sa propre hauteur avant la peinture et pose CETTE
+ * valeur-là (EnTeteTatouage, §1 nº 886) ; cette constante n'est plus
+ * que la valeur de départ, celle de la toute première image. Le banc
+ * 886 tient les deux : réserve = barre, sur chaque sorte de page.
+ */
+export const RESERVE_LOGO = 70;
 
 /**
  * ██ §6 (nº 821) — LA CIBLE DES GESTES DE LA BARRE, AU DOIGT ██

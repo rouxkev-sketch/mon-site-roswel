@@ -1884,7 +1884,9 @@ export function ContenuFiche({
         * en `fixed` au doigt et qui doit, elle, réserver sa place —
         * voir EnTeteTatouage et lib/reserve-barre.)
         *
-        * LA BUTÉE — 64 px, ET CE NOMBRE N'EST PAS ÉCRIT ICI :
+        * LA BUTÉE — LA HAUTEUR DE LA BARRE DU LOGO, ET CE NOMBRE N'EST
+        * PAS ÉCRIT ICI (il valait 64 jusqu'à la nº 886, qui l'a rendu à
+        * la barre réelle : 70) :
         * `RESERVE_LOGO` (lib/reserve-barre) est la SEULE écriture de la
         * hauteur de la barre du logo dans tout le site. C'est déjà elle
         * qui dimensionne le bloc invisible tenant la place de la barre

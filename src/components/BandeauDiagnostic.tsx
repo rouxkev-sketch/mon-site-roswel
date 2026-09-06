@@ -177,6 +177,31 @@ function relever(): Releve {
     });
   }
 
+  /*  ██ §1 (nº 886) — LA RÉSERVE CONTRE LA BARRE ██
+      LA QUESTION DU PROPRIÉTAIRE : « la réserve calculée vs la hauteur
+      réelle de la barre à l'arrivée ». Un écart NÉGATIF veut dire que
+      le contenu commence SOUS la barre — de cet écart-là, exactement.
+      C'est le défaut qu'il voyait, et la ligne le dit d'un coup d'œil. */
+  const reserve = document.querySelector("[data-reserve-barre]");
+  if (barre) {
+    const hauteurBarre = Math.round(barre.getBoundingClientRect().height);
+    const hauteurReserve = reserve
+      ? Math.round(reserve.getBoundingClientRect().height)
+      : null;
+    lignes.push({
+      titre: "réserve / barre",
+      valeur:
+        hauteurReserve === null
+          ? `barre ${hauteurBarre} · pas de réserve (écran large)`
+          : `réserve ${hauteurReserve} · barre ${hauteurBarre} · écart ${
+              hauteurReserve - hauteurBarre
+            }${hauteurReserve === hauteurBarre ? " (juste)" : " ← LE CONTENU EST DÉCALÉ"}` +
+            ` · annoncé ${reserve?.getAttribute("data-reserve-posee") ?? "?"}/${
+              reserve?.getAttribute("data-reserve-depliee") ?? "?"
+            }`,
+    });
+  }
+
   const drapeaux = ["appareil", "defilementProgramme", "recherche", "fenetreFiche", "zoom", "positionPosee"]
     .map((cle) => (html.dataset[cle] ? `${cle}=${html.dataset[cle]}` : null))
     .filter(Boolean)

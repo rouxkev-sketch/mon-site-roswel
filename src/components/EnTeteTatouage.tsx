@@ -551,6 +551,48 @@ export function EnTeteTatouage({
       un autre chantier que cette passe, qui ne touche qu'à ses sujets. */
   const rangeeFixe = accueilNu || rangeeLibre;
   const replie = rangeeFixe ? false : moteurReplie;
+  /**
+   * ██ §1 (nº 886) — LA RÉSERVE EST LA HAUTEUR RÉELLE DE **SA** BARRE ██
+   * ==================================================================
+   * LA RÈGLE DU PROPRIÉTAIRE, MOT POUR MOT : « la réserve d'une page =
+   * la hauteur réelle de SA barre, posée avant la peinture, jamais
+   * héritée. »
+   * POURQUOI IL A FALLU LA POSER. Les deux hauteurs étaient des
+   * CONSTANTES (nº 218-§4, pour ne pas mesurer au milieu d'une
+   * transition de 300 ms) — et l'une des deux avait dérivé de six
+   * pixels : barre 70, réserve 64 sur toute page à ligne de logo seule
+   * (relevé nº 886, voir lib/reserve-barre). Le contenu commençait donc
+   * SOUS la barre, sans qu'aucun défilement soit en cause — exactement
+   * ce que le propriétaire décrit, `scrollY = 0` à l'appui.
+   * CE QUI EST FAIT ICI, ET RIEN DE PLUS : à chaque rendu, AVANT LA
+   * PEINTURE, la barre lit sa propre hauteur et la réserve prend cette
+   * valeur. Une constante qui dérive ne peut donc plus se voir à
+   * l'écran : elle n'est plus que la valeur de la toute première image,
+   * corrigée avant qu'aucun œil ne la voie.
+   * ⚠️ LA MESURE NE MENT PLUS PENDANT LA TRANSITION, et c'est la raison
+   * pour laquelle elle est possible aujourd'hui : depuis la nº 857, la
+   * rangée est FIXE partout où elle existe (`rangeeFixe`), le repli est
+   * inerte — il n'y a plus de transition de hauteur à traverser. On
+   * garde malgré tout la garde : une mesure n'est retenue que si elle
+   * tombe sur l'une des deux hauteurs annoncées à ±12 px, jamais au
+   * milieu d'un mouvement.
+   * ⚠️ ET ELLE N'EST JAMAIS HÉRITÉE : elle est relue à chaque rendu de
+   * CETTE barre-ci — donc à chaque page, avec sa propre composition.
+   */
+  const [hauteurDeLaBarre, setHauteurDeLaBarre] = useState<number | null>(null);
+  const reserveAnnoncee = rangeePresente && !replie ? RESERVE_RANGEE : RESERVE_LOGO;
+  useEffetAvantPeinture(() => {
+    const noeud = barre.current;
+    if (!noeud) return;
+    const mesuree = Math.round(noeud.getBoundingClientRect().height);
+    if (mesuree <= 0) return;
+    //  Une valeur prise en plein mouvement n'est celle d'aucun état :
+    //  on ne retient que ce qui ressemble à la hauteur annoncée.
+    if (Math.abs(mesuree - reserveAnnoncee) > 12) return;
+    setHauteurDeLaBarre((connue) => (connue === mesuree ? connue : mesuree));
+  });
+  /** La hauteur posée : la barre mesurée, sinon la valeur annoncée. */
+  const reservePosee = hauteurDeLaBarre ?? reserveAnnoncee;
   useEffect(() => {
     rangeeFixeRef.current = rangeeFixe;
   }, [rangeeFixe]);
@@ -1749,13 +1791,17 @@ export function EnTeteTatouage({
         //  classes) et une quatrième dans la mémoire de position. La
         //  hauteur vient donc du style, pas d'une classe : une classe
         //  Tailwind ne sait pas lire une constante.
-        data-reserve-posee={
-          rangeePresente && !replie ? RESERVE_RANGEE : RESERVE_LOGO
+        //  §1 (nº 886) — LA HAUTEUR POSÉE EST LA MESURÉE ; l'ANNONCE
+        //  des deux états, elle, reste ce qu'elle a toujours été : un
+        //  couple que lib/reserve-barre ne lit QUE pour en tirer un
+        //  booléen (repliée, ou pas). Quand la rangée est dépliée — le
+        //  cas de toutes les pages depuis la nº 857 —, les deux valeurs
+        //  restent égales, et ce booléen ne change pas d'un iota.
+        data-reserve-posee={reservePosee}
+        data-reserve-depliee={
+          rangeePresente && replie ? RESERVE_RANGEE : reservePosee
         }
-        data-reserve-depliee={rangeePresente ? RESERVE_RANGEE : RESERVE_LOGO}
-        style={{
-          height: rangeePresente && !replie ? RESERVE_RANGEE : RESERVE_LOGO,
-        }}
+        style={{ height: reservePosee }}
         className="hidden mobile:block shrink-0 transition-[height]
                    duration-300 ease-out"
       />
