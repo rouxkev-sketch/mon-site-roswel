@@ -122,7 +122,9 @@ function remonterALAdresseCommise(
    * elle n'a rien à rendre. Vingt ouvertures, web et doigt, à zéro
    * (banc 875).
    */
-  garantirLeHaut: boolean
+  garantirLeHaut: boolean,
+  /** §2 (nº 881) — le plafond de la garde, quand elle est armée. */
+  ecartMaximalDefendu?: number
 ): (() => void) | undefined {
   const remonter = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -132,7 +134,18 @@ function remonterALAdresseCommise(
     //  plus tôt, elle aurait retenu celle qu'on quitte et serait morte
     //  au changement d'adresse.
     if (garantirLeHaut) {
-      armerLaGardeDePosition(0, "arrival at the top intended (no. 446)");
+      armerLaGardeDePosition(
+        0,
+        "arrival at the top intended (no. 446)",
+        //  §2 (nº 881) — LA GARDE NE DÉFEND QUE LES PETITS ÉCARTS ici :
+        //  le défaut est « quelques pixels » (un recalage tardif du
+        //  navigateur), et un mouvement plus ample est VOULU — le site
+        //  qui repose une place, un banc qui mesure. Quarante pixels :
+        //  large pour un recalage, dérisoire pour une intention. Sans ce
+        //  plafond, la garde annulait le défilement programmé d'une page
+        //  Portfolio (banc 873, relevé à cette passe).
+        ecartMaximalDefendu
+      );
     }
   };
   if (window.location.pathname === chemin) {
@@ -213,6 +226,15 @@ function remonterALAdresseCommise(
  * peinture — il n'y a plus d'intervalle où quoi que ce soit puisse
  * s'afficher de travers.
  */
+
+/**
+ * §2 (nº 881) — L'AMPLITUDE QU'UN RECALAGE DE NAVIGATEUR PEUT AVOIR.
+ * Le propriétaire décrit « quelques pixels » ; quarante est large pour
+ * un recalage et dérisoire pour une intention (un défilement voulu se
+ * compte en centaines). Au-delà, la garde s'efface — voir
+ * `armerLaGardeDePosition`.
+ */
+const ECART_DEFENDU_PX = 40;
 
 /** useLayoutEffect côté navigateur, useEffect côté serveur (silencieux) */
 const useEffetAvantPeinture =
@@ -375,7 +397,7 @@ export function DefilementEnHaut() {
        * propriétaire mesure le défaut ».
        */
       //  nº 361 — après la photo d'adieu du navigateur (voir l'en-tête).
-      return remonterALAdresseCommise(chemin, true);
+      return remonterALAdresseCommise(chemin, true, ECART_DEFENDU_PX);
     }
 
     /*  ██ nº 812 — SAUF SI L'ARRIVÉE EN HAUT EST DÉCLARÉE ██

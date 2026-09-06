@@ -217,6 +217,8 @@ type GardeDePosition = {
   signature: string;
   adresse: string;
   annulations: number;
+  /** §2 (nº 881) — voir `armerLaGardeDePosition`. */
+  ecartMax?: number;
 };
 let garde: GardeDePosition | null = null;
 let veilleusePosee = false;
@@ -227,7 +229,24 @@ let veilleusePosee = false;
     voir le bloc ci-dessus. */
 export function armerLaGardeDePosition(
   position: number,
-  signature: string
+  signature: string,
+  /**
+   * ██ §2 (nº 881) — JUSQU'OÙ ELLE DÉFEND, ET PAS AU-DELÀ ██
+   * ------------------------------------------------------------------
+   * SANS PLAFOND (le comportement d'origine, et celui de tous les
+   * appelants d'avant cette passe) : la garde annule TOUT écart qu'aucun
+   * geste n'explique, quelle que soit son ampleur.
+   * AVEC PLAFOND : elle ne défend QUE LES PETITS ÉCARTS et s'efface
+   * devant un grand. LA RAISON, MESURÉE À LA nº 881 : le défaut que le
+   * propriétaire décrit est « quelques pixels » — un recalage tardif du
+   * navigateur quand le document grandit après la pose. Un mouvement de
+   * plusieurs centaines de pixels, lui, est VOULU : c'est le site qui
+   * repose une place, ou un banc qui mesure. La nº 875 avait armé la
+   * garde partout SANS plafond et trois bancs étaient tombés sur ce
+   * malentendu exact ; le plafond est ce qui manquait pour distinguer
+   * les deux, sans avoir à deviner qui appelle.
+   */
+  ecartMax?: number
 ): void {
   if (typeof window === "undefined") return;
   garde = {
@@ -235,6 +254,7 @@ export function armerLaGardeDePosition(
     signature,
     adresse: window.location.pathname + window.location.search,
     annulations: 0,
+    ecartMax,
   };
   poserLaVeilleuse();
   //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
@@ -300,6 +320,12 @@ function surDefilementSousGarde(): void {
   const y = Math.round(window.scrollY);
   const ecart = y - g.position;
   if (Math.abs(ecart) <= TOLERANCE_DE_GARDE_PX) return;
+  //  §2 (nº 881) — UN GRAND ÉCART N'EST PAS UN RECALAGE : il est voulu,
+  //  et la garde s'efface (voir `ecartMax`, à l'armement).
+  if (g.ecartMax !== undefined && Math.abs(ecart) > g.ecartMax) {
+    garde = null;
+    return;
+  }
   //  Un mouvement porté par un geste : l'utilisateur a la main, la
   //  garde n'a plus rien à défendre. (Le doigt était peut-être déjà
   //  posé avant l'armement — l'abonnement au DÉBUT du geste ne l'a
