@@ -87,10 +87,21 @@ export const REPOS_PASTILLE = 3000;
  *    BOUGE PLUS. Un pointeur qui se promène sur la photo veut voir où
  *    il en est ; un écran laissé tranquille n'a rien à annoncer.
  *
- * ⚠️ CHACUNE NE VAUT QUE SUR SON APPAREIL, et c'est la règle nº 60 qui
- * en décide — `data-appareil` sur la racine, jamais une largeur de
- * fenêtre ni la finesse du pointeur. Une tablette tactile large reste
- * un doigt ; une fenêtre d'ordinateur rétrécie reste un web.
+ *  · `"vue"` — UNE VUE PHOTO, AUX DEUX APPAREILS (§4, nº 880) : elle
+ *    s'allume À L'OUVERTURE et s'efface trois secondes plus tard, et
+ *    CHAQUE APPAREIL GARDE SON GESTE — la souris au web (c'est le
+ *    `"souris"` d'avant, à la lettre), le défilement de la page au
+ *    doigt. LE DÉFAUT QUE CELA CORRIGE, relevé par le propriétaire :
+ *    la vue photo ouverte depuis « Ma sélection » n'affichait AUCUNE
+ *    pastille sur un téléphone — elle demandait `"souris"`, et
+ *    `"souris"` se tait au doigt (voir la garde, plus bas). Rien à
+ *    l'écran ne disait plus « 3/11 ».
+ *
+ * ⚠️ `"page"` ET `"souris"` NE VALENT QUE SUR LEUR APPAREIL, et c'est la
+ * règle nº 60 qui en décide — `data-appareil` sur la racine, jamais une
+ * largeur de fenêtre ni la finesse du pointeur. Une tablette tactile
+ * large reste un doigt ; une fenêtre d'ordinateur rétrécie reste un
+ * web. `"vue"`, lui, vaut des deux côtés : c'est sa raison d'être.
  * ⚠️ ET RIEN NE S'ALLUME AU PREMIER RENDU : l'état de départ reste FAUX
  * des deux côtés (serveur et navigateur), et l'éveil se fait dans un
  * effet, après le montage. Sans cela, le serveur rendrait une pastille
@@ -101,7 +112,7 @@ export const REPOS_PASTILLE = 3000;
  * fréquents, et `reveiller` ne coûte un rendu qu'au premier (voir la
  * note du crochet, plus haut).
  */
-export type EveilPastille = "page" | "souris";
+export type EveilPastille = "page" | "souris" | "vue";
 
 export function usePastilleDeDefilement(eveil?: EveilPastille) {
   const [eveillee, setEveillee] = useState(false);
@@ -125,8 +136,26 @@ export function usePastilleDeDefilement(eveil?: EveilPastille) {
   useEffect(() => {
     if (!eveil) return;
     const auDoigt = document.documentElement.dataset.appareil === "mobile";
-    if (eveil === "page" ? !auDoigt : auDoigt) return;
-    const evenement = eveil === "page" ? "scroll" : "mousemove";
+    /*  QUEL GESTE LA TIENT ÉVEILLÉE, SELON L'ÉVEIL DEMANDÉ ET
+        L'APPAREIL — et `null` quand cet éveil-là ne vaut pas ici :
+         · `"page"`   : le doigt seulement, le défilement de la page ;
+         · `"souris"` : le web seulement, le mouvement de souris ;
+         · `"vue"`    : LES DEUX (nº 880-§4), chacun avec son geste.
+        L'allumage d'ouverture, lui, est le même dans les trois cas :
+        c'est l'appel de `suivre()` juste en dessous. */
+    const evenement =
+      eveil === "vue"
+        ? auDoigt
+          ? "scroll"
+          : "mousemove"
+        : eveil === "page"
+          ? auDoigt
+            ? "scroll"
+            : null
+          : auDoigt
+            ? null
+            : "mousemove";
+    if (!evenement) return;
     const suivre = () => reveiller();
     //  L'ALLUMAGE D'OUVERTURE : la même minuterie que partout ailleurs.
     suivre();

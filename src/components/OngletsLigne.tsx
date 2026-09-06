@@ -1,5 +1,46 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
+
+/**
+ * ██ §2 (nº 880) — LE VA-ET-VIENT GLISSE, MÊME QUAND LA PAGE CHANGE ██
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE DEMANDE : « le trait rouge GLISSE en douceur
+ * d'un onglet à l'autre, et la couleur du titre sélectionné change en
+ * fondu — partout, web et mobile. »
+ *
+ * CE QUI EXISTAIT DÉJÀ, ET CE QUI MANQUAIT — mesuré à l'atelier (sonde
+ * 880), va-et-vient par va-et-vient :
+ *  · « Ma sélection », dont les onglets sont des BOUTONS : il glissait
+ *    déjà (relevé à mi-course : 163 px sur 179). La transition du trait
+ *    (300 ms) et celle des couleurs (150 ms) sont écrites plus bas
+ *    depuis les nº 112 et 858 ;
+ *  · l'accueil et le profil, dont les onglets sont des LIENS : ils NE
+ *    GLISSAIENT PAS — à mi-course, le trait était DÉJÀ arrivé. La cause
+ *    n'est pas un réglage manquant : changer d'onglet y change de PAGE,
+ *    le composant est REMONTÉ, et un nœud qui vient de naître n'a pas
+ *    d'état d'avant à quitter. Une transition ne peut animer que ce qui
+ *    change ; là, rien ne changeait — tout arrivait déjà fini.
+ *
+ * LE REMÈDE, ET IL TIENT DANS CE FICHIER : le va-et-vient SE SOUVIENT
+ * de l'onglet qu'il montrait la dernière fois (une mémoire de module,
+ * rangée sous son étiquette). Au montage suivant, s'il découvre qu'il a
+ * changé d'onglet, il REPOSE le trait et les deux couleurs dans leur
+ * état d'avant — sans transition, avant la première peinture
+ * (`useLayoutEffect`) —, puis les relâche : le navigateur voit alors
+ * deux états différents et fait ce qu'il sait faire.
+ * ⚠️ AVANT LA PREMIÈRE PEINTURE, ET C'EST TOUT LE SUJET : dans un effet
+ * ordinaire, l'œil verrait le trait arrivé, puis reculer.
+ * ⚠️ AUCUN ÉTAT REACT, AUCUN RENDU DE PLUS : on ne touche que le style
+ * en ligne de trois nœuds, le temps d'une image, et on l'efface. Le
+ * rendu, lui, dit toujours la vérité — l'onglet actif est le bon dès la
+ * première image, `aria-current` compris.
+ * ⚠️ RIEN À FAIRE CHEZ LES APPELANTS : les huit va-et-vient du site
+ * passent par ici (accueil, Ma sélection, profil, formulaire,
+ * authentification, démarchage, lieux, recherche mobile).
+ */
+const MEMOIRE_DES_ONGLETS = new Map<string, string>();
+
 /**
  * LES ONGLETS SOULIGNÉS — le sélecteur de la passe nº 112
  * ========================================================
@@ -218,6 +259,61 @@ export function OngletsLigne({
     ? `calc(${index} * ${largeurInactive})`
     : `${index * 100}%`;
 
+  /*  §2 (nº 880) — LE GLISSEMENT QUI SURVIT AU REMONTAGE. La mécanique
+      et son pourquoi sont écrits en tête de fichier ; ici, les trois
+      nœuds qu'elle touche et les deux valeurs qu'elle repose. */
+  const trait = useRef<HTMLSpanElement>(null);
+  const rangeeDesOnglets = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    //  ⚠️ `cleActive` PEUT ÊTRE NULLE (aucun onglet choisi) : on ne
+    //  retient alors rien, et il n'y a rien à faire glisser.
+    if (cleActive === null) return;
+    const precedent = MEMOIRE_DES_ONGLETS.get(ariaLabel);
+    MEMOIRE_DES_ONGLETS.set(ariaLabel, cleActive);
+    if (precedent === undefined || precedent === cleActive) return;
+    const rangPrecedent = options.findIndex(
+      (option) => option.cle === precedent
+    );
+    if (rangPrecedent < 0 || index < 0) return;
+    //  ── LE TRAIT : reposé d'où il vient, puis relâché.
+    const barre = trait.current;
+    if (barre) {
+      const depart = largeurInactive
+        ? `calc(${rangPrecedent} * ${largeurInactive})`
+        : `${rangPrecedent * 100}%`;
+      barre.style.transition = "none";
+      barre.style.transform = `translateX(${depart})`;
+      //  LA MESURE FORCÉE : sans elle, le navigateur regrouperait les
+      //  deux écritures et ne verrait qu'un seul état — donc aucune
+      //  transition. C'est la seule ligne qui coûte, et elle ne coûte
+      //  qu'au changement d'onglet.
+      void barre.offsetWidth;
+      barre.style.transition = "";
+      /*  ⚠️ ON REPOSE LA VALEUR DU RENDU, ON NE L'EFFACE PAS. Effacer
+          le `transform` en ligne le retire de l'attribut `style` — et
+          React ne le réécrira qu'au prochain rendu où il CHANGE : le
+          trait retomberait au premier onglet et y resterait. C'est ce
+          que la sonde a vu à la première écriture de cette passe. */
+      barre.style.transform = `translateX(${decalageDuTrait})`;
+    }
+    //  ── LES DEUX COULEURS : chacune repart de celle de l'autre. On ne
+    //     nomme aucun jeton — on LIT les deux couleurs à l'écran, celle
+    //     de l'onglet qui vient d'être choisi (l'active) et celle de
+    //     celui qui vient de la perdre (l'éteinte).
+    const cases = rangeeDesOnglets.current?.children;
+    const quitte = cases?.[rangPrecedent] as HTMLElement | undefined;
+    const prend = cases?.[index] as HTMLElement | undefined;
+    if (quitte && prend) {
+      const couleurActive = getComputedStyle(prend).color;
+      const couleurEteinte = getComputedStyle(quitte).color;
+      quitte.style.color = couleurActive;
+      prend.style.color = couleurEteinte;
+      void quitte.offsetWidth;
+      quitte.style.color = "";
+      prend.style.color = "";
+    }
+  }, [ariaLabel, cleActive, decalageDuTrait, index, largeurInactive, options]);
+
   /*  ██ §1 (nº 870) — LA TYPOGRAPHIE D'UN ONGLET, ÉCRITE UNE FOIS ██
       Elle était posée dans la classe du bouton et nulle part ailleurs.
       Le trait rose en a besoin LUI AUSSI depuis cette passe : c'est une
@@ -236,6 +332,7 @@ export function OngletsLigne({
       className={fige ? "opacity-60" : ""}
     >
       <div
+        ref={rangeeDesOnglets}
         /*  §1 (nº 858) — LA GRILLE S'ANIME quand les colonnes sont
             inégales : l'onglet qui s'ouvre pousse l'autre au lieu de
             sauter, à la courbe du trait rose. Sans `largeurInactive`,
@@ -373,6 +470,7 @@ export function OngletsLigne({
            * annoncé une seule fois, par son onglet.
            */
           <span
+            ref={trait}
             className="absolute bottom-0 left-0 flex h-[3px] justify-center
                        transition-transform duration-300
                        ease-[cubic-bezier(0.32,0.72,0,1)]"

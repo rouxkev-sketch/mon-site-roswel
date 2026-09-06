@@ -399,9 +399,15 @@ export function CarrouselPortfolio({
          c'est donc SA GRILLE qui le lui dit (`eveilPastille`).
       ⚠️ LA RÈGLE DU GESTE (nº 844) N'EST PAS TOUCHÉE : elle continue de
       réveiller la pastille à chaque glissement, partout. */
-  const pastille = usePastilleDeDefilement(
-    surCarte ? eveilPastille : "souris"
-  );
+  /*  §4 (nº 880) — UNE VUE PHOTO S'OUVRE SUR SA PASTILLE, AUX DEUX
+      APPAREILS : `"vue"` remplace `"souris"` pour tout ce qui n'est pas
+      une carte (un profil, une image du portfolio). Au web, rien ne
+      change d'un pixel — `"vue"` y est le `"souris"` d'avant. Au doigt,
+      la pastille s'allume enfin à l'ouverture et s'efface trois
+      secondes plus tard : c'est la règle de la nº 852-§4, étendue à
+      cette vue sur demande du propriétaire (elle n'affichait RIEN sur
+      un téléphone). Voir la note d'`EveilPastille`. */
+  const pastille = usePastilleDeDefilement(surCarte ? eveilPastille : "vue");
   const poseSilencieuse = useRef(0);
   const DELAI_POSE_SILENCIEUSE = 200;
   const annoncerPoseSilencieuse = () => {

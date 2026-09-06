@@ -864,6 +864,25 @@ html[data-zoom] [data-mosaique] {
   contain: none !important;
 }
 
+/*  … ET LE CADRE QUI L'ENVELOPPE CESSE DE ROGNER (nº 880-§3-b)
+    -------------------------------------------------------------------
+    LA SUITE DE LA MÊME HISTOIRE. Depuis la nº 880, ce que le pincement
+    agrandit sur une carte du fil n'est plus le cadre enveloppant mais
+    LE CADRE DES PHOTOS, d'un cran plus bas : c'est ainsi que la
+    PASTILLE — sa sœur, et non sa fille — reste immobile pendant le
+    geste (relevé du propriétaire : « elle est prise dans le zoom et
+    casse l'affichage »).
+    MAIS le cadre enveloppant, lui, porte `overflow-hidden` : il
+    rognerait l'image agrandie à sa propre boîte, et le zoom ne
+    sortirait plus de la carte. Le temps du geste — et de lui seul, le
+    drapeau `data-pincement` étant posé par `usePincement` sur la zone
+    touchée puis retiré au rangement —, il cesse donc de rogner.
+    ⚠️ IL NE S'AGIT QUE DE LA CARTE DU FIL (`data-cadre-de-fil`) : le
+    reste du site garde ses coupes intactes, au repos comme en geste. */
+[data-pincement] [data-cadre-de-fil] {
+  overflow: visible !important;
+}
+
 /*  « EFFACER » ET « VALIDER » S'EFFACENT DÈS QU'UNE LISTE EST OUVERTE
     (nº 195-§2, étendu à TOUS les champs par la nº 196)
     -------------------------------------------------------------------

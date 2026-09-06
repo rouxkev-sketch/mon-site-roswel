@@ -572,9 +572,36 @@ function CarteTatoueurNue({
       grossit — voir ZoomPincement.tsx pour la mécanique. */
   const zoneCarte = useRef<HTMLElement>(null);
   const cadrePhoto = useRef<HTMLDivElement>(null);
+  /**
+   * ██ §3-b (nº 880) — LA PASTILLE RESTE HORS DU ZOOM ██
+   * ------------------------------------------------------------------
+   * CE QUE LE PROPRIÉTAIRE A VU : sur une carte de résultats, le
+   * pincement emportait LA PASTILLE avec l'image — elle grossissait et
+   * partait de son coin, « ça casse l'affichage ».
+   * LA CAUSE, ET ELLE EST DE STRUCTURE : la cible du zoom était le
+   * cadre qui ENVELOPPE le carrousel, et la pastille vit dedans (elle
+   * est peinte par le carrousel, en frère du cadre des photos).
+   * LE REMÈDE : la cible descend d'un cran — c'est LE CADRE DES PHOTOS
+   * du carrousel qui grossit, et la pastille, qui n'est pas dedans
+   * (elle en est la sœur), ne bouge plus d'un pixel. Le cadre
+   * enveloppant cesse de rogner le temps du geste (une règle de
+   * `globals.css`, à côté de celle de la nº 276) : sans elle, l'image
+   * agrandie serait retenue par lui.
+   * ⚠️ LA CIBLE EST DEMANDÉE AU PREMIER DOIGT, et non tenue dans une
+   * référence : ce nœud appartient au carrousel, pas à la carte. Le
+   * crochet sait le faire depuis cette passe (voir `cible`,
+   * ZoomPincement) — personne n'a de référence à se prêter.
+   * ⚠️ AU WEB, RIEN NE CHANGE : la carte du web n'a pas de carrousel
+   * (une seule image), et sa cible reste son cadre.
+   */
   const gestesPincement = usePincement({
     ecoute: zoneCarte,
-    cible: cadrePhoto,
+    cible: fil
+      ? () =>
+          cadrePhoto.current?.querySelector<HTMLElement>(
+            '[data-role="cadre"]'
+          ) ?? cadrePhoto.current
+      : cadrePhoto,
   });
 
   /** L'ADRESSE DE LA FICHE — elle EMPORTE le style cherché (?style=…) :

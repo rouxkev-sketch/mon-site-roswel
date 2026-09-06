@@ -72,8 +72,18 @@ export function usePincement({
       §1 (nº 276) : il porte `data-pincement` le temps du geste — c'est
       ce qui LÈVE SON CONFINEMENT (voir la règle dans globals.css). */
   ecoute: React.RefObject<HTMLElement | null>;
-  /** L'élément TRANSFORMÉ (l'image, ou son cadre direct). */
-  cible: React.RefObject<HTMLElement | null>;
+  /**
+   * L'élément TRANSFORMÉ (l'image, ou son cadre direct).
+   * §3-b (nº 880) — IL PEUT AUSSI ÊTRE DEMANDÉ AU MOMENT DU GESTE, par
+   * une fonction. LA RAISON : sur une carte du fil, ce qu'il faut
+   * agrandir est le CADRE DES PHOTOS du carrousel — un nœud que la
+   * carte ne possède pas, et qu'elle ne peut donc pas tenir dans une
+   * référence à elle. Le demander au premier doigt le trouve toujours
+   * (le carrousel est monté depuis longtemps) et n'oblige personne à se
+   * prêter une référence. Rendre `null` annule le geste, comme une
+   * référence vide.
+   */
+  cible: React.RefObject<HTMLElement | null> | (() => HTMLElement | null);
   /** Prévient quand le pincement commence/finit — le carrousel s'en
       sert pour ABANDONNER son balayage en cours. */
   surPincement?: (actif: boolean) => void;
@@ -110,6 +120,10 @@ export function usePincement({
    */
   sortirDuCadre?: boolean;
 }) {
+  /*  §3-b (nº 880) — LA CIBLE DU MOMENT, demandée d'une seule façon
+      que l'appelant l'ait donnée en référence ou en fonction. */
+  const cibleDuMoment = () =>
+    typeof cible === "function" ? cible() : cible.current;
   const doigts = useRef(new Map<number, Doigt>());
   const depart = useRef<Mesure | null>(null);
   const actif = useRef(false);
@@ -211,7 +225,7 @@ export function usePincement({
     delete document.documentElement.dataset.zoom;
     finDernierPincement = Date.now();
     surPincement?.(false);
-    const element = cible.current;
+    const element = cibleDuMoment();
     //  §1 (nº 276) — la zone est notée MAINTENANT : au moment où le
     //  rangement s'achèvera, la ref peut déjà être vide (démontage).
     const zone = ecoute.current;
@@ -287,7 +301,7 @@ export function usePincement({
       //  (zoom tenu, et déplacements faits au doigt depuis).
       courant.current = affiche.current;
       if (!reprise) surPincement?.(true);
-      const element = cible.current;
+      const element = cibleDuMoment();
       if (element) {
           element.style.transition = "";
         if (!reprise) {
@@ -330,7 +344,7 @@ export function usePincement({
 
   /** Poser la transformation, et retenir ce qu'on vient de poser. */
   function poser(echelle: number, dx: number, dy: number) {
-    const element = cible.current;
+    const element = cibleDuMoment();
     if (!element) return;
     element.style.transform = `translate(${dx}px, ${dy}px) scale(${echelle})`;
     affiche.current = { echelle, dx, dy };

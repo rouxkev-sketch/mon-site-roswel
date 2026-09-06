@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+//  §3-a (nº 880) — le zoom au pincement, le crochet du site : la carte
+//  écoute, le cadre de l'image grossit (voir sa note, plus bas).
+import { usePincement } from "@/components/ZoomPincement";
 import { PiedDeFil } from "@/components/CarteFil";
 //  §6 (nº 877) — les flèches du clavier font défiler la carte survolée
 //  (la mécanique de la nº 840, telle quelle).
@@ -111,12 +114,22 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *   · bas d'une carte → titre de la suivante : 24 px, et c'est la
  *     gouttière de la liste (`GOUTTIERE_DU_FIL`, `gap-y-6`) — au doigt,
  *     le bas de la carte est celui de son PIED, qui en fait partie.
- * LES DEUX APPAREILS DONNENT LA MÊME VALEUR : une seule classe suffit
- * donc, `mt-6`, et il n'y a rien à séparer par appareil (le piège
- * nº 389 ne se pose pas — une propriété, une classe).
- * ⚠️ LA GOUTTIÈRE RESTE LA SOURCE : si elle change un jour, cet air
- * devra la suivre — c'est la même distance, dite deux fois, et le
- * banc 879 les compare l'une à l'autre plutôt qu'à un nombre écrit.
+ * LES DEUX APPAREILS DONNAIENT LA MÊME VALEUR à la nº 879 : une seule
+ * classe suffisait alors, `mt-6`.
+ *
+ * ██ §1 (nº 880) — AU DOIGT, UN CRAN DE PLUS ██
+ * ------------------------------------------------------------------
+ * Le propriétaire a regardé les vingt-quatre pixels sur son téléphone
+ * et les trouve TROP PETITS. L'air y monte donc d'UN CRAN DE L'ÉCHELLE
+ * — `mt-7`, VINGT-HUIT pixels (le même pas que la nº 867-§4, qui
+ * descendait de 32 à 28) —, ET AU DOIGT SEULEMENT : le web garde ses
+ * vingt-quatre, que le propriétaire n'a pas nommés.
+ * ⚠️ DEUX CLASSES POUR UNE SEULE PROPRIÉTÉ, une par appareil (piège
+ * nº 389) : `mobile:mt-7 not-mobile:mt-6`. C'est l'APPAREIL qui tranche,
+ * jamais une largeur (règle nº 60).
+ * ⚠️ LE WEB GARDE SA PARENTÉ AVEC LA GOUTTIÈRE (24 px, `gap-y-6`), et
+ * le banc 880 continue de comparer les deux airs l'un à l'autre de ce
+ * côté-là ; au doigt, il mesure la valeur demandée.
  *
  * ██ §3 (nº 876) — ET LE WEB AUSSI : LE FIL EST LA PRÉSENTATION DES
  * DEUX APPAREILS ██
@@ -263,10 +276,11 @@ export function FilDeGalerie({
     <div
       data-fil-de-galerie=""
       //  §3 (nº 876) — aux deux appareils désormais (voir l'en-tête).
-      //  §2/§3 (nº 879) — `mt-6` : l'air au-dessus de la première carte
+      //  §2/§3 (nº 879) — au web, l'air au-dessus de la première carte
       //  vaut celui qui sépare deux cartes (24 px, la gouttière de la
-      //  liste), aux deux appareils. Voir l'en-tête pour la mesure.
-      className="mt-6 mobile:-mx-4"
+      //  liste). §1 (nº 880) — au doigt, un cran de plus : 28. Voir
+      //  l'en-tête pour la mesure et la règle.
+      className="mobile:mt-7 not-mobile:mt-6 mobile:-mx-4"
     >
       {/*  LA GOUTTIÈRE EST CELLE DU FIL DES RÉSULTATS (`GOUTTIERE_DU_FIL`,
            GrilleTatoueurs) : les cartes s'y détachent de vingt-quatre
@@ -356,6 +370,33 @@ function CarteDeGalerie({
   /** Le texte de remplacement d'une photo seule — la phrase du
       carrousel de la fiche (CarrouselPortfolio, `texteDe`), mot pour
       mot ; le carrousel écrit lui-même la sienne. */
+  /**
+   * ██ §3-a (nº 880) — LE ZOOM AU PINCEMENT ARRIVE ICI AUSSI ██
+   * ------------------------------------------------------------------
+   * CE QUE LE PROPRIÉTAIRE A RELEVÉ : pincer une photo d'une carte de
+   * galerie (Portfolio, Flash) ne faisait RIEN, alors que le même geste
+   * grossit l'image sur une carte de « Ma sélection ». La cause n'est
+   * pas un réglage : ces cartes-ci n'avaient jamais monté le crochet.
+   * CE QU'ON POSE, ET C'EST L'ÉCRITURE DE LA CARTE DES RÉSULTATS À LA
+   * LETTRE (CarteTatoueur) : la CARTE écoute les doigts, LE CADRE DE
+   * L'IMAGE grossit. Rien de neuf n'est inventé — même crochet, même
+   * répartition, même lever de confinement (`data-pincement`, la règle
+   * de la nº 276 dans `globals.css`).
+   * ⚠️ ET LA PASTILLE N'EST PAS UN SUJET ICI : depuis la nº 874-§4, le
+   * compteur d'une carte de galerie vit SUR LA LIGNE DU TITRE, hors de
+   * l'image (`sansCompteur` au carrousel). Il n'y a donc rien à sortir
+   * du zoom — le §3-b de cette passe ne concerne que les cartes qui en
+   * portent une dans la photo.
+   * ⚠️ RIEN AU WEB : un pincement est un geste à deux doigts ; sans
+   * écran tactile, ces gestionnaires ne se déclenchent jamais.
+   */
+  const carte = useRef<HTMLLIElement>(null);
+  const cadreDeLImage = useRef<HTMLDivElement>(null);
+  const gestesPincement = usePincement({
+    ecoute: carte,
+    cible: cadreDeLImage,
+  });
+
   const photoSeule = serie.photos[0];
   const texteDeLaPhotoSeule = photoSeule
     ? `${tatoueur.nom}'s portfolio — ${serie.label}${
@@ -365,6 +406,8 @@ function CarteDeGalerie({
 
   return (
     <li
+      ref={carte}
+      {...gestesPincement}
       data-carte-de-galerie={rang}
       data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
       /*  §3 (nº 876) — `group` : les chevrons du web se montrent au
@@ -407,6 +450,7 @@ function CarteDeGalerie({
         />
       </div>
       <div
+        ref={cadreDeLImage}
         data-cadre-de-galerie=""
         className={`relative w-full ${CADRE_PHOTO_PORTFOLIO} overflow-hidden`}
       >
