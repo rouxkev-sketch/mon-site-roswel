@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+//  §1 (nº 879) — LA RÈGLE DE LA CARTE SURVOLÉE, SORTIE D'ICI : la
+//  fenêtre de fiche la lit aussi, pour que sa grande photo ne prenne
+//  pas la touche qu'une carte a déjà prise.
+import { carteSousLeCurseur } from "@/lib/carte-survolee";
 
 /**
  * ██ §1 (nº 371) — LES FLÈCHES DU CLAVIER FONT DÉFILER LA CARTE
@@ -68,6 +72,27 @@ export function ClavierCartes() {
             ? -1
             : 0;
       if (!sens) return;
+      /*  ██ §1 (nº 879) — UNE TOUCHE DÉJÀ PRISE N'EST PAS PRISE DEUX
+          FOIS ██
+          ------------------------------------------------------------
+          LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET REPRODUIT À LA SONDE
+          879d : dans la FENÊTRE de fiche superposée, un seul appui
+          faisait avancer la carte survolée de DEUX photos (1/6 → 3/6).
+          LA CAUSE, comptée à l'atelier (quatre écouteurs de clavier
+          dans la fenêtre contre trois sur la page) : DEUX
+          `ClavierCartes` vivent alors ensemble — celui de la mosaïque
+          restée derrière la fenêtre, et celui du fil de galeries que la
+          fenêtre monte. Chacun trouvait la même carte survolée et
+          pressait le même chevron.
+          LE REMÈDE, ET IL TIENT EN UNE LIGNE : le premier qui prend la
+          touche la marque (`preventDefault`, plus bas) ; celui qui suit
+          voit la marque et se tait. Aucun registre, aucun compte de
+          montages — l'événement lui-même porte la réponse.
+          ⚠️ CE N'EST PAS `stopPropagation` : on ne coupe pas la
+          propagation, on constate qu'un autre a déjà répondu. Une
+          touche préemptée par n'importe qui d'autre nous fait taire de
+          la même façon, et c'est bien ce qu'on veut. */
+      if (evenement.defaultPrevented) return;
       if (
         evenement.metaKey ||
         evenement.ctrlKey ||
@@ -130,9 +155,9 @@ export function ClavierCartes() {
           ⚠️ ON CHERCHE LA CARTE, PUIS SON CHEVRON — et non le chevron
           d'emblée : c'est la présence de LA CARTE qui commande, pas
           celle du bouton. */
-      const carte = document.querySelector<HTMLElement>(
-        "[data-carte]:hover, [data-carte-de-galerie]:hover"
-      );
+      //  §1 (nº 879) — la même question qu'ailleurs, posée au même
+      //  endroit : `lib/carte-survolee`.
+      const carte = carteSousLeCurseur();
       if (!carte) return;
       evenement.preventDefault();
       const chevron = carte.querySelector<HTMLElement>(

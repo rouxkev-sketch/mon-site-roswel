@@ -97,9 +97,26 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * Une liste vide ne monte pas ce fil — la page dit « No tattoos yet. »
  * ou « No flash yet. » (ContenuFiche, §4).
  *
- * L'AIR AU-DESSUS : quarante pixels sous le va-et-vient (`mt-10`), la
- * valeur qui ouvrait le portfolio du web sous la rangée Profil /
- * Portfolio et qui ouvre le bloc du nom sur le profil (nº 870-§5).
+ * ██ §2 ET §3 (nº 879) — L'AIR AU-DESSUS EST CELUI QUI SÉPARE DEUX
+ * CARTES ██
+ * ------------------------------------------------------------------
+ * IL VALAIT QUARANTE PIXELS (`mt-10`) — la valeur qui ouvrait le
+ * portfolio du web sous la rangée Profil / Portfolio et qui ouvre le
+ * bloc du nom sur le profil (nº 870-§5). Le propriétaire le trouve trop
+ * grand : il doit valoir CE QUI SÉPARE UNE CARTE DE LA SUIVANTE.
+ * MESURÉ À L'ATELIER (sonde 879), aux deux appareils :
+ *   · va-et-vient → titre de la 1re carte : 40 px (le bas du
+ *     va-et-vient est celui de sa bande, trait compris — 144 au web,
+ *     120 au doigt ; le fil commençait à 184 et 160) ;
+ *   · bas d'une carte → titre de la suivante : 24 px, et c'est la
+ *     gouttière de la liste (`GOUTTIERE_DU_FIL`, `gap-y-6`) — au doigt,
+ *     le bas de la carte est celui de son PIED, qui en fait partie.
+ * LES DEUX APPAREILS DONNENT LA MÊME VALEUR : une seule classe suffit
+ * donc, `mt-6`, et il n'y a rien à séparer par appareil (le piège
+ * nº 389 ne se pose pas — une propriété, une classe).
+ * ⚠️ LA GOUTTIÈRE RESTE LA SOURCE : si elle change un jour, cet air
+ * devra la suivre — c'est la même distance, dite deux fois, et le
+ * banc 879 les compare l'une à l'autre plutôt qu'à un nombre écrit.
  *
  * ██ §3 (nº 876) — ET LE WEB AUSSI : LE FIL EST LA PRÉSENTATION DES
  * DEUX APPAREILS ██
@@ -246,7 +263,10 @@ export function FilDeGalerie({
     <div
       data-fil-de-galerie=""
       //  §3 (nº 876) — aux deux appareils désormais (voir l'en-tête).
-      className="mt-10 mobile:-mx-4"
+      //  §2/§3 (nº 879) — `mt-6` : l'air au-dessus de la première carte
+      //  vaut celui qui sépare deux cartes (24 px, la gouttière de la
+      //  liste), aux deux appareils. Voir l'en-tête pour la mesure.
+      className="mt-6 mobile:-mx-4"
     >
       {/*  LA GOUTTIÈRE EST CELLE DU FIL DES RÉSULTATS (`GOUTTIERE_DU_FIL`,
            GrilleTatoueurs) : les cartes s'y détachent de vingt-quatre

@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
+//  §1 (nº 879) — la règle partagée : une carte sous le curseur prend
+//  les flèches, et la grande photo ne les reçoit pas.
+import { carteSousLeCurseur } from "@/lib/carte-survolee";
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import Link from "next/link";
 //  §1 (nº 459) — `villeAffichee`, `MARQUE_YOKOFOLIO` et
@@ -503,11 +506,33 @@ export function FenetreFiche({
       if (pileClavier[pileClavier.length - 1] !== jeton) return;
       if (evenement.key === "Escape") {
         surFermeture();
-      } else if (evenement.key === "ArrowRight") {
+        return;
+      }
+      if (evenement.key !== "ArrowRight" && evenement.key !== "ArrowLeft") {
+        return;
+      }
+      /*  ██ §1 (nº 879) — LA CARTE SURVOLÉE PASSE AVANT LA GRANDE PHOTO ██
+          ------------------------------------------------------------
+          LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET REPRODUIT À LA SONDE
+          879d, DANS LA FENÊTRE : curseur sur une carte du fil, flèche
+          droite — la carte avançait ET la grande photo avec elle. LA
+          CAUSE EST ICI, et pas dans `ClavierCartes` : cet écouteur-ci,
+          posé sur la fenêtre, ne savait rien du survol. La nº 878 avait
+          nommé la règle mais ne l'avait écrite qu'à un endroit ; elle
+          vit désormais dans `lib/carte-survolee`, et ces deux lignes la
+          lisent.
+          ⚠️ ET LA TOUCHE EST PRISE ENTIÈRE quand la fenêtre la prend :
+          sans `preventDefault`, le cadre à coupe de la grande photo
+          défilait EN PLUS (le « scroller focus » implicite de Chromium,
+          après un clic dedans) — la même sonde a vu l'affiche sauter de
+          1/6 à 3/6 pour un seul appui. Un appui, une photo. */
+      if (carteSousLeCurseur()) return;
+      evenement.preventDefault();
+      if (evenement.key === "ArrowRight") {
         setIndice((courant) =>
           Math.min(courant + 1, nombreDePhotos.current - 1)
         );
-      } else if (evenement.key === "ArrowLeft") {
+      } else {
         setIndice((courant) => Math.max(courant - 1, 0));
       }
     };
