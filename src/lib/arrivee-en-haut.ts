@@ -77,6 +77,9 @@
  * ensemble, au bout de la même seconde (`DUREE_DE_LA_GARDE_MS`).
  */
 import { auDebutDuGeste, unDoigtEstPose } from "@/lib/geste-toucher";
+//  nº 884 — le journal du diagnostic : désarmé, il ne coûte qu'un test
+//  de booléen (voir sa note).
+import { diagnosticArme, noterDiag } from "@/lib/journal-diagnostic";
 
 /**
  * ██ L'AMPLITUDE QU'UN RECALAGE DE MOTEUR PEUT AVOIR (nº 881-§2) ██
@@ -112,9 +115,15 @@ export const DUREE_DE_LA_GARDE_MS = 1000;
  * DOM et la peinture (la sixième occasion, la plus ancienne).
  */
 export function poserLeHaut(): void {
+  //  nº 884 — LA POSE S'ÉCRIT, avec ce qu'elle a trouvé et ce qu'elle
+  //  laisse : c'est l'unique endroit où le site pose zéro.
+  const avant = diagnosticArme() ? Math.round(window.scrollY) : 0;
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   const racine = document.scrollingElement;
   if (racine && racine.scrollTop !== 0) racine.scrollTop = 0;
+  if (diagnosticArme()) {
+    noterDiag(`POSE ZÉRO · y ${avant} → ${Math.round(window.scrollY)}`);
+  }
 }
 
 /**
@@ -148,6 +157,7 @@ export function tenirLeHautDeLaPage(): () => void {
     //  bon (le geste l'aurait fait de toute façon, un battement plus
     //  tard : `auDebutDuGeste` ci-dessous).
     if (unDoigtEstPose()) {
+      noterDiag("MAINTIEN rangé · un doigt est posé (règle b, nº 883)");
       ranger();
       return;
     }
@@ -177,6 +187,9 @@ export function tenirLeHautDeLaPage(): () => void {
   //  l'on a déjà rangé.
   document.fonts?.ready.then(reposer).catch(() => {});
   //  ── ET LA FIN, QUOI QU'IL ARRIVE (§1-a nº 883).
-  const fin = window.setTimeout(ranger, DUREE_DE_LA_GARDE_MS);
+  const fin = window.setTimeout(() => {
+    noterDiag(`MAINTIEN rangé · la seconde est écoulée (${DUREE_DE_LA_GARDE_MS} ms)`);
+    ranger();
+  }, DUREE_DE_LA_GARDE_MS);
   return ranger;
 }

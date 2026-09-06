@@ -72,6 +72,8 @@ import {
   gesteDeDefilementPlausible,
   unDoigtEstPose,
 } from "@/lib/geste-toucher";
+//  nº 884 — le journal du diagnostic (désarmé : un test de booléen).
+import { noterDiag } from "@/lib/journal-diagnostic";
 
 /** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
     Assez large pour couvrir le re-bornage d'une recomposition de
@@ -281,6 +283,11 @@ export function armerLaGardeDePosition(
     ecartMax,
     finA: dureeMaxMs === undefined ? undefined : performance.now() + dureeMaxMs,
   };
+  noterDiag(
+    `GARDE ARMÉE · ${Math.round(position)} px · ${signature}` +
+      `${ecartMax === undefined ? "" : ` · plafond ${ecartMax}`}` +
+      `${dureeMaxMs === undefined ? "" : ` · ${dureeMaxMs} ms`}`
+  );
   poserLaVeilleuse();
   //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
   //  annulera : le propriétaire doit pouvoir vérifier que la garde
@@ -324,8 +331,9 @@ function poserLaVeilleuse(): void {
   //  « La garde se lève au premier vrai toucher » — et il n'a même pas
   //  besoin de faire défiler : dès que l'utilisateur a la main, la
   //  position lui appartient.
-  auDebutDuGeste(() => {
+  auDebutDuGeste((source) => {
     if (!garde) return;
+    noterDiag(`GARDE ÉTEINTE · un geste (${source})`);
     garde = null;
   });
   window.addEventListener("scroll", surDefilementSousGarde, {
@@ -339,12 +347,14 @@ function surDefilementSousGarde(): void {
   //  La page a changé d'adresse depuis l'armement : cette position ne
   //  décrit plus rien ici, on se tait.
   if (window.location.pathname + window.location.search !== g.adresse) {
+    noterDiag("GARDE ÉTEINTE · l'adresse a changé");
     garde = null;
     return;
   }
   //  §1 (nº 883) — LA DURÉE EST ÉCOULÉE : la garde s'efface, et la
   //  position appartient au visiteur (voir `dureeMaxMs`, à l'armement).
   if (g.finA !== undefined && performance.now() > g.finA) {
+    noterDiag("GARDE ÉTEINTE · la durée est écoulée (nº 883)");
     garde = null;
     return;
   }
@@ -354,6 +364,7 @@ function surDefilementSousGarde(): void {
   //  §2 (nº 881) — UN GRAND ÉCART N'EST PAS UN RECALAGE : il est voulu,
   //  et la garde s'efface (voir `ecartMax`, à l'armement).
   if (g.ecartMax !== undefined && Math.abs(ecart) > g.ecartMax) {
+    noterDiag(`GARDE ÉTEINTE · écart ${ecart} px au-delà du plafond`);
     garde = null;
     return;
   }
@@ -368,6 +379,9 @@ function surDefilementSousGarde(): void {
   //  doigt sur l'écran pendant que la page arrive — passait entre les
   //  deux, et la re-pose annulait son toucher.
   if (gesteDeDefilementPlausible() || unDoigtEstPose()) {
+    noterDiag(
+      `GARDE ÉTEINTE · ${unDoigtEstPose() ? "un doigt est posé" : "un geste porte le mouvement"}`
+    );
     garde = null;
     return;
   }
@@ -377,6 +391,7 @@ function surDefilementSousGarde(): void {
   //  douze recalages peuvent tomber dans sa seconde sans qu'elle ait à
   //  céder.
   if (g.finA === undefined && g.annulations > RECALAGES_ANNULES_MAX) {
+    noterDiag(`GARDE ÉTEINTE · ${g.annulations} recalages annulés, on cède`);
     garde = null;
     return;
   }
@@ -385,6 +400,7 @@ function surDefilementSousGarde(): void {
   //  geste). `scrollTo` « instant » est synchrone : l'événement que ce
   //  re-pose déclenchera retombera exactement sur la position gardée,
   //  et repassera ici sans rien faire — aucune boucle possible.
+  noterDiag(`RECALAGE ANNULÉ · y ${y} → ${g.position} (écart ${ecart})`);
   document.documentElement.dataset[MARQUEUR] = "1";
   window.scrollTo({ top: g.position, left: 0, behavior: "instant" });
   const obtenu = Math.round(window.scrollY);

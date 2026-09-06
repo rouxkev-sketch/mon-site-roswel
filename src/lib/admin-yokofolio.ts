@@ -1,5 +1,11 @@
-import { COURRIELS_ADMIN } from "@/config/tatouage";
 import { creerClientSupabaseServeur } from "@/lib/supabase/server";
+/*  §1 (nº 884) — LA COMPARAISON A DÉMÉNAGÉ, et elle est réexportée
+    ici : le bandeau de diagnostic la pose côté navigateur, où ce
+    fichier-ci ne peut pas entrer (il importe le client Supabase du
+    serveur). Une seule écriture, deux lecteurs. */
+import { estCourrielAdmin } from "@/lib/courriel-admin";
+
+export { estCourrielAdmin };
 
 /**
  * LE GARDE DE L'ADMIN YOKOFOLIO — côté serveur
@@ -9,14 +15,6 @@ import { creerClientSupabaseServeur } from "@/lib/supabase/server";
  * vérifie pour l'affichage ; CHAQUE API revérifie ici — c'est la
  * sécurité réelle, celle qu'aucun navigateur ne contourne.
  */
-
-/** Cette adresse est-elle administratrice ? (comparaison insensible
-    à la casse) */
-export function estCourrielAdmin(courriel: string | undefined | null): boolean {
-  if (!courriel) return false;
-  const propre = courriel.trim().toLowerCase();
-  return COURRIELS_ADMIN.some((c) => c.trim().toLowerCase() === propre);
-}
 
 /** Le compte connecté de la requête est-il administrateur ?
     null = oui ; sinon la raison du refus (à renvoyer en 401/403). */

@@ -41,6 +41,11 @@
  * tomberait dans la fenêtre du tap et passerait pour un geste.
  */
 
+//  nº 884 — le journal du diagnostic : c'est ICI que se lit la question
+//  du propriétaire (« le toucher arrive-t-il seulement ? »). Désarmé,
+//  il ne coûte qu'un test de booléen.
+import { diagnosticArme, nommerLeNoeud, noterDiag } from "@/lib/journal-diagnostic";
+
 /** Le doigt franchit ce déplacement → le toucher est un DÉFILEMENT
     (en deçà, c'est un tap : il ne laisse aucune lancée derrière lui). */
 const SEUIL_DE_MOUVEMENT_PX = 9;
@@ -170,6 +175,12 @@ if (typeof window !== "undefined") {
       if (premier) {
         departX = premier.clientX;
         departY = premier.clientY;
+      }
+      if (diagnosticArme()) {
+        noterDiag(
+          `TOUCHER REÇU · ${nommerLeNoeud(evenement.target as Element | null)}` +
+            `${premier ? ` en ${Math.round(premier.clientX)},${Math.round(premier.clientY)}` : ""}`
+        );
       }
       annoncerLeDebut("finger down");
     },

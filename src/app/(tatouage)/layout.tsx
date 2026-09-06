@@ -29,6 +29,9 @@ import {
   TEXTES_TATOUAGE,
 } from "@/config/tatouage";
 import { DefilementEnHaut } from "@/components/DefilementEnHaut";
+//  nº 884 — le bandeau de diagnostic : invisible et inerte pour tout
+//  le monde, sauf l'administration sur une adresse portant `?diag=1`.
+import { BandeauDiagnostic } from "@/components/BandeauDiagnostic";
 import { IconeDuLien } from "@/components/IconeReseau";
 import { LienAuGeste } from "@/components/LienAuGeste";
 import { ChargeurFavoris } from "@/components/ChargeurFavoris";
@@ -294,6 +297,13 @@ export default async function MiseEnPageTatouage({
       {/* Chaque navigation ouvre sa page TOUT EN HAUT (n'affiche rien,
           voir le composant pour la cause du bug qu'il corrige). */}
       <DefilementEnHaut />
+      {/* ██ LE DIAGNOSTIC DU PROPRIÉTAIRE (nº 884) ██ Chrome iOS bloque
+          la barre fixe à l'arrivée d'une page, et l'atelier ne peut pas
+          le reproduire : ce bandeau relève, SUR SON TÉLÉPHONE, qui
+          reçoit le toucher au centre de la loupe. Il ne s'affiche que
+          pour l'administration ET sur `?diag=1` ; partout ailleurs il
+          ne rend rien, n'écoute rien, n'arme rien. */}
+      <BandeauDiagnostic />
       {/* LA GARDE DE SAISIE (passe nº 116) : pendant qu'un formulaire
           est en cours, TOUT lien qui quitterait la page — logo, menu,
           barre fixe, pied de page — ouvre d'abord la fenêtre

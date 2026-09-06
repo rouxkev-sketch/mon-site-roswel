@@ -25,6 +25,8 @@ import {
   tenirLeHautDeLaPage,
 } from "@/lib/arrivee-en-haut";
 import { souscrireAdresse } from "@/lib/adresse-courante";
+//  nº 884 — le journal du diagnostic (désarmé : un test de booléen).
+import { noterDiag } from "@/lib/journal-diagnostic";
 //  §1 (nº 653) — le chemin de la recherche, écrit une seule fois
 //  (nº 652), et le journal des sondes.
 import { estLaMosaique } from "@/lib/chemin-recherche";
@@ -145,6 +147,9 @@ function remonterALAdresseCommise(chemin: string): () => void {
    */
   let relacherLeHaut: () => void = () => {};
   const remonter = () => {
+    //  nº 884 — L'ARRIVÉE S'ÉCRIT, avec l'adresse rejointe : c'est la
+    //  première ligne que le propriétaire lira sur son téléphone.
+    noterDiag(`ARRIVÉE · ${chemin} · le site pose zéro`);
     poserLeHaut();
     //  §1 (nº 661) — LA GARDE EST ARMÉE ICI, ET PAS AVANT : à cet
     //  instant l'adresse est commise (c'est toute la raison d'être de
