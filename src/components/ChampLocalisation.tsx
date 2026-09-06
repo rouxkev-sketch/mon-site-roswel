@@ -347,6 +347,17 @@ export function ChampLocalisation({
     lieuInitial ? texteDuLieu(lieuInitial, pourLeMoteur) : ""
   );
   const [suggestions, setSuggestions] = useState<LieuTrouve[]>([]);
+  /**
+   * ██ §4 (nº 878) — LE RANG PARCOURU AU CLAVIER ██
+   * DEMANDE DU PROPRIÉTAIRE : « ↑ ↓ parcourent les options (surlignage
+   * visible), ENTRÉE sélectionne et VALIDE la recherche, ÉCHAP ferme.
+   * Tab passe au champ suivant. » Le focus NE BOUGE PAS du champ (le
+   * patron « combobox ») : c'est ce rang qui se déplace, et l'option
+   * visée le dit par `aria-selected` et par son fond.
+   * `null` : personne n'est visé — Entrée garde alors son ancien
+   * chemin (la première suggestion, comme la loupe du moteur).
+   */
+  const [rangActif, setRangActif] = useState<number | null>(null);
   const [listeOuverte, setListeOuverte] = useState(false);
   const [chargement, setChargement] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -725,7 +736,9 @@ export function ChampLocalisation({
     if (!actionValider) return;
     actionValider.current = () => {
       if (listeOuverte && suggestions.length > 0) {
-        choisir(suggestions[0]);
+        //  §4 (nº 878) — LA SUGGESTION VISÉE AU CLAVIER, à défaut la
+        //  première : c'est le même geste, avec un rang en plus.
+        choisir(suggestions[rangActif ?? 0]);
         return;
       }
       if (lieuCourant.current) annoncerAuMoteur(lieuCourant.current);
@@ -734,6 +747,26 @@ export function ChampLocalisation({
       if (actionValider) actionValider.current = null;
     };
   });
+
+  /*  §4 (nº 878) — UNE LISTE NEUVE REPART SANS RANG : les suggestions
+      changent à chaque frappe, un rang gardé viserait une autre ville.
+      ⚠️ AJUSTÉ PENDANT LE RENDU, PAS DANS UN EFFET : c'est le motif
+      officiel de React pour un état qui dépend d'un autre (déjà employé
+      par FenetreFiche et ContenuFiche) — aucune image intermédiaire
+      n'est peinte avec l'ancien rang, et aucun rendu en cascade. */
+  const [listeVue, setListeVue] = useState(suggestions);
+  if (listeVue !== suggestions) {
+    setListeVue(suggestions);
+    setRangActif(null);
+  }
+  /*  §4 (nº 878) — L'OPTION VISÉE RESTE À L'ÉCRAN, du plus petit
+      mouvement possible. */
+  useEffect(() => {
+    if (rangActif === null) return;
+    document
+      .querySelector<HTMLElement>("[data-suggestion-active]")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [rangActif]);
 
   function choisir(lieu: LieuTrouve) {
     saisieUtilisateur.current = false; // pas de recherche sur ce changement
@@ -1030,12 +1063,16 @@ export function ChampLocalisation({
               </li>
             )}
 
-            {suggestions.map((lieu) => (
+            {suggestions.map((lieu, rang) => (
               <li key={lieu.identifiant}>
                 <button
                   type="button"
                   role="option"
-                  aria-selected="false"
+                  //  §4 (nº 878) — la suggestion visée au clavier : dite
+                  //  aux lecteurs d'écran, marquée pour la mise à
+                  //  l'écran, et surlignée (voir la classe plus bas).
+                  data-suggestion-active={rang === rangActif ? "" : undefined}
+                  aria-selected={rang === rangActif}
                   // À la SOURIS : choisir dès l'appui (le champ garde
                   // le focus). AU DOIGT : rien à l'appui — un appui
                   // qui devient un défilement ne choisit pas ; le tap
@@ -1061,6 +1098,16 @@ export function ChampLocalisation({
                                opaque
                                  ? "hover:bg-sombre-eleve-clair active:bg-sombre-eleve-clair"
                                  : "hover:bg-sombre-eleve active:bg-sombre-eleve"
+                             }${
+                               /*  §4 (nº 878) — LE SURLIGNAGE DU CLAVIER :
+                                   le MÊME fond que le survol de la souris,
+                                   posé en dur sur la suggestion visée. Deux
+                                   chaînes littérales (piège nº 472). */
+                               rang === rangActif
+                                 ? opaque
+                                   ? " bg-sombre-eleve-clair"
+                                   : " bg-sombre-eleve"
+                                 : ""
                              }`}
                 >
                   {/* DEUX LIGNES : le lieu, puis ce qui le situe. */}
@@ -1165,6 +1212,40 @@ export function ChampLocalisation({
             //  C'est le même drapeau qu'à l'ouverture, donc les deux ne
             //  peuvent plus se contredire.
             setListeOuverte(ouvrirDesLeToucher || Boolean(piedPanneau));
+          }
+        }}
+        /**
+         * ██ §4 (nº 878) — LES FLÈCHES ET ENTRÉE, DANS LE CHAMP ██
+         * ↑ ↓ déplacent le rang visé dans les suggestions (sans bouger
+         * le focus ni le curseur de saisie — d'où `preventDefault`, qui
+         * retient aussi le saut du curseur au début/fin du texte).
+         * ENTRÉE : si une suggestion est visée, on la CHOISIT — et
+         * `choisir` annonce le lieu au moteur, c'est-à-dire qu'il VALIDE
+         * la recherche (`annoncerAuMoteur`). Sinon, la touche poursuit
+         * son chemin d'avant (le panneau se referme, la loupe du moteur
+         * garde sa règle).
+         * ÉCHAP ne change pas : il vit dans l'écouteur de document, qui
+         * ferme le panneau d'où qu'on tape.
+         * TAB N'EST PAS PRIS : le navigateur emmène le focus au champ
+         * suivant, et le `blur` du champ referme le panneau.
+         */
+        onKeyDown={(evenement) => {
+          if (evenement.metaKey || evenement.ctrlKey || evenement.altKey) return;
+          const touche = evenement.key;
+          if (touche === "ArrowDown" || touche === "ArrowUp") {
+            if (suggestions.length === 0) return;
+            evenement.preventDefault();
+            const pas = touche === "ArrowDown" ? 1 : -1;
+            const dernier = suggestions.length - 1;
+            setRangActif((rang) => {
+              if (rang === null) return pas === 1 ? 0 : dernier;
+              return Math.min(Math.max(rang + pas, 0), dernier);
+            });
+            return;
+          }
+          if (touche === "Enter" && rangActif !== null && suggestions[rangActif]) {
+            evenement.preventDefault();
+            choisir(suggestions[rangActif]);
           }
         }}
         onFocus={auToucher}

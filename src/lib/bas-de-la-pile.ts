@@ -278,6 +278,24 @@ export function lireLeBasDeLaPile(): BasDeLaPile | null {
 }
 
 /**
+ * ██ §3 (nº 878) — LA MARQUE DU CRAN, ÉCRITE UNE SEULE FOIS ██
+ * ==================================================================
+ * LE CRAN DU RETOUR (nº 335, posé par `RetourGaranti`) est une entrée
+ * d'historique SANS ADRESSE : un double de la page courante, posé sous
+ * elle pour absorber un retour qui sortirait du site. On le reconnaît
+ * à cette marque, dans l'état de l'entrée.
+ * ⚠️ POURQUOI ELLE VIT ICI, ET PLUS DANS LE COMPOSANT : depuis la
+ * nº 878, UN SECOND LECTEUR en a besoin — la grille, qui ouvre sa
+ * fenêtre de fiche PAR-DESSUS l'entrée courante. Quand cette entrée
+ * est le cran, la fenêtre le REMPLACE au lieu de s'empiler dessus :
+ * sans quoi la pile porte deux entrées à la même adresse (le cran et
+ * la page), le retour qui suit la fermeture semble ne rien faire, et
+ * l'avance retombe sur le cran au lieu de rouvrir la fiche (relevé et
+ * reproduit à la sonde 878). Deux fichiers, une seule chaîne.
+ */
+export const MARQUE_DU_CRAN = "retourReconstruit";
+
+/**
  * A — AUCUNE PAGE DU SITE N'EST DERRIÈRE MOI.
  * ------------------------------------------------------------------
  * La pile n'a pas grandi depuis notre arrivée : rien de nous ne s'est

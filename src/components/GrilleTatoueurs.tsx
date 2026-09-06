@@ -28,6 +28,9 @@ import type { Tatoueur } from "@/lib/tatoueurs";
 //  déclare, pour que le rattrapage du filet ne la prenne jamais pour
 //  un atterrissage accidentel au fond de la pile.
 import { annoncerRepriseDuSite } from "@/lib/navigation-session";
+//  §3 (nº 878) — la marque du cran du retour : quand l'entrée courante
+//  EST le cran, la fenêtre le remplace au lieu de s'empiler dessus.
+import { MARQUE_DU_CRAN } from "@/lib/bas-de-la-pile";
 //  §1 (nº 660) — la trace permanente : ce défilement se signe.
 
 /** UN PIXEL TRANSPARENT — ce qu'une image lointaine porte à la place
@@ -440,7 +443,10 @@ export function GrilleTatoueurs({
       doit pas se fermer pour autant. */
   const [profondeurPile, setProfondeurPile] = useState(0);
   /** §5 (nº 328) — CETTE GRILLE A-T-ELLE POUSSÉ L'ENTRÉE ? (point 7
-      de la règle — voir `fermer`.) */
+      de la règle — voir `fermer`.)
+      ⚠️ §3 (nº 878) — CE DRAPEAU NE DÉCIDE PLUS DE LA FERMETURE : c'est
+      L'ENTRÉE COURANTE qui répond désormais (voir `fermer`). Il reste
+      la trace de l'ouverture pour le reste du fichier. */
   const entreePoussee = useRef(false);
 
   // La fenêtre ne vit que si l'adresse est la sienne : le bouton
@@ -513,11 +519,52 @@ export function GrilleTatoueurs({
     }
     if (photoRegardee) parametres.set("photo", photoRegardee);
     const requete = parametres.toString();
-    window.history.pushState(
-      { fenetreFiche: true },
-      "",
-      `/artist/${tatoueur.slug}${requete ? `?${requete}` : ""}`
-    );
+    const adresseDeLaFenetre = `/artist/${tatoueur.slug}${
+      requete ? `?${requete}` : ""
+    }`;
+    /**
+     * ██ §3 (nº 878) — LA FENÊTRE REMPLACE LE CRAN QUAND ELLE S'OUVRE
+     * DESSUS ██
+     * ==================================================================
+     * LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET REPRODUIT À LA SONDE 878
+     * (recherche → carte → fenêtre → clic à côté) :
+     *   · le retour ne faisait rien au premier appui, et marchait au
+     *     second ;
+     *   · l'avance ne rouvrait pas la fiche.
+     * CE QUE LA SONDE A MONTRÉ, ÉTAPE PAR ÉTAPE : la pile portait
+     * [recherche, CRAN(même adresse), fiche]. Le cran est l'entrée sans
+     * adresse du filet de retour (`RetourGaranti`, nº 335), posée au
+     * PREMIER APPUI FRANC — souvent le clic même qui ouvre la fenêtre.
+     * Fermer revenait donc sur le CRAN : même adresse, rien à l'écran
+     * qui bouge ; le retour suivant atteignait la recherche (« il ne
+     * fait rien la première fois »), et l'avance retombait sur le cran
+     * au lieu de la fiche.
+     * LA CORRECTION, MINIMALE : quand l'entrée sur laquelle on se tient
+     * EST ce cran, la fenêtre le REMPLACE (`replaceState`) au lieu de
+     * pousser par-dessus. La pile redevient [recherche, fiche] : une
+     * fenêtre = UNE entrée (règle 332-§1), fermer la retire, le retour
+     * rend la recherche du premier appui, et l'avance rouvre la fiche.
+     * ⚠️ CE QUE CELA COÛTE, ET JE LE DIS : le cran est CONSOMMÉ par la
+     * fenêtre. Sur une arrivée sans rien derrière (lien partagé, onglet
+     * neuf), un retour APRÈS avoir ouvert puis fermé une fiche sort donc
+     * du site — le filet ne se repose pas, la pile ayant grandi
+     * (`aucunePageDuSiteDerriere`). C'est le prix de l'appariement
+     * demandé, et il ne se paie que dans ce cas-là : le cran garde son
+     * office entier tant qu'aucune fenêtre ne s'ouvre.
+     * ⚠️ LA FERMETURE NE CHANGE PAS D'UNE LIGNE : elle consomme ce
+     * qu'elle a créé (`entreePoussee`, `history.back()`) — remplacer ou
+     * pousser, l'entrée du dessous est la même page.
+     */
+    const etatCourant = window.history.state as Record<string, unknown> | null;
+    const surLeCran =
+      Boolean(etatCourant?.[MARQUE_DU_CRAN]) &&
+      !etatCourant?.fenetreFiche &&
+      !etatCourant?.fenetreCarrousel;
+    if (surLeCran) {
+      window.history.replaceState({ fenetreFiche: true }, "", adresseDeLaFenetre);
+    } else {
+      window.history.pushState({ fenetreFiche: true }, "", adresseDeLaFenetre);
+    }
     entreePoussee.current = true;
     setPhotoOuverte(photoRegardee);
     /*  §1 (nº 745) — DÉJÀ EN CACHE ? L'ouverture est alors complète du
@@ -584,8 +631,23 @@ export function GrilleTatoueurs({
    * ⚠️ UN DRAPEAU, PAS UN TEST D'APPAREIL. « Ai-je poussé ? » est la
    * question exacte ; « suis-je sur un mobile ? » n'en est qu'un
    * indice, et il serait faux le jour où une largeur change d'avis.
+   *
+   * ██ §3 (nº 878) — ET C'EST L'ENTRÉE QUI RÉPOND, PAS UN SOUVENIR ██
+   * ------------------------------------------------------------------
+   * LE TROU, TROUVÉ EN ÉPROUVANT L'AVANCE : un drapeau de composant ne
+   * survit pas à une TRAVERSÉE. Fermer le remettait à faux ; l'AVANCE
+   * du navigateur rouvrait bien la fenêtre (l'adresse redevient celle
+   * de la fiche), mais le drapeau, lui, restait faux — et la fenêtre
+   * ne se refermait plus ni au voile, ni à la croix, ni par Échap.
+   * LA QUESTION EXACTE SE LIT DANS L'HISTORIQUE LUI-MÊME : l'entrée sur
+   * laquelle on se tient porte-t-elle notre marque (`fenetreFiche`) ?
+   * Elle est posée à l'ouverture, elle voyage avec l'entrée, elle
+   * revient avec elle. Le smartphone reste couvert, et pour la même
+   * raison qu'avant : son ouverture est un vrai lien, son entrée n'a
+   * pas cette marque, et la fermeture ne consomme donc rien.
    */
-    if (!entreePoussee.current) return;
+    const etatIci = window.history.state as Record<string, unknown> | null;
+    if (!etatIci?.fenetreFiche) return;
     entreePoussee.current = false;
     //  §1 (nº 438) — reprise déclarée AVANT le back : le rattrapage du
     //  filet la lit au popstate et se tait (relevé nº 438 : sans elle,

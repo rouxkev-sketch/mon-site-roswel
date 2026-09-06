@@ -107,16 +107,38 @@ export function ClavierCartes() {
           ne montre pas de carte de galerie, et une page de profil ne
           montre pas de carte de résultat. `querySelector` rend le
           premier trouvé ; il n'y a jamais les deux. */
-      const chevron = document.querySelector<HTMLElement>(
-        `[data-carte]:hover [data-fleche-de-carte="${
-          sens === 1 ? "droite" : "gauche"
-        }"], [data-carte-de-galerie]:hover [data-fleche-de-carte="${
-          sens === 1 ? "droite" : "gauche"
-        }"]`
+      /*  ██ §1 (nº 878) — LA CARTE SURVOLÉE PREND LA TOUCHE, QU'ELLE AIT
+          UN CHEVRON DE CE CÔTÉ OU NON ██
+          ------------------------------------------------------------
+          LE DÉFAUT, RELEVÉ PAR LE PROPRIÉTAIRE ET REPRODUIT AU BANC :
+          sur une page Portfolio, les flèches faisaient défiler la carte
+          survolée ET la GRANDE PHOTO de gauche. La cause n'était pas un
+          second écouteur — il n'y en a pas —, c'est le DÉFILEMENT NATIF
+          du navigateur : le cadre du carrousel de l'affiche est une
+          boîte qui défile, et Chromium lui donne le clavier dès qu'on a
+          cliqué dedans (« scroller focus » implicite). Tant qu'un
+          chevron existait, `preventDefault` le retenait ; AU BOUT DE LA
+          CARTE (plus de chevron de ce côté), l'ancien code sortait
+          SANS prévenir le navigateur — et la touche allait à la photo.
+          Deux commandes bougeaient pour un seul appui.
+          LA RÈGLE, DÉSORMAIS : le survol d'une carte DÉCIDE. Une carte
+          sous le curseur prend la touche entière — elle avance si elle
+          le peut, elle ne fait rien si elle est au bout, et dans les
+          deux cas la page (donc la grande photo) ne reçoit rien. Hors
+          de toute carte, on ne prévient rien : les flèches commandent
+          la grande photo comme avant, par le défilement natif.
+          ⚠️ ON CHERCHE LA CARTE, PUIS SON CHEVRON — et non le chevron
+          d'emblée : c'est la présence de LA CARTE qui commande, pas
+          celle du bouton. */
+      const carte = document.querySelector<HTMLElement>(
+        "[data-carte]:hover, [data-carte-de-galerie]:hover"
       );
-      if (!chevron) return;
+      if (!carte) return;
       evenement.preventDefault();
-      chevron.click();
+      const chevron = carte.querySelector<HTMLElement>(
+        `[data-fleche-de-carte="${sens === 1 ? "droite" : "gauche"}"]`
+      );
+      chevron?.click();
     };
     document.addEventListener("keydown", auClavier);
     return () => document.removeEventListener("keydown", auClavier);

@@ -494,8 +494,33 @@ export function CommandesDeLAffiche({
   return (
     <div
       data-commandes-affiche=""
-      className={`${affichage} pointer-events-none absolute inset-x-3 bottom-3
-                  z-[2] min-h-12 items-center justify-between`}
+      /*  ██ §2 (nº 878) — LES TROIS AIRS, MESURÉS SUR L'ENCRE ██
+          ------------------------------------------------------------
+          CE QUE LE PROPRIÉTAIRE A RELEVÉ À L'ÉCRAN : le bloc est TROP
+          HAUT, et l'air à gauche est plus grand qu'à droite.
+          CE QUE LE BANC A MESURÉ (sonde 878b, encre des dessins et non
+          cibles tactiles — `getBBox`) : 26,5 px à gauche, 24,0 à
+          droite, 26,6 en bas. Les trois diffèrent parce que chaque
+          dessin flotte DIFFÉREMMENT dans sa cible : le drapeau du
+          signalement laisse 14,5 px de vide à sa gauche, le fanion
+          15,9 à sa droite, 14,6 sous lui.
+          LA RÈGLE POSÉE ICI : L'ENCRE À SEIZE PIXELS DES TROIS BORDS —
+          la marge du site (`px-4`), celle du pied des cartes. Les
+          retraits de boîte s'en déduisent, un par côté : 2 px à gauche
+          (2 + 14,5 = 16,5), 0 à droite (0 + 15,9 = 15,9), 2 px en bas
+          (2 + 14,6 = 16,6). Le bloc descend donc de DIX pixels, et les
+          deux airs de côté ne diffèrent plus que d'un demi-pixel.
+          ⚠️ TROIS PROPRIÉTÉS, TROIS CLASSES (piège nº 389) : `bottom`,
+          `left` et `right` ne se recouvrent pas.
+          ⚠️ LE DOIGT NE BOUGE PAS D'UN PIXEL (la consigne est « web
+          uniquement ») : la fenêtre superposée s'ouvre AUSSI au doigt
+          (une fiche ouverte depuis une fiche, PileFiches), et elle y
+          garde les douze pixels de la nº 375 — un préfixe d'appareil
+          par côté, jamais une largeur (règle nº 60). */
+      className={`${affichage} pointer-events-none absolute z-[2] min-h-12
+                  items-center justify-between
+                  mobile:bottom-3 mobile:left-3 mobile:right-3
+                  not-mobile:bottom-0.5 not-mobile:left-0.5 not-mobile:right-0`}
     >
       {/*  À GAUCHE, AU SURVOL : le signalement puis les vues — l'ordre
            et les airs du pied du fil (nº 855, nº 866-§3, nº 867-§7). */}
@@ -527,18 +552,14 @@ export function CommandesDeLAffiche({
           <PointsDuCarrousel photos={photos} indice={indice} surRang={surRang} />
         </div>
       )}
-      {/*  À DROITE, TOUJOURS : le fanion, puis le partage. */}
+      {/*  ██ §2 b (nº 878) — LE PARTAGE, PUIS LE FANION ██
+           Les deux gestes de droite ÉCHANGENT leur place, sur décision
+           du propriétaire : le fanion prend le BORD (il est le plus à
+           droite), le partage se glisse avant lui. C'est l'inverse de
+           la nº 877 — et le même geste que la nº 852-§7 avait fait dans
+           le pied des cartes, dans l'autre sens. Rien d'autre ne bouge :
+           ni les cibles, ni les dessins, ni leurs états. */}
       <div className="pointer-events-auto relative flex shrink-0 items-center">
-        {photoEnregistrable && (
-          <BoutonCoeurPhoto
-            //  LA CLÉ EST CELLE DE LA PHOTO : elle remonte le bouton à
-            //  chaque glissement, ce qui réamorce son état sur la
-            //  nouvelle image (le motif du pied du fil).
-            key={photoEnregistrable}
-            photoId={photoEnregistrable}
-            variante="fiche"
-          />
-        )}
         <span
           className="hidden pointer-fine:flex items-center
                      [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
@@ -556,6 +577,16 @@ export function CommandesDeLAffiche({
             objet="portfolio"
           />
         </span>
+        {photoEnregistrable && (
+          <BoutonCoeurPhoto
+            //  LA CLÉ EST CELLE DE LA PHOTO : elle remonte le bouton à
+            //  chaque glissement, ce qui réamorce son état sur la
+            //  nouvelle image (le motif du pied du fil).
+            key={photoEnregistrable}
+            photoId={photoEnregistrable}
+            variante="fiche"
+          />
+        )}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   aucunePageDuSiteDerriere,
+  MARQUE_DU_CRAN,
   unePageEtrangereEstDerriere,
 } from "@/lib/bas-de-la-pile";
 //  §2 (nº 428) — la marque qui dit au filet de réparation du script
@@ -112,7 +113,11 @@ import {
  */
 
 /** La marque de notre étape, recopiée par toute étape posée au-dessus. */
-const MARQUE = "retourReconstruit";
+/*  §3 (nº 878) — LA CHAÎNE A DÉMÉNAGÉ dans lib/bas-de-la-pile : la
+    grille la lit aussi, pour que sa fenêtre de fiche REMPLACE le cran
+    au lieu de s'empiler dessus. Le nom local ne change pas d'un
+    caractère — c'est la même marque, au même endroit dans l'état. */
+const MARQUE = MARQUE_DU_CRAN;
 
 /**
  * §2 (nº 790) — LE VOYANT DU FILET EST PARTI AVEC SON JOURNAL.

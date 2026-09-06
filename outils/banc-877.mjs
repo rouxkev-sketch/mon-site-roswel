@@ -279,20 +279,29 @@ for (const mode of ["web", "doigt"]) {
     verif("au survol de la photo : SIGNALER et les VUES apparaissent",
       survol.signalerVu === true && survol.vuesVu === true,
       `signaler ${survol.signalerVu} · vues ${survol.vuesVu}`);
-    verif("L'ORDRE DEMANDÉ : signaler, les vues, les points, le fanion, le partage",
+    /*  ⚠️ nº 878-§2b — LES DEUX GESTES DE DROITE ONT ÉCHANGÉ LEUR
+        PLACE, sur décision du propriétaire : LE PARTAGE PUIS LE FANION,
+        et non plus l'inverse. C'est le seul mot qui change ici ; le
+        reste de l'ordre (signaler, les vues, les points) est celui de
+        la nº 877 et ne bouge pas. */
+    verif("L'ORDRE DEMANDÉ : signaler, les vues, les points, le partage, le fanion (nº 878-§2b)",
       survol.signaler.d <= survol.vues.g + 0.5 && survol.vues.d < survol.pointsBoite.g &&
-      survol.pointsBoite.d < survol.fanion.g && survol.fanion.d <= survol.partage.g + 0.5,
-      `signaler ${survol.signaler.g}→${survol.signaler.d} · vues ${survol.vues.g}→${survol.vues.d} · points ${survol.pointsBoite.g}→${survol.pointsBoite.d} · fanion ${survol.fanion.g}→${survol.fanion.d} · partage ${survol.partage.g}→${survol.partage.d}`);
-    verif("le PARTAGE est bien À DROITE du fanion", survol.partage.g >= survol.fanion.d - 0.5,
-      `fanion →${survol.fanion.d} · partage ${survol.partage.g}→`);
+      survol.pointsBoite.d < survol.partage.g && survol.partage.d <= survol.fanion.g + 0.5,
+      `signaler ${survol.signaler.g}→${survol.signaler.d} · vues ${survol.vues.g}→${survol.vues.d} · points ${survol.pointsBoite.g}→${survol.pointsBoite.d} · partage ${survol.partage.g}→${survol.partage.d} · fanion ${survol.fanion.g}→${survol.fanion.d}`);
+    verif("le FANION est bien À DROITE du partage (nº 878-§2b)", survol.fanion.g >= survol.partage.d - 0.5,
+      `partage →${survol.partage.d} · fanion ${survol.fanion.g}→`);
     verif("les POINTS sont centrés sur la largeur de la photo",
       proche(survol.milieuPoints, survol.milieuPhoto, 1),
       `points ${survol.milieuPoints} · photo ${survol.milieuPhoto}`);
     verif("… ET SUR LA LIGNE DES ICÔNES : même centre vertical que le fanion (le « trop bas » corrigé)",
       proche(survol.centrePoints, survol.centreFanion, 1),
       `points ${survol.centrePoints} · fanion ${survol.centreFanion}`);
-    verif("la rangée est posée à douze pixels du bas de la photo",
-      proche(survol.photo.bas - survol.rangee.bas, 12, 0.5),
+    /*  ⚠️ nº 878-§2a — LE BLOC EST DESCENDU DE DIX PIXELS : la boîte de
+        la rangée est à DEUX pixels du bas au web (elle en gardait douze
+        à la nº 877), pour que L'ENCRE des dessins tombe à seize — la
+        marge du site. Le doigt, lui, garde ses douze (banc 878, §2). */
+    verif("la rangée est posée à DEUX pixels du bas de la photo (nº 878-§2a)",
+      proche(survol.photo.bas - survol.rangee.bas, 2, 0.5),
       String(survol.photo.bas - survol.rangee.bas));
   } catch (e) {
     verif("déroulement du banc 877 (§4)", false, String(e).slice(0, 400));

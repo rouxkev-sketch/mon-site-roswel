@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { gelerLeCorps } from "@/lib/gel-du-corps";
 //  §3 (nº 573) — LE VERROU DE DÉFILEMENT COMPTÉ de la maison (nº 469),
 //  le même qu'à la nº 560 : le corps ne redéfile qu'au dernier retrait.
@@ -813,8 +813,10 @@ export function MenuDeroulant({
       if (racineFeuille.current?.contains(cible)) return;
       setOuvert(false);
     };
+    //  §4 (nº 878) — CE N'EST PLUS SEULEMENT ÉCHAP : tout le clavier du
+    //  menu ouvert passe ici (voir la note d'`auClavierDuMenu`).
     const surTouche = (evenement: KeyboardEvent) => {
-      if (evenement.key === "Escape") setOuvert(false);
+      clavierDuMenuOuvert.current(evenement);
     };
     document.addEventListener("pointerdown", surClic);
     document.addEventListener("keydown", surTouche);
@@ -1339,6 +1341,9 @@ export function MenuDeroulant({
         {entetesDesSections.map((entete, rang) => (
           <div key={entete}>
             {enTeteSection(entete, `${retrait} ${rang === 0 ? "pt-3" : "pt-2"} pb-1`, {
+              //  §4 (nº 878) — la place au clavier, au panneau du web
+              //  seulement (voir la note d'`enTeteSection`).
+              rang: enBas ? undefined : rangParCle.get(cleDePorte(entete)),
               graisse:
                 groupeDeplie === entete
                   ? GRAISSE_TITRE_GROUPE
@@ -1450,6 +1455,292 @@ export function MenuDeroulant({
       seule référence : un seul habillage est monté à la fois. */
   const listeDeroulante = useRef<HTMLUListElement>(null);
 
+  /**
+   * ██ §4 (nº 878) — LE MENU SE PARCOURT AU CLAVIER ██
+   * ==================================================================
+   * DEMANDE DU PROPRIÉTAIRE, pour les menus du moteur (styles) comme
+   * pour ceux de « Ma sélection » (Favoris / Portfolios), qui montent
+   * tous ce composant : « ↑ ↓ parcourent les options (surlignage
+   * visible), ENTRÉE sélectionne et VALIDE la recherche, ÉCHAP ferme.
+   * Tab passe au champ suivant. »
+   *
+   * OÙ VIT LE CLAVIER : sur le DÉCLENCHEUR, et nulle part ailleurs.
+   * C'est lui qui a le focus (la liste n'est pas focalisable) : c'est
+   * le patron « combobox » — le rang parcouru se dit aux lecteurs
+   * d'écran par `aria-activedescendant`, la rangée visée porte son
+   * identifiant, et le focus ne bouge pas d'un pixel. Un panneau qui
+   * volerait le focus casserait Tab et le retour au champ.
+   *
+   * ██ CE QUI EST PARCOURU : LES RANGÉES, PAS LES SEULES OPTIONS ██
+   * ------------------------------------------------------------------
+   * PREMIÈRE ÉCRITURE, ET SON DÉFAUT, MESURÉ AU BANC : elle ne
+   * parcourait que les options visibles. Or le menu des styles du
+   * moteur s'ouvre TOUT REPLIÉ — ses deux portes (« Tattoos »,
+   * « Flash ») sont à l'écran, et AUCUNE option ne l'est : la liste
+   * mesure zéro (voir `listeGarnie`). La flèche ne trouvait donc rien
+   * à viser et ne faisait RIEN DU TOUT — le menu ne s'ouvrait même
+   * pas. Le même travers frappait les menus de « Ma sélection », qui
+   * ont eux aussi deux portes.
+   * LA RÈGLE, ÉCRITE PLUTÔT QUE SUBIE : ON PARCOURT CE QUE L'ŒIL VOIT,
+   * dans l'ordre où il le voit — les portes de groupe (le bloc du
+   * haut, ou les titres en ligne), les portes de sous-section, puis
+   * les options visibles. ENTRÉE fait alors ce que ferait la souris
+   * sur la rangée visée : elle OUVRE une porte, elle CHOISIT une
+   * option (et la recherche part, par `choisir` → `surChangement`).
+   * ⚠️ OUVRIR UNE PORTE MÈNE À SA PREMIÈRE ENTRÉE : sans cela, la
+   * flèche suivante irait à la porte d'à côté (elle est juste en
+   * dessous, dans le bloc) et l'on croirait la section vide.
+   *
+   * COMMENT LA RANGÉE VISÉE SE SOUVIENT D'ELLE-MÊME : par sa CLÉ, pas
+   * par son rang. Ouvrir une porte change la liste sous nos pieds ; un
+   * numéro y désignerait autre chose d'un rendu à l'autre.
+   *
+   * ⚠️ ENTRÉE PASSE PAR `choisir` — le MÊME chemin que la souris : la
+   * valeur remonte à l'appelant (`surChangement`), qui lance la
+   * recherche, et le menu se referme. Rien n'est écrit deux fois.
+   * ⚠️ TAB NE PREND RIEN : on ferme le menu et on laisse le navigateur
+   * emmener le focus au champ suivant.
+   * ⚠️ RIEN AU DOIGT : un téléphone n'a pas de flèches, et le geste ne
+   * coûte rien à qui n'en a pas.
+   */
+  type RangeeDeMenu =
+    | { genre: "porte"; cle: string; entete: string }
+    | { genre: "sousPorte"; cle: string; sousEntete: string }
+    | { genre: "option"; cle: string; option: OptionMenu };
+
+  const cleDePorte = (entete: string) => `porte▸${entete}`;
+  const cleDeSousPorte = (option: OptionMenu, sousEntete: string) =>
+    `sous▸${option.groupe ?? ""}▸${sousEntete}`;
+
+  /**
+   * LES RANGÉES D'UN ÉTAT DE REPLI DONNÉ — celui d'aujourd'hui pour le
+   * rendu, celui de DEMAIN quand on s'apprête à ouvrir le menu ou une
+   * porte (le repli repart alors du choix courant, voir
+   * `ouvertureConnue`). Une seule écriture, deux emplois : les rangées
+   * du clavier ne peuvent pas diverger de ce que le rendu montre.
+   */
+  function rangeesPour(
+    groupe: string | null,
+    sousGroupe: string | null
+  ): RangeeDeMenu[] {
+    const seVoit = (option: OptionMenu) =>
+      optionSeVoit(option, {
+        repliable,
+        portesDeGroupe,
+        groupeDeplie: groupe,
+        sousGroupeDeplie: sousGroupe,
+        sousTitres,
+      });
+    const porteOuverte = (option: OptionMenu) =>
+      repliable &&
+      (!portesDeGroupe || !option.groupe || option.groupe === groupe);
+    const rangees: RangeeDeMenu[] = [];
+    //  LE BLOC DU HAUT : toutes les portes, avant la liste (nº 572).
+    if (blocEntetes) {
+      for (const entete of entetesDesSections) {
+        rangees.push({ genre: "porte", cle: cleDePorte(entete), entete });
+      }
+    }
+    for (const { option, cle, entete, sousEntete } of optionsAvecEntetes) {
+      //  LES TITRES EN LIGNE : une porte seulement s'il y en a (nº 304).
+      if (!blocEntetes && entete && titreEnLigne && portesDeGroupe) {
+        rangees.push({ genre: "porte", cle: cleDePorte(entete), entete });
+      }
+      //  ET LE SOUS-TITRE N'EST PAS UNE PORTE (nº 317) : rien à ouvrir,
+      //  donc rien à viser.
+      if (sousEntete && porteOuverte(option) && !option.sousTitre) {
+        rangees.push({
+          genre: "sousPorte",
+          cle: cleDeSousPorte(option, sousEntete),
+          sousEntete,
+        });
+      }
+      if (seVoit(option)) rangees.push({ genre: "option", cle, option });
+    }
+    return rangees;
+  }
+  const rangeesDuMenu = rangeesPour(groupeDeplie, sousGroupeDeplie);
+  const rangParCle = new Map(
+    rangeesDuMenu.map(({ cle }, rang) => [cle, rang] as const)
+  );
+  const [cleActive, setCleActive] = useState<string | null>(null);
+  const nomDeLaListe = useId();
+  const idDuRang = (rang: number) => `${nomDeLaListe}-${rang}`;
+  const rangActif = cleActive === null ? -1 : rangParCle.get(cleActive) ?? -1;
+  //  ⚠️ AUCUN EFFET POUR REMETTRE LA RANGÉE À ZÉRO : elle est posée PAR
+  //  LE GESTE qui ouvre (le clic n'en vise aucune, la flèche vise le
+  //  choix courant), et elle n'est lue que menu ouvert. Un effet qui
+  //  appelle un poseur d'état ferait un rendu de plus pour rien.
+  //  LA RANGÉE VISÉE RESTE À L'ÉCRAN : le panneau défile de lui-même,
+  //  du plus petit mouvement possible (`nearest`).
+  //  ⚠️ ON CHERCHE DANS LE PANNEAU ENTIER, pas dans la seule liste :
+  //  les portes vivent AU-DESSUS d'elle, dans le bloc fixe.
+  useEffect(() => {
+    if (rangActif < 0) return;
+    const racine =
+      panneau.current ?? racineFeuille.current ?? listeDeroulante.current;
+    racine
+      ?.querySelector<HTMLElement>("[data-rangee-active]")
+      ?.scrollIntoView({ block: "nearest" });
+  }, [rangActif]);
+
+  /**
+   * ██ §4 (nº 878) — OÙ LE CLAVIER EST ÉCOUTÉ, ET POURQUOI À DEUX
+   * ENDROITS ██
+   * ------------------------------------------------------------------
+   * SUR LE DÉCLENCHEUR : rien que L'OUVERTURE (la première flèche) et
+   * Tab. C'est le seul moment où le menu fermé doit répondre, et le
+   * déclencheur a alors le focus.
+   * SUR LE DOCUMENT, LE MENU OUVERT : tout le reste — les flèches,
+   * Entrée, Échap. LA RAISON, ET ELLE EST MESURÉE : dans « Ma
+   * sélection », le déclencheur de ces menus N'EST PLUS QU'UNE ANCRE
+   * DE HAUTEUR ZÉRO depuis la nº 461 — c'est le va-et-vient qui
+   * commande l'ouverture (`commandeOuverture`). Personne ne peut donc
+   * lui donner le focus, et un gestionnaire posé sur lui n'entendrait
+   * jamais rien : le banc 878 l'a montré, les deux menus de « Ma
+   * sélection » restaient muets pendant que celui du moteur répondait.
+   * Le menu ouvert PREND l'écran (voile compris) : les flèches lui
+   * reviennent, d'où qu'elles partent.
+   * ⚠️ AUCUN DOUBLE EFFET : le déclencheur ne traite plus rien quand le
+   * menu est ouvert, et l'écouteur du document n'est posé QUE dans cet
+   * état — la touche qui ouvre a fini de se propager avant que l'effet
+   * ne le pose.
+   * ⚠️ ON NE VOLE JAMAIS LES FLÈCHES D'UN CHAMP DE SAISIE : Échap mis à
+   * part, une frappe partie d'un `input` reste à lui (le champ de
+   * localité a les siennes).
+   */
+  function auClavierDuMenu(evenement: React.KeyboardEvent<HTMLButtonElement>) {
+    if (evenement.metaKey || evenement.ctrlKey || evenement.altKey) return;
+    const touche = evenement.key;
+    if (touche === "Tab") {
+      if (ouvert) setOuvert(false);
+      return;
+    }
+    //  MENU OUVERT : c'est l'écouteur du document qui parle (voir la
+    //  note ci-dessus) — une seule écriture, pas deux.
+    if (ouvert) return;
+    if (touche !== "ArrowDown" && touche !== "ArrowUp") return;
+    evenement.preventDefault();
+    //  LE MENU S'OUVRE SUR LE CHOIX COURANT quand il en a un : la
+    //  première flèche montre où l'on est, elle ne saute pas ailleurs.
+    //  Et l'on vise dans les rangées D'APRÈS L'OUVERTURE : le repli y
+    //  repart du choix courant.
+    const alOuverture = rangeesPour(groupeDuChoix, sousGroupeDuChoix);
+    setOuvert(true);
+    if (alOuverture.length === 0) return;
+    const surLeChoix = valeur
+      ? alOuverture.findIndex(
+          (rangee) => rangee.genre === "option" && rangee.option.value === valeur
+        )
+      : -1;
+    const vise =
+      surLeChoix >= 0
+        ? surLeChoix
+        : touche === "ArrowDown"
+          ? 0
+          : alOuverture.length - 1;
+    setCleActive(alOuverture[vise].cle);
+  }
+
+  /** Le clavier DU MENU OUVERT, quel que soit l'endroit d'où il part. */
+  function auClavierDuMenuOuvert(evenement: KeyboardEvent) {
+    if (evenement.metaKey || evenement.ctrlKey || evenement.altKey) return;
+    const touche = evenement.key;
+    if (touche === "Escape") {
+      evenement.preventDefault();
+      //  ⚠️ `setOuvert(false)` ET NON `fermer()` : le second AVEUGLE le
+      //  déclencheur (`blur`), et Échap ne doit pas faire perdre sa
+      //  place au clavier — le Tab suivant repartirait du corps de la
+      //  page. C'est ce que cet écouteur faisait déjà avant la nº 878 ;
+      //  rien ne change ici.
+      setOuvert(false);
+      return;
+    }
+    const cible = evenement.target as HTMLElement | null;
+    if (
+      cible &&
+      (cible.tagName === "INPUT" ||
+        cible.tagName === "TEXTAREA" ||
+        cible.isContentEditable)
+    ) {
+      return;
+    }
+    if (touche === "ArrowDown" || touche === "ArrowUp") {
+      if (rangeesDuMenu.length === 0) return;
+      evenement.preventDefault();
+      const pas = touche === "ArrowDown" ? 1 : -1;
+      const dernier = rangeesDuMenu.length - 1;
+      const suivant =
+        rangActif < 0
+          ? pas === 1
+            ? 0
+            : dernier
+          : Math.min(Math.max(rangActif + pas, 0), dernier);
+      setCleActive(rangeesDuMenu[suivant].cle);
+      return;
+    }
+    if (touche !== "Enter") return;
+    evenement.preventDefault();
+    const visee = rangActif >= 0 ? rangeesDuMenu[rangActif] : null;
+    if (!visee) {
+      //  Rien de visé : on referme, en laissant le focus où il est
+      //  (même raison qu'Échap, juste au-dessus).
+      setOuvert(false);
+      return;
+    }
+    if (visee.genre === "option") {
+      choisir(visee.option.value);
+      return;
+    }
+    if (visee.genre === "porte") {
+      const ouvre = groupeDeplie !== visee.entete;
+      basculerGroupe(visee.entete);
+      //  ⚠️ `basculerGroupe` REMET LA SOUS-SECTION SUR CELLE DU CHOIX
+      //  COURANT : les rangées d'après sont donc celles-là.
+      if (ouvre) {
+        const apres = rangeesPour(visee.entete, sousGroupeDuChoix);
+        const premiere = apres.find((rangee) => rangee.genre !== "porte");
+        if (premiere) setCleActive(premiere.cle);
+      }
+      return;
+    }
+    //  ⚠️ LA MÊME PORTE QUE LA SOURIS : `basculerSousGroupe` fait aussi
+    //  remonter la sous-section en tête de liste (nº 238).
+    const ouvreLaSous = sousGroupeDeplie !== visee.sousEntete;
+    basculerSousGroupe(visee.sousEntete);
+    if (ouvreLaSous) {
+      const apres = rangeesPour(groupeDeplie, visee.sousEntete);
+      const saPlace = apres.findIndex((rangee) => rangee.cle === visee.cle);
+      const premiere = apres
+        .slice(saPlace + 1)
+        .find((rangee) => rangee.genre === "option");
+      if (premiere) setCleActive(premiere.cle);
+    }
+  }
+  /*  LE GESTIONNAIRE DU MOMENT, tenu dans une référence : l'écouteur
+      posé sur le document ne se repose pas à chaque rendu, et il
+      appelle pourtant toujours la dernière version — celle qui connaît
+      les rangées d'aujourd'hui. */
+  const clavierDuMenuOuvert = useRef(auClavierDuMenuOuvert);
+  useEffect(() => {
+    clavierDuMenuOuvert.current = auClavierDuMenuOuvert;
+  });
+
+  /**  §4 (nº 878) — LE FOND DU SURLIGNAGE, écrit une fois pour les trois
+   *  sortes de rangées : le MÊME aplat que le survol de la souris.
+   *  ⚠️ TROIS CHAÎNES LITTÉRALES, jamais assemblées à l'exécution
+   *  (piège nº 472), et jamais collées à un `${` (piège nº 865).
+   */
+  const FOND_DU_SURLIGNAGE = sombre
+    ? opaque
+      ? "bg-sombre-eleve-clair"
+      : "bg-sombre-eleve"
+    : "bg-fond-doux";
+  /** Cette rangée est-elle celle que le clavier vise ? */
+  const rangeeVisee = (cle: string) =>
+    cleActive !== null && cle === cleActive && rangParCle.has(cle);
+
+
   function basculerGroupe(groupe: string) {
     const ouvre = groupeDeplie !== groupe;
     setGroupeDeplie(ouvre ? groupe : null);
@@ -1526,8 +1817,22 @@ export function MenuDeroulant({
       graisse = GRAISSE_TITRE_GROUPE,
       souligne = false,
       chevronFixe = false,
-    }: { graisse?: string; souligne?: boolean; chevronFixe?: boolean } = {}
+      //  §4 (nº 878) — `rang` : la place de cette porte parmi les
+      //  rangées que le clavier parcourt. IL VIENT DE L'APPELANT, et
+      //  SEUL LE PANNEAU DU WEB le donne : la feuille du doigt est
+      //  montée EN MÊME TEMPS que lui (`hidden md:flex`, plus haut) —
+      //  si elle le portait aussi, deux nœuds auraient le même
+      //  identifiant et `aria-activedescendant` en désignerait un au
+      //  hasard. Le doigt n'a pas de flèches, il n'y perd rien.
+      rang,
+    }: {
+      graisse?: string;
+      souligne?: boolean;
+      chevronFixe?: boolean;
+      rang?: number;
+    } = {}
   ) {
+    const viseeAuClavier = rang !== undefined && rang === rangActif;
     /*  ██ §1 (nº 648) — LE TITRE PASSE EN BLANC, LE ROSE RESTE AUX
          SIGNES ██
          ------------------------------------------------------------
@@ -1561,6 +1866,8 @@ export function MenuDeroulant({
     return (
       <button
         type="button"
+        id={rang !== undefined ? idDuRang(rang) : undefined}
+        data-rangee-active={viseeAuClavier ? "" : undefined}
         aria-expanded={groupeDeplie === entete}
         //  ⚠️ `onClick` SEUL — surtout pas `onPointerDown` en plus.
         //  Les OPTIONS choisissent dès l'appui (pour ne pas voler le
@@ -1571,7 +1878,9 @@ export function MenuDeroulant({
         //  corrigé ici.
         onClick={() => basculerGroupe(entete)}
         className={`${classes} flex w-full items-center justify-between gap-2
-                   min-h-[44px] text-left transition-opacity hover:opacity-80`}
+                   min-h-[44px] text-left transition-opacity hover:opacity-80${
+                     viseeAuClavier ? ` ${FOND_DU_SURLIGNAGE}` : ""
+                   }`}
       >
         {/*  ██ §1 (nº 632) — LE TRAIT NE TIENT QU'AUX MOTS ██
              C'est la leçon du §2 de la nº 290, à la lettre : la ligne
@@ -1728,11 +2037,20 @@ export function MenuDeroulant({
     //  panneau du web perd le sien (voir la note des options — le menu
     //  garde UNE couleur de fond), la feuille l'avait perdu à la
     //  nº 260. Plus personne ne le passait : le paramètre part avec.
-    { avecPoint = false, souligne = false } = {}
+    //  §4 (nº 878) — `rang` : la place de cette porte parmi les
+    //  rangées que le clavier parcourt, quand elle en est une.
+    {
+      avecPoint = false,
+      souligne = false,
+      rang,
+    }: { avecPoint?: boolean; souligne?: boolean; rang?: number } = {}
   ) {
+    const viseeAuClavier = rang !== undefined && rang === rangActif;
     return (
       <button
         type="button"
+        id={rang !== undefined ? idDuRang(rang) : undefined}
+        data-rangee-active={viseeAuClavier ? "" : undefined}
         aria-expanded={sousGroupeDeplie === sousEntete}
         onClick={() => basculerSousGroupe(sousEntete)}
         //  C'est cette ligne que la remontée du §2 (nº 238) amène en
@@ -1740,7 +2058,9 @@ export function MenuDeroulant({
         //  d'index à tenir à jour.
         data-sous-porte={sousEntete}
         data-porte-famille={avecPoint ? "" : undefined}
-        className={`${classes} flex w-full items-center gap-3 text-left`}
+        className={`${classes} flex w-full items-center gap-3 text-left${
+          viseeAuClavier ? ` ${FOND_DU_SURLIGNAGE}` : ""
+        }`}
       >
         {avecPoint && (
           <span
@@ -1838,7 +2158,22 @@ export function MenuDeroulant({
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={ouvert}
-        onClick={() => (ouvert ? fermer() : setOuvert(true))}
+        //  §4 (nº 878) — le déclencheur DÉSIGNE la liste qu'il ouvre ;
+        //  le rang parcouru, lui, se dit SUR LA LISTE
+        //  (`aria-activedescendant` n'est pas admis sur un bouton — il
+        //  vit donc là où il a un sens, sur le `listbox`).
+        aria-controls={ouvert ? nomDeLaListe : undefined}
+        onKeyDown={auClavierDuMenu}
+        onClick={() => {
+          if (ouvert) {
+            fermer();
+            return;
+          }
+          //  §4 (nº 878) — ouvert À LA SOURIS : aucune option n'est
+          //  visée tant qu'une flèche n'a pas parlé.
+          setCleActive(null);
+          setOuvert(true);
+        }}
         //  §3 (nº 262) — en mode mobile du champ, AUCUNE flèche : elle
         //  part avec le libellé, c'est l'icône grise du contenu qui dit
         //  « ceci ouvre ».
@@ -2001,7 +2336,12 @@ export function MenuDeroulant({
           {blocEntetes && blocDesEntetes("px-4")}
           <ul
             ref={listeDeroulante}
+            id={nomDeLaListe}
             role="listbox"
+            //  §4 (nº 878) — l'option visée au clavier, nommée.
+            aria-activedescendant={
+              rangActif >= 0 ? idDuRang(rangActif) : undefined
+            }
             aria-label={ariaLabel}
             // C'est la LISTE qui défile dans le plafond de hauteur du
             // panneau : le menu ne dépasse jamais le bas (ni le haut)
@@ -2023,7 +2363,11 @@ export function MenuDeroulant({
                 {/*  §1 (nº 577) — `titreEnLigne` dit à la fois « le bloc
                      ne s'en charge pas » ET « il y a de quoi
                      distinguer ». Voir sa note plus haut. */}
-                {entete && titreEnLigne && enTeteSection(entete, "px-4 pt-3 pb-1")}
+                {entete &&
+                  titreEnLigne &&
+                  enTeteSection(entete, "px-4 pt-3 pb-1", {
+                    rang: rangParCle.get(cleDePorte(entete)),
+                  })}
                 {/* Porte de sous-section — à la place d'une option */}
                 {sousEntete &&
                   sousEnteteVisible(option) &&
@@ -2055,11 +2399,19 @@ export function MenuDeroulant({
                       //  glissante (plus bas) ne le pose jamais.
                       porteSousSection(sousEntete, optionSombre(OPTION_LISTE), {
                         souligne: familleSoulignee,
+                        rang: rangParCle.get(cleDeSousPorte(option, sousEntete)),
                       }))}
                 {optionVisible(option) && (
                 <button
                   type="button"
                   role="option"
+                  id={
+                    rangParCle.has(cle) ? idDuRang(rangParCle.get(cle)!) : undefined
+                  }
+                  //  §4 (nº 878) — L'OPTION VISÉE AU CLAVIER, marquée
+                  //  pour le surlignage (voir la classe, plus bas) et
+                  //  pour la mise à l'écran de la liste.
+                  data-rangee-active={rangeeVisee(cle) ? "" : undefined}
                   aria-selected={option.value === valeur}
                   // À la SOURIS : choisir dès l'appui, sans voler le focus.
                   // AU DOIGT : ne rien faire à l'appui — un appui qui
@@ -2114,11 +2466,20 @@ export function MenuDeroulant({
                       de la porte (nº 290). La feuille du bas l'avait
                       déjà retiré (nº 260-§3) — les deux habillages
                       disent enfin la même chose. */
+                  /*  §4 (nº 878) — LE SURLIGNAGE DU CLAVIER : le MÊME
+                      fond que le survol de la souris (`SURVOL_ENTREE`,
+                      plus haut), écrit UNE FOIS pour les trois sortes
+                      de rangées (`FOND_DU_SURLIGNAGE`, plus haut) :
+                      trois chaînes littérales, jamais assemblées à
+                      l'exécution (piège nº 472), et jamais collées au
+                      dollar qui les suit (piège nº 865). */
                   className={`${optionSombre(
                     option.sousGroupe && !option.sousTitre
                       ? OPTION_LISTE.replace("px-4", "pr-4 pl-9")
                       : OPTION_LISTE
-                  )}${option.compte !== undefined ? " flex items-center" : ""}`}
+                  )}${option.compte !== undefined ? " flex items-center" : ""}${
+                    rangeeVisee(cle) ? ` ${FOND_DU_SURLIGNAGE}` : ""
+                  }`}
                 >
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   {option.compte !== undefined && (
