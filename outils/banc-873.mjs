@@ -229,23 +229,27 @@ for (const mode of ["doigt", "web"]) {
     await page.waitForTimeout(1500);
     const retourOnglet = await position();
     verif(`RETOUR PAR L'ONGLET : Portfolio retrouve ${CIBLE}`, retourOnglet === CIBLE, `${retourOnglet} / ${CIBLE}`);
+    /*  ██ §1 (nº 875) — LE RETOUR NE PROMÈNE PLUS DANS LES ONGLETS ██
+        CE QUE CE BANC ÉPROUVAIT ICI, ET QUI N'A PLUS COURS : « chaque
+        onglet suivi a posé une entrée — quatre retours rendent le
+        profil ». Le propriétaire a RENVERSÉ la règle à la nº 875 :
+        changer d'onglet REMPLACE l'étape courante, il n'en ajoute
+        jamais, et un seul retour rend la page d'où l'on est arrivé.
+        LE PARCOURS ENTIER EST ÉPROUVÉ AU BANC 875 (les trois
+        va-et-vient, dix touchers, un retour, positions comprises) — on
+        n'en garde ici que ce qui appartient à CE banc : les touchers
+        n'ajoutent aucune étape. Les positions par page, elles, ne
+        changent pas d'un pixel : c'est ce que les deux vérifications
+        ci-dessus viennent de mesurer. */
+    const avantOnglets = await page.evaluate(() => history.length);
     await toucherLOnglet(page, "Flash");
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/flash`, SLUG, { timeout: 15000 });
     await page.waitForTimeout(1000);
-    await page.goBack();
-    await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio`, SLUG, { timeout: 15000 });
-    await page.waitForTimeout(1500);
-    const retourNavigateur = await position();
-    verif(`RETOUR DU NAVIGATEUR : Portfolio retrouve ${CIBLE}`, retourNavigateur === CIBLE, `${retourNavigateur} / ${CIBLE}`);
-    //  CHAQUE ONGLET SUIVI A POSÉ UNE ENTRÉE (Portfolio, Flash, Portfolio,
-    //  Flash) : un retour est déjà joué, il en reste trois jusqu'au profil.
-    for (const attendu of [`/artist/${SLUG}/flash`, `/artist/${SLUG}/portfolio`, `/artist/${SLUG}`]) {
-      await page.goBack();
-      await page.waitForFunction((c) => location.pathname === c, attendu, { timeout: 15000 });
-      await page.waitForTimeout(600);
-    }
-    verif("… chaque onglet suivi a posé une entrée : trois retours de plus rendent le profil, à son adresse",
-      await page.evaluate(() => location.pathname + location.search) === `/artist/${SLUG}?entree=lien`, await page.evaluate(() => location.pathname + location.search));
+    await toucherLOnglet(page, "Profile");
+    await page.waitForTimeout(1000);
+    const apresOnglets = await page.evaluate(() => history.length);
+    verif("§1 (nº 875) — changer d'onglet n'ajoute aucune étape d'historique",
+      apresOnglets === avantOnglets, `${avantOnglets} → ${apresOnglets}`);
   } catch (e) {
     verif(`déroulement du banc 873 (§1/§2 ${mode})`, false, String(e).slice(0, 500));
   } finally { await nav.close(); }

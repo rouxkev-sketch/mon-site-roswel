@@ -264,6 +264,30 @@ export function OngletsLigne({
             <Link
               key={option.cle}
               href={option.href}
+              /**
+               * ██ §1 (nº 875) — CHANGER D'ONGLET REMPLACE L'ÉTAPE ██
+               * ==========================================================
+               * CE QUE LE PROPRIÉTAIRE A MESURÉ, ET IL A RAISON : depuis
+               * que ces onglets sont des LIENS (nº 860 pour l'accueil,
+               * nº 873 pour un portfolio), chaque toucher POSAIT une
+               * étape d'historique. Dix allers-retours Profile ↔
+               * Portfolio, dix appuis de retour pour revenir aux cartes.
+               * LA RÈGLE, ET ELLE VAUT POUR TOUS LES VA-ET-VIENT DU
+               * SITE : changer d'onglet REMPLACE l'étape courante, il
+               * n'en ajoute jamais. Un seul retour ramène donc à la page
+               * d'où l'on est arrivé, quel que soit le nombre d'onglets
+               * touchés — et c'est ce que fait déjà « Ma sélection »,
+               * qui écrit son filtre par `replaceState` depuis la
+               * nº 333. Les trois va-et-vient disent enfin la même chose.
+               * ⚠️ ÉCRIT ICI, ET NULLE PART AILLEURS (piège nº 378) :
+               * les deux va-et-vient à adresses passent par ce lien-ci ;
+               * il n'y a pas deux règles à tenir d'accord.
+               * ⚠️ LES POSITIONS PAR PAGE NE BOUGENT PAS D'UN PIXEL :
+               * elles sont rangées sous L'ADRESSE (nº 860-§2, nº 873-§1),
+               * pas sous l'étape d'historique. L'adresse change, l'étape
+               * non — la mémoire ne voit aucune différence.
+               */
+              replace
               onClick={option.surClic}
               aria-current={actif ? "page" : undefined}
               aria-label={option.nom}

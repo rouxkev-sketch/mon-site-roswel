@@ -56,10 +56,15 @@ const versFlash = async (page) => {
       await versFlash(page);
       const v = await lire(page);
       if (!aCharge(v)) ratés.push(`tour ${tour} : ${JSON.stringify(v)}`);
-      //  UN TOUR SUR DEUX PAR LE BOUTON DU NAVIGATEUR, l'autre par le
-      //  lien du va-et-vient : les deux véhicules du retour.
-      if (tour % 2 === 0) await page.goBack();
-      else await page.locator("[data-va-et-vient-nature] a[href='/']").tap();
+      /*  LE RETOUR SE FAIT PAR LE LIEN DU VA-ET-VIENT, ET PAR LUI SEUL
+          (nº 875-§1). Ce banc alternait avec le BOUTON DU NAVIGATEUR :
+          il le pouvait parce que chaque onglet posait une étape. Le
+          propriétaire a renversé la règle à la nº 875 — changer
+          d'onglet REMPLACE l'étape courante —, et un retour quitte
+          donc la paire d'accueils au lieu de faire l'aller-retour.
+          Ce que ce banc-ci éprouve n'a pas changé d'un mot : « /flash »
+          charge à chaque tour, jamais bloqué sur un squelette. */
+      await page.locator("[data-va-et-vient-nature] a[href='/']").tap();
       await page.waitForFunction(() => location.pathname === "/", { timeout: 20000 });
       await page.waitForTimeout(1400);
     }

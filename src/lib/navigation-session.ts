@@ -423,6 +423,38 @@ export const AGE_MAXIMUM_MS = 24 * 3600 * 1000;
  */
 export const AGE_POSITION_MS = 30 * 60 * 1000;
 
+/**
+ * ██ §2 (nº 875) — LE PLANCHER D'UNE POSITION : SOUS 24 px, C'EST LE
+ * HAUT ██
+ * ==================================================================
+ * LE DÉFAUT DU PROPRIÉTAIRE : « une page fraîche s'ouvre parfois déjà
+ * descendue de quelques pixels ». QUELQUES PIXELS — c'est la forme du
+ * symptôme, et c'est elle qui désigne le coupable : rien dans le site
+ * ne vise « quelques pixels », mais TOUT ce qui rend une place rend
+ * fidèlement ce qu'on lui a rangé. Or on lui rangeait des riens :
+ * `memoriserDefilement` écrivait N'IMPORTE QUEL `y` non nul — un
+ * rebond élastique en fin de défilement, la barre d'adresse d'un
+ * téléphone qui se replie, un doigt qui effleure la page avant de
+ * partir. Relevé pendant le diagnostic de la nº 874 : une note de
+ * SIX PIXELS rangée pour « /flash ». La visite suivante la rendait —
+ * six pixels, exactement le symptôme.
+ * LA RÈGLE : une place sous ce plancher N'EST PAS UNE PLACE. On ne
+ * l'écrit pas (on efface, comme le fait déjà `memoriserColonne` pour
+ * zéro), et on ne la lit pas (les notes d'avant cette passe meurent
+ * donc d'elles-mêmes, sans rien à purger).
+ * POURQUOI VINGT-QUATRE : c'est moins d'une ligne de texte du site.
+ * En dessous, restituer ne rend RIEN que l'œil puisse reconnaître —
+ * on ne retrouve aucun contenu, on ne fait que ne pas être en haut.
+ * Au-dessus, la place décrit un vrai déplacement, et elle est rendue
+ * comme depuis toujours : rien de ce que le propriétaire connaît ne
+ * change.
+ * ⚠️ ÉCRIT UNE SEULE FOIS, ET LE SCRIPT D'AVANT PEINTURE LIT CETTE
+ * VALEUR-CI (lib/script-avant-peinture l'injecte dans son texte) :
+ * les deux poseurs de position du site ne peuvent pas se désaccorder
+ * sur ce qu'est « le haut » (piège nº 378).
+ */
+export const PLANCHER_DE_POSITION_PX = 24;
+
 type PagesVisitees = {
   courante: string | null;
   precedente: string | null;
@@ -536,6 +568,13 @@ export type PlaceGardee = { y: number; p?: boolean; date: number };
 /** Mémorise la place d'une adresse : la position ET l'état de la rangée */
 export function memoriserDefilement(url: string, y: number) {
   try {
+    //  §2 (nº 875) — SOUS LE PLANCHER, IL N'Y A RIEN À RANGER : on
+    //  EFFACE (l'idiome de `memoriserColonne` pour zéro), sans quoi une
+    //  note de six pixels survivrait à la note juste qu'elle remplace.
+    if (Math.round(y) < PLANCHER_DE_POSITION_PX) {
+      localStorage.removeItem(cleDePosition(url));
+      return;
+    }
     const repliee = rangeeReplieeMaintenant();
     const place: PlaceGardee = { y: Math.round(y), date: Date.now() };
     //  ⚠️ LA POSITION EST BRUTE (nº 335-§1) : plus aucun écart n'y est
@@ -577,7 +616,11 @@ export function lireLaPlace(url: string): PlaceGardee | null {
     const place = JSON.parse(brut) as PlaceGardee;
     //  ⚠️ TRENTE MINUTES, et plus vingt-quatre heures (nº 181-§1c).
     if (Date.now() - (place.date ?? 0) > AGE_POSITION_MS) return null;
-    if (!place.y) return null;
+    //  §2 (nº 875) — LE PLANCHER SE LIT AUSSI, et pas seulement à
+    //  l'écriture : les notes rangées AVANT cette passe sont encore là
+    //  pour une demi-heure, et ce sont elles qui ouvriraient une page
+    //  à six pixels. Elles meurent ici, sans purge à écrire.
+    if (!place.y || place.y < PLANCHER_DE_POSITION_PX) return null;
     return place;
   } catch {
     return null;
@@ -1049,10 +1092,11 @@ export function consommerRestaurationPosition(): boolean {
  */
 export const PREFIXE_COLONNE = "yokofolio:colonne:";
 
-/** Retient la place de la colonne d'une page (0 : on efface). */
+/** Retient la place de la colonne d'une page (sous le plancher : on
+    efface — §2 nº 875, la même règle que les places de page). */
 export function memoriserColonne(url: string, y: number) {
   try {
-    if (y <= 0) {
+    if (y < PLANCHER_DE_POSITION_PX) {
       sessionStorage.removeItem(PREFIXE_COLONNE + url);
       return;
     }
@@ -1073,7 +1117,10 @@ export function lireColonne(url: string): number {
     if (!brut) return 0;
     const note = JSON.parse(brut) as { y?: number; date?: number };
     if (Date.now() - (note.date ?? 0) > AGE_POSITION_MS) return 0;
-    return note.y || 0;
+    //  §2 (nº 875) — le plancher, ici aussi : une colonne de web qui
+    //  rouvrirait trois pixels plus bas est le même défaut.
+    const y = note.y || 0;
+    return y < PLANCHER_DE_POSITION_PX ? 0 : y;
   } catch {
     return 0;
   }

@@ -18,6 +18,7 @@ import {
   CLE_ONGLET,
   CLE_RATTRAPAGE_FILET,
   CLE_RESTAURER,
+  PLANCHER_DE_POSITION_PX,
   PREFIXE_DEFILEMENT,
 } from "@/lib/navigation-session";
 //  §1 (nº 335) — la marque « nais avec la rangée repliée », écrite une
@@ -307,6 +308,13 @@ var maintenant=Date.now();
 var age=${AGE_MAXIMUM_MS};
 /* La POSITION, elle, ne vit qu'une demi-heure (nº 181-§1c). */
 var agePosition=${AGE_POSITION_MS};
+/* §2 (nº 875) — LE PLANCHER D'UNE POSITION, lu au module et jamais
+   recopié : ce qui vaut pour la mémoire du site vaut pour ce script,
+   qui pose la position AVANT elle. Sans lui, une note de six pixels
+   ouvrait la page six pixels plus bas, avant la premiere image — le
+   defaut du proprietaire, dans sa forme exacte. Voir le bloc
+   PLANCHER_DE_POSITION_PX (lib/navigation-session). */
+var plancherPosition=${PLANCHER_DE_POSITION_PX};
 
 /* 3. LA REPRISE DE SESSION, AVANT TOUTE PEINTURE. */
 var memoireOnglet=jour(${onglet},sessionStorage)||{};
@@ -423,7 +431,7 @@ if(${conditionDeReglagePourLeScript('n')})p.delete(n)}
 p.sort();var q=p.toString();
 var cle=location.pathname+(q?"?"+q:"");
 var note=jour(${prefixe}+cle,localStorage);
-if(!note||!note.y||maintenant-(note.date||0)>agePosition){return}
+if(!note||!note.y||note.y<plancherPosition||maintenant-(note.date||0)>agePosition){return}
 r.dataset.positionPosee=String(note.y);
 /* §1 (nº 335) — LA RANGÉE NAÎT DANS L'ÉTAT OÙ ON L'A LAISSÉE. La
    place gardée porte les deux (lib/navigation-session) ; la barre

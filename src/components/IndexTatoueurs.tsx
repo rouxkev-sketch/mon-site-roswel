@@ -1144,6 +1144,20 @@ export function IndexTatoueurs({
            `relative` n'est posé qu'avec le chantier, pour ancrer la
            superposition — une classe par propriété (nº 389). */}
       <main
+        /*  ██ §3 (nº 875) — LE CORPS DE L'ACCUEIL, NOMMÉ ██
+            Le balayage horizontal qui bascule Tattoo ↔ Flash
+            (VaEtVientNature) doit PARTIR du corps de la page : le
+            module de glissement du site demande une ZONE, il ne
+            connaît pas les écrans (lib/glissement-lateral,
+            branchement nº 2). On la NOMME ici, on ne la touche pas —
+            aucune classe, aucun pixel, aucun conteneur de plus
+            (pièges 378/379).
+            ⚠️ SUR LE SEUL ACCUEIL, et c'est ce que dit la marque : ce
+            `main` sert aussi les RÉSULTATS, où il n'y a pas de
+            va-et-vient à basculer. `sansRecherche` est exactement la
+            question que la barre se pose déjà pour son champ (nº 846),
+            et on ne la repose pas : on la lit. */
+        data-corps-accueil={sansRecherche ? "" : undefined}
         aria-busy={enChantier || undefined}
         className={`flex-1 mx-auto w-full ${LARGEUR_SITE} px-4 sm:px-6 pb-16${
           enChantier ? " relative invisible" : ""

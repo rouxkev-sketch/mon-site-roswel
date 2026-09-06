@@ -1192,7 +1192,12 @@ export function ContenuFiche({
    *    glissement n'est pas un clic : la mémoire de navigation n'a pas
    *    vu partir la page, on écrit donc sa place nous-mêmes (ce que
    *    MemoireNavigation fait au clic d'un lien de fiche, nº 230-§3),
-   *    puis on déclare et on part comme l'onglet (`avantDePartir`) ;
+   *    puis on déclare et on part comme l'onglet (`avantDePartir`).
+   *    §1 (nº 875) — ET IL REMPLACE L'ÉTAPE, comme le toucher d'un
+   *    onglet : `router.replace`, jamais `push`. Le geste et le clic
+   *    mènent au même endroit, ils doivent coûter le même historique —
+   *    la règle et son pourquoi sont écrits chez le lien
+   *    (OngletsLigne, §1 nº 875) ;
    *  · DANS LA FENÊTRE DU WEB ET L'APERÇU, `choisirOnglet` — le
    *    va-et-vient suit (trait rouge compris : il lit `onglet`), rien
    *    n'est écrit dans l'adresse, et LA POSITION SUIT LA MÊME RÈGLE
@@ -1217,7 +1222,8 @@ export function ContenuFiche({
         positionSousLeGel()
       );
       avantDePartir(cible);
-      router.push(adresses[cible]);
+      //  §1 (nº 875) — REMPLACER, jamais empiler (voir la note).
+      router.replace(adresses[cible]);
       return;
     }
     choisirOnglet(cible);

@@ -98,6 +98,29 @@ function remonterALAdresseCommise(
    * l'utilisateur n'a pas repris la main ». Elle se lève au premier
    * geste, meurt si l'adresse change, et cède au bout de douze
    * recalages. Rien n'est inventé ici.
+   *
+   * ██ §2 (nº 875) — ET ELLE RESTE BORNÉE AUX ARRIVÉES DÉCLARÉES ██
+   * ------------------------------------------------------------------
+   * ESSAYÉ, MESURÉ, ÉCARTÉ — pour que la passe suivante n'ait pas à le
+   * refaire. La 875 a armé la garde sur TOUTE remontée d'arrivée, pour
+   * fermer la fenêtre où le document grandit après la pose (le défaut
+   * de la nº 661, plus haut). LE COÛT EST TROP LARGE : la garde ne
+   * distingue pas un recalage du navigateur d'un DÉFILEMENT PROGRAMMÉ
+   * légitime, et tant que le visiteur n'a pas fait un geste, tout
+   * défilement programmé se fait annuler — `scrollIntoView` (le champ
+   * de localité, ChampLocalisation), une pose brute du site
+   * (GrilleTatoueurs rend sa place à la réouverture d'une fenêtre),
+   * et jusqu'aux outils du navigateur. Relevé au banc : trois bancs
+   * existants (868, 869, 873) sont tombés d'un coup, tous sur un
+   * défilement programmé avant le premier geste.
+   * LA CAUSE DU DÉFAUT DE LA nº 875 ÉTAIT AILLEURS, et elle est
+   * fermée : la mémoire rangeait et rendait des places de quelques
+   * pixels (voir PLANCHER_DE_POSITION_PX, lib/navigation-session).
+   * ⚠️ ET LA RESTAURATION NATIVE DU NAVIGATEUR N'EST PAS EN CAUSE SUR
+   * UNE OUVERTURE NEUVE : « auto » (nº 363) ne rend une position que
+   * sur un retour, une avance ou un rechargement — sur un « navigate »,
+   * elle n'a rien à rendre. Vingt ouvertures, web et doigt, à zéro
+   * (banc 875).
    */
   garantirLeHaut: boolean
 ): (() => void) | undefined {
