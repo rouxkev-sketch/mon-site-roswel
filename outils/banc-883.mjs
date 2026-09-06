@@ -147,12 +147,21 @@ for (const mode of ["doigt", "web"]) {
     await attendre(page, 200);
     verif("un recalage de 12 px, juste après l'arrivée, est repris",
       (await ou(page)) === 0, String(await ou(page)));
-    //  APRÈS la fenêtre : plus personne ne défend — c'est la règle de
-    //  la nº 883, et c'est ce qui débloque Chrome iOS.
+    /*  ██ MIS AU PAS DE LA nº 888 ██ La garde d'arrivée tient
+        désormais TROIS secondes et non une : le relevé du propriétaire
+        (Chrome iOS) montre le navigateur réappliquant le défilement de
+        l'origine deux à quatre fois pendant la première seconde, et
+        « parfois plus tard ». On vérifie donc les deux bords : à deux
+        secondes elle défend ENCORE, à quatre elle a rendu la main. */
     await attendre(page, 1400);
     await recaler(page, 12);
+    await attendre(page, 500);
+    verif("… deux secondes après l'arrivée, la garde défend toujours",
+      (await ou(page)) === 0, String(await ou(page)));
+    await attendre(page, 2200);
+    await recaler(page, 12);
     await attendre(page, 600);
-    verif("… et deux secondes après l'arrivée, la garde a rendu la main",
+    verif("… et quatre secondes après, elle a rendu la main",
       (await ou(page)) === 12, String(await ou(page)));
 
     titre(`883 · §1 — ${mode} : aucune pose n'interrompt un toucher`);

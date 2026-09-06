@@ -114,14 +114,24 @@ export const ECART_DE_RECALAGE_PX = PLANCHER_DE_POSITION_PX;
  * COMBIEN DE TEMPS LE SITE DÉFEND SON ZÉRO. La nº 882 ne bornait pas
  * (« jusqu'au premier geste ») : sur Chrome iOS, où les événements de
  * viewport ne s'arrêtent jamais, cela revenait à défendre pour
- * toujours — et à manger les touchers. Une seconde couvre la peinture,
- * `load`, les polices et le repli de la barre d'adresse ; au-delà, un
- * mouvement appartient au visiteur, quoi qu'il arrive.
+ * toujours — et à manger les touchers. La nº 883 a donc borné à une
+ * seconde.
+ * ██ §2 (nº 888) — TROIS SECONDES, ET C'EST MESURÉ ██
+ * LE RELEVÉ DU PROPRIÉTAIRE (Chrome iOS, après la nº 887) : le
+ * navigateur réapplique le défilement de l'origine DEUX fois sur une
+ * liste de recherche, QUATRE fois sur un profil, pendant la première
+ * seconde — et « parfois plus tard ». Une seconde était donc trop
+ * juste. Trois secondes couvrent la peinture, `load`, les polices, le
+ * repli de la barre d'adresse et les réapplications tardives ; au-delà,
+ * un mouvement appartient au visiteur, quoi qu'il arrive.
+ * ⚠️ ET ELLE CÈDE TOUJOURS AU DOIGT, immédiatement : la durée n'est
+ * qu'un plafond — le premier geste, un changement d'adresse et un écart
+ * plus grand que le seuil l'éteignent plus tôt, comme depuis la nº 883.
  * ⚠️ ÉCRITE ICI, LUE DES DEUX CÔTÉS : ce module s'en sert pour sa fin
  * de vie, et `DefilementEnHaut` la passe à la garde de position — les
  * deux mécanismes ne peuvent pas diverger.
  */
-export const DUREE_DE_LA_GARDE_MS = 1000;
+export const DUREE_DE_LA_GARDE_MS = 3000;
 
 /**
  * LA POSE, DANS SES DEUX ÉCRITURES — et c'est LA SEULE ÉCRITURE DE LA
@@ -132,9 +142,24 @@ export function poserLeHaut(): void {
   //  nº 884 — LA POSE S'ÉCRIT, avec ce qu'elle a trouvé et ce qu'elle
   //  laisse : c'est l'unique endroit où le site pose zéro.
   const avant = diagnosticArme() ? Math.round(window.scrollY) : 0;
+  /*  ██ §4 (nº 888) — INSTANTANÉE, ET LES DEUX ÉCRITURES ██
+      LA DEMANDE DU PROPRIÉTAIRE : « aucune animation visible avant le
+      départ ». `scrollTo` porte déjà son `behavior: "instant"` — mais
+      LA SECONDE ÉCRITURE, `scrollingElement.scrollTop = 0`, N'A PAS
+      D'OPTION : elle obéit au `scroll-behavior` de la feuille, et le
+      site en déclare un DOUX pour tout le document (globals.css, les
+      ancres du vitrine). Elle s'animait donc, et l'œil pouvait voir la
+      page glisser avant de partir.
+      LE REMÈDE : on éteint le défilement doux le temps des deux
+      écritures, puis on rend exactement ce qu'on a trouvé — un style
+      en ligne posé et retiré dans la même tâche, jamais peint. */
+  const racineHtml = document.documentElement;
+  const douxDAvant = racineHtml.style.scrollBehavior;
+  racineHtml.style.scrollBehavior = "auto";
   window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   const racine = document.scrollingElement;
   if (racine && racine.scrollTop !== 0) racine.scrollTop = 0;
+  racineHtml.style.scrollBehavior = douxDAvant;
   if (diagnosticArme()) {
     noterDiag(`POSE ZÉRO · y ${avant} → ${Math.round(window.scrollY)}`);
   }
@@ -178,7 +203,6 @@ export function neutraliserLeDefilementAvantDeQuitter(): () => void {
   if (typeof window === "undefined") return () => {};
   const surClic = (evenement: MouseEvent) => {
     if (
-      evenement.defaultPrevented ||
       evenement.button !== 0 ||
       evenement.metaKey ||
       evenement.ctrlKey ||
@@ -188,32 +212,68 @@ export function neutraliserLeDefilementAvantDeQuitter(): () => void {
       return;
     }
     const cible = evenement.target;
-    const lien =
+    /*  ██ §1 (nº 888) — TOUT CE QUI NAVIGUE, PAS SEULEMENT LES <a> ██
+        LE RELEVÉ DU PROPRIÉTAIRE : sur les cartes de style de l'accueil
+        et sur les cartes du fil, AUCUNE ligne « DÉPART À ZÉRO » — la
+        remise à zéro ne s'était pas déclenchée. On élargit donc la
+        prise à ce que le site NOMME comme menant ailleurs (les deux
+        marques de cartes), et l'on ne demande plus que la cible soit
+        une ancre : une carte qui navigue par le routeur compte autant
+        qu'un lien. */
+    const partant =
       cible instanceof Element
-        ? (cible.closest("a[href]") as HTMLAnchorElement | null)
+        ? cible.closest(
+            "a[href], [data-lien-carte], [data-lien-profil-de-fil]"
+          )
         : null;
-    if (!lien) return;
-    const fenetre = lien.getAttribute("target");
-    if ((fenetre && fenetre !== "_self") || lien.hasAttribute("download")) return;
+    if (!partant) return;
+    const lien =
+      partant instanceof HTMLAnchorElement
+        ? partant
+        : (partant.querySelector("a[href]") as HTMLAnchorElement | null);
+    /*  §1 (nº 888) — CHAQUE DÉCISION S'ÉCRIT, y compris l'abstention et
+        SA RAISON : le propriétaire doit pouvoir lire, sur son
+        téléphone, pourquoi la remise à zéro n'a pas joué. C'était la
+        ligne qui manquait à son relevé. */
+    const renoncer = (pourquoi: string) => {
+      noterDiag(`DÉPART À ZÉRO · non — ${pourquoi}`);
+    };
+    if (evenement.defaultPrevented) return renoncer("le clic était déjà empêché");
+    const fenetre = lien?.getAttribute("target");
+    if ((fenetre && fenetre !== "_self") || lien?.hasAttribute("download")) {
+      return renoncer("le lien ouvre ailleurs");
+    }
     //  Un lien qui ne navigue pas (la loupe de la barre, nº 627) ne
     //  quitte rien : il n'y a aucune entrée à faire naître.
-    if (lien.closest("[data-sans-navigation]")) return;
-    let visee: URL;
-    try {
-      visee = new URL(lien.href, window.location.href);
-    } catch {
-      return;
+    if (partant.closest("[data-sans-navigation]")) {
+      return renoncer("ce lien ne navigue pas (data-sans-navigation)");
     }
-    if (visee.origin !== window.location.origin) return;
-    if (
-      visee.pathname === window.location.pathname &&
-      visee.search === window.location.search
-    ) {
-      return;
+    if (lien) {
+      let visee: URL;
+      try {
+        visee = new URL(lien.href, window.location.href);
+      } catch {
+        return renoncer("adresse illisible");
+      }
+      if (visee.origin !== window.location.origin) {
+        return renoncer("un autre site");
+      }
+      if (
+        visee.pathname === window.location.pathname &&
+        visee.search === window.location.search
+      ) {
+        return renoncer("la même adresse");
+      }
     }
     const y = Math.round(window.scrollY);
-    if (y === 0 || y > ECART_DE_RECALAGE_PX) return;
-    noterDiag(`DÉPART À ZÉRO · la page quittée passe de ${y} à 0 (nº 885)`);
+    if (y === 0) return;
+    if (y > ECART_DE_RECALAGE_PX) {
+      return renoncer(`${y} px, c'est une place (seuil ${ECART_DE_RECALAGE_PX})`);
+    }
+    noterDiag(
+      `DÉPART À ZÉRO · la page quittée passe de ${y} à 0 · ` +
+        `${lien ? lien.getAttribute("href") : "carte"}`
+    );
     //  Le site annonce son mouvement : la barre fixe ne doit pas lire
     //  un geste dans cette remise à zéro (nº 154-§6A).
     annoncerMouvementDuSite();

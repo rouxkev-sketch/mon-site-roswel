@@ -410,7 +410,23 @@ function surDefilementSousGarde(): void {
   //  geste). `scrollTo` « instant » est synchrone : l'événement que ce
   //  re-pose déclenchera retombera exactement sur la position gardée,
   //  et repassera ici sans rien faire — aucune boucle possible.
-  noterDiag(`RECALAGE ANNULÉ · y ${y} → ${g.position} (écart ${ecart})`);
+  /*  ██ §3 (nº 888) — D'OÙ VIENT CE RECALAGE ? ██
+      LA DEMANDE DU PROPRIÉTAIRE : « journalise l'origine de chaque
+      recalage annulé si possible (scroll natif vs script) ». Le site
+      ANNONCE ses propres mouvements (l'attribut de ce module) : un
+      écart qui tombe pendant cette annonce vient du SITE ; un écart
+      qui tombe hors d'elle, sans geste plausible et sans doigt posé,
+      ne peut venir que du NAVIGATEUR — c'est la réapplication que le
+      propriétaire voit sur Chrome iOS. On le dit, avec le compte : le
+      quatrième recalage d'affilée ne se lit pas comme le premier. */
+  noterDiag(
+    `RECALAGE ANNULÉ nº ${g.annulations} · y ${y} → ${g.position} (écart ${ecart}) · ` +
+      `${
+        estDefilementProgramme()
+          ? "pendant un mouvement du site (script)"
+          : "hors mouvement du site — LE NAVIGATEUR"
+      }`
+  );
   document.documentElement.dataset[MARQUEUR] = "1";
   window.scrollTo({ top: g.position, left: 0, behavior: "instant" });
   const obtenu = Math.round(window.scrollY);
