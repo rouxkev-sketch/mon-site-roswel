@@ -19,6 +19,7 @@ import { armerLaGardeDePosition } from "@/lib/defilement-programme";
 //  du haut aux moments tardifs de WebKit, et le plafond qu'ils
 //  partagent avec la garde (une seule écriture pour les trois).
 import {
+  DUREE_DE_LA_GARDE_MS,
   ECART_DE_RECALAGE_PX,
   poserLeHaut,
   tenirLeHautDeLaPage,
@@ -118,15 +119,22 @@ function remonterALAdresseCommise(chemin: string): () => void {
    * les pages et pas seulement sur les fiches. Trois pièces, et il en
    * faut trois :
    *  · LA POSE, dans ses deux écritures (`poserLeHaut`) ;
-   *  · LA GARDE, qui répond aux événements `scroll`, tenue jusqu'au
-   *    PREMIER GESTE et plus seulement douze recalages ;
+   *  · LA GARDE, qui répond aux événements `scroll` ;
    *  · LE MAINTIEN (`tenirLeHautDeLaPage`), qui répond aux MOMENTS où
    *    WebKit recale sans qu'aucun `scroll` ne parte : après la
-   *    peinture, à `load`, à `fonts.ready`, à chaque redimensionnement
-   *    de `visualViewport`.
+   *    peinture, à `load`, à `fonts.ready`.
    * Les trois visent la même valeur — zéro — et se lèvent aux mêmes
-   * trois sorties : le premier geste, un changement d'adresse, un
-   * écart plus grand que le plafond.
+   * sorties : le premier geste, un changement d'adresse, un écart plus
+   * grand que le plafond.
+   *
+   * nº 883 — ET TOUTES TROIS S'ÉTEIGNENT AU BOUT D'UNE SECONDE. La
+   * nº 882 tenait « jusqu'au premier geste » et écoutait aussi
+   * `visualViewport` : sur Chrome iOS, où le repli de la barre
+   * d'adresse fait pleuvoir ces événements sans qu'un pixel du document
+   * ne bouge, la garde tournait sans fin et AVALAIT LES TOUCHERS — la
+   * barre fixe et le va-et-vient ne répondaient plus. La durée est
+   * désormais bornée (`DUREE_DE_LA_GARDE_MS`), et aucune pose ne tombe
+   * sur un doigt posé.
    *
    * ⚠️ CE QUI N'EST PAS EN CAUSE, et qu'il est inutile de re-suspecter :
    * la restauration native (`scrollRestoration = "auto"`, nº 363) ne
@@ -145,9 +153,12 @@ function remonterALAdresseCommise(chemin: string): () => void {
     //  au changement d'adresse.
     armerLaGardeDePosition(
       0,
-      "arrival at the top (no. 882)",
+      "arrival at the top (no. 883)",
       ECART_DE_RECALAGE_PX,
-      true
+      //  §1 (nº 883) — UNE SECONDE, ET PLUS « jusqu'au premier geste » :
+      //  sur Chrome iOS, une garde sans fin avalait les touchers de la
+      //  barre fixe (voir lib/arrivee-en-haut, §1 nº 883).
+      DUREE_DE_LA_GARDE_MS
     );
     relacherLeHaut = tenirLeHautDeLaPage();
   };

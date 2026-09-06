@@ -70,6 +70,7 @@ const MARQUEUR = "defilementProgramme";
 import {
   auDebutDuGeste,
   gesteDeDefilementPlausible,
+  unDoigtEstPose,
 } from "@/lib/geste-toucher";
 
 /** La fenêtre pendant laquelle les défilements ne sont pas des gestes.
@@ -219,8 +220,8 @@ type GardeDePosition = {
   annulations: number;
   /** §2 (nº 881) — voir `armerLaGardeDePosition`. */
   ecartMax?: number;
-  /** §1 (nº 882) — voir `armerLaGardeDePosition`. */
-  tenirJusquAuGeste?: boolean;
+  /** §1 (nº 883) — l'instant où elle s'éteint d'elle-même. */
+  finA?: number;
 };
 let garde: GardeDePosition | null = null;
 let veilleusePosee = false;
@@ -250,23 +251,26 @@ export function armerLaGardeDePosition(
    */
   ecartMax?: number,
   /**
-   * ██ §1 (nº 882) — TENIR JUSQU'AU PREMIER GESTE, ET PAS DOUZE FOIS ██
+   * ██ §1 (nº 883) — COMBIEN DE TEMPS, ET LA nº 882 N'EN DISAIT RIEN ██
    * ------------------------------------------------------------------
    * LA GARDE ABANDONNE APRÈS DOUZE ANNULATIONS (`RECALAGES_ANNULES_MAX`)
-   * : c'est un garde-fou contre une boucle, et il vaut pour tous ses
-   * appelants d'origine. SUR UNE ARRIVÉE DE PAGE, IL NE SUFFIT PAS —
-   * WebKit (les navigateurs de l'iPhone) recale le défilement à chaque
-   * étape tardive de la mise en page : la barre d'adresse qui se replie,
-   * les polices qui arrivent, `visualViewport` qui change de taille.
-   * Douze annulations peuvent partir en une seconde, et le treizième
-   * recalage passe. Le propriétaire le mesure : « la page bouge encore
-   * vers le haut au doigt ».
-   * AVEC CE DRAPEAU, la garde ne compte plus : elle tient jusqu'au
-   * PREMIER GESTE du visiteur (le vrai relâchement, `auDebutDuGeste`),
-   * jusqu'au changement d'adresse, ou jusqu'au premier écart plus grand
-   * que son plafond — trois sorties, toutes franches.
+   * : un garde-fou contre une boucle, et il vaut pour tous ses appelants
+   * d'origine. SUR UNE ARRIVÉE DE PAGE, IL NE SUFFIT PAS — WebKit
+   * recale le défilement à chaque étape tardive de la mise en page, et
+   * douze annulations peuvent partir en une seconde. La nº 882 a donc
+   * fait tenir la garde d'arrivée « jusqu'au premier geste ».
+   * CE QUE CELA A COÛTÉ, MESURÉ PAR LE PROPRIÉTAIRE SUR CHROME iOS :
+   * une garde sans fin, réveillée en continu par le repli de la barre
+   * d'adresse, qui AVALAIT LES TOUCHERS — la barre fixe et le
+   * va-et-vient ne répondaient plus tant qu'on n'avait pas fait défiler.
+   * LA RÈGLE DU PROPRIÉTAIRE (nº 883) : une DURÉE, jamais « jusqu'au
+   * geste ». Passé ce délai, la garde s'éteint d'elle-même, quoi qu'il
+   * arrive ; le premier geste, un changement d'adresse et un écart plus
+   * grand que le plafond l'éteignent plus tôt, comme avant.
+   * ⚠️ SANS ARGUMENT, RIEN NE CHANGE : les appelants d'origine gardent
+   * le compte des douze annulations, et aucune limite de temps.
    */
-  tenirJusquAuGeste?: boolean
+  dureeMaxMs?: number
 ): void {
   if (typeof window === "undefined") return;
   garde = {
@@ -275,7 +279,7 @@ export function armerLaGardeDePosition(
     adresse: window.location.pathname + window.location.search,
     annulations: 0,
     ecartMax,
-    tenirJusquAuGeste,
+    finA: dureeMaxMs === undefined ? undefined : performance.now() + dureeMaxMs,
   };
   poserLaVeilleuse();
   //  §1 (nº 661) — L'ARMEMENT SE SIGNE, comme les recalages qu'il
@@ -338,6 +342,12 @@ function surDefilementSousGarde(): void {
     garde = null;
     return;
   }
+  //  §1 (nº 883) — LA DURÉE EST ÉCOULÉE : la garde s'efface, et la
+  //  position appartient au visiteur (voir `dureeMaxMs`, à l'armement).
+  if (g.finA !== undefined && performance.now() > g.finA) {
+    garde = null;
+    return;
+  }
   const y = Math.round(window.scrollY);
   const ecart = y - g.position;
   if (Math.abs(ecart) <= TOLERANCE_DE_GARDE_PX) return;
@@ -351,14 +361,22 @@ function surDefilementSousGarde(): void {
   //  garde n'a plus rien à défendre. (Le doigt était peut-être déjà
   //  posé avant l'armement — l'abonnement au DÉBUT du geste ne l'a
   //  alors pas vu passer ; ce second chemin le couvre.)
-  if (gesteDeDefilementPlausible()) {
+  //  §1-b (nº 883) — ET UN DOIGT POSÉ SUFFIT, MÊME IMMOBILE : « aucune
+  //  pose de zéro ne doit jamais interrompre un toucher » (règle du
+  //  propriétaire). `gesteDeDefilementPlausible` ne voit qu'un doigt
+  //  qui a BOUGÉ ; un doigt posé juste avant l'armement — on garde le
+  //  doigt sur l'écran pendant que la page arrive — passait entre les
+  //  deux, et la re-pose annulait son toucher.
+  if (gesteDeDefilementPlausible() || unDoigtEstPose()) {
     garde = null;
     return;
   }
   g.annulations += 1;
-  //  §1 (nº 882) — le compte ne vaut que pour les gardes ordinaires :
-  //  celle d'une arrivée tient jusqu'au geste (voir son drapeau).
-  if (!g.tenirJusquAuGeste && g.annulations > RECALAGES_ANNULES_MAX) {
+  //  §1 (nº 883) — le compte ne vaut que pour les gardes SANS durée :
+  //  celle d'une arrivée est bornée par le temps (voir `dureeMaxMs`), et
+  //  douze recalages peuvent tomber dans sa seconde sans qu'elle ait à
+  //  céder.
+  if (g.finA === undefined && g.annulations > RECALAGES_ANNULES_MAX) {
     garde = null;
     return;
   }

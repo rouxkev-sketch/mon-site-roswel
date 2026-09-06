@@ -219,7 +219,11 @@ export function OngletsLigne({
    * DÉCISION DU PROPRIÉTAIRE : sur le va-et-vient Profile · Portfolio ·
    * Flash d'un portfolio, le trait rouge prend TOUTE LA LARGEUR de
    * l'onglet — plus de trait court (la nº 871-§1 est annulée pour ce
-   * va-et-vient, et pour lui seul : « Ma sélection » garde le sien).
+   * va-et-vient : « Ma sélection » garde le sien).
+   * §2 (nº 883) — LA PAGE DE CONNEXION LE DEMANDE AUSSI : « Sign up » /
+   * « Log in » n'a que deux positions, son trait plein fait donc la
+   * MOITIÉ du va-et-vient. Deux appelants le passent désormais ; les
+   * sept autres n'y touchent pas.
    * Vrai : le trait est le segment entier, comme avant la nº 870 ; la
    * copie invisible du libellé n'a alors plus rien à mesurer et ne se
    * rend pas. Faux (le défaut) : le mot plus vingt-huit pixels de

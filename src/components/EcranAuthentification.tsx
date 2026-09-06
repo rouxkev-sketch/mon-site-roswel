@@ -613,6 +613,23 @@ export function EcranAuthentification({
             ]}
             cleActive={mode}
             surChoix={(cle) => basculer(cle as Mode)}
+            /**
+             * ██ §2 (nº 883) — LE TRAIT FAIT LA MOITIÉ, PAS LE MOT ██
+             * ====================================================
+             * DÉCISION DU PROPRIÉTAIRE : ici, le trait rouge était
+             * RÉDUIT sous le mot (le défaut de la nº 871 : le libellé
+             * plus vingt-huit pixels de chaque côté). Il doit prendre
+             * LE SEGMENT ENTIER — la moitié du va-et-vient, puisqu'il
+             * n'a que deux positions —, comme le trait plein du
+             * va-et-vient d'un portfolio (nº 873).
+             * ⚠️ LE GLISSEMENT NE CHANGE PAS : c'est le même nœud qui
+             * se déplace, avec la même courbe (nº 880) ; seule sa
+             * largeur diffère. Ce va-et-vient-ci est fait de BOUTONS,
+             * il ne remonte donc même pas entre deux états.
+             * ⚠️ ET LUI SEUL : les autres appelants ne passent rien et
+             * gardent leur trait au mot (« Ma sélection » le premier).
+             */
+            traitPlein
           />
         </div>
       )}

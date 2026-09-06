@@ -103,6 +103,21 @@ export function appareilTactile(): boolean {
 }
 
 /**
+ * ██ §1 (nº 883) — UN DOIGT EST-IL POSÉ, MÊME IMMOBILE ? ██
+ * ==================================================================
+ * LA RÈGLE QUE LE PROPRIÉTAIRE POSE : « aucune pose de zéro ne doit
+ * jamais interrompre un toucher ». `gesteDeDefilementPlausible` ne
+ * répond pas à cette question-là : un doigt POSÉ mais qui n'a pas
+ * encore bougé n'est pas (encore) un défilement — c'est pourtant déjà
+ * un toucher, et un `scrollTo` qui tombe dessus l'annule.
+ * ⚠️ NE REMPLACE RIEN : les deux lectures coexistent, chacune répond à
+ * sa question. Celle-ci ne sert qu'à s'ABSTENIR.
+ */
+export function unDoigtEstPose(): boolean {
+  return doigtPose;
+}
+
+/**
  * CE MOUVEMENT PEUT-IL VENIR DE L'UTILISATEUR ? Vrai si un doigt qui a
  * bougé est posé en ce moment, ou si une lancée (doigt, molette,
  * touche de défilement) est encore plausible. Faux : le mouvement est

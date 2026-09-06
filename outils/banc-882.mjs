@@ -29,9 +29,14 @@ const PHOTO = (k, i) => `5282${k}00${i.toString(16)}-0000-4000-8000-${String(i).
 {
   const gabarit = (await lire("tatoueurs", "slug=eq.demo-blackwork-12"))[0];
   await ranger("tatoueurs", [{ ...gabarit, id: SLUG, slug: SLUG, nom: "Banc 882",
-    styles: ["blackwork", "realisme"], ville_slug: `lyon-${SLUG}` }]);
+    styles: ["blackwork", "realisme", "trash-polka"], ville_slug: `lyon-${SLUG}` }]);
   const photos = [];
-  for (const [k, style, nature, n] of [[0, "blackwork", "tatouage", 8], [1, "realisme", "flash", 6]]) {
+  /*  TROIS GALERIES DE TATOUAGES : il faut de la HAUTEUR pour éprouver
+      un écart de trois cents pixels sur une page d'arrivée (nº 883). */
+  for (const [k, style, nature, n] of [
+    [0, "blackwork", "tatouage", 8], [1, "realisme", "flash", 6],
+    [2, "realisme", "tatouage", 6], [3, "trash-polka", "tatouage", 6],
+  ]) {
     for (let i = 1; i <= n; i += 1) {
       photos.push({ id: PHOTO(k, i), tatoueur_id: SLUG, style, rendu: "black", nature,
         url: `/images-demo/tatouage/${style}-${(i % 3) + 1}.svg`,
@@ -43,6 +48,7 @@ const PHOTO = (k, i) => `5282${k}00${i.toString(16)}-0000-4000-8000-${String(i).
 }
 
 const RECHERCHE = "/search?style=blackwork&nature=tatouage";
+const ONGLETS = '[aria-label="Profile, portfolio or flash"] a, [aria-label="Profile, portfolio or flash"] button';
 const attendre = (page, ms) => page.waitForTimeout(ms);
 const ou = (page) => page.evaluate(() => Math.round(window.scrollY));
 /** UN RECALAGE DE MOTEUR : la page bouge, AUCUN geste ne l'explique. */
@@ -74,55 +80,88 @@ const cliquer = (page, selecteur, texte = null) =>
   page.evaluate(([C, s, t]) => new Function("return " + C)()(s, t), [CLIQUER, selecteur, texte]);
 
 //  ══ 1 · LE MÉCANISME ═══════════════════════════════════════════════
+/*  ██ MISE AU PAS DE LA nº 883 ██
+    CE QUI A CHANGÉ SOUS CE §1 : la garde d'arrivée ne tient plus
+    « jusqu'au premier geste » (nº 882) mais UNE SECONDE. La nº 882
+    l'avait faite sans fin ; sur Chrome iOS, où le repli de la barre
+    d'adresse fait pleuvoir les événements de viewport, elle tournait en
+    boucle et AVALAIT LES TOUCHERS — barre fixe et va-et-vient bloqués.
+    Les mesures se font donc DANS cette seconde, et la fin de la garde
+    est mesurée par le banc 883.
+    ⚠️ ON PART D'UNE NAVIGATION DOUCE, et c'est ce qui rend le chrono
+    possible : après un `goto`, l'attente du réseau brouille l'instant
+    de l'arrivée.
+    ⚠️ ET LA DESTINATION EST UNE GALERIE, PAS UNE LISTE DE RECHERCHE :
+    une liste NEUVE se pose elle-même en haut à son arrivée
+    (`laListeServieEstArrivee`, lib/liste-neuve) et arme une garde
+    ORDINAIRE — sans plafond, celle-là : elle défendrait AUSSI l'écart
+    de 300 px, et la mesure ne parlerait plus de la garde d'arrivée
+    (relevé de cette passe). Trois galeries donnent la hauteur qu'il
+    faut. */
+const rafale = (page, combien, pas) =>
+  page.evaluate(async ([n, ms]) => {
+    for (let i = 0; i < n; i += 1) {
+      window.scrollTo({ top: 6 + (i % 7), left: 0, behavior: "instant" });
+      await new Promise((r) => setTimeout(r, ms));
+    }
+  }, [combien, pas]);
+
 for (const mode of ["doigt", "web"]) {
   const { nav, page } = await ouvrir(mode, { session: U });
   try {
-    titre(`882 · §1 — ${mode} : un recalage sans geste est REPRIS, tard et souvent`);
-    await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "networkidle" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 1200);
-    verif("l'arrivée est à zéro", (await ou(page)) === 0, String(await ou(page)));
+    /** ARRIVER SUR UNE LISTE LONGUE, EN DOUCEUR — et rendre la main à
+        l'instant précis où la garde vient d'être armée. */
+    const arriver = async () => {
+      await page.goto(`${BASE}/artist/${SLUG}`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(ONGLETS, { timeout: 20000, state: "attached" });
+      await attendre(page, 1500);
+      await page.evaluate(([s]) => {
+        const c = [...document.querySelectorAll(s)].find((n) => n.textContent.trim() === "Portfolio");
+        if (c) c.click();
+      }, [ONGLETS]);
+      await page.waitForFunction(() => location.pathname.endsWith("/portfolio"), null, { timeout: 20000 });
+    };
 
+    titre(`882 · §1 — ${mode} : un recalage sans geste est REPRIS, dans la seconde`);
+    await arriver();
+    /*  TREIZE RECALAGES D'AFFILÉE, ET EN PREMIER — au-delà des douze
+        annulations après lesquelles une garde ORDINAIRE cède
+        (RECALAGES_ANNULES_MAX) : une garde d'arrivée ne les compte pas,
+        elle est bornée par le temps (nº 883). Envoyés en UN aller-retour
+        et serrés, pour tenir dans la seconde. */
+    await rafale(page, 13, 15);
+    verif("treize recalages d'affilée : toujours zéro", (await ou(page)) === 0,
+      String(await ou(page)));
     await recaler(page, 12);
-    await attendre(page, 400);
-    verif("… un recalage de 12 px est repris", (await ou(page)) === 0, String(await ou(page)));
-
-    /*  VINGT RECALAGES D'AFFILÉE — au-delà des douze annulations après
-        lesquelles une garde ORDINAIRE cède (RECALAGES_ANNULES_MAX). Une
-        garde d'arrivée, elle, tient jusqu'au geste (nº 882). */
-    for (let i = 0; i < 20; i += 1) {
-      await recaler(page, 6 + (i % 7));
-      await attendre(page, 60);
-    }
-    await attendre(page, 600);
-    verif("… vingt recalages d'affilée : toujours zéro", (await ou(page)) === 0, String(await ou(page)));
-
-    /*  ET BIEN APRÈS LA VEILLE PAR IMAGE (1,2 s, nº 661) : c'est la
-        fenêtre où le site lâchait, et où WebKit recale encore (les
-        images qui se posent, la barre d'adresse qui se replie). */
-    await attendre(page, 2600);
-    await recaler(page, 15);
-    await attendre(page, 500);
-    verif("… un recalage QUATRE SECONDES après l'arrivée est encore repris",
-      (await ou(page)) === 0, String(await ou(page)));
+    await attendre(page, 150);
+    verif("… un recalage de 12 px de plus est repris", (await ou(page)) === 0,
+      String(await ou(page)));
+    const hauteur = await page.evaluate(
+      () => document.documentElement.scrollHeight - window.innerHeight
+    );
+    verif("la galerie d'arrivée peut défiler bien au-delà du plafond",
+      hauteur > 60, `${hauteur} px`);
 
     titre(`882 · §1 — ${mode} : un GRAND écart est voulu — on ne le combat pas`);
-    await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "networkidle" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 1200);
-    await recaler(page, 300);
-    await attendre(page, 700);
-    verif("un défilement de 300 px tient (le plafond des 40 px)",
-      (await ou(page)) === 300, String(await ou(page)));
+    await arriver();
+    /*  ⚠️ L'ÉCART ÉPROUVÉ EST LE PLUS GRAND QUE LA PAGE PERMETTE, borné
+        à trois cents : la même galerie mesure 1286 px au doigt et 110 au
+        web (les cartes s'y étalent). LA RÈGLE EST LE PLAFOND DE QUARANTE,
+        pas un chiffre — au-delà, le mouvement est voulu, et rien ne doit
+        le combattre. */
+    const grand = Math.min(300, Math.max(0, hauteur - 10));
+    verif("l'écart éprouvé dépasse largement le plafond", grand > 60, `${grand} px`);
+    await recaler(page, grand);
+    await attendre(page, 500);
+    verif("un grand défilement tient (le plafond des 40 px)",
+      (await ou(page)) === grand, `${await ou(page)} / ${grand}`);
 
     titre(`882 · §1 — ${mode} : le PREMIER GESTE rend la main, définitivement`);
-    await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "networkidle" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 1200);
+    await arriver();
     await page.mouse.wheel(0, 120);
-    await attendre(page, 500);
+    await attendre(page, 300);
     await recaler(page, 12);
-    await attendre(page, 700);
+    await attendre(page, 500);
     verif("après un geste, douze pixels TIENNENT (le visiteur a le dernier mot)",
       (await ou(page)) === 12, String(await ou(page)));
   } catch (e) {
@@ -148,7 +187,6 @@ for (const mode of ["doigt", "web"]) {
        (`elementFromPoint` rend le voile, jamais le lien), aucun
        visiteur ne peut naviguer de là. Le web part donc du profil
        lui-même, ouvert à son adresse. */
-const ONGLETS = '[aria-label="Profile, portfolio or flash"] a, [aria-label="Profile, portfolio or flash"] button';
 const DEPARTS = [6, 40, 700];
 for (const mode of ["doigt", "web"]) {
   const { nav, page } = await ouvrir(mode, { session: U });

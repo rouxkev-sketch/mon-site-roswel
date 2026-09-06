@@ -203,7 +203,8 @@ function renduDe(photo: PhotoGalerie): string {
  * ------------------------------------------------------------------
  * « Profile · Portfolio · Flash », chaque onglet un tiers, le mot
  * centré, et LE TRAIT ROUGE SUR TOUTE LA LARGEUR DE L'ONGLET
- * (`traitPlein` — la nº 871-§1 est annulée ici, et ici seulement :
+ * (`traitPlein` — la nº 871-§1 est annulée ici, et sur la page de
+ * connexion depuis la nº 883 :
  * « Ma sélection » garde son trait court).
  * SUR UNE PAGE PUBLIQUE (`adresses` fournies), les onglets sont des
  * LIENS entre les trois pages d'un portfolio — la navigation douce de

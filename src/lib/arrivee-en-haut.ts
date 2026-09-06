@@ -23,12 +23,37 @@
  * position qu'il croyait bonne. Poser zéro entre le DOM et la peinture
  * — ce que le site fait depuis la nº 191 — arrive AVANT toutes.
  *
- * CE QUE CE MODULE FAIT, ET C'EST LA CONSIGNE DU PROPRIÉTAIRE, MOT POUR
- * MOT : sur toute arrivée sans position mémorisée, poser zéro AVANT la
- * peinture (l'appelant s'en charge, il est dans un effet de mise en
- * page), APRÈS la peinture, à `load`, à `fonts.ready`, à CHAQUE
- * redimensionnement de `visualViewport` — et rester armé jusqu'au
- * PREMIER GESTE du visiteur.
+ * CE QUE CE MODULE FAIT : sur toute arrivée sans position mémorisée,
+ * poser zéro AVANT la peinture (l'appelant s'en charge, il est dans un
+ * effet de mise en page), APRÈS la peinture, à `load` et à
+ * `fonts.ready` — le temps d'UNE SECONDE, et pas une de plus.
+ *
+ * ██ §1 (nº 883) — CE QUE LA 882 FAISAIT DE TROP, ET QUI BLOQUAIT ██
+ * ==================================================================
+ * LA nº 882 ÉCOUTAIT AUSSI `visualViewport` (resize et scroll) et
+ * restait armée JUSQU'AU PREMIER GESTE. Safari s'en est trouvé
+ * corrigé ; CHROME iOS, lui, s'est bloqué — relevé du propriétaire :
+ * à l'ouverture d'une page, toute la barre fixe (logo, loupe,
+ * globe/fanion, avatar) ET le va-et-vient ne répondaient plus à aucun
+ * toucher, jusqu'à ce qu'on fasse défiler.
+ * LA CAUSE : sur Chrome iOS, le repli de la barre d'adresse fait
+ * pleuvoir les événements de `visualViewport` — en continu, et sans
+ * qu'aucun pixel du DOCUMENT n'ait bougé. Chacun rappelait la pose ;
+ * un `scrollTo` par événement, et le moteur annule le toucher en
+ * cours. Ce que l'œil prenait pour « la page est défilée » n'était
+ * d'ailleurs pas le document : c'était le VIEWPORT VISUEL, hérité de
+ * la page d'origine dont la barre d'adresse était repliée.
+ * LES TROIS RÈGLES DU PROPRIÉTAIRE, ÉCRITES ICI :
+ *  (a) plus aucune écoute de `visualViewport`, et la garde se DÉSARME
+ *      d'elle-même — au plus une seconde après l'arrivée, jamais
+ *      « jusqu'au premier geste » ;
+ *  (b) AUCUNE POSE N'INTERROMPT UN TOUCHER : un doigt posé, même
+ *      immobile, suffit à rendre la main (`unDoigtEstPose`) ;
+ *  (c) rien de tout cela ne dépend de l'état de la barre d'adresse.
+ * ⚠️ LA PEINTURE ET `load` TOMBENT TOUS DEUX DANS CETTE SECONDE : c'est
+ * elle qui borne, et non `load` seul — le recalage tardif de Safari
+ * (celui que la 882 a fermé, et qui est corrigé chez le propriétaire)
+ * arrive parfois juste après lui.
  *
  * LES DEUX ÉCRITURES DE LA POSE, ET IL EN FAUT DEUX : `window.scrollTo`
  * ne suffit pas partout — sur WebKit, l'élément qui défile vraiment est
@@ -48,9 +73,10 @@
  * complète. La garde répond aux événements `scroll` ; ce module-ci
  * répond aux MOMENTS où WebKit recale sans qu'aucun `scroll` ne soit
  * encore parti. Les deux visent la même valeur, aucune ne peut
- * contredire l'autre.
+ * contredire l'autre — et depuis la nº 883, les deux s'éteignent
+ * ensemble, au bout de la même seconde (`DUREE_DE_LA_GARDE_MS`).
  */
-import { auDebutDuGeste } from "@/lib/geste-toucher";
+import { auDebutDuGeste, unDoigtEstPose } from "@/lib/geste-toucher";
 
 /**
  * ██ L'AMPLITUDE QU'UN RECALAGE DE MOTEUR PEUT AVOIR (nº 881-§2) ██
@@ -66,6 +92,21 @@ import { auDebutDuGeste } from "@/lib/geste-toucher";
 export const ECART_DE_RECALAGE_PX = 40;
 
 /**
+ * ██ §1 (nº 883) — LA SECONDE, ET PAS PLUS ██
+ * ==================================================================
+ * COMBIEN DE TEMPS LE SITE DÉFEND SON ZÉRO. La nº 882 ne bornait pas
+ * (« jusqu'au premier geste ») : sur Chrome iOS, où les événements de
+ * viewport ne s'arrêtent jamais, cela revenait à défendre pour
+ * toujours — et à manger les touchers. Une seconde couvre la peinture,
+ * `load`, les polices et le repli de la barre d'adresse ; au-delà, un
+ * mouvement appartient au visiteur, quoi qu'il arrive.
+ * ⚠️ ÉCRITE ICI, LUE DES DEUX CÔTÉS : ce module s'en sert pour sa fin
+ * de vie, et `DefilementEnHaut` la passe à la garde de position — les
+ * deux mécanismes ne peuvent pas diverger.
+ */
+export const DUREE_DE_LA_GARDE_MS = 1000;
+
+/**
  * LA POSE, DANS SES DEUX ÉCRITURES — et c'est LA SEULE ÉCRITURE DE LA
  * POSE DE ZÉRO du site : `DefilementEnHaut` l'appelle aussi, entre le
  * DOM et la peinture (la sixième occasion, la plus ancienne).
@@ -77,7 +118,7 @@ export function poserLeHaut(): void {
 }
 
 /**
- * TENIR LE HAUT DE CETTE PAGE-CI jusqu'au premier geste. Rend la
+ * TENIR LE HAUT DE CETTE PAGE-CI, une seconde au plus. Rend la
  * fonction qui range tout — l'appelant la donne à React, qui l'appelle
  * au démontage (changement de page compris).
  */
@@ -90,16 +131,23 @@ export function tenirLeHautDeLaPage(): () => void {
     vivant = false;
     quitterLeGeste();
     window.removeEventListener("load", reposer);
-    window.visualViewport?.removeEventListener("resize", reposer);
-    window.visualViewport?.removeEventListener("scroll", reposer);
     cancelAnimationFrame(image1);
     cancelAnimationFrame(image2);
+    window.clearTimeout(fin);
   };
   /** REPOSER, SI C'EST ENCORE À NOUS DE LE FAIRE. */
   function reposer(): void {
     if (!vivant) return;
     //  L'adresse a changé : cette arrivée n'est plus le sujet.
     if (window.location.pathname + window.location.search !== adresse) {
+      ranger();
+      return;
+    }
+    //  §1-b (nº 883) — UN DOIGT EST POSÉ : la main est au visiteur, et
+    //  un `scrollTo` annulerait son toucher. On rend la main pour de
+    //  bon (le geste l'aurait fait de toute façon, un battement plus
+    //  tard : `auDebutDuGeste` ci-dessous).
+    if (unDoigtEstPose()) {
       ranger();
       return;
     }
@@ -121,13 +169,14 @@ export function tenirLeHautDeLaPage(): () => void {
     reposer();
     image2 = requestAnimationFrame(reposer);
   });
-  //  ── LES MOMENTS TARDIFS DE WEBKIT (voir l'en-tête).
+  //  ── LES MOMENTS TARDIFS DE WEBKIT (voir l'en-tête) — `load` et les
+  //     polices, tous deux DANS la seconde.
   window.addEventListener("load", reposer);
-  window.visualViewport?.addEventListener("resize", reposer);
-  window.visualViewport?.addEventListener("scroll", reposer);
   //  ⚠️ `fonts.ready` NE SE RETIRE PAS — une promesse ne s'annule pas.
   //  Le drapeau `vivant` fait le travail : la reprise ne pose rien si
   //  l'on a déjà rangé.
   document.fonts?.ready.then(reposer).catch(() => {});
+  //  ── ET LA FIN, QUOI QU'IL ARRIVE (§1-a nº 883).
+  const fin = window.setTimeout(ranger, DUREE_DE_LA_GARDE_MS);
   return ranger;
 }
