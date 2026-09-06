@@ -83,19 +83,30 @@ import { diagnosticArme, noterDiag } from "@/lib/journal-diagnostic";
 //  §1 (nº 885) — le site annonce ses propres mouvements (la barre fixe
 //  ne doit pas lire un geste dans une remise à zéro).
 import { annoncerMouvementDuSite } from "@/lib/defilement-programme";
+//  §1 (nº 887) — LE SEUL SEUIL DU SITE : sous cent pixels, ce n'est pas
+//  une place (lib/navigation-session).
+import { PLANCHER_DE_POSITION_PX } from "@/lib/navigation-session";
 
 /**
  * ██ L'AMPLITUDE QU'UN RECALAGE DE MOTEUR PEUT AVOIR (nº 881-§2) ██
  * ==================================================================
  * LE PLAFOND, ÉCRIT UNE SEULE FOIS ET LU DES DEUX CÔTÉS : par ce
- * module (qui repose aux moments tardifs) et par `DefilementEnHaut`
- * (qui arme la garde de position). Le propriétaire décrit « quelques
- * pixels » : quarante est large pour un recalage, et dérisoire pour
- * une intention — un défilement voulu se compte en centaines. Au-delà,
- * les deux mécanismes s'effacent : le mouvement est VOULU (le site qui
- * repose une place, un banc qui mesure), et rien ne doit le combattre.
+ * module (qui repose aux moments tardifs et qui remet à zéro la page
+ * qu'on quitte, §1 nº 885) et par `DefilementEnHaut` (qui arme la
+ * garde de position). Au-delà, les deux mécanismes s'effacent : le
+ * mouvement est VOULU (le site qui repose une place, un banc qui
+ * mesure), et rien ne doit le combattre.
+ *
+ * ██ §1 (nº 887) — IL N'Y A PLUS QU'UN SEUL SEUIL DANS LE SITE ██
+ * ------------------------------------------------------------------
+ * LA RÈGLE DU PROPRIÉTAIRE : « une position sous cent pixels n'est ni
+ * mémorisée ni restituée — la page rouvre à zéro ». Elle vaut pour
+ * TOUS les mécanismes ; les deux anciens seuils (24 à la nº 875, 40 à
+ * la nº 885) sont donc remplacés par celui-là, et cette constante-ci
+ * ne fait plus que le NOMMER pour ses deux lecteurs. Un seul chiffre,
+ * une seule écriture (lib/navigation-session, piège nº 378).
  */
-export const ECART_DE_RECALAGE_PX = 40;
+export const ECART_DE_RECALAGE_PX = PLANCHER_DE_POSITION_PX;
 
 /**
  * ██ §1 (nº 883) — LA SECONDE, ET PAS PLUS ██
@@ -158,10 +169,10 @@ export function poserLeHaut(): void {
  * page qu'on quitte fait photographier un fond non rasterisé — l'écran
  * noir du glissement retour. Quarante pixels ne peuvent pas produire
  * cela : les tuiles autour de la position courante sont déjà peintes.
- * ⚠️ ET C'EST UNE PAGE QU'ON QUITTE : à moins de quarante pixels, elle
- * était, pour l'œil, en haut. Le retour l'y ramènera — le site ne
- * range d'ailleurs pas les places de moins de vingt-quatre pixels
- * (PLANCHER_DE_POSITION_PX, nº 875).
+ * ⚠️ ET C'EST UNE PAGE QU'ON QUITTE : sous le seuil, elle était, pour
+ * l'œil, en haut. Le retour l'y ramènera — depuis la nº 887, le site
+ * ne range et ne rend AUCUNE place sous cent pixels, et c'est le même
+ * chiffre qui décide ici (PLANCHER_DE_POSITION_PX).
  */
 export function neutraliserLeDefilementAvantDeQuitter(): () => void {
   if (typeof window === "undefined") return () => {};

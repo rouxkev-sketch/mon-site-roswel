@@ -400,6 +400,7 @@
 import { adresseDeRecherche } from "@/lib/adresse-recherche";
 //  §1 (nº 335) — la règle du « cran » du retour, écrite une seule fois.
 import { rangeeReplieeMaintenant } from "@/lib/reserve-barre";
+import { diagnosticArme, noterDiag } from "@/lib/journal-diagnostic";
 
 export const CLE_JOURNAL = "yokofolio:pages-visitees";
 const CLE = CLE_JOURNAL;
@@ -442,18 +443,47 @@ export const AGE_POSITION_MS = 30 * 60 * 1000;
  * l'écrit pas (on efface, comme le fait déjà `memoriserColonne` pour
  * zéro), et on ne la lit pas (les notes d'avant cette passe meurent
  * donc d'elles-mêmes, sans rien à purger).
- * POURQUOI VINGT-QUATRE : c'est moins d'une ligne de texte du site.
- * En dessous, restituer ne rend RIEN que l'œil puisse reconnaître —
- * on ne retrouve aucun contenu, on ne fait que ne pas être en haut.
- * Au-dessus, la place décrit un vrai déplacement, et elle est rendue
- * comme depuis toujours : rien de ce que le propriétaire connaît ne
- * change.
+ * ██ §1 (nº 887) — CENT PIXELS, ET C'EST LE SEUL SEUIL DU SITE ██
+ * ------------------------------------------------------------------
+ * CE QUE LE JOURNAL DE LA nº 886 A MONTRÉ, ET QUI CLÔT L'ENQUÊTE : le
+ * « défilement à l'ouverture » que le propriétaire poursuivait depuis
+ * la nº 881 n'était pas un recalage de moteur. C'était le site
+ * lui-même, restituant FIDÈLEMENT une petite place mémorisée —
+ * quarante-sept pixels, au retour sur un onglet de portfolio (la règle
+ * nº 873). Tout fonctionnait comme écrit ; c'est la RÈGLE qui était
+ * trop basse.
+ * LA RÈGLE DU PROPRIÉTAIRE (nº 887) : UNE POSITION SOUS CENT PIXELS
+ * N'EST NI MÉMORISÉE NI RESTITUÉE — la page rouvre à zéro. Pour TOUS
+ * les mécanismes, sans exception : la mémoire par adresse, la demande
+ * explicite de restitution, la colonne de lecture du web. Au-delà de
+ * cent pixels, rien ne change : la place décrit un vrai déplacement,
+ * et elle est rendue comme depuis toujours.
+ * POURQUOI CENT : sous cent pixels, restituer ne rend RIEN que l'œil
+ * puisse reconnaître — on ne retrouve aucun contenu, on ne fait que ne
+ * pas être en haut. C'est à peu près la hauteur de la barre fixe : en
+ * dessous, le premier écran est le même à quelques lignes près.
+ * ⚠️ IL REMPLACE LES DEUX ANCIENS SEUILS, et il n'en reste qu'un dans
+ * tout le site : le plancher des places (24, nº 875) et le seuil du
+ * départ à zéro (40, nº 885 — `ECART_DE_RECALAGE_PX`, qui lit
+ * désormais cette valeur-ci).
  * ⚠️ ÉCRIT UNE SEULE FOIS, ET LE SCRIPT D'AVANT PEINTURE LIT CETTE
  * VALEUR-CI (lib/script-avant-peinture l'injecte dans son texte) :
  * les deux poseurs de position du site ne peuvent pas se désaccorder
  * sur ce qu'est « le haut » (piège nº 378).
  */
-export const PLANCHER_DE_POSITION_PX = 24;
+export const PLANCHER_DE_POSITION_PX = 100;
+
+/**
+ * §3 (nº 887) — L'INSTANT DE LA DERNIÈRE NAVIGATION, pour que CHAQUE
+ * écriture de mémoire puisse dire au diagnostic combien de temps la
+ * séparait du changement d'adresse (la demande du propriétaire). Posé
+ * par MemoireNavigation, à l'arrivée.
+ */
+let derniereNavigationA = 0;
+export function signalerNavigation(): void {
+  derniereNavigationA =
+    typeof performance === "undefined" ? 0 : performance.now();
+}
 
 type PagesVisitees = {
   courante: string | null;
@@ -568,6 +598,22 @@ export type PlaceGardee = { y: number; p?: boolean; date: number };
 /** Mémorise la place d'une adresse : la position ET l'état de la rangée */
 export function memoriserDefilement(url: string, y: number) {
   try {
+    /*  §3 (nº 887) — CHAQUE ÉCRITURE S'ÉCRIT : la clé, la valeur, et le
+        temps écoulé depuis la dernière navigation. C'est la ligne qui
+        aurait montré le défaut du premier coup — une note posée sous
+        l'adresse de la destination, quelques dizaines de millisecondes
+        après le changement d'adresse. Désarmé, cela ne coûte qu'un test
+        de booléen (lib/journal-diagnostic). */
+    if (diagnosticArme()) {
+      const depuis =
+        derniereNavigationA === 0
+          ? "?"
+          : `${Math.round(performance.now() - derniereNavigationA)} ms`;
+      noterDiag(
+        `MÉMOIRE · ${url} ← ${Math.round(y)} px · ${depuis} après la navigation` +
+          `${Math.round(y) < PLANCHER_DE_POSITION_PX ? " · SOUS LE SEUIL, effacée" : ""}`
+      );
+    }
     //  §2 (nº 875) — SOUS LE PLANCHER, IL N'Y A RIEN À RANGER : on
     //  EFFACE (l'idiome de `memoriserColonne` pour zéro), sans quoi une
     //  note de six pixels survivrait à la note juste qu'elle remplace.

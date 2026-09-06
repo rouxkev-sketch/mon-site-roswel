@@ -136,11 +136,11 @@ for (const mode of ["doigt", "web"]) {
     await attendre(page, 150);
     verif("… un recalage de 12 px de plus est repris", (await ou(page)) === 0,
       String(await ou(page)));
-    const hauteur = await page.evaluate(
+    let hauteur = await page.evaluate(
       () => document.documentElement.scrollHeight - window.innerHeight
     );
-    verif("la galerie d'arrivée peut défiler bien au-delà du plafond",
-      hauteur > 60, `${hauteur} px`);
+    verif("la galerie d'arrivée peut défiler bien au-delà du seuil",
+      hauteur > 100, `${hauteur} px`);
 
     titre(`882 · §1 — ${mode} : un GRAND écart est voulu — on ne le combat pas`);
     await arriver();
@@ -149,8 +149,23 @@ for (const mode of ["doigt", "web"]) {
         web (les cartes s'y étalent). LA RÈGLE EST LE PLAFOND DE QUARANTE,
         pas un chiffre — au-delà, le mouvement est voulu, et rien ne doit
         le combattre. */
+    /*  ⚠️ MIS AU PAS DE LA nº 887 : le plafond a rejoint le seuil unique
+        du site — cent pixels (« sous cent, ce n'est pas une place »).
+        L'écart éprouvé doit donc le dépasser franchement ; la galerie
+        du web ne le permet pas (110 px de course en tout, ses cartes
+        s'étalent), on l'y remplace par la liste de recherche, ouverte
+        à son adresse : rien n'y arme d'autre garde tant qu'aucune
+        liste NEUVE n'arrive. */
+    if (hauteur < 260) {
+      await page.goto(`${BASE}${RECHERCHE}`, { waitUntil: "domcontentloaded" });
+      await page.waitForSelector("[data-carte]", { timeout: 20000 });
+      await attendre(page, 1500);
+      hauteur = await page.evaluate(
+        () => document.documentElement.scrollHeight - window.innerHeight
+      );
+    }
     const grand = Math.min(300, Math.max(0, hauteur - 10));
-    verif("l'écart éprouvé dépasse largement le plafond", grand > 60, `${grand} px`);
+    verif("l'écart éprouvé dépasse largement le seuil", grand > 150, `${grand} px`);
     await recaler(page, grand);
     await attendre(page, 500);
     verif("un grand défilement tient (le plafond des 40 px)",

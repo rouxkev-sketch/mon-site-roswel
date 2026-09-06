@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
+//  §1 (nº 887) — le journal du diagnostic (désarmé : un test de
+//  booléen) et le signal de navigation que la mémoire date.
+import { noterDiag } from "@/lib/journal-diagnostic";
 import {
   arriveeEnHautVoulue,
   arriveeQuiRestitue,
@@ -16,6 +19,7 @@ import {
   noterPageVisitee,
   purgerDefilementsAnciens,
   signalerTraversee,
+  signalerNavigation,
 } from "@/lib/navigation-session";
 //  §2 (nº 328) — LA POSITION SE LIT SOUS LE GEL, JAMAIS BRUTE.
 //  C'est le point 4 de la règle de navigation (lib/navigation-session).
@@ -77,8 +81,43 @@ function estUnePageDeDetail(chemin: string): boolean {
   return chemin.startsWith("/artist/");
 }
 
+/**
+ * §1 (nº 887) — LE SILENCE QUI SUIT UNE NAVIGATION. Sept cents
+ * millisecondes : l'élan d'une pichenette d'iOS s'éteint bien avant
+ * (le témoin du geste le borne d'ailleurs à 180 ms de calme,
+ * lib/geste-toucher), et aucun visiteur n'a le temps de poser un doigt
+ * et de faire défiler une page neuve dans cet intervalle.
+ */
+const SILENCE_APRES_NAVIGATION_MS = 700;
+
 export function MemoireNavigation() {
   const pathname = usePathname();
+  /**
+   * ██ §1 (nº 887) — À QUI APPARTIENT CE DÉFILEMENT ? ██
+   * ==================================================================
+   * LE DÉFAUT, DÉMONTRÉ PAR LE PROPRIÉTAIRE (relevés 884-886) : « le
+   * décalage n'apparaît que si la page d'origine était LÉGÈREMENT
+   * défilée ». Son hypothèse colle à tout, et le code lui donne
+   * raison : au doigt, un petit défilement est une PICHENETTE dont
+   * l'élan continue APRÈS le toucher du lien. L'adresse a déjà changé
+   * ; l'écriture de la mémoire, elle, est différée de deux images
+   * (nº 335) et relisait `location.pathname` AU MOMENT D'ÉCRIRE. Les
+   * derniers pixels de l'élan de l'origine — trente, quarante-sept —
+   * étaient donc rangés SOUS L'ADRESSE DE LA DESTINATION. L'arrivée
+   * suivante les restituait fidèlement : « GARDE ARMÉE · 47 px ·
+   * restitution », puis « DÉFILEMENT 0 → 47 ». Un grand défilement ne
+   * donne rien parce qu'il n'est plus en train de courir quand le
+   * doigt touche le lien — d'où « une fois sur deux » au début.
+   * LA RÈGLE : une position appartient à LA PAGE OÙ LE GESTE A
+   * COMMENCÉ. La clé est donc CAPTURÉE — à l'arrivée d'une page, et à
+   * chaque début de geste — et jamais relue au moment d'écrire. Et
+   * pendant les sept cents millisecondes qui suivent un changement
+   * d'adresse, plus rien ne s'écrit : ce qui défile là n'est ni la
+   * page qu'on quitte (elle n'est plus) ni celle qui arrive (personne
+   * ne l'a encore touchée).
+   */
+  const adresseDesPositions = useRef("");
+  const navigationA = useRef(0);
   /**
    * ⚠️ LES CRITÈRES AUSSI, ET C'ÉTAIT UN TROU.
    * L'effet de restitution ne se rejouait qu'au changement de CHEMIN.
@@ -297,22 +336,32 @@ export function MemoireNavigation() {
         //  refonte nº 191). Une fiche s'ouvre toujours en haut : on
         //  n'écrit donc jamais de position pour une page de détail, et
         //  on n'en restitue jamais non plus (voir plus bas).
-        if (estUnePageDeDetail(location.pathname)) return;
-        memoriserDefilement(
-          location.pathname + location.search,
-          positionSousLeGel()
-        );
+        //  §1 (nº 887) — LA CLÉ DU GESTE, ET LE SILENCE D'APRÈS
+        //  NAVIGATION : les deux gardes de la règle, ensemble.
+        const cle = adresseDesPositions.current;
+        if (!cle) return;
+        if (performance.now() - navigationA.current < SILENCE_APRES_NAVIGATION_MS) {
+          noterDiag(
+            `MÉMOIRE · écriture IGNORÉE (élan d'après navigation, ` +
+              `${Math.round(performance.now() - navigationA.current)} ms)`
+          );
+          return;
+        }
+        if (estUnePageDeDetail(cle.split("?")[0])) return;
+        memoriserDefilement(cle, positionSousLeGel());
       }));
     };
 
-    /** L'écriture tout de suite, sans attendre l'image suivante. */
+    /** L'écriture tout de suite, sans attendre l'image suivante.
+        §1 (nº 887) — elle aussi écrit sous la clé du geste : elle est
+        appelée au DÉPART d'une page, où la clé capturée est encore
+        celle qu'on quitte — c'est exactement la bonne. */
     const ecrireMaintenant = () => {
       if (document.documentElement.dataset.recherche) return;
-      if (estUnePageDeDetail(location.pathname)) return;
-      memoriserDefilement(
-        location.pathname + location.search,
-        positionSousLeGel()
-      );
+      const cle = adresseDesPositions.current;
+      if (!cle) return;
+      if (estUnePageDeDetail(cle.split("?")[0])) return;
+      memoriserDefilement(cle, positionSousLeGel());
     };
     const auDepart = (evenement: MouseEvent) => {
       const cible = evenement.target;
@@ -399,6 +448,10 @@ export function MemoireNavigation() {
     };
     const auGeste = () => {
       gele = false;
+      //  §1 (nº 887) — LE GESTE NOMME SA PAGE : ce qui défilera ensuite
+      //  appartient à l'adresse où le doigt s'est posé, et à elle
+      //  seule — même si l'adresse change avant que l'élan ne s'arrête.
+      adresseDesPositions.current = location.pathname + location.search;
       //  ⚠️ ET LA DEMANDE MEURT AVEC LE GESTE (nº 194-§1) : dès que la
       //  personne touche la page, plus rien n'a le droit de la
       //  déplacer à sa place.
@@ -487,6 +540,12 @@ export function MemoireNavigation() {
      */
     if (pathname !== window.location.pathname) return;
     const url = pathname + window.location.search;
+    //  §1 (nº 887) — L'ARRIVÉE CAPTURE LA CLÉ ET DATE LA NAVIGATION :
+    //  les positions qui suivront appartiennent à cette page-ci, et
+    //  rien ne s'écrit tant que l'élan de la précédente peut courir.
+    adresseDesPositions.current = url;
+    navigationA.current = performance.now();
+    signalerNavigation();
     noterPageVisitee(url);
     // ⚠️ UNE FENÊTRE DE FICHE N'EST PAS UNE PAGE. Elle se pose PAR-
     // DESSUS la mosaïque et écrit son adresse dans la barre
