@@ -150,7 +150,25 @@ export const CLASSES_GRILLE_CARTES = `${SOCLE_GRILLE_CARTES} ${GOUTTIERES_DEUX_C
  * variante d'appareil qui tranche (règle nº 60), pas une largeur.
  */
 export const COLONNE_UNIQUE_DU_FIL = "mobile:grid-cols-1";
-export const GOUTTIERE_DU_FIL = "mobile:gap-y-6";
+/**
+ * ██ §3 (nº 876) — LA GOUTTIÈRE D'UN FIL, AUX DEUX APPAREILS ██
+ * ------------------------------------------------------------------
+ * Vingt-quatre pixels entre deux cartes d'un fil. Le FIL DE GALERIES
+ * (FilDeGalerie) est un fil sur les DEUX appareils depuis cette passe
+ * — au web, une carte par rangée, pleine largeur dans les marges — et
+ * sa liste (une colonne de flexion, sans autre gouttière) lit cette
+ * écriture-ci, nue.
+ * ⚠️ SA JUMELLE SOUS LE PRÉFIXE D'APPAREIL, JUSTE DESSOUS : la grille
+ * des RÉSULTATS porte déjà ses gouttières web (`gap-4 sm:gap-5`, le
+ * socle) et n'a le fil qu'au doigt ; lui donner la valeur nue y
+ * poserait deux classes pour une même propriété (piège nº 389). Les
+ * deux chaînes disent LE MÊME NOMBRE — une copie nommée, comme celle
+ * du squelette (nº 710) —, et le banc 876 les garde d'accord : la
+ * gouttière mesurée entre deux cartes du fil de galeries au web vaut
+ * celle entre deux cartes des résultats au doigt.
+ */
+export const GOUTTIERE_DU_FIL = "gap-y-6";
+export const GOUTTIERE_DU_FIL_AU_DOIGT = "mobile:gap-y-6";
 
 export function GrilleTatoueurs({
   tatoueurs,
@@ -784,8 +802,9 @@ export function GrilleTatoueurs({
                 //  jamais cette branche) ne changent pas.
                 "mobile:gap-y-6"
               : //  §1 (nº 841) — LE FIL : au doigt, cette grille n'a plus
-                //  qu'une colonne, et c'est sa gouttière à lui.
-                GOUTTIERE_DU_FIL
+                //  qu'une colonne, et c'est sa gouttière à lui — sous le
+                //  préfixe d'appareil (§3 nº 876, voir la constante).
+                GOUTTIERE_DU_FIL_AU_DOIGT
         } ${
           //  L'ESTOMPE DE RECHERCHE — la seule opacité de la mosaïque
           //  désormais (nº 166) : plus rien ne l'efface à la bascule.

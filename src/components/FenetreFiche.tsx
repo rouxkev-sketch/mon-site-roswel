@@ -252,7 +252,11 @@ export function FenetreFiche({
       qui en change (nº 197-§4) ; la fenêtre est remontée à chaque
       ouverture (voir la clé dans GrilleTatoueurs), l'état repart donc
       toujours du bon style. */
-  const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
+  /*  §3 (nº 876) — PLUS AUCUN POSEUR : les bandes par style du panneau
+      de droite (PanneauPortfolio), seules à changer le style affiché,
+      n'existent plus — le portfolio y est le fil de galeries. La valeur
+      est celle de l'ouverture, pour la vie de la fenêtre. */
+  const [styleAffiche] = useState(ouverture.style);
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
       dépôt. `null` à l'ouverture : le style entier, comme toujours. */
@@ -1042,33 +1046,6 @@ export function FenetreFiche({
                 //  le panneau montre les deux sections (la série
                 //  cherchée continue d'ouvrir le carrousel de gauche,
                 //  serieCherchee n'a pas bougé).
-                surSerieChoisie={(serie) => {
-                  setStyleAffiche(serie.style);
-                  setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
-                  /*  §5 (nº 310) — LA PHOTO TOUCHÉE, PAS LA PREMIÈRE.
-                      ------------------------------------------------
-                      C'ÉTAIT ÉCRIT `setIndice(0)`, ET C'EST TOUT LE
-                      DÉFAUT : la galerie envoie le RANG de la photo
-                      cliquée depuis la nº 306-§6 (`serie.indice`), la
-                      fiche PLEINE PAGE l'honore — et cette fenêtre-ci,
-                      écrite avant, le jetait à la poubelle en reposant
-                      l'indice à zéro. Cliquer la 4ᵉ photo ouvrait donc
-                      bien la bonne série, mais sur sa PREMIÈRE image :
-                      vu de l'écran, « il ne se passe rien ».
-                      Les deux contextes lisent maintenant la MÊME
-                      valeur, de la même façon. Le repli sur zéro reste
-                      pour la grille du doigt, qui n'envoie pas de rang
-                      (nº 306-§6). */
-                  setIndice(serie.indice ?? 0);
-                  //  ⚠️ LA COLONNE NE REMONTE PLUS (nº 218-§3). Elle le
-                  //  faisait depuis la nº 197-§4 ; dans cette fenêtre,
-                  //  la photo est en permanence sous les yeux, à
-                  //  gauche : la remontée ne révélait rien et faisait
-                  //  perdre la place qu'on venait de choisir dans la
-                  //  galerie. Les deux références restent utilisées par
-                  //  la mise en page, on ne les touche simplement plus
-                  //  ici.
-                }}
               />
               )}
             </div>

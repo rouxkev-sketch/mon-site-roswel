@@ -164,6 +164,15 @@ export type TatoueurSuivi = {
   /** LE COMPTE DE NOUVEAUTÉS (§5) — publications postérieures à la
       dernière visite de CETTE page. Zéro quand on ne sait pas. */
   nouveautes: number;
+  /** ██ §1 (nº 876) — QUAND CE PORTFOLIO A ÉTÉ SUIVI ██
+      L'horodatage de la ligne `tatoueurs_suivis` (ISO). C'est LUI qui
+      ordonne l'onglet Portfolios depuis cette passe — du plus
+      récemment suivi au plus ancien (`suivisAPlat`, lib/selection-
+      suivis). Il était lu depuis toujours (la lecture trie déjà dessus)
+      mais ne voyageait pas jusqu'à la page : elle réordonnait alors sur
+      la dernière publication. Vide si la base ne le rend pas — le tri
+      le range alors en queue, jamais en tête. */
+  suiviLe: string;
 };
 
 export type ContenuFavoris = {
@@ -284,6 +293,15 @@ export async function lireLesFavoris(
     );
     const idsSuivis = (lignesSuivis.data ?? []).map(
       (ligne) => ligne.tatoueur_id as string
+    );
+    //  §1 (nº 876) — la date de chaque suivi, pour l'ordre de l'onglet
+    //  Portfolios (voir `suiviLe`, plus haut) : une lecture, aucune de
+    //  plus — la ligne la porte déjà.
+    const suiviLeParFiche = new Map<string, string>(
+      (lignesSuivis.data ?? []).map((ligne) => [
+        ligne.tatoueur_id as string,
+        (ligne.cree_le as string | null) ?? "",
+      ])
     );
     if (idsPhotos.length === 0 && idsSuivis.length === 0) return VIDE;
 
@@ -572,6 +590,8 @@ export async function lireLesFavoris(
         nouveautes: visite
           ? recentes.filter((photo) => photo.creeLe > visite).length
           : 0,
+        //  §1 (nº 876) — voir `suiviLe`, dans le type.
+        suiviLe: suiviLeParFiche.get(id) ?? "",
       });
     }
 

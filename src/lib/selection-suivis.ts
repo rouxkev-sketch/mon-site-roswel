@@ -96,18 +96,38 @@ export function guestDuSuivi(
  * le propriétaire a découvert des titres et un trait qu'il n'avait
  * jamais demandés. Il les supprime : LA LISTE SEULE.
  *
- * L'ORDRE QUI RESTE est celui que la liste avait pendant tout ce
+ * L'ORDRE QUI RESTAIT était celui que la liste avait pendant tout ce
  * temps : la PUBLICATION LA PLUS RÉCENTE d'abord — l'ordre du groupe
  * « tous », c'est-à-dire la présentation qu'il a toujours vue. Une
  * session guest ne fait plus remonter personne.
+ * ⚠️ REMPLACÉ À LA nº 876 par la DATE DU SUIVI — voir la note juste
+ * en dessous.
  * ⚠️ `guestDuSuivi` et `periodeDuGuest` RESTENT : elles servent la
  * ligne de dates DANS le bloc d'un artiste, qui ne change pas.
+ */
+/**
+ * ██ §1 (nº 876) — DU PLUS RÉCEMMENT SUIVI AU PLUS ANCIEN ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE, web et mobile : l'onglet Portfolios se lit
+ * dans l'ordre où l'on a suivi — le dernier suivi en tête. La nº 412
+ * rangeait sur la PUBLICATION la plus récente (l'ordre du groupe
+ * « tous », qui datait de la nº 243) : un portfolio suivi hier passait
+ * sous un portfolio suivi il y a six mois qui venait de publier.
+ * LA DATE VIENT DE LA LIGNE DE SUIVI (`suiviLe`, lib/favoris-serveur) —
+ * elle était lue depuis toujours, elle voyage désormais. Deux dates
+ * égales à la seconde (deux suivis d'un même geste, ou une base sans
+ * horodatage) : le NOM départage, par le même `localeCompare` que le
+ * reste du site — jamais le hasard de la lecture en base.
+ * ⚠️ RIEN D'AUTRE NE CHANGE : ni le choix des trois photos, ni la ligne
+ * de dates, ni le compte de nouveautés. Ce fichier POSE toujours ; il
+ * range seulement sur une autre colonne.
  */
 export function suivisAPlat(suivis: TatoueurSuivi[]): TatoueurSuivi[] {
   return suivis
     .slice()
-    .sort((a, b) =>
-      (b.recentes[0]?.creeLe ?? "").localeCompare(a.recentes[0]?.creeLe ?? "")
+    .sort(
+      (a, b) =>
+        b.suiviLe.localeCompare(a.suiviLe) || a.nom.localeCompare(b.nom, "en")
     );
 }
 

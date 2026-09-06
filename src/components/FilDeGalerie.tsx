@@ -3,6 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { MARGES_EN_TETE_DE_FIL, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
+//  §3 (nº 876) — la galerie de carte du WEB (nº 839) : la piste qui
+//  glisse par transformation, ses deux chevrons au survol, et l'état
+//  qui les tient. Voir la note du cadre, plus bas.
+import {
+  CommandesDeCarte,
+  PisteDeCarte,
+  useGalerieDeCarte,
+} from "@/components/GalerieDeCarte";
 import { PhotoDeCarte, TAILLES_CARTE } from "@/components/PhotoDeCarte";
 import {
   CompteurDeGalerie,
@@ -85,12 +93,45 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * ou « No flash yet. » (ContenuFiche, §4).
  *
  * L'AIR AU-DESSUS : quarante pixels sous le va-et-vient (`mt-10`), la
- * valeur qui ouvre le portfolio du web sous la rangée Profil / Portfolio
- * (PanneauPortfolio) et le bloc du nom sur le profil (nº 870-§5).
+ * valeur qui ouvrait le portfolio du web sous la rangée Profil /
+ * Portfolio et qui ouvre le bloc du nom sur le profil (nº 870-§5).
  *
- * ⚠️ AU DOIGT SEULEMENT (règle nº 60, `hidden mobile:block`) : le web
- * garde ses galeries par style (PanneauPortfolio). Ce bloc y est rendu
- * masqué, et ses images différées ne partent pas.
+ * ██ §3 (nº 876) — ET LE WEB AUSSI : LE FIL EST LA PRÉSENTATION DES
+ * DEUX APPAREILS ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : au web, les bandes horizontales par style
+ * (PanneauPortfolio, nº 306 → nº 874-§5) DISPARAISSENT ; à leur place,
+ * CES CARTES — une par rangée, PLEINE LARGEUR dans les marges gauche et
+ * droite du web (la colonne de lecture d'une fiche, la colonne de
+ * droite de la fenêtre superposée) : le titre en haut à gauche, le
+ * compteur « 1/20 » en haut à droite, la photo, le pied en dessous.
+ * Une galerie à une photo : sans compteur ni points, comme au doigt.
+ * CE QUI CHANGE D'UN APPAREIL À L'AUTRE, ET RIEN D'AUTRE : LA PHOTO.
+ *  · AU DOIGT, le carrousel natif de la fiche en variante « carte »
+ *    (glissement au doigt, accrochage par photo) — inchangé ;
+ *  · AU WEB, la galerie de carte de la nº 839 (GalerieDeCarte) : la
+ *    piste qui GLISSE par transformation d'une photo à l'autre, et LES
+ *    DEUX CHEVRONS DE LA nº 839 AU SURVOL, sans la pastille (le
+ *    compteur est déjà sur la ligne du titre, nº 874-§4 —
+ *    `sansCompteur`). C'est exactement le partage des cartes de la
+ *    grille (CarteTatoueur) : deux mécaniques, l'une par appareil, et
+ *    la feuille de style qui choisit (`hidden mobile:block` / `hidden
+ *    not-mobile:block`, règle nº 60 — l'appareil, jamais la largeur).
+ *    Le web ne monte que ce que le survol a demandé (`precharger`,
+ *    puis un pas à la fois) ; le carrousel du doigt, masqué au web, ne
+ *    demande rien de plus que sa première photo (une image différée
+ *    dans un élément sans boîte ne part jamais).
+ * LE RANG REGARDÉ EST UN SEUL NOMBRE, écrit comme sur une carte des
+ * résultats (nº 841) : celui du doigt ne bouge que par un glissement,
+ * celui du web que par ses chevrons ou les points du pied — le plus
+ * grand des deux est donc toujours le rang regardé, et l'autre zéro.
+ * Le compteur du titre et le pied lisent ce nombre-là.
+ * LA GOUTTIÈRE entre deux cartes est celle du fil des résultats
+ * (`GOUTTIERE_DU_FIL`, GrilleTatoueurs — vingt-quatre pixels), aux deux
+ * appareils ; au doigt seulement, la liste saigne jusqu'aux bords
+ * (`mobile:-mx-4`), comme les cartes des résultats.
+ * ⚠️ AUCUNE PHOTO N'EST UN LIEN, ni au doigt (nº 873-§3) ni au web : la
+ * page est déjà celle de cet artiste.
  */
 export function FilDeGalerie({
   tatoueur,
@@ -149,11 +190,13 @@ export function FilDeGalerie({
   return (
     <div
       data-fil-de-galerie=""
-      className="mt-10 hidden mobile:block mobile:-mx-4"
+      //  §3 (nº 876) — aux deux appareils désormais (voir l'en-tête).
+      className="mt-10 mobile:-mx-4"
     >
       {/*  LA GOUTTIÈRE EST CELLE DU FIL DES RÉSULTATS (`GOUTTIERE_DU_FIL`,
            GrilleTatoueurs) : les cartes s'y détachent de vingt-quatre
-           pixels, comme les cartes d'une liste de résultats au doigt. */}
+           pixels, comme les cartes d'une liste de résultats au doigt —
+           et au web depuis la nº 876, la même valeur. */}
       <ul ref={liste} className={`flex flex-col ${GOUTTIERE_DU_FIL}`}>
         {galeries.map((galerie, rang) => (
           <CarteDeGalerie
@@ -209,6 +252,17 @@ function CarteDeGalerie({
 }) {
   const { serie, nature } = galerie;
   const [indice, setIndice] = useState(0);
+  /*  §3 (nº 876) — LE RANG DU WEB, tenu par la galerie de carte
+      (nº 839) ; celui du doigt est `indice`, juste au-dessus. Le rang
+      regardé est le plus grand des deux (voir l'en-tête), et les points
+      du pied posent l'un ou l'autre selon l'appareil — le partage exact
+      d'une carte des résultats (CarteTatoueur). */
+  const galerieWeb = useGalerieDeCarte(serie.photos.length);
+  const rangRegarde = Math.max(galerieWeb.indice, indice);
+  const allerAuRang = (cible: number) => {
+    if (document.documentElement.dataset.appareil === "mobile") setIndice(cible);
+    else galerieWeb.allerAu(cible);
+  };
   /** La première carte est celle qu'on regarde à l'arrivée : son image
       ne se diffère pas. Les autres attendent qu'on défile jusqu'à
       elles. */
@@ -228,6 +282,23 @@ function CarteDeGalerie({
     <li
       data-carte-de-galerie={rang}
       data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
+      /*  §3 (nº 876) — `group` : les chevrons du web se montrent au
+          survol de LA CARTE (`group-hover`, BoutonChevron), comme sur une
+          carte de la grille ; et le survol prépare la photo suivante
+          (`precharger`) — au premier chevron, elle est déjà là. Le doigt
+          n'est pas concerné (l'appareil tranche, règle nº 60 : ce
+          gestionnaire se déclenche aussi à la première touche d'un
+          écran tactile). */
+      className="group"
+      onPointerEnter={
+        serie.photos.length > 1
+          ? () => {
+              if (document.documentElement.dataset.appareil !== "mobile") {
+                galerieWeb.precharger();
+              }
+            }
+          : undefined
+      }
     >
       {/*  §3 (nº 873) — LE TITRE SEUL, dans la boîte de l'en-tête du fil
            (seize de côté, douze au-dessus de l'image) : l'avatar de la
@@ -245,7 +316,7 @@ function CarteDeGalerie({
           titre={titreDeGalerie(serie.label, serie.rendu)}
           compteur={
             serie.photos.length > 1 ? (
-              <CompteurDeGalerie rang={indice} total={serie.photos.length} />
+              <CompteurDeGalerie rang={rangRegarde} total={serie.photos.length} />
             ) : undefined
           }
         />
@@ -256,6 +327,38 @@ function CarteDeGalerie({
       >
         <span aria-hidden="true" className={FOND_RESERVE_PHOTO} />
         {serie.photos.length > 1 ? (
+          <>
+          {/*  ██ §3 (nº 876) — AU WEB, LA GALERIE DE CARTE DE LA nº 839 ██
+               La piste (une photo par case, chacune sur l'encadré
+               entier, glissement par transformation — le remède au
+               liseré de la nº 840 compris), et ses deux chevrons au
+               survol, SANS la pastille : le compteur vit sur la ligne du
+               titre. Le rang 0 est la photo que le doigt montre aussi —
+               même source, même taille : rien de plus n'est demandé.
+               Masqué au doigt par l'appareil (`hidden not-mobile:block`),
+               jamais par une largeur (piège nº 60). */}
+          <div className="absolute inset-0 hidden not-mobile:block">
+            <PisteDeCarte
+              photos={serie.photos}
+              indice={galerieWeb.indice}
+              chargees={galerieWeb.chargees}
+              alt={texteDeLaPhotoSeule || `${tatoueur.nom}'s portfolio — ${serie.label}`}
+              prioritaire={premiere}
+            />
+            <CommandesDeCarte
+              indice={galerieWeb.indice}
+              nombre={serie.photos.length}
+              peutReculer={galerieWeb.peutReculer}
+              peutAvancer={galerieWeb.peutAvancer}
+              aller={galerieWeb.aller}
+              pastilleEveillee={galerieWeb.pastilleEveillee}
+              pleineLargeur
+              sansCompteur
+            />
+          </div>
+          {/*  AU DOIGT, LE CARROUSEL NATIF — inchangé depuis la nº 873 ;
+               masqué au web par l'appareil (§3 nº 876). */}
+          <div className="absolute inset-0 hidden mobile:block">
           <CarrouselPortfolio
             photos={serie.photos}
             nomTatoueur={tatoueur.nom}
@@ -284,6 +387,8 @@ function CarteDeGalerie({
             prioritaire={premiere}
             approchee={approchee}
           />
+          </div>
+          </>
         ) : (
           photoSeule && (
             <PhotoDeCarte
@@ -302,15 +407,17 @@ function CarteDeGalerie({
         <PiedDeFil
           tatoueur={tatoueur}
           photos={serie.photos}
-          indice={indice}
-          surRang={setIndice}
+          //  §3 (nº 876) — le rang regardé, et les points posent le rang
+          //  de l'appareil (voir `allerAuRang`).
+          indice={rangRegarde}
+          surRang={allerAuRang}
           //  LE PARTAGE EMPORTE LA PHOTO REGARDÉE de cette galerie — la
           //  fiche s'ouvrira dessus (`ouvertureSurUnePhoto`).
           cheminAPartager={cheminDuCarrousel(
             tatoueur.slug,
             serie.style,
             { nature, rendu: serie.rendu },
-            serie.photos[indice]?.cle ?? ""
+            serie.photos[rangRegarde]?.cle ?? ""
           )}
           metier={metier}
           vues={vues}

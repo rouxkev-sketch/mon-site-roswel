@@ -245,7 +245,12 @@ export function FicheTatoueur({
 
   /** LE STYLE AFFICHÉ — c'est une vignette de l'onglet « Portfolio »
       qui en change, et le carrousel suit. */
-  const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
+  /*  §3 (nº 876) — PLUS AUCUN POSEUR : la seule vignette qui changeait
+      le style affiché — celles des bandes par style du web
+      (PanneauPortfolio) — n'existe plus, les pages Portfolio et Flash
+      sont le fil de galeries aux deux appareils. La valeur est celle de
+      l'ouverture, pour la vie du composant. */
+  const [styleAffiche] = useState(ouverture.style);
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
       dépôt. `null` à l'arrivée : le style entier, comme toujours.
@@ -290,7 +295,8 @@ export function FicheTatoueur({
     surUnePhoto?.serie ??
     serieCherchee ??
     serieDeLOuverture(groupes, ouverture.style);
-  const [serieOuverte, setSerieOuverte] = useState<{
+  //  §3 (nº 876) — plus aucun poseur non plus (voir `styleAffiche`).
+  const [serieOuverte] = useState<{
     nature: string;
     rendu: string;
   } | null>(serieInitiale);
@@ -1697,53 +1703,6 @@ export function FicheTatoueur({
             //  §1 (nº 873) — la page où l'on est : c'est elle qui ouvre
             //  l'onglet, et fait des trois onglets des liens.
             vue={vue}
-            surSerieChoisie={(serie) => {
-              /*  ██ §3 (nº 873) — AU DOIGT, PLUS AUCUNE NAVIGATION ICI ██
-                  ------------------------------------------------------
-                  De la nº 455 à la nº 872, une vignette de l'onglet
-                  Portfolio NAVIGUAIT au doigt vers la vue photo — puis,
-                  depuis la nº 863, vers le fil de galeries, avec la
-                  consigne « entree=portfolio » dans l'adresse et la page
-                  posée en haut à l'adresse commise (nº 742, mesurée). Ce
-                  chemin n'existe plus : le portfolio est une PAGE
-                  (`/artist/<nom>/portfolio`), et au doigt cette page EST
-                  le fil de galeries — le panneau de vignettes ne s'y
-                  montre plus (ContenuFiche, `mobile:hidden`). Une
-                  vignette ne peut donc être touchée qu'au WEB, où elle
-                  change la série sous la même adresse, et la photo du
-                  haut avec : ce qui suit est ce comportement-là, à la
-                  lettre. Parties avec la branche, faute d'appelant :
-                  `useRouter`, `souscrireAdresse`, la pose en haut de la
-                  nº 742 et la traduction du rang touché en identifiant
-                  de photo (nº 314-§3d) — le web reçoit le rang lui-même
-                  (`serie.indice`, nº 306). */
-              setStyleAffiche(serie.style);
-              setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
-              //  §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE. Les
-              //  galeries du web en envoient un : le cadre photo de la
-              //  fiche s'ouvre SUR CETTE PHOTO. La grille du doigt n'en
-              //  envoie pas — la première, comme depuis toujours.
-              setIndicePhoto(serie.indice ?? 0);
-              /*  ⚠️ PLUS AUCUNE REMONTÉE ICI (nº 238-§1), ET C'EST LA
-                  CAUSE DE « LA PAGE DESCEND ».
-                  --------------------------------------------------
-                  CE QUI SE PASSAIT, mesuré au banc depuis le bas de la
-                  galerie (départ 2967) :
-                    t=0 ms   → 0    (le saut instantané écrit ICI, nº 218-§3)
-                    t=100 ms → 24
-                    t=250 ms → 340
-                    t=500 ms → 488  (le repère « sous la barre »)
-                  DEUX mécanismes agissaient sur le même geste : ce
-                  `scrollTo(0)` instantané, puis la remontée douce
-                  ajoutée par la nº 236-§1. L'œil ne voit pas le saut —
-                  il voit la page GLISSER VERS LE BAS de 0 à 488. Le
-                  défaut n'était donc ni un calcul faux ni une hauteur
-                  mal lue : c'était un mouvement de trop.
-                  IL N'EN RESTE QU'UN, `remonterSousLaBarre` (dans
-                  ContenuFiche), le MÊME que Profil / Portfolio —
-                  mesuré au même repère, 488, et déclenché seulement
-                  quand la nouvelle liste a sa hauteur définitive. */
-            }}
           />
         </div>
       </div>

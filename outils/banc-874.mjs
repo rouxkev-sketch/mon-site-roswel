@@ -194,8 +194,8 @@ for (const mode of ["doigt", "web"]) {
       //  Le fil est RENDU aux deux appareils et masqué au web (règle
       //  nº 60) : on ne mesure que le bloc qui se voit.
       const doigt = [...document.querySelectorAll("[data-carte-de-galerie]")].find(visible) ?? null;
-      const web = [...document.querySelectorAll('[data-galeries="web"] [data-galerie-serie]')].find(visible) ?? null;
-      const bloc = doigt ?? web;
+      //  nº 876 — au web aussi, c'est la carte du fil (plus de bandes).
+      const bloc = doigt;
       const compteur = bloc?.querySelector("[data-compteur-galerie]");
       const titreG = bloc?.querySelector("[data-titre-galerie]");
       const cadre = bloc?.querySelector("[data-cadre-de-galerie]");
@@ -214,50 +214,54 @@ for (const mode of ["doigt", "web"]) {
         carte (« 1/20 » au repos). Le banc éprouve donc le total, la
         place et l'écriture — pas un rang qui appartient à chaque
         surface. */
-    verif("le compteur « N/20 » est sur la ligne du titre, à son opposé",
-      /^\d+\/20$/.test(g.compteur ?? "") && (mode === "doigt" ? g.compteur === "1/20" : true) &&
+    //  nº 876 — au web aussi, le compteur est celui de la carte : « 1/20 »
+    //  au repos (la photo regardée), plus « 2/20 » de la dernière vignette vue.
+    verif("le compteur « 1/20 » est sur la ligne du titre, à son opposé",
+      g.compteur === "1/20" &&
       g.boiteCompteur && g.boiteTitre && Math.abs(g.boiteCompteur.y - g.boiteTitre.y) <= 3 && g.boiteCompteur.g > g.boiteTitre.d,
       `${g.compteur} · titre→${g.boiteTitre?.d} compteur ${g.boiteCompteur?.g}`);
     verif("… gris, quatorze pixels, graisse normale — l'écriture du web, à l'identique",
       g.corps === "14px" && g.graisse === "400" && g.couleur === "rgb(168, 168, 176)",
       `${g.corps} · ${g.graisse} · ${g.couleur}`);
-    if (mode === "doigt") {
-      verif("§4 — au doigt, la pastille a quitté la photo", g.pastilleDansLaPhoto === false && g.cartes > 0, `pastille ${g.pastilleDansLaPhoto}`);
-    } else {
-      verif("§4 — au web, la galerie garde sa présentation (aucune carte de fil VISIBLE)", g.cartes === 0, String(g.cartes));
-    }
+    verif(`§4 — ${mode === "doigt" ? "au doigt" : "au web (nº 876)"}, la carte du fil est là et la pastille a quitté la photo`,
+      g.pastilleDansLaPhoto === false && g.cartes > 0, `pastille ${g.pastilleDansLaPhoto} · ${g.cartes} carte(s)`);
   } catch (e) {
     verif(`déroulement du banc 874 (§4 ${mode})`, false, String(e).slice(0, 400));
   } finally { await nav.close(); }
 }
 
-//  ══ 5 · LES CASES DU WEB : UNE PLEINE, 60 % DE LA SUIVANTE ══════════
+//  ══ 5 · LA CARTE DU WEB : PLEINE LARGEUR, UNE IMAGE ENTIÈRE ═══════
+/*  ⛔ nº 876 — LES CASES À 60 % N'EXISTENT PLUS : les bandes du web sont
+    parties, remplacées par les cartes de galerie du fil, une par rangée,
+    à la largeur du CONTENU de la colonne de lecture (celle-ci porte
+    `lg:px-3 lg:-mx-3`, douze pixels d'air de chaque côté pour que sa
+    coupe horizontale n'emporte pas les liserés). La photo y est la
+    galerie de carte de la nº 839 : UNE image entière dans l'encadré, la
+    suivante hors champ — pas de seconde à 60 %. */
 {
   const { nav, page } = await ouvrir("web");
   try {
-    titre("874 · §5 — web : une image pleine et 60 % de la suivante");
+    titre("874 · §5 — web : la carte de galerie, pleine largeur, une image entière (nº 876)");
     await page.goto(`${BASE}/artist/${SLUG}/portfolio`, { waitUntil: "networkidle" });
-    await page.waitForSelector('[data-galeries="web"] [data-case-galerie]', { timeout: 20000 });
+    await page.waitForSelector("[data-carte-de-galerie] [data-case-de-carte]", { timeout: 20000 });
     await page.waitForTimeout(1200);
     const c = await page.evaluate(() => {
-      const bloc = document.querySelector('[data-galeries="web"] [data-galerie-serie]');
-      const cases = [...bloc.querySelectorAll("[data-case-galerie]")];
-      const cadre = cases[0].parentElement;
-      const R = cadre.getBoundingClientRect();
-      const style = getComputedStyle(cadre);
-      const utile = R.width - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0);
-      const bord = R.left + (parseFloat(style.paddingLeft) || 0);
-      const b = cases.map((k) => k.getBoundingClientRect());
-      return { utile: +utile.toFixed(1), largeurCase: +b[0].width.toFixed(1), ecart: +(b[1].left - b[0].right).toFixed(1),
-        visibleDeLaSeconde: +(bord + utile - b[1].left).toFixed(1), premiereEntiere: +(b[0].right - bord).toFixed(1) };
+      const B = (n) => { const r = n.getBoundingClientRect(); return { g: +r.left.toFixed(1), d: +r.right.toFixed(1), l: +r.width.toFixed(1) }; };
+      const colonne = document.querySelector("[data-colonne-lecture]");
+      const st = getComputedStyle(colonne);
+      const bc = B(colonne); const pg = parseFloat(st.paddingLeft), pd = parseFloat(st.paddingRight);
+      const carte = document.querySelector("[data-carte-de-galerie]");
+      const cadre = carte.querySelector("[data-cadre-de-galerie]");
+      const cases = [...carte.querySelectorAll("[data-case-de-carte]")].map(B);
+      return { colonne: { g: bc.g + pg, d: bc.d - pd, l: bc.l - pg - pd }, carte: B(carte), cadre: B(cadre), cases: cases.slice(0, 2), nCases: cases.length };
     });
-    //  case = (utile − 3) / 1,6 ; la seconde montre 60 % d'une case.
-    const attendue = (c.utile - 3) / 1.6;
-    verif("la case vaut (largeur utile − 3 px) / 1,6", proche(c.largeurCase, attendue, 1.5), `${c.largeurCase} contre ${attendue.toFixed(1)}`);
-    verif("la PREMIÈRE image est entière", proche(c.premiereEntiere, c.largeurCase, 1.5), `${c.premiereEntiere} / ${c.largeurCase}`);
-    verif("… et la SECONDE se montre à 60 %", proche(c.visibleDeLaSeconde, c.largeurCase * 0.6, 2),
-      `${c.visibleDeLaSeconde} contre ${(c.largeurCase * 0.6).toFixed(1)} (60 % de ${c.largeurCase})`);
-    verif("l'écart des cases ne bouge pas (trois pixels)", c.ecart === 3, String(c.ecart));
+    verif("la carte prend la largeur du contenu de la colonne de lecture", proche(c.carte.l, c.colonne.l, 1) && proche(c.carte.g, c.colonne.g, 1),
+      `carte ${c.carte.g}→${c.carte.d} (${c.carte.l}) · colonne ${c.colonne.g}→${c.colonne.d} (${c.colonne.l})`);
+    verif("la PREMIÈRE image est entière : une case = l'encadré", proche(c.cases[0].l, c.cadre.l, 1) && proche(c.cases[0].g, c.cadre.g, 1), `${c.cases[0].l} / ${c.cadre.l}`);
+    //  Au repos, la piste de la nº 839 n'a qu'UNE case dans le document
+    //  (la suivante n'arrive qu'au survol) : il n'y a plus de seconde
+    //  image à montrer à 60 %.
+    verif("… et aucune seconde image à 60 % : au repos, la piste n'a qu'une case (règle nº 839)", c.nCases === 1, `${c.nCases} case(s)`);
   } catch (e) {
     verif("déroulement du banc 874 (§5)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }

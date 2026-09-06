@@ -91,27 +91,51 @@ import type { Tatoueur } from "@/lib/tatoueurs";
     badge, mais elle pose son titre dans LA MÊME BOÎTE — seize pixels de
     côté, douze au-dessus de l'image. Un troisième porteur, aucune valeur
     recopiée (règle nº 276). */
+/**
+ * ██ nº 876 — UNE SEULE ÉCRITURE DE L'EN-TÊTE ET DU PIED, POUR TOUT LE
+ * SITE (MOBILE ET WEB) ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : les cartes du WEB prennent LA STRUCTURE des
+ * cartes du fil — l'en-tête (avatar, nom, ville, badge du type)
+ * au-dessus de la photo, le pied (signaler, vues, points, fanion,
+ * partage) en dessous ; la grille reste. « L'appareil ne décide que
+ * des colonnes. » Ces deux rangées cessent donc de porter LEUR
+ * APPAREIL : les chaînes ci-dessous ne disent plus que la géométrie
+ * (alignement, écarts, marges, hauteur), et c'est L'APPELANT qui dit
+ * l'affichage — une carte des résultats les montre aux deux appareils
+ * (`flex`), une carte de « Ma sélection » au web seul (`hidden
+ * not-mobile:flex` — sa vignette côte à côte du doigt n'a pas la place,
+ * nº 865), la vue photo d'une fiche au doigt seul (`hidden
+ * mobile:flex`, nº 862-§3). UNE seule déclaration d'affichage par
+ * rangée et par appareil (piège nº 389), posée en tête de la classe.
+ * ⚠️ LE SQUELETTE COMPOSE DE LA MÊME FAÇON (SquelettesDePage) : la
+ * boîte vient d'ici, l'affichage de lui.
+ */
 export const MARGES_EN_TETE_DE_FIL = "px-4 pb-3";
-export const RANGEE_EN_TETE_DE_FIL =
-  `hidden mobile:flex items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`;
+export const RANGEE_EN_TETE_DE_FIL = `items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`;
 /*  ⚠️ `relative` PORTE LES POINTS EN ABSOLU (voir la note du pied) ;
     `min-h-10` est la hauteur des cibles tactiles, et c'est elle qui
     fixe la hauteur du pied — le squelette la reprend telle quelle. */
 export const RANGEE_PIED_DE_FIL =
-  "relative hidden mobile:flex min-h-10 items-center justify-between px-4 pt-1";
+  "relative min-h-10 items-center justify-between px-4 pt-1";
 
 /** L'EN-TÊTE DU FIL — avatar, nom, ville, puis le badge du type. */
 export function EnTeteDeFil({
   tatoueur,
   lieu,
+  affichage = "flex",
 }: {
   tatoueur: Tatoueur;
   lieu: LieuAffichable;
+  /** nº 876 — CE QUE L'APPELANT DIT DE L'APPAREIL (voir l'en-tête) :
+      `flex` aux deux, `hidden not-mobile:flex` au web seul, `hidden
+      mobile:flex` au doigt seul. */
+  affichage?: string;
 }) {
   return (
     <div
       data-en-tete-de-fil=""
-      className={RANGEE_EN_TETE_DE_FIL}
+      className={`${affichage} ${RANGEE_EN_TETE_DE_FIL}`}
     >
       {/*  UN SEUL LIEN POUR LES TROIS (avatar, titre, sous-titre), vers
            le profil — pas deux liens côte à côte vers la même
@@ -179,8 +203,11 @@ export function PiedDeFil({
   cheminAPartager,
   metier,
   vues,
+  affichage = "flex",
 }: {
-
+  /** nº 876 — l'affichage selon l'appareil, dit par l'appelant (voir
+      l'en-tête du fichier). */
+  affichage?: string;
   tatoueur: Tatoueur;
   photos: PhotoGalerie[];
   indice: number;
@@ -235,7 +262,7 @@ export function PiedDeFil({
           photo d'une fiche au doigt (nº 598). Les centrer entre les
           groupes les décalerait dès que l'un des deux change de
           largeur. */
-      className={RANGEE_PIED_DE_FIL}
+      className={`${affichage} ${RANGEE_PIED_DE_FIL}`}
     >
       {/*  ██ §1 (nº 855) — LE SIGNALEMENT OUVRE LE PIED, PUIS LES VUES ██
            TROIS CHOSES CHANGENT, ET CE SONT LES TROIS DE LA CONSIGNE :

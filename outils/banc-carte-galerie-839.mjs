@@ -39,20 +39,23 @@ page.on("request", (r) => { if (r.resourceType() === "image") images.push(r.url(
 try {
   //  ── LE PATRON : le chevron d'une galerie de profil ────────────────
   titre("839 · le patron (une galerie de profil)");
-  await page.goto(`${BASE}/artist/${RICHE}?entree=lien`, { waitUntil: "networkidle" });
-  await page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first().click();
+  //  nº 873 — l'onglet Portfolio est une PAGE ; nº 876 — au web, cette
+  //  page montre LES CARTES DE GALERIE du fil, dont la photo est la
+  //  galerie de carte de la nº 839 : le chevron du profil et celui de la
+  //  carte de recherche sont désormais le même dessin par construction
+  //  — le banc le mesure quand même, comme il l'a toujours fait.
+  await page.goto(`${BASE}/artist/${RICHE}/portfolio`, { waitUntil: "networkidle" });
+  await page.waitForSelector("[data-carte-de-galerie]", { timeout: 20000 });
   await page.waitForTimeout(1500);
-  //  ⚠️ LA GALERIE DU WEB, PAS CELLE DU DOIGT : la fiche monte les deux
-  //  et masque l'autre par la feuille de style (`lg:hidden`). Un
-  //  élément masqué ne se survole pas.
-  await page.locator("[data-galerie-defilante]:visible").first().hover();
+  await page.locator("[data-carte-de-galerie]").first().hover({ position: { x: 150, y: 150 } });
   await page.waitForTimeout(500);
   const patron = await page.evaluate((D) => {
     const f = new Function("n", `return (${D})(n)`);
-    //  Le même écart que ci-dessus : on ne lit que ce qui est monté à
-    //  l'écran (`offsetParent` est nul sous un `display:none`).
-    const bandeau = [...document.querySelectorAll("[data-bandeau-defilement]")].find((n) => n.offsetParent !== null);
-    const svg = bandeau?.querySelector("svg");
+    //  On ne lit que ce qui est monté à l'écran (`offsetParent` est nul
+    //  sous un `display:none` — la pastille de l'affiche, par exemple,
+    //  n'existe qu'au web).
+    const carte = document.querySelector("[data-carte-de-galerie]");
+    const svg = carte?.querySelector("[data-fleche-de-carte] svg");
     const pastille = [...document.querySelectorAll('[data-role="compteur"]')].find((n) => n.offsetParent !== null);
     const s = pastille && getComputedStyle(pastille);
     return {
@@ -65,6 +68,12 @@ try {
 
   //  ── 1. AU REPOS ───────────────────────────────────────────────────
   titre("839 · au repos : la carte est telle qu'elle était");
+  //  ⚠️ LA SOURIS EST RESTÉE LÀ OÙ LE PATRON L'A LAISSÉE, et Chromium
+  //  rejoue un survol sous un pointeur immobile quand la page change :
+  //  une carte de la mosaïque se trouverait « survolée » à l'arrivée et
+  //  préchargerait sa deuxième photo (`precharger`, nº 876). On la range
+  //  dans la barre du haut, entre deux éléments, avant de partir.
+  await page.mouse.move(700, 60);
   images.length = 0;
   await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
   await page.waitForTimeout(1200);

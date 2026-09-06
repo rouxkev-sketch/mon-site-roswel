@@ -188,7 +188,11 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
       return {
         colonnes: getComputedStyle(document.querySelector("[data-grille-tatoueurs]")).gridTemplateColumns.split(" ").length,
         sousTitres,
-        filMasque: cartes.every((c) => vis(c.querySelector("[data-en-tete-de-fil]")) === "masqué" && vis(c.querySelector("[data-cadre-de-fil]")) === "masqué" && vis(c.querySelector("[data-pied-de-fil]")) === "masqué"),
+        //  nº 876 — AU WEB, L'EN-TÊTE ET LE PIED DU FIL SE MONTRENT (la
+        //  carte de recherche a pris la structure du fil) ; seul le
+        //  CADRE du doigt (le carrousel natif) reste masqué : le web
+        //  garde sa piste de la nº 839.
+        filMasque: cartes.every((c) => vis(c.querySelector("[data-en-tete-de-fil]")) === "visible" && vis(c.querySelector("[data-cadre-de-fil]")) === "masqué" && vis(c.querySelector("[data-pied-de-fil]")) === "visible"),
         lienWeb: cartes.every((c) => vis(c.querySelector("[data-lien-carte]")) === "visible"),
         piste: cartes.every((c) => c.querySelectorAll("[data-piste-de-carte] img").length === 1),
         /*  §1 (nº 844) — LA PASTILLE NE SE MASQUE PLUS, ELLE S'ÉTEINT :
@@ -207,7 +211,7 @@ const vis = `(n) => { if (!n) return "absent"; const s = getComputedStyle(n); re
     }, vis);
     verif("quatre colonnes, comme avant", web.colonnes === 4, `${web.colonnes}`);
     verif("LE POINT MÉDIAN sur chaque sous-titre, et plus un seul deux-points", web.sousTitres.every((t) => t.includes(" · ") && !t.includes(": ")), web.sousTitres.slice(0, 3).join(" | "));
-    verif("l'en-tête, le cadre et le pied du fil sont masqués sur le web", web.filMasque);
+    verif("sur le web, l'en-tête et le pied du fil se montrent, le cadre du doigt reste masqué (nº 876)", web.filMasque);
     verif("le lien de la carte du web est là, sa piste n'a qu'une image, aucune pastille au repos", web.lienWeb && web.piste && web.pastilles);
     verif("le réseau : au plus une image par carte (la structure masquée n'en demande aucune de plus)", images.length <= web.n, `${images.length} image(s) pour ${web.n} cartes`);
   } catch (e) {

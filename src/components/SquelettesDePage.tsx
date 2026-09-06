@@ -11,7 +11,7 @@ import {
 import {
   CLASSES_GRILLE_CARTES,
   COLONNE_UNIQUE_DU_FIL,
-  GOUTTIERE_DU_FIL,
+  GOUTTIERE_DU_FIL_AU_DOIGT,
 } from "@/components/GrilleTatoueurs";
 //  §2 (nº 845) — les deux boîtes de la carte du fil, lues chez elle :
 //  le squelette les épouse au pixel (voir CarteGriseDuFil).
@@ -396,10 +396,32 @@ function BarreSquelette({ centre }: { centre: "recherche" | "selection" }) {
  * c'est elle qui décide de la hauteur de l'en-tête (le rond n'en fait
  * que 40). Le banc nº 845 mesure les deux côte à côte.
  */
-function CarteGriseDuFil() {
+/**
+ * ██ nº 876 — LA SILHOUETTE DU FIL, AUX DEUX APPAREILS ██
+ * ------------------------------------------------------------------
+ * DÉCISION DU PROPRIÉTAIRE : les cartes du WEB ont désormais la
+ * structure des cartes du fil — l'en-tête au-dessus de la photo, le
+ * pied en dessous (CarteTatoueur, nº 876-§4). Ce bloc, qui n'annonçait
+ * que le doigt, annonce donc les deux : `affichage` dit à ses deux
+ * rangées ce que la vraie carte dit aux siennes (`flex` sur les
+ * résultats, aux deux appareils ; `hidden not-mobile:flex` sur « Ma
+ * sélection », dont la vignette du doigt n'a pas d'en-tête), et la
+ * photo n'a plus d'appareil du tout. La boîte des rangées vient
+ * toujours de la carte (`RANGEE_EN_TETE_DE_FIL`, `RANGEE_PIED_DE_FIL`,
+ * CarteFil) — l'affichage se compose devant, comme chez elle.
+ */
+function CarteGriseDuFil({
+  affichage,
+  sansPied = false,
+}: {
+  affichage: string;
+  /** « Ma sélection » : pas de pied — son fanion est sur la ligne des
+      styles (web) ou dans l'image (doigt), voir CarteGrise. */
+  sansPied?: boolean;
+}) {
   return (
     <>
-      <div className={RANGEE_EN_TETE_DE_FIL}>
+      <div className={`${affichage} ${RANGEE_EN_TETE_DE_FIL}`}>
         <span className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
         <div className="min-w-0 flex-1">
           {/*  20 px — le nom (16 × 1,25). */}
@@ -424,8 +446,9 @@ function CarteGriseDuFil() {
              où le squelette et la vraie carte tombent au millième. */}
         <span className={`${HAUTEUR_BADGE_GRIS} w-[98px] shrink-0 rounded-lg bg-sombre-eleve`} />
       </div>
-      <div className={`hidden mobile:block w-full ${CADRE_PHOTO_PORTFOLIO} bg-sombre-eleve`} />
-      <div className={RANGEE_PIED_DE_FIL}>
+      <div className={`w-full ${CADRE_PHOTO_PORTFOLIO} bg-sombre-eleve`} />
+      {!sansPied && (
+      <div className={`${affichage} ${RANGEE_PIED_DE_FIL}`}>
         <span className="h-10 w-10 shrink-0 rounded-full bg-sombre-eleve -ml-2" />
         {/*  LES POINTS, centrés sur la carte entière comme les vrais
              (nº 842) : sept crans de 6 px, écartés de 4 — la frise que
@@ -440,6 +463,7 @@ function CarteGriseDuFil() {
           <span className="h-10 w-10 rounded-full bg-sombre-eleve" />
         </span>
       </div>
+      )}
     </>
   );
 }
@@ -459,28 +483,45 @@ function CarteGriseDuFil() {
     choisir selon l'appareil (CarteTatoueur, règle nº 60). « Ma
     sélection » n'est pas un fil : elle garde ses deux colonnes, et ce
     bloc, aux deux appareils. */
+/**
+ * ██ nº 876 — LES DEUX CARTES GRISES, À L'IMAGE DES DEUX VRAIES ██
+ * ------------------------------------------------------------------
+ *  · LA LISTE DES RÉSULTATS (`fil`) : la silhouette du fil, aux deux
+ *    appareils — en-tête, photo, pied (CarteTatoueur §4 : la grille du
+ *    web garde ses colonnes, chaque carte a pris la structure du fil,
+ *    et la ligne des styles est partie).
+ *  · « MA SÉLECTION » : au web, l'en-tête au-dessus de la photo (§5)
+ *    et, SOUS la photo, LA LIGNE DES STYLES AVEC SON FANION — gardée :
+ *    quatre pixels d'air (`not-mobile:pt-1`) et une rangée de quarante
+ *    (la cible du fanion, nº 856/859) ; au doigt, la vignette côte à
+ *    côte, inchangée — deux lignes de texte, pas d'en-tête (nº 865).
+ *    La marge basse de cinq pixels que la ligne portait au web (la
+ *    césure vers le rond de profil, nº 856) est partie avec le rond.
+ */
 function CarteGrise({ classe = "", fil = false }: { classe?: string; fil?: boolean }) {
   return (
     <li className={`min-w-0 list-none${classe ? ` ${classe}` : ""}`}>
-      <div className={fil ? "mobile:hidden" : ""}>
-        <div className={`${CADRE_PHOTO_PORTFOLIO} w-full bg-sombre-eleve`} />
-        <div className="pt-2 px-0.5 mobile:px-2">
-          <div className="h-4 sm:h-[18px] w-2/3 bg-sombre-eleve" />
-          {/*  §3 (nº 709) — DEUX LIGNES à droite du rond, comme la
-               vraie carte (nom + sous-ligne empilés) ; au doigt la
-               vraie n'a qu'une ligne et pas de rond — la seconde barre
-               suit le rond (`mobile:hidden`). La rangée garde ses
-               40 px au web (`sm:h-10`) : le pied ne bouge pas. */}
-          <div className="mt-4 mobile:mt-1 flex items-center gap-2.5 sm:h-10">
-            <span className="mobile:hidden h-10 w-10 shrink-0 rounded-full bg-sombre-eleve" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="h-4 w-1/2 bg-sombre-eleve" />
-              <div className="mobile:hidden h-3 w-1/3 bg-sombre-eleve" />
+      {fil ? (
+        <CarteGriseDuFil affichage="flex" />
+      ) : (
+        <>
+          <CarteGriseDuFil affichage="hidden not-mobile:flex" sansPied />
+          <div className="mobile:pt-2 not-mobile:pt-1 px-0.5 mobile:px-2">
+            {/*  AU WEB : la ligne des styles, dans la rangée de quarante du
+                 fanion — le texte d'un côté, la cible ronde de l'autre. */}
+            <div className="hidden not-mobile:flex min-h-10 items-center justify-between gap-2">
+              <div className="h-[18px] w-2/3 bg-sombre-eleve" />
+              <span className="size-10 shrink-0 rounded-full bg-sombre-eleve" />
+            </div>
+            {/*  AU DOIGT : le nom, puis la ville (nº 865) — les deux
+                 lignes de la vignette, à leurs hauteurs. */}
+            <div className="not-mobile:hidden">
+              <div className="h-4 w-2/3 bg-sombre-eleve" />
+              <div className="mt-1 h-4 w-1/2 bg-sombre-eleve" />
             </div>
           </div>
-        </div>
-      </div>
-      {fil && <CarteGriseDuFil />}
+        </>
+      )}
     </li>
   );
 }
@@ -615,7 +656,7 @@ export function CorpsSquelette({
       <ul
         {...(selection ? { "data-squelette-cartes": "" } : {})}
         className={`${CLASSES_GRILLE_CARTES}${
-          fil ? ` ${COLONNE_UNIQUE_DU_FIL} ${GOUTTIERE_DU_FIL}` : ""
+          fil ? ` ${COLONNE_UNIQUE_DU_FIL} ${GOUTTIERE_DU_FIL_AU_DOIGT}` : ""
         }`}
       >
         {Array.from({ length: 15 }, (_, rang) => (

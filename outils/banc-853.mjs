@@ -44,7 +44,9 @@ const RESULTATS = `${BASE}/search?style=blackwork&nature=tatouage`;
     //  ⚠️ ON ATTEND LE VA-ET-VIENT DU PROFIL, pas un badge : deux badges
     //  de type vivent dans le document depuis la nº 852, et l'un des
     //  deux est toujours retiré de l'affichage.
-    await page.waitForSelector("[role='radiogroup']", { state: "visible", timeout: 20000 });
+    //  nº 873 — le va-et-vient du profil est une rangée de LIENS (plus
+    //  un groupe de boutons radio) : c'est lui qu'on attend.
+    await page.waitForSelector('nav[aria-label="Profile, portfolio or flash"]', { state: "visible", timeout: 20000 });
     await page.waitForTimeout(1000);
     const apres = await lu();
     verif("après une navigation douce, les deux tiennent",

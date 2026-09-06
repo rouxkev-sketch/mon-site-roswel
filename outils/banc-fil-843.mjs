@@ -156,15 +156,17 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
 {
   const { nav, page } = await ouvrir("web");
   try {
-    titre("843 · la carte du web : le nom seul, le type devant la ville");
+    titre("843 · la carte du web : le nom seul, la ville seule, le badge du type — dans l'en-tête du fil (nº 876)");
     await page.setViewportSize({ width: 1440, height: 950 });
     await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
     const m = await page.evaluate(({ SEL, R }) => {
       const regle = new Function("return " + R)();
       const c = document.querySelector(SEL);
-      const h = c.querySelector("h3");
-      const p = [...c.querySelectorAll("[data-lien-carte] p")].pop();
+      //  nº 876 — AU WEB, LE NOM ET LA VILLE VIVENT DANS L'EN-TÊTE DU FIL
+      //  (au-dessus de la photo) ; le bloc sous la photo est retiré du web.
+      const h = c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:first-child");
+      const p = c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:last-child");
       /*  ⚠️ LE BADGE DU FIL EST DANS LE DOCUMENT SUR LE WEB — masqué
           par la feuille de style, comme toute la structure du doigt
           (nº 841). La question n'est donc pas « existe-t-il ? » mais
@@ -200,8 +202,8 @@ const CARTELONG = `[data-carte]:has([data-lien-profil-de-fil][href*="${LONG}"])`
     const l = await page.evaluate(({ SEL, R }) => {
       const regle = new Function("return " + R)();
       const c = document.querySelector(SEL);
-      const t = regle(c.querySelector("h3"));
-      const s = regle([...c.querySelectorAll("[data-lien-carte] p")].pop());
+      const t = regle(c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:first-child"));
+      const s = regle(c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:last-child"));
       return { titreLignes: t.lignes, titreCoupe: t.coupe, sousLignes: s.lignes, sousCoupe: s.coupe, deborde: document.documentElement.scrollWidth > innerWidth + 1 };
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${LONG}"])`, R: REGLE });
     verif("un nom de 60 : une ligne, coupé ; le sous-titre aussi", l.titreLignes === 1 && l.titreCoupe && l.sousLignes === 1 && l.sousCoupe && !l.deborde, JSON.stringify(l));

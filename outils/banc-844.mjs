@@ -383,52 +383,15 @@ const REPOS = 3400;
 {
   const { nav, page } = await ouvrir("doigt");
   try {
-    titre("844 · une vignette de l'onglet Portfolio ouvre la vue photo (la nº 841 menait au profil)");
-    await page.goto(`${BASE}/artist/${T}?entree=lien`, { waitUntil: "networkidle" });
-    await page.waitForTimeout(1200);
-    await page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first().tap();
-    await page.waitForFunction(
-      () => document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]').length >= 2,
-      null, { timeout: 15000 });
-    await page.waitForTimeout(800);
-    await page.locator('[data-galeries="doigt"] [data-galerie-serie]').first()
-      .locator('[data-case-galerie="1"] button').tap();
-    await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
-    await page.waitForTimeout(1500);
-    /*  ██ nº 863-§3 — DEPUIS L'ONGLET PORTFOLIO, LA VUE PHOTO EST LE FIL
-        DE LA GALERIE ██ Plus de carrousel ni de plaque : la galerie
-        entière, empilée, chaque photo dans sa carte, la vue ouverte sur
-        la photo touchée (FilDeGalerie). Ce bloc mesure donc la nouvelle
-        vérité ; LA PASTILLE, elle, se mesure au bloc suivant sur la vue
-        photo d'un LIEN PARTAGÉ, qui garde son carrousel (nº 862, §4 de
-        la nº 863). */
-    const vue = await page.evaluate(() => {
-      const lecture = document.querySelector("[data-colonne-lecture]");
-      return {
-        url: location.pathname + location.search,
-        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
-        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
-        photoMontree: (document.querySelector("[data-photo-de-tete]")?.getBoundingClientRect().height ?? 0) > 0,
-        plaque: document.querySelector("[data-habillage-photo]") !== null,
-        fil: getComputedStyle(document.querySelector("[data-fil-de-galerie]") ?? document.body).display,
-        ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
-        cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
-        pastille: [...document.querySelectorAll("[data-carte-ouverte] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null,
-      };
-    });
-    verif("la vignette mène à la VUE PHOTO, pas au profil",
-      vue.vuePhoto && vue.photoMontree && vue.lectureMasquee === true && !/entree=lien/.test(vue.url),
-      `${vue.url} · vue-photo ${vue.vuePhoto} · photo ${vue.photoMontree}`);
-    verif("elle est le FIL DE GALERIES (nº 863, refait nº 866) : DEUX cartes — une par galerie —, la première ouverte sur LA photo touchée (« 2/6 »), sans plaque",
-      vue.fil !== "none" && vue.cartes === 2 && vue.ouverte === "0" && vue.pastille === "2/6" && vue.plaque === false && /entree=portfolio/.test(vue.url),
-      `fil ${vue.fil} · ${vue.cartes} carte(s) · ouverte ${vue.ouverte} · pastille ${vue.pastille} · plaque ${vue.plaque}`);
-    /*  L'ANCIENNE VÉRIFICATION, GARDÉE POUR MÉMOIRE ET NEUTRALISÉE : elle
-        lisait la pastille d'un carrousel qui n'existe plus ici. */
-    verif("(mémoire nº 844) l'ancienne vue photo du Portfolio ouvrait un carrousel — remplacé par le fil (nº 863)",
-      true, "");
-    if (false) verif("elle s'ouvre sur LA photo touchée (la deuxième de la galerie), pastille éteinte, plaque présente",
-      vue.pastille.texte === "2/6" && vue.pastille.opacite === 0 && vue.plaque,
-      `${vue.pastille.texte} · opacité ${vue.pastille.opacite} · plaque ${vue.plaque}`);
+    /*  ⛔ nº 873 — L'ONGLET PORTFOLIO EST UNE PAGE, ET AU DOIGT UNE
+        VIGNETTE DE GALERIE NE MÈNE PLUS NULLE PART (« toucher une photo
+        ne fait rien », banc 873-§3) : la vue photo ne s'ouvre plus que
+        depuis un LIEN PARTAGÉ (mesurée dans ce banc). Le bloc qui touchait
+        une vignette des anciennes bandes (`[data-galeries]`, `[role=radio]`)
+        est retiré : ces nœuds n'existent plus — nº 873 au doigt, nº 876 au
+        web, où la page Portfolio montre les mêmes cartes de fil. */
+    titre("844 · (mémoire) une vignette de l'onglet Portfolio ouvrait la vue photo — plus depuis la nº 873");
+    verif("(mémoire nº 844/863) le Portfolio est le fil de galeries, une vignette n'y mène nulle part — mesuré au banc 873", true, "");
 
     //  ET LA PASTILLE DE LA VUE PHOTO DU PORTFOLIO OBÉIT À LA MÊME RÈGLE.
     titre("844 · la vue photo d'un lien partagé : la même pastille, la même règle (nº 863 : le carrousel vit là)");

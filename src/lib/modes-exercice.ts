@@ -1181,12 +1181,27 @@ export function ligneDuMode(mode: ModeExerciceFiche): {
  * l'autre. (Les slugs de genre ne sont pas les libellés : `prive`
  * s'affiche « Studio », `salon` s'affiche « Salon » — nº 402.)
  */
+/*  ██ §2 (nº 876) — « INDEPENDENT » PASSE EN TÊTE ██
+    ------------------------------------------------------------------
+    DÉCISION DU PROPRIÉTAIRE, web et mobile : sur les plaques d'un
+    profil, le type « Independent » vient TOUJOURS EN PREMIER ; le reste
+    de l'ordre ne change pas — Studio · Salon · Guest · Convention
+    gardent leurs rangs entre eux, ils descendent tous d'un cran.
+    ⚠️ CETTE TABLE VAUT PARTOUT OÙ PLUSIEURS PROFILS SE SUIVENT (voir
+    l'en-tête) : les plaques (BlocProfilsArtiste), et le sous-titre du
+    nom (`sousTitreArtiste`) — qui ne change QUE pour un artiste sans
+    aucun rôle déclaré (un rôle l'emporte, quel que soit le rang). Un
+    ordre écrit une seule fois ne peut pas diverger d'un écran à
+    l'autre ; c'est le prix, et il est dit. Le catalogue (GENRES_MODE) et
+    le sélecteur du formulaire (ORDRE_SELECTEUR) ne sont PAS touchés :
+    l'artiste continue de déclarer « Autre » en dernier, c'est le
+    visiteur qui le lit en premier. */
 const RANG_DU_GENRE: Record<string, number> = {
-  prive: 0,
-  salon: 1,
-  guest: 2,
-  convention: 3,
-  independent: 4,
+  independent: 0,
+  prive: 1,
+  salon: 2,
+  guest: 3,
+  convention: 4,
 };
 
 export function modesOrdonnes(

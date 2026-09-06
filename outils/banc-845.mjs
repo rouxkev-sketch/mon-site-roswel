@@ -104,9 +104,12 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         const c = montrees[0];
         if (!c) return null;
         const f = new Function("return " + R)();
-        const tete = c.children[1];
-        const cadre = c.children[2];
-        const pied = c.children[3];
+        //  nº 876 — PLUS DE BLOC DU WEB EN TÊTE DE CASE : la carte de
+        //  recherche a la structure du fil aux deux appareils, le
+        //  squelette aussi — trois enfants, en-tête, photo, pied.
+        const tete = c.children[0];
+        const cadre = c.children[1];
+        const pied = c.children[2];
         const releve = f(
           c, tete, cadre, pied,
           tete?.children[0],
@@ -121,7 +124,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
           colonnes: getComputedStyle(b.querySelector("ul")).gridTemplateColumns.split(" ").length,
           //  Le premier bloc de chaque case est celui du WEB : au doigt
           //  il doit être retiré de l'affichage, comme sur la vraie.
-          blocWeb: getComputedStyle(c.children[0]).display,
+          enfants: c.children.length,
           y: c.getBoundingClientRect().top,
         };
       }, RELEVE).catch(() => null);
@@ -132,8 +135,8 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
       gris !== null && gris.colonnes === 1, gris ? `${gris.colonnes} colonne(s)` : "jamais vu");
     verif("il montre TROIS cartes au doigt (quinze rendues, douze retirées de l'affichage)",
       gris.rendues === 15 && gris.montrees === 3, `${gris.montrees} montrée(s) sur ${gris.rendues}`);
-    verif("le bloc de la carte du WEB est retiré de l'affichage au doigt",
-      gris.blocWeb === "none", gris.blocWeb);
+    verif("la case n'a que la structure du fil : trois enfants, en-tête, photo, pied (nº 876)",
+      gris.enfants === 3, `${gris.enfants} enfant(s)`);
 
     //  … ET MAINTENANT LA VRAIE, SUR LA MÊME PAGE.
     await page.waitForLoadState("networkidle");
@@ -297,43 +300,15 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
       apres.url === `/artist/${T}?entree=lien` && !apres.photoMontree,
       `${apres.url} · photo ${apres.photoMontree}`);
 
-    /*  ██ nº 863-§3 — DEPUIS L'ONGLET PORTFOLIO, PLUS DE PLAQUE NI
-        D'EN-TÊTE : c'est LE FIL DE LA GALERIE (FilDeGalerie) — le titre
-        de la galerie au-dessus de chaque image, ouvert sur la photo
-        touchée. La plaque / l'en-tête de la nº 845/862 vit toujours sur
-        la vue photo d'un lien partagé (mesurée plus haut dans ce banc). */
-    titre("845 · une vignette du Portfolio ouvre le fil de la galerie, sur la photo touchée (nº 863)");
-    await page.locator("[role=radio]").filter({ hasText: /portfolio/i }).first().tap();
-    await page.waitForFunction(
-      () => document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]').length >= 2,
-      null, { timeout: 15000 });
-    await page.waitForTimeout(800);
-    await page.locator('[data-galeries="doigt"] [data-galerie-serie]').first()
-      .locator('[data-case-galerie="1"] button').tap();
-    await page.waitForFunction(() => /photo=/.test(location.search), null, { timeout: 15000 });
-    await page.waitForTimeout(1500);
-    const vignette = await page.evaluate(() => {
-      const plaque = document.querySelector("[data-habillage-photo]");
-      const lecture = document.querySelector("[data-colonne-lecture]");
-      return {
-        url: location.pathname + location.search,
-        vuePhoto: document.querySelector("[data-vue-photo]") !== null,
-        lectureMasquee: lecture ? getComputedStyle(lecture).display === "none" : null,
-        plaqueMontree: (plaque?.getBoundingClientRect().height ?? 0) > 0,
-        href: plaque?.querySelector("a")?.getAttribute("href"),
-        ouverte: document.querySelector("[data-carte-ouverte]")?.getAttribute("data-carte-de-galerie") ?? null,
-        cartes: document.querySelectorAll("[data-carte-de-galerie]").length,
-        pastille: [...document.querySelectorAll("[data-carte-ouverte] [data-cadre-de-galerie] *")].map((e) => e.textContent.trim()).find((t) => /^\d+\/\d+$/.test(t)) ?? null,
-        titre: document.querySelector("[data-carte-ouverte] [data-titre-galerie]")?.textContent.trim() ?? null,
-      };
-    });
-    verif("la vignette mène à la vue photo (pas au profil), sur LA photo touchée — la première des deux cartes du fil, ouverte sur « 2/6 » (nº 866)",
-      vignette.vuePhoto && vignette.lectureMasquee === true && /entree=portfolio/.test(vignette.url) &&
-      vignette.cartes === 2 && vignette.ouverte === "0" && vignette.pastille === "2/6",
-      `${vignette.url} · ${vignette.cartes} carte(s) · ouverte ${vignette.ouverte} · pastille ${vignette.pastille}`);
-    verif("et le titre de la galerie coiffe l'image, sans plaque (nº 863)",
-      !vignette.plaqueMontree && vignette.titre === "Blackwork • Black",
-      `plaque ${vignette.plaqueMontree} · « ${vignette.titre} »`);
+    /*  ⛔ nº 873 — L'ONGLET PORTFOLIO EST UNE PAGE, ET AU DOIGT UNE
+        VIGNETTE DE GALERIE NE MÈNE PLUS NULLE PART (« toucher une photo
+        ne fait rien », banc 873-§3) : la vue photo ne s'ouvre plus que
+        depuis un LIEN PARTAGÉ (mesurée dans ce banc). Le bloc qui touchait
+        une vignette des anciennes bandes (`[data-galeries]`, `[role=radio]`)
+        est retiré : ces nœuds n'existent plus — nº 873 au doigt, nº 876 au
+        web, où la page Portfolio montre les mêmes cartes de fil. */
+    titre("845 · (mémoire) une vignette du Portfolio ouvrait le fil de la galerie — plus depuis la nº 873");
+    verif("(mémoire nº 845/863/866) le Portfolio est le fil de galeries, une vignette n'y mène nulle part — mesuré au banc 873", true, "");
 
     titre("845 · la carte du fil, elle, mène toujours au profil direct");
     await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
@@ -359,7 +334,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
 {
   const { nav, page } = await ouvrir("web");
   try {
-    titre("845 · le web : ni fil, ni squelette de fil");
+    titre("845 · le web : le squelette du fil, aux deux appareils (nº 876)");
     //  ⚠️ MÊME RÉESSAI QU'AU DOIGT : voir la note du premier bloc.
     let gris = null;
     for (let essai = 0; essai < 3 && !gris; essai += 1) {
@@ -374,11 +349,11 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         return {
           colonnes: getComputedStyle(b.querySelector("ul")).gridTemplateColumns.split(" ").length,
           montrees: montrees.length,
-          //  Au web, la structure du fil ne doit rien peindre : la
-          //  première case n'a que son bloc web affiché.
-          filMontre: montrees[0].children.length > 1
-            ? [...montrees[0].children].slice(1).some((n) => n.getBoundingClientRect().height > 0)
-            : false,
+          //  nº 876 — AU WEB AUSSI, la case peint la structure du fil :
+          //  en-tête, photo, pied — trois enfants, tous affichés (la
+          //  nº 845 exigeait l'inverse : le web n'avait que son bloc).
+          filMontre: montrees[0].children.length === 3
+            && [...montrees[0].children].every((n) => n.getBoundingClientRect().height > 0),
           hauteur: Math.round(montrees[0].getBoundingClientRect().height),
         };
       }).catch(() => null);
@@ -388,7 +363,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
     verif("le squelette du web garde ses colonnes (quatre à 1440 px) et ses douze cases",
       gris !== null && gris.colonnes === 4 && gris.montrees === 12,
       gris ? `${gris.colonnes} colonnes · ${gris.montrees} cases` : "jamais vu");
-    verif("aucune structure de fil n'y est peinte", gris.filMontre === false);
+    verif("la structure du fil y est peinte : en-tête, photo, pied (nº 876)", gris.filMontre === true);
 
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1500);

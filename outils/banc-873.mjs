@@ -100,12 +100,12 @@ const SONDE_PAGE = `() => {
       titreX: titre ? Math.round(titre.getBoundingClientRect().left) : null, liens: cadre ? cadre.querySelectorAll("a").length : null,
       cadreG: cadre ? Math.round(cadre.getBoundingClientRect().left) : null, cadreD: cadre ? Math.round(cadre.getBoundingClientRect().right) : null };
   });
-  const bandes = [...document.querySelectorAll('[data-galeries="doigt"] [data-galerie-serie]')];
-  const web = [...document.querySelectorAll('[data-galeries="web"] [data-galerie-serie]')];
+  //  Les bandes par style : parties au doigt (nº 873) puis au web
+  //  (nº 876) — la sonde garde le compte, qui doit rester à zéro.
+  const bandes = [...document.querySelectorAll('[data-galeries] [data-galerie-serie]')];
   const vide = document.querySelector("[data-page-vide]");
   const nav = document.querySelector('${NAV}');
   return { filVisible: visible(fil), cartes, bandesVisibles: bandes.filter(visible).length, bandes: bandes.length,
-    webVisibles: web.filter(visible).map((g) => g.dataset.galerieSerie), webSeries: web.map((g) => g.dataset.galerieSerie),
     vide: vide ? { texte: vide.querySelector("p")?.textContent.trim(), bouton: vide.querySelector("a")?.textContent.trim(), href: vide.querySelector("a")?.getAttribute("href") } : null,
     filY: fil && visible(fil) ? Math.round(fil.getBoundingClientRect().top) : null, navBas: nav ? Math.round(nav.parentElement.getBoundingClientRect().bottom) : null,
     vuePhoto: Boolean(document.querySelector("[data-vue-photo]")), lecture: getComputedStyle(document.querySelector("[data-colonne-lecture]") ?? document.body).display,
@@ -315,8 +315,10 @@ for (const mode of ["doigt", "web"]) {
       await page.waitForTimeout(1000);
       verif("vers la droite : Flash → Portfolio", await page.evaluate(() => location.pathname) === `/artist/${SLUG}/portfolio`, await page.evaluate(() => location.pathname));
     } else {
-      verif("LE WEB garde ses galeries par style — les six de tattoos seulement",
-        p.webVisibles.join(" ") === TATTOOS.join(" ") && !p.filVisible, `${p.webVisibles.join(" ")} · fil ${p.filVisible}`);
+      //  nº 876 — LE WEB MONTRE LE MÊME FIL QUE LE DOIGT : les six
+      //  galeries de tattoos, une carte chacune, dans le même ordre.
+      verif("LE WEB montre le fil de galeries — les six de tattoos, une carte chacune (nº 876)",
+        p.filVisible && p.cartes.map((c) => c.serie).join(" ") === TATTOOS.join(" "), `${p.cartes.map((c) => c.serie).join(" ")} · fil ${p.filVisible}`);
     }
 
     titre(`873 · §3 — ${mode} : la page Flash`);
@@ -329,7 +331,8 @@ for (const mode of ["doigt", "web"]) {
         f.filVisible && f.cartes.length === 1 && f.cartes[0].serie === "flash·blackwork·black" && f.cartes[0].surtitre === undefined && f.cartes[0].compteur === "1/3" && f.cartes[0].avatar === 0,
         JSON.stringify(f.cartes));
     } else {
-      verif("la galerie de flashs seule, par style", f.webVisibles.join(" ") === "flash·blackwork·black" && !f.filVisible, `${f.webVisibles.join(" ")}`);
+      verif("la galerie de flashs seule, en carte de fil (nº 876)", f.filVisible && f.cartes.length === 1 && f.cartes[0].serie === "flash·blackwork·black" && f.cartes[0].compteur === "1/3",
+        JSON.stringify(f.cartes.map((c) => [c.serie, c.compteur])));
     }
     verif("aucune page vide ici", f.vide === null);
   } catch (e) {
@@ -353,7 +356,7 @@ for (const mode of ["doigt", "web"]) {
       const vv = await sonderVV(page);
       verif(`la page dit « ${phrase} », avec la capsule « Explore styles » de l'écran vide du site`,
         v.vide?.texte === phrase && v.vide.bouton === "Explore styles" && v.vide.href === "/", JSON.stringify(v.vide));
-      verif("ni fil, ni galerie, ni bande", !v.filVisible && v.cartes.length === 0 && v.webVisibles.length === 0 && v.bandesVisibles === 0);
+      verif("ni fil, ni galerie, ni bande", !v.filVisible && v.cartes.length === 0 && v.bandesVisibles === 0);
       verif("le va-et-vient a toujours ses trois onglets, l'actif étant la page",
         vv.liens?.map((l) => l.mot).join(" · ") === "Profile · Portfolio · Flash" && vv.liens.find((l) => l.courant === "page")?.mot === (chemin === "flash" ? "Flash" : "Portfolio"),
         JSON.stringify(vv.liens?.map((l) => [l.mot, l.courant])));

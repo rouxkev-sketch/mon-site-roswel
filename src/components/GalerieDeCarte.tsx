@@ -129,6 +129,22 @@ export function useGalerieDeCarte(nombre: number) {
       //  La cible, et celle d'après : le pas suivant sera prêt.
       setChargees((eues) => Math.max(eues, Math.min(nombre, cible + 2)));
     },
+    /**
+     * ██ §4 (nº 876) — UN SAUT À UN RANG, POUR LES POINTS DU PIED ██
+     * Le pied du fil (PiedDeFil, CarteFil) vit désormais aussi sur les
+     * cartes du WEB, et ses points de position posent un RANG — le
+     * geste qui, au doigt, fait glisser le carrousel jusqu'à la photo
+     * (nº 217). Sur le web la galerie ne connaissait qu'un PAS ; elle
+     * sait maintenant viser un rang, avec les mêmes suites qu'un pas :
+     * la pastille se réveille, la cible et celle d'après sont
+     * demandées. Hors de la liste, rien ne bouge.
+     */
+    allerAu: (cible: number) => {
+      if (cible < 0 || cible > nombre - 1 || cible === indice) return;
+      pastille.reveiller();
+      setIndice(cible);
+      setChargees((eues) => Math.max(eues, Math.min(nombre, cible + 2)));
+    },
   };
 }
 
@@ -291,6 +307,7 @@ export function CommandesDeCarte({
   aller,
   pastilleEveillee,
   pleineLargeur,
+  sansCompteur = false,
 }: {
   indice: number;
   nombre: number;
@@ -303,6 +320,16 @@ export function CommandesDeCarte({
       la pastille des fiches ; une carte côte à côte, les réduits — le
       dessin est le même, c'est le gabarit qui suit la carte. */
   pleineLargeur: boolean;
+  /**
+   * ██ §3 (nº 876) — LES CHEVRONS SEULS, SANS LA PASTILLE ██
+   * Une carte du FIL DE GALERIES (FilDeGalerie) écrit déjà « 1/20 » sur
+   * sa ligne de titre (nº 874-§4) : une pastille dans la photo le
+   * dirait deux fois. Elle passe donc ce réglage — le même mot que le
+   * carrousel des fiches (`sansCompteur`, nº 284) — et ne reçoit que
+   * les deux chevrons de la nº 839. Faux par défaut : les cartes de la
+   * grille ne changent pas d'un pixel.
+   */
+  sansCompteur?: boolean;
 }) {
   const chevron: TailleChevron = pleineLargeur
     ? CHEVRON_GALERIE
@@ -337,14 +364,16 @@ export function CommandesDeCarte({
            partout (`PastilleCompteur`). Le gabarit, lui, ne bouge pas
            d'un pixel — mêmes ancres, mêmes rembourrages, mêmes tailles
            qu'à la nº 839, simplement passés en paramètres. */}
-      <PastilleCompteur
-        indice={indice}
-        nombre={nombre}
-        eveillee={pastilleEveillee}
-        place={`top-2 right-2 ${pleineLargeur ? "px-2.5 py-1.5" : "px-2 py-1"}`}
-        ecriture={pleineLargeur ? "text-[12px]" : "text-[10px]"}
-        attributs={{ "data-compteur-de-carte": "" }}
-      />
+      {!sansCompteur && (
+        <PastilleCompteur
+          indice={indice}
+          nombre={nombre}
+          eveillee={pastilleEveillee}
+          place={`top-2 right-2 ${pleineLargeur ? "px-2.5 py-1.5" : "px-2 py-1"}`}
+          ecriture={pleineLargeur ? "text-[12px]" : "text-[10px]"}
+          attributs={{ "data-compteur-de-carte": "" }}
+        />
+      )}
       {peutReculer && fleche(-1)}
       {peutAvancer && fleche(1)}
     </>

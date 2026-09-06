@@ -1,28 +1,14 @@
 "use client";
 
-//  §4 (nº 459) — `useEffect` : la purge d'arrivée de la mémoire des
-//  galeries (voir PanneauPortfolio).
-import { useEffect, useState } from "react";
 import { OngletsLigne } from "@/components/OngletsLigne";
-//  §4 (nº 459) — la mémoire de défilement des galeries du doigt.
-import {
-  cleDeGalerie,
-  oublierLesAutresGaleries,
-} from "@/lib/memoire-galeries";
 import { CATEGORIES_EXPLORER } from "@/config/tatouage";
 import {
   NATURE_PAR_DEFAUT,
   RENDU_PAR_DEFAUT,
   RENDUS_PHOTO,
-  titreDeGalerie,
   type SlugNature,
 } from "@/lib/photos-tatoueur";
-import {
-  CHEVRON_GALERIE_PETIT,
-  GalerieQuiDefile,
-} from "@/components/GalerieQuiDefile";
 import type { PhotoGalerie, StyleGalerie } from "@/lib/photo-tatoueur";
-import { photoDuBord } from "@/lib/photos-du-bord";
 //  §1 (nº 873) — les trois vues d'un portfolio et leurs adresses : une
 //  feuille sans dépendance, lue ici comme par les routes et le proxy.
 import {
@@ -32,6 +18,28 @@ import {
 } from "@/lib/lien-interne";
 
 /**
+ * ██ §3 (nº 876) — LES BANDES PAR STYLE DU WEB SONT SUPPRIMÉES, CODE
+ * COMPRIS ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE : au web, les pages Portfolio et Flash d'un
+ * profil montrent LES CARTES DE GALERIE DU MOBILE (FilDeGalerie,
+ * nº 873/874) — une par rangée, pleine largeur dans les marges du web :
+ * titre en haut à gauche, compteur en haut à droite, la photo avec les
+ * chevrons de la nº 839 au survol, le pied en dessous. Le fil est donc
+ * la présentation des DEUX appareils, et ce fichier perd tout ce qui ne
+ * servait qu'aux bandes : `PanneauPortfolio` (ses deux blocs « doigt »
+ * et « web », les cases `casesDe`, la règle « une image pleine et 60 %
+ * de la suivante » de la nº 874-§5), `TeteDeGalerie` (nº 521/747, dont
+ * le compteur vit déjà ici, `CompteurDeGalerie`), la purge d'arrivée de
+ * la mémoire des galeries (nº 459 — elle ne servait que les bandes du
+ * doigt, parties à la nº 873) et le type `SerieChoisie` avec le chemin
+ * « une vignette change la photo du haut » (nº 204/306) : plus de
+ * vignette, plus de série choisie — les poseurs correspondants de
+ * FicheTatoueur et FenetreFiche sont partis avec (règle nº 386 : pas de
+ * code mort). RESTENT : le va-et-vient (SelecteurOngletAffiche), la
+ * liste des galeries d'une page (`galeriesDuPortfolio`), le titre et le
+ * compteur d'une galerie — ce que le fil consomme.
+ *
  * L'AFFICHE EN TROIS ONGLETS — « Profile », « Portfolio », « Flash »
  * ==================================================================
  * (passe nº 197 ; refondu par la nº 276-§3 ; TROIS PAGES depuis la
@@ -86,17 +94,9 @@ import {
     pages, trois adresses. Le type `OngletAffiche` à deux valeurs de la
     nº 197 est parti avec l'onglet-requête (« ?onglet=portfolio »). */
 
-/** UNE SÉRIE — ce qu'un toucher de vignette ouvre (nº 204-§3) :
-    exactement une galerie de dépôt. */
-export type SerieChoisie = {
-  style: string;
-  nature: string;
-  rendu: string;
-  /** §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE dans sa série. Le
-      cadre photo de la fiche s'ouvre SUR ELLE. Absent : la première,
-      comme depuis toujours (c'est ce qu'envoie la grille du doigt). */
-  indice?: number;
-};
+/*  ⛔ §3 (nº 876) — `SerieChoisie` EST SUPPRIMÉ, CODE COMPRIS : « ce
+    qu'un toucher de vignette ouvre » (nº 204-§3) n'a plus de vignette
+    — voir la note en tête de fichier. */
 
 //  §2 (nº 873) — LES TROIS ONGLETS, dans l'ordre des vues ; « Flash »
 //  est TOUJOURS là, même sans flash : la page existe, et dit alors
@@ -504,463 +504,5 @@ export function TitreDeGalerie({
         {compteur}
       </div>
     </>
-  );
-}
-
-function TeteDeGalerie({
-  titre,
-  total,
-  galerie,
-}: {
-  titre: string;
-  total: number;
-  galerie: (surRang: (rang: number) => void) => React.ReactNode;
-}) {
-  const [rang, setRang] = useState(0);
-  return (
-    <>
-      {/*  §3 (nº 863) — la ligne du titre vit chez `TitreDeGalerie`,
-           partagé avec le fil de galerie ; ce composant-ci n'y ajoute
-           que son compteur et sa galerie. */}
-      {/*  §4 (nº 874) — le compteur est écrit une seule fois, plus haut
-           (`CompteurDeGalerie`) : le fil du doigt porte le même. */}
-      <TitreDeGalerie
-        titre={titre}
-        compteur={<CompteurDeGalerie rang={rang} total={total} />}
-      />
-      {galerie(setRang)}
-    </>
-  );
-}
-
-
-/**
- * LE PANNEAU « PORTFOLIO » — UNE SUITE DE GALERIES, sans plus aucun
- * sélecteur (nº 276-§3) ni aucun titre de section (nº 375-§2). Chaque
- * galerie porte sa catégorie en surtitre.
- * ██ §1 ET §3 (nº 873) — LES GALERIES D'UNE PAGE, ET LE WEB SEUL ██
- * ------------------------------------------------------------------
- * Il ne reçoit plus le portfolio entier : ContenuFiche lui donne LES
- * GALERIES DE LA PAGE (`galeriesDuPortfolio`, une catégorie), jamais
- * vides — une page sans photo montre l'écran vide du site, chez lui.
- * AU DOIGT, CE PANNEAU NE SE MONTRE PLUS : les pages Portfolio et
- * Flash y sont LE FIL DE GALERIES (FilDeGalerie) — les bandes par
- * style et la page intermédiaire de la nº 866 ont disparu du mobile.
- * Ses deux blocs (« doigt », « web ») restent ce qu'ils étaient : le
- * WEB garde sa présentation, galeries par style, sans qu'on y touche ;
- * le bloc « doigt » ne sert plus qu'à une fenêtre étroite d'ordinateur
- * — l'appareil décide (ContenuFiche, `mobile:hidden`), jamais une
- * largeur (piège nº 60).
- */
-export function PanneauPortfolio({
-  galeries,
-  surSerie,
-  nomTatoueur,
-  slugTatoueur = "",
-}: {
-  /** Les galeries de la page — une catégorie, au moins une galerie. */
-  galeries: GalerieDuPortfolio[];
-  /** Un toucher sur une vignette : la galerie principale montre CETTE
-      série — style + catégorie + rendu, une galerie de dépôt — et la
-      page remonte en haut (nº 197-§4, précisé par la nº 204-§3). */
-  surSerie: (serie: SerieChoisie) => void;
-  nomTatoueur: string;
-  /** §4 (nº 459) — L'IDENTITÉ DE LA FICHE, pour la mémoire de
-      défilement des galeries du doigt (lib/memoire-galeries) : la clé
-      de chaque galerie commence par lui, et son arrivée purge les
-      positions des AUTRES fiches. Vide : aucune mémoire — rien ne
-      change. */
-  slugTatoueur?: string;
-}) {
-  /*  §4 (nº 459) — LA PURGE D'ARRIVÉE : les positions retenues des
-      autres fiches meurent quand ce panneau se monte — aucune
-      position fantôme ne voyage d'un profil à l'autre. */
-  useEffect(() => {
-    if (slugTatoueur) oublierLesAutresGaleries(slugTatoueur);
-  }, [slugTatoueur]);
-  /*  LES GALERIES sont celles de la page (nº 873) — la liste que le fil
-      de galeries lit aussi (nº 866 ; la règle est celle de la nº 375),
-      calculée une fois par ContenuFiche. « No posts yet » (nº 197-§5)
-      n'a plus de place ici : une page vide se dit là-bas, par l'écran
-      vide du site (§4). */
-
-  /**
-   * §3 (nº 314) — LES CASES D'UNE GALERIE, ÉCRITES UNE SEULE FOIS.
-   * ------------------------------------------------------------------
-   * Le web et le doigt montrent EXACTEMENT les mêmes cases : même
-   * largeur, même format, même geste. Seuls diffèrent le débord et
-   * l'effacement, qui sont des réglages de l'enveloppe — pas du
-   * contenu. Les écrire deux fois, c'était garantir qu'ils finiraient
-   * par diverger ; ils vivent donc ici, et les deux blocs les
-   * appellent.
-   */
-  const casesDe = (serie: SeriePubliee, nature: string) =>
-    serie.photos.map((photo, rang) => (
-      <li
-        key={photo.cle}
-        data-case-galerie={rang}
-        /*  ██ §5 (nº 874) — LES GALERIES DU WEB S'AGRANDISSENT ██
-             ------------------------------------------------------
-             DÉCISION DU PROPRIÉTAIRE : la rangée montrait DEUX photos
-             pleines et 10 % de la troisième ; elle en montre désormais
-             UNE PLEINE et 60 % DE LA SUIVANTE — des images nettement
-             plus grandes, et il reste assez de la voisine pour qu'on
-             voie qu'il y en a d'autres.
-             LA RÈGLE EST LA MÊME, avec un autre nombre :
-             `1,6 × case + 1 × écart = 100 %`, d'où
-             `case = (100 % − 3px) / 1,6` avec l'écart de 3 px. `100 %`
-             est la boîte de CONTENU de la rangée — au doigt, le
-             rembourrage du débord n'en fait donc pas partie, et la
-             règle tient telle quelle aux deux largeurs. Aucune largeur
-             en dur.
-             ⚠️ « WEB SEULEMENT », ET C'EST DÉJÀ LE CAS : depuis la
-             nº 873-§3, ce panneau ne se montre plus au doigt (les pages
-             Portfolio et Flash y sont le fil de galeries) — ses deux
-             blocs, « doigt » et « web », sont deux largeurs d'un même
-             ORDINATEUR. Une seule écriture les sert (piège nº 378).
-             ⚠️ LE CALCUL D'ORIGINE, POUR MÉMOIRE : deux photos pleines
-             et 10 % de la troisième, `2,1 × case + 2 × écart = 100 %`.
-             §2 (nº 310) — `grow` : ET C'ÉTAIT ÇA, LA MARGE DE DROITE.
-             ------------------------------------------------------
-             LA CAUSE, DÉCODÉE AU PIXEL : cette largeur est calculée
-             pour qu'IL Y AIT une troisième photo. Une série qui n'en a
-             QUE DEUX ne remplit donc pas le cadre, et ce qui reste se
-             voit comme une marge à droite — mesuré 21 px à deux
-             photos, 202 px à une seule, contre 0,00 px dès trois.
-             LE REMÈDE : les cases GRANDISSENT pour remplir ce qui
-             reste. `shrink-0` les empêche toujours de rétrécir, donc
-             dès trois photos la rangée déborde, l'espace libre est
-             négatif, et `grow` n'a rien à distribuer — la règle des
-             10 % est intacte, au pixel.
-             ██ §4 (nº 417) — ET C'ÉTAIT AUSSI LA PHOTO PLEINE LARGEUR ██
-             LE RELEVÉ : une galerie qui ne contient QU'UNE photo
-             l'affiche sur toute la largeur, au lieu du format d'une
-             galerie ordinaire.
-             LA CAUSE EST CE MÊME `grow`, ET SA MESURE ÉTAIT DÉJÀ ÉCRITE
-             DEUX LIGNES PLUS HAUT : « 202 px à une seule » photo. À
-             deux photos il rattrape 21 px, ce qui se voit à peine ; à
-             une seule il en rattrape DIX FOIS PLUS — la case unique
-             absorbe tout l'espace libre et occupe la rangée entière.
-             Le défaut ne vient donc pas de l'origine : il est né AVEC
-             le remède de la nº 310 (commit du 16-08-2026), et il vaut
-             pour LE WEB COMME POUR LE DOIGT — les deux rendus posent
-             les mêmes cases, par cette seule fonction.
-             LE REMÈDE, MINIMAL : `grow` ne s'applique plus qu'À PARTIR
-             DE DEUX photos. Une case seule garde donc sa largeur de
-             gabarit — `basis` intacte, exactement celle qu'elle aurait
-             au milieu d'une galerie de dix —, et la nº 310 n'est pas
-             défaite d'un pixel là où elle réparait quelque chose.
-             ⚠️ LES CHEVRONS, EUX, N'APPARAISSENT PAS POUR AUTANT, et
-             c'est par construction : `GalerieQuiDefile` les allume sur
-             les BOUTS DE COURSE réels (`scrollWidth` contre
-             `clientWidth`) — une rangée qui ne déborde pas n'en a
-             aucun, ni fondu. Les points ont été supprimés à la nº 301,
-             et cette galerie n'a jamais porté de badge de comptage. */
-        className={`${
-          serie.photos.length > 1 ? "grow " : ""
-        }shrink-0 snap-start basis-[calc((100%_-_3px)/1.6)]`}
-      >
-        {/*  RÈGLE 6 (nº 306) — TOUCHER UNE PHOTO L'OUVRE, ELLE ET PAS
-             UNE AUTRE. C'est le chemin qui existe déjà (`surSerie`),
-             avec le RANG en plus : en web il pose la photo dans le
-             cadre du haut. (Au doigt, la vignette NAVIGUAIT vers la vue
-             photo — nº 455, puis le fil de galeries de la nº 863 ; ce
-             panneau ne se montre plus au doigt depuis la nº 873-§3, et
-             ce chemin-là n'existe plus.) */}
-        <button
-          type="button"
-          onClick={() =>
-            surSerie({
-              style: serie.style,
-              nature,
-              rendu: serie.rendu,
-              indice: rang,
-            })
-          }
-          className="group/case block w-full text-left"
-        >
-          <span className="block aspect-[4/5] overflow-hidden bg-sombre-eleve">
-            {/* eslint-disable-next-line @next/next/no-img-element --
-                photo déposée par le tatoueur, servie telle quelle
-                (la règle des vignettes). */}
-            <img
-              //  §1 (nº 782) — par notre porte : voir lib/photos-du-bord.
-              src={photoDuBord(photo.miniature)}
-              alt={`${serie.label} — ${nomTatoueur}`}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover
-                         transition-opacity group-hover/case:opacity-90"
-            />
-          </span>
-        </button>
-      </li>
-    ));
-
-  return (
-    /*  §2 (nº 375) — LE RYTHME, ET CE QU'IL DEVIENT.
-        ------------------------------------------------------------
-        CE QUI DISPARAÎT, entièrement :
-         · le `mt-10` que portait CHAQUE `<section>` — 40 px avant
-           « RÉALISATIONS », 40 px avant « FLASHS » ;
-         · la ligne du `<h2>` lui-même, deux fois ;
-         · le `mt-5` (20 px) qui séparait un titre de sa première
-           galerie, deux fois.
-        CE QUI EST CONSERVÉ, à la valeur près :
-         · les 40 px qui ouvrent le portfolio sous la rangée Profil /
-           Portfolio — le `mt-10` ne disparaît pas, il REMONTE d'un
-           cran, du `<section>` au conteneur des galeries. Le premier
-           mot du portfolio se pose donc exactement là où se posait
-           « RÉALISATIONS » ;
-         · le `mt-7 first:mt-0` (28 px) entre deux galeries — pas
-           touché d'un pixel, y compris à la jointure réalisations /
-           flashs, qui n'est plus une frontière de section mais deux
-           galeries qui se suivent ;
-         · le `mt-2.5` (10 px) entre un titre de galerie et sa rangée,
-           et le `gap-[3px]` dans la rangée.
-        AUCUNE VALEUR NEUVE N'EST INTRODUITE : le surtitre s'empile sur
-        le titre sans marge du tout.
-
-        ██ §1 (nº 382) — LE PORTFOLIO REÇOIT SON PROPRE PLAN ██
-        ============================================================
-        LE DÉFAUT : sur le web, en remontant dans les galeries, LES
-        FLÈCHES DE DÉFILEMENT PASSENT PAR-DESSUS LA BARRE FIXE.
-        LES RANGS EN PRÉSENCE :
-         · la flèche d'une galerie — `z-[2]`, et son enveloppe
-           (`GalerieQuiDefile`) est `relative` SANS rang : elle ne
-           fabrique donc aucun plan, et la flèche se compare
-           DIRECTEMENT au premier plan rencontré en remontant ;
-         · le voile de bord d'une galerie — `z-[1]`, même situation ;
-         · la photo agrandie au pincement — `z-[60]` (ZoomPincement,
-           monté par `CarrouselPortfolio`, donc présent sur cette
-           page) : au-dessus de la barre, et c'est le rang qui prouve
-           que la comparaison directe est dangereuse ;
-         · la barre fixe du logo — `z-50` ;
-         · la rangée collante — `lg:z-[2]` sur le web, `mobile:z-[3]`
-           au doigt (nº 377).
-        LA CAUSE, ET ELLE EST DÉJÀ DOCUMENTÉE : c'est très exactement
-        le défaut de la nº 193-§3, où les cartes passaient devant la
-        barre. « La barre est au rang 50, mais la mosaïque
-        n'appartenait à aucun plan à elle — ses enfants pouvaient donc
-        se comparer DIRECTEMENT à la barre… et l'ordre de peinture
-        entre un calque neuf et une barre en verre dépoli n'est pas
-        garanti. » Le portfolio est dans la même situation : aucun
-        plan à lui.
-        LE REMÈDE EST LE SIEN, MOT POUR MOT : un plan au rang 0.
-        Tout ce que le portfolio contient s'ordonne À L'INTÉRIEUR
-        (les voiles sous les flèches, comme avant), et le plan entier
-        reste sous la barre — quoi qu'il arrive, y compris si un
-        navigateur promeut la zone sur son propre calque.
-        ⚠️ ET LA RÈGLE DE LA Nº 377 EN SORT RENFORCÉE, PAS CASSÉE : la
-        rangée collante est au rang 2 (web) ou 3 (doigt), ce plan au
-        rang 0 — elle passe donc au-dessus du portfolio, ce qui est
-        précisément ce que la nº 377 demandait. Aujourd'hui les
-        flèches (`z-[2]`) ÉGALAIENT la rangée du web et passaient
-        devant elle par l'ordre du flux ; elles ne le peuvent plus.
-        ⚠️ RIEN DE GÉOMÉTRIQUE : `relative` sans décalage ne déplace
-        rien, et le rang 0 ne change aucun ordre interne.
-        ⚠️ ET RIEN AU-DESSUS DE LA RANGÉE : ce bloc est un frère
-        SUIVANT de la rangée, jamais un de ses parents — la règle de
-        cette passe est tenue. La fenêtre d'adresse (`z-[80]`,
-        BlocLieux) vit dans l'onglet Profil, hors de ce plan : son
-        échappée reste entière. */
-    <div className="relative z-0">
-      {/*  LES VIGNETTES — une par SÉRIE publiée, le nom du style
-           dessous. Angles arrondis, aucun contour, aucun encadré :
-           l'image et son nom, rien de plus. (Le cœur de série de
-           la nº 203 est ANNULÉ par la nº 204-§1 : le cœur vit sur
-           chaque photo, dans la galerie — jamais ici.) Un style
-           publié dans les deux rendus a DEUX vignettes, sous le
-           même nom : c'est la première photo de chaque série qui
-           les distingue — jamais un mot de rendu. */}
-      {/*  §3 (nº 314) — AU DOIGT AUSSI, DES GALERIES QUI DÉFILENT.
-           ------------------------------------------------------
-           CE QUI EST REMPLACÉ : la GRILLE DE VIGNETTES par lignes
-           de deux (une vignette par SÉRIE, sa première photo et le
-           nom du style dessous). Elle ne montrait qu'une image par
-           carrousel ; on ne voyait le reste qu'après avoir touché.
-           CE QUI PREND SA PLACE : la présentation du web — un titre
-           « Réalisme · Couleur » et, sous lui, TOUTES les photos du
-           carrousel dans une galerie qui défile.
-           LA SEULE DIFFÉRENCE AVEC LE WEB, et c'est le cœur du
-           point : AU DOIGT, LA GALERIE VA BORD À BORD DE L'ÉCRAN et
-           s'efface dans les marges de la page.
-           ⚠️ RIEN N'EST INVENTÉ ICI : ce débord et cet effacement
-           sont EXACTEMENT ceux de « Ma sélection » au doigt
-           (BlocSuivis) — mêmes marges négatives rendues en
-           rembourrage (`-mx-4 px-4 sm:-mx-6 sm:px-6`), et les deux
-           FONDUS ANTHRACITE du dessin partagé, qui sont son
-           comportement PAR DÉFAUT (`avecVoiles`, `decalageGauche`
-           et `decalageDroite` de `GalerieQuiDefile`). On ne les
-           repasse même pas : ne rien passer, c'est déjà les
-           demander.
-           ⚠️ ET C'EST LE MÊME COMPOSANT : le débord et l'effacement
-           étaient déjà des réglages, comme l'écart et la taille des
-           chevrons. Aucun second dessin. */}
-      <div data-galeries="doigt" className="mt-10 lg:hidden">
-        {galeries.map(({ serie, nature }) => (
-          <div
-            /*  §2 (nº 375) — LA NATURE ENTRE DANS LA CLÉ, et il le
-                 faut : la liste est APLATIE, or un même style dans
-                 un même rendu peut exister en réalisation ET en
-                 flash. Sans elle, deux galeries porteraient la
-                 même clé — et le même nom de sonde. */
-            key={`doigt-${nature}-${serie.style}-${serie.rendu}`}
-            data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
-            className="mt-7 first:mt-0"
-          >
-            <TeteDeGalerie
-              titre={titreDeGalerie(serie.label, serie.rendu)}
-              total={serie.photos.length}
-              galerie={(surRang) => (
-            <GalerieQuiDefile
-              surRang={surRang}
-              classeEnveloppe="mt-2.5"
-              /*  LE DÉBORD DE « MA SÉLECTION », À LA LETTRE : la
-                   rangée sort jusqu'aux bords de l'écran (marges
-                   négatives de la largeur des marges de page) et se
-                   les reprend en REMBOURRAGE — au repos, la
-                   première photo reste donc alignée sur les titres,
-                   et ce qui défile passe SOUS les marges, où les
-                   fondus l'effacent.
-                   ⚠️ ET LE REMBOURRAGE DE DÉFILEMENT AVEC (`scroll-pl`),
-                   MESURÉ : sans lui, la rangée s'ouvrait décalée de
-                   16 px (`scrollLeft: 16`) et la première photo
-                   collait au bord de l'écran, à moitié effacée. LA
-                   RAISON : `snap-start` aligne sur le SNAPPORT, qui
-                   est la boîte de REMBOURRAGE — le rembourrage de
-                   débord en faisait donc partie, et le navigateur
-                   « rattrapait » les 16 px pour poser la première
-                   case au bord. « Ma sélection » ne connaît pas ce
-                   défaut parce que ses cases sont en `snap-center`,
-                   pas en `snap-start` ; les nôtres suivent le web
-                   (nº 308), qui n'a aucun rembourrage. On ne change
-                   donc NI les cases NI le web : on dit seulement au
-                   défilement où est le bord utile, et le débord se
-                   comporte enfin comme celui de « Ma sélection ». */
-              classeRangee="-mx-4 px-4 scroll-pl-4 sm:-mx-6 sm:px-6 sm:scroll-pl-6"
-              //  L'écart de la fiche (nº 308), le même qu'en web :
-              //  le portfolio se lit pareil sur les deux appareils.
-              ecart="gap-[3px]"
-              cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-              /*  §4 (nº 459) — CHAQUE GALERIE DU DOIGT SE SOUVIENT DE
-                   SA POSITION au retour d'une vue photo (le remontage
-                   la remettait au début) : la clé porte la fiche et
-                   l'identité de la série. Sans slug (aucun appelant
-                   aujourd'hui), pas de mémoire — comportement
-                   d'avant. Le web n'est pas concerné : sur lui, une
-                   vignette ne démonte rien. */
-              cleMemoire={
-                slugTatoueur
-                  ? cleDeGalerie(slugTatoueur, nature, serie.style, serie.rendu)
-                  : undefined
-              }
-              etiquette={titreDeGalerie(serie.label, serie.rendu)}
-            >
-              {casesDe(serie, nature)}
-            </GalerieQuiDefile>
-              )}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/*  §1 (nº 306) — LE WEB : UNE GALERIE QUI DÉFILE PAR
-           CARROUSEL, la présentation de « Ma sélection »
-           (`GalerieQuiDefile`, partagée — aucun second dessin).
-           ------------------------------------------------------
-           RÈGLE 2 — LE TITRE PORTE LE STYLE ET LE RENDU :
-           « Réalisme · Couleur », « Réalisme · Noir et gris ».
-           Deux carrousels d'un même style mais de rendus
-           différents portent donc deux titres distincts, et c'est
-           le but. Les mots viennent de `titreDeGalerie` (nº 376) :
-           aucun libellé n'est écrit ici, et la ligne sous la photo
-           de la fiche au doigt affiche EXACTEMENT la même chaîne.
-           RÈGLE 3 — TOUTES les photos du carrousel. Le plafond de
-           vingt de « Ma sélection » ne s'applique pas à cette
-           page, et il n'y a pas de « Voir plus ».
-           RÈGLE 4 — DEUX PHOTOS PLEINES ET 10 % DE LA TROISIÈME,
-           son bord droit collé au bord droit du cadre :
-           `2,1 × case + 2 écarts = 100 %` de la boîte de CONTENU,
-           d'où `case = (100 % − 6px) / 2,1` avec l'écart de 3 px.
-           Aucune largeur en dur — la règle tient à toute largeur
-           de colonne.
-           RÈGLE 5 — ANNULÉE PAR LA Nº 312-§1, SUR CONSIGNE.
-           ------------------------------------------------------
-           Elle faisait DÉBORDER la galerie de 40 px vers la grande
-           photo et effaçait cette bande en dégradé. Le propriétaire
-           n'en veut plus : LA GALERIE S'ARRÊTE À L'ALIGNEMENT DU
-           TEXTE, la même ligne verticale que les titres, et une
-           photo qui sort à gauche disparaît NETTEMENT sur cette
-           ligne. Plus de débord, plus de masque, plus de dégradé —
-           la rangée n'a donc plus ni marge négative, ni
-           rembourrage, ni rembourrage de défilement : sa boîte est
-           celle de la colonne, et `snap-start` s'aligne dessus
-           sans qu'on ait rien à corriger. */}
-      <div data-galeries="web" className="mt-10 hidden lg:block">
-        {galeries.map(({ serie, nature }) => (
-          <div
-            //  §2 (nº 375) — la nature dans la clé, même raison
-            //  qu'au doigt : la liste est aplatie.
-            key={`galerie-${nature}-${serie.style}-${serie.rendu}`}
-            data-galerie-serie={`${nature}·${serie.style}·${serie.rendu}`}
-            className="mt-7 first:mt-0"
-          >
-            {/*  §2 (nº 375) — LE SURTITRE : « RÉALISATIONS » ou
-                 « FLASHS », l'écriture de l'ancien titre de
-                 section, collée au titre de la galerie. */}
-            <TeteDeGalerie
-              titre={titreDeGalerie(serie.label, serie.rendu)}
-              total={serie.photos.length}
-              galerie={(surRang) => (
-            <GalerieQuiDefile
-              surRang={surRang}
-              /*  §1 (nº 312) — PLUS AUCUN DÉBORD, PLUS AUCUN MASQUE.
-                   ------------------------------------------------
-                   LA GALERIE TIENT DANS LA COLONNE, exactement : ni
-                   marge négative sur l'enveloppe, ni marge négative
-                   sur la rangée, ni rembourrage pour la compenser.
-                   Son bord gauche EST l'alignement du texte, parce
-                   que c'est la même boîte que celle des titres — ce
-                   n'est plus un réglage qui tombe juste, c'est une
-                   identité.
-                   CE QUE ÇA SIMPLIFIE AU PASSAGE : `scroll-pl-10`
-                   n'a plus de raison d'être (il remettait le
-                   snapport sur la boîte de contenu quand la rangée
-                   avait 40 px de rembourrage), et les deux lignes
-                   de masque disparaissent avec l'effacement — donc
-                   aussi la racine d'arrière-plan qu'un masque crée
-                   pour ses descendants, et toutes les précautions
-                   qui allaient avec (nº 234). */
-              classeEnveloppe="mt-2.5"
-              /*  §4-a (nº 308) — L'ÉCART PASSE DE 6 À 3 px, la
-                   moitié. Il est donné au dessin partagé en
-                   RÉGLAGE : « Ma sélection » garde ses 6 px. */
-              ecart="gap-[3px]"
-              //  §4 (nº 310) — le petit chevron est demandé ICI,
-              //  et seulement ici : « Ma sélection » garde celui
-              //  de la nº 301 (le défaut du dessin partagé).
-              chevron={CHEVRON_GALERIE_PETIT}
-              /*  §3-b ET §4-c (nº 308) — LES DEUX CHEVRONS SONT
-                   POSÉS DE LA MÊME FAÇON, chacun contre SON bord
-                   de la galerie : `left-0` et `right-0`, donc la
-                   même distance des deux côtés. Ils vivent DANS la
-                   rangée — jamais dans une gouttière collée à la
-                   grande photo, d'où venait « à moitié coupée »
-                   (nº 308-§3, puis nº 310-§3). */
-              decalageGauche="left-0"
-              decalageDroite="right-0"
-              avecVoiles={false}
-              cleDuContenu={`${serie.style}-${serie.rendu}-${serie.photos.length}`}
-              etiquette={titreDeGalerie(serie.label, serie.rendu)}
-            >
-              {casesDe(serie, nature)}
-            </GalerieQuiDefile>
-              )}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }
