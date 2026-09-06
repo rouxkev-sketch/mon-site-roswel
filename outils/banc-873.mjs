@@ -291,7 +291,12 @@ for (const mode of ["doigt", "web"]) {
       verif("LA GALERIE D'UNE PHOTO : même carte, aucun compteur, pas de points, le pied gardé",
         p.cartes[2] && p.cartes[2].compteur === null && p.cartes[2].pastille === null && p.cartes[2].points === 0 && p.cartes[2].pied && p.cartes[2].cadreG === 0 && p.cartes[2].cadreD === 390, JSON.stringify(p.cartes[2]));
       verif("plus de bandes par style au doigt", p.bandesVisibles === 0, `${p.bandesVisibles} visible(s) sur ${p.bandes}`);
-      verif("quarante pixels d'air entre la rangée du va-et-vient (son trait) et le fil", p.filY !== null && p.navBas !== null && p.filY - p.navBas === 40, `${p.filY} − ${p.navBas}`);
+      /*  ⚠️ nº 879-§3 — VINGT-QUATRE, ET PLUS QUARANTE : le propriétaire
+          veut que l'air au-dessus de la première carte vaille CELUI QUI
+          SÉPARE DEUX CARTES — la gouttière de la liste (`gap-y-6`),
+          mesurée aux deux appareils. C'est le seul nombre qui change
+          ici ; le banc 879 compare les deux airs l'un à l'autre. */
+      verif("vingt-quatre pixels d'air entre la rangée du va-et-vient (son trait) et le fil (nº 879-§3)", p.filY !== null && p.navBas !== null && p.filY - p.navBas === 24, `${p.filY} − ${p.navBas}`);
       verif("aucune photo n'est un lien", p.cartes.every((c) => c.liens === 0), JSON.stringify(p.cartes.map((c) => c.liens)));
       titre("873 · §3 — doigt : toucher une photo ne fait rien");
       const avant = await page.evaluate(() => location.pathname + location.search + " " + Math.round(scrollY));
