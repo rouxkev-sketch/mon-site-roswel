@@ -256,18 +256,15 @@ const mesureTitre = `(bloc) => {
 {
   const { nav, page } = await ouvrir("web");
   try {
-    titre("842 · au web : la carte dit la même chose — dans l'en-tête du fil (nº 876)");
+    titre("842 · au web : la carte dit la même chose");
     await page.setViewportSize({ width: 1440, height: 950 });
     await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
     await page.waitForTimeout(1500);
     const m = await page.evaluate(({ SEL, M }) => {
       const f = new Function("return " + M)();
       const c = document.querySelector(SEL);
-      //  nº 876 — AU WEB, LE NOM ET LA VILLE VIVENT DANS L'EN-TÊTE DU FIL
-      //  (au-dessus de la photo) : le bloc sous la photo, avec son h3,
-      //  est retiré du web. On lit ce qui se voit.
-      const t = f(c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:first-child"));
-      const p = c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:last-child");
+      const t = f(c.querySelector("h3"));
+      const p = [...c.querySelectorAll("[data-lien-carte] p")].pop();
       //  §8 (nº 852) — LE SOUS-TITRE SE LIT SUR CE QUI SE VOIT : les
       //  deux écritures (celle du doigt, celle du web) vivent dans le
       //  même paragraphe, et l'appareil en montre une.
@@ -284,7 +281,7 @@ const mesureTitre = `(bloc) => {
     verif("le sous-titre du web ne porte que la LOCALITÉ (nº 852-§8)", m.sousTitre === "Lyon, FR", m.sousTitre);
     const ml = await page.evaluate(({ SEL, M }) => {
       const f = new Function("return " + M)();
-      return f(document.querySelector(SEL + " [data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:first-child"));
+      return f(document.querySelector(SEL + " h3"));
     }, { SEL: `[data-carte]:has([data-lien-carte][href*="${LONG}"])`, M: mesureTitre });
     verif("un nom long tient sur une ligne", ml.lignes === 1, `${ml.lignes} ligne(s)`);
   } catch (e) {

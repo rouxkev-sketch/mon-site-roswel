@@ -637,3 +637,25 @@ déplace que des airs, des places et des couleurs.
 > **Les données en base** : les libellés des styles ajoutés vivent en base
 > (`suggestions_style.label`, relus à la nº 807) et s'affichent ici tels
 > quels — cette passe ne les touche pas, il n'y a rien à corriger en SQL.
+
+## Passe nº 877 — la photo d'une carte de galerie, cliquable (web)
+
+Un seul nom accessible est ajouté par cette passe ; tout le reste ne
+déplace que des places (le pied qui quitte les cartes du web, les
+commandes qui montent sur la grande photo).
+
+| ce qui change à l'écran | ce que le texte devient | où |
+| --- | --- | --- |
+| — (la photo d'une carte de galerie ne répondait à rien au web) | **Show photo 4 of 20** — le nom lu du bouton transparent posé sur l'encadré : un clic met CETTE photo dans l'affiche, à gauche | `FilDeGalerie` (`data-photo-vers-affiche`) |
+
+> **La famille des étiquettes de photo est respectée** : les ronds du
+> pied disent « View photo 4 of 20 » (`PointsDuCarrousel`), les chevrons
+> « Next photo » / « Previous photo ». Le verbe change parce que le geste
+> change : les premiers font défiler DANS la carte, celui-ci montre la
+> photo EN GRAND ailleurs sur la page.
+> **Ce qui n'a PAS changé** : « Save this photo », « Remove this photo
+> from my favorites », « Share <nom>'s portfolio », « Report this
+> portfolio » — les quatre commandes déménagent sur la grande photo
+> (nº 877-§4) avec leurs noms lus, au caractère près.
+> **Les données en base** : aucune de ces phrases n'y vit ; rien à
+> corriger en SQL.

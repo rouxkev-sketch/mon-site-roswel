@@ -129,22 +129,14 @@ export function useGalerieDeCarte(nombre: number) {
       //  La cible, et celle d'après : le pas suivant sera prêt.
       setChargees((eues) => Math.max(eues, Math.min(nombre, cible + 2)));
     },
-    /**
-     * ██ §4 (nº 876) — UN SAUT À UN RANG, POUR LES POINTS DU PIED ██
-     * Le pied du fil (PiedDeFil, CarteFil) vit désormais aussi sur les
-     * cartes du WEB, et ses points de position posent un RANG — le
-     * geste qui, au doigt, fait glisser le carrousel jusqu'à la photo
-     * (nº 217). Sur le web la galerie ne connaissait qu'un PAS ; elle
-     * sait maintenant viser un rang, avec les mêmes suites qu'un pas :
-     * la pastille se réveille, la cible et celle d'après sont
-     * demandées. Hors de la liste, rien ne bouge.
-     */
-    allerAu: (cible: number) => {
-      if (cible < 0 || cible > nombre - 1 || cible === indice) return;
-      pastille.reveiller();
-      setIndice(cible);
-      setChargees((eues) => Math.max(eues, Math.min(nombre, cible + 2)));
-    },
+    /*  ⛔ §2 (nº 877) — `allerAu` EST SUPPRIMÉ, CODE COMPRIS : la nº 876
+        l'avait ajouté pour LES POINTS DU PIED des cartes du web (poser
+        un rang, comme un glissement le fait au doigt). Le propriétaire
+        a retiré ce pied — au web, une carte de galerie n'a plus ni
+        points, ni fanion, ni partage —, et plus aucun appelant ne visait
+        un rang : la galerie d'une carte ne connaît de nouveau QUE le PAS
+        de ses chevrons (`aller`, juste au-dessus). Pas de code mort
+        (règle nº 735). */
   };
 }
 

@@ -86,56 +86,52 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * (`mobile:`, règle nº 60), l'alignement, les écarts, les marges et la
  * hauteur minimale.
  */
+/**
+ * ██ ⛔ §1 (nº 877) — LA nº 876 EST ANNULÉE ICI, SUR DÉCISION DU
+ * PROPRIÉTAIRE ██
+ * ==================================================================
+ * CE QUE LA nº 876 AVAIT FAIT : ces deux rangées avaient perdu leur
+ * appareil (`hidden mobile:flex`) pour que L'APPELANT le dise
+ * (paramètre `affichage`) — les cartes de RECHERCHE et de « Ma
+ * sélection » prenaient alors, au web, la structure du fil : en-tête
+ * au-dessus de la photo, pied en dessous.
+ * CE QUE LE PROPRIÉTAIRE A TRANCHÉ, À L'ÉCRAN, À LA nº 877 : « retour
+ * à l'état d'AVANT la 876 » pour ces cartes-là. Les deux rangées
+ * reprennent donc leur appareil, et le paramètre `affichage` s'en va
+ * avec sa raison d'être — plus aucun appelant ne le passait dans
+ * l'autre sens.
+ * ⚠️ CE QUI RESTE DE LA nº 876, ET C'EST L'ESSENTIEL : L'ÉCRITURE EST
+ * TOUJOURS PARTAGÉE — la carte des résultats au doigt, la vue photo du
+ * doigt et le fil de galeries lisent ces mêmes deux rangées. Le fil de
+ * galeries du WEB, lui, n'a plus de pied du tout (§2 nº 877) : ces
+ * classes le retirent de son affichage sans qu'il ait un mot à dire.
+ */
 /*  §3 (nº 863) — LES MARGES DE L'EN-TÊTE, LISIBLES À PART : la carte
     d'un fil de galerie (FilDeGalerie) n'a pas la rangée avatar / nom /
     badge, mais elle pose son titre dans LA MÊME BOÎTE — seize pixels de
     côté, douze au-dessus de l'image. Un troisième porteur, aucune valeur
     recopiée (règle nº 276). */
-/**
- * ██ nº 876 — UNE SEULE ÉCRITURE DE L'EN-TÊTE ET DU PIED, POUR TOUT LE
- * SITE (MOBILE ET WEB) ██
- * ==================================================================
- * DÉCISION DU PROPRIÉTAIRE : les cartes du WEB prennent LA STRUCTURE des
- * cartes du fil — l'en-tête (avatar, nom, ville, badge du type)
- * au-dessus de la photo, le pied (signaler, vues, points, fanion,
- * partage) en dessous ; la grille reste. « L'appareil ne décide que
- * des colonnes. » Ces deux rangées cessent donc de porter LEUR
- * APPAREIL : les chaînes ci-dessous ne disent plus que la géométrie
- * (alignement, écarts, marges, hauteur), et c'est L'APPELANT qui dit
- * l'affichage — une carte des résultats les montre aux deux appareils
- * (`flex`), une carte de « Ma sélection » au web seul (`hidden
- * not-mobile:flex` — sa vignette côte à côte du doigt n'a pas la place,
- * nº 865), la vue photo d'une fiche au doigt seul (`hidden
- * mobile:flex`, nº 862-§3). UNE seule déclaration d'affichage par
- * rangée et par appareil (piège nº 389), posée en tête de la classe.
- * ⚠️ LE SQUELETTE COMPOSE DE LA MÊME FAÇON (SquelettesDePage) : la
- * boîte vient d'ici, l'affichage de lui.
- */
 export const MARGES_EN_TETE_DE_FIL = "px-4 pb-3";
-export const RANGEE_EN_TETE_DE_FIL = `items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`;
+export const RANGEE_EN_TETE_DE_FIL =
+  `hidden mobile:flex items-center gap-3 ${MARGES_EN_TETE_DE_FIL}`;
 /*  ⚠️ `relative` PORTE LES POINTS EN ABSOLU (voir la note du pied) ;
     `min-h-10` est la hauteur des cibles tactiles, et c'est elle qui
     fixe la hauteur du pied — le squelette la reprend telle quelle. */
 export const RANGEE_PIED_DE_FIL =
-  "relative min-h-10 items-center justify-between px-4 pt-1";
+  "relative hidden mobile:flex min-h-10 items-center justify-between px-4 pt-1";
 
 /** L'EN-TÊTE DU FIL — avatar, nom, ville, puis le badge du type. */
 export function EnTeteDeFil({
   tatoueur,
   lieu,
-  affichage = "flex",
 }: {
   tatoueur: Tatoueur;
   lieu: LieuAffichable;
-  /** nº 876 — CE QUE L'APPELANT DIT DE L'APPAREIL (voir l'en-tête) :
-      `flex` aux deux, `hidden not-mobile:flex` au web seul, `hidden
-      mobile:flex` au doigt seul. */
-  affichage?: string;
 }) {
   return (
     <div
       data-en-tete-de-fil=""
-      className={`${affichage} ${RANGEE_EN_TETE_DE_FIL}`}
+      className={RANGEE_EN_TETE_DE_FIL}
     >
       {/*  UN SEUL LIEN POUR LES TROIS (avatar, titre, sous-titre), vers
            le profil — pas deux liens côte à côte vers la même
@@ -203,11 +199,8 @@ export function PiedDeFil({
   cheminAPartager,
   metier,
   vues,
-  affichage = "flex",
 }: {
-  /** nº 876 — l'affichage selon l'appareil, dit par l'appelant (voir
-      l'en-tête du fichier). */
-  affichage?: string;
+
   tatoueur: Tatoueur;
   photos: PhotoGalerie[];
   indice: number;
@@ -262,7 +255,7 @@ export function PiedDeFil({
           photo d'une fiche au doigt (nº 598). Les centrer entre les
           groupes les décalerait dès que l'un des deux change de
           largeur. */
-      className={`${affichage} ${RANGEE_PIED_DE_FIL}`}
+      className={RANGEE_PIED_DE_FIL}
     >
       {/*  ██ §1 (nº 855) — LE SIGNALEMENT OUVRE LE PIED, PUIS LES VUES ██
            TROIS CHOSES CHANGENT, ET CE SONT LES TROIS DE LA CONSIGNE :
@@ -418,6 +411,151 @@ export function PiedDeFil({
           marque={MARQUE_YOKOFOLIO.nom}
           objet="portfolio"
         />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * ██ §4 (nº 877) — LES COMMANDES DE LA GRANDE PHOTO (L'AFFICHE), AU WEB ██
+ * ==================================================================
+ * DÉCISION DU PROPRIÉTAIRE, À L'ÉCRAN : sur la grande photo de la
+ * colonne de gauche, « à droite du fanion, l'icône PARTAGE ; à
+ * l'opposé, à gauche : SIGNALER puis le nombre de vues avec
+ * l'histogramme ; les POINTS de défilement remontent, centrés sur la
+ * ligne des icônes. Curseur HORS de la photo : tout disparaît sauf les
+ * points, le fanion et le partage. »
+ *
+ * C'EST LE PIED DU FIL, POSÉ SUR L'IMAGE — mêmes pièces, mêmes places,
+ * mêmes cibles (le signalement et les vues à gauche, les points centrés
+ * sur toute la largeur, le fanion puis le partage à droite, nº 842 et
+ * nº 855). Ce qui change, et c'est tout : la rangée n'est pas dans le
+ * flux sous la photo, elle est EN SURIMPRESSION dedans, à douze pixels
+ * des bords — la marge que le fanion tenait déjà seul (nº 375).
+ *
+ * ██ LES TROIS RÈGLES D'APPARITION, ET ELLES SONT ÉCRITES EN CSS ██
+ * ------------------------------------------------------------------
+ *  · LES POINTS ET LE FANION NE BOUGENT PAS : ils étaient permanents
+ *    (nº 375, nº 598), ils le restent — au web comme au doigt, sur la
+ *    page comme dans la fenêtre superposée ;
+ *  · LE PARTAGE EST NEUF, ET IL EST PERMANENT LUI AUSSI — mais AU WEB
+ *    SEULEMENT (`hidden pointer-fine:flex`) : un appareil sans curseur
+ *    ne voit rien apparaître, et la fenêtre superposée du doigt (une
+ *    fiche ouverte depuis une fiche, PileFiches) reste au pixel ce
+ *    qu'elle était. C'est la consigne : « le mobile ne change pas » ;
+ *  · SIGNALER ET LES VUES N'APPARAISSENT QU'AU SURVOL DE LA PHOTO
+ *    (`invisible group-hover:visible`, l'ensemble étant la racine du
+ *    carrousel — `group`, nº 844) : c'est l'écriture des CHEVRONS, mot
+ *    pour mot, et la même que la carte-galerie du web (nº 839). Rien
+ *    n'est mesuré, rien n'est écouté en JavaScript.
+ *
+ * ⚠️ LA RANGÉE NE PREND AUCUN CLIC : elle est `pointer-events-none` et
+ * ses deux groupes reprennent le leur (`pointer-events-auto`), comme la
+ * frise le fait depuis toujours. La photo garde donc sa surface
+ * entière — et le lien de chaque photo du carrousel, dessous, n'est
+ * jamais volé par une bande transparente.
+ * ⚠️ L'OMBRE DOUCE (nº 221) EST POSÉE SUR LES DEUX PIÈCES QUI N'EN
+ * AVAIENT PAS — le signalement, les vues et le partage : leurs traits
+ * blancs vivent SUR UNE PHOTO, dont on ne sait rien. Le fanion porte
+ * déjà la sienne, à l'intérieur (BoutonCoeurPhoto) : la lui poser une
+ * seconde fois la doublerait.
+ * ⚠️ QUARANTE-HUIT PIXELS DE HAUT (`min-h-12`), la cible du fanion :
+ * c'est elle qui fait la ligne, et c'est sur elle que les points se
+ * centrent — le « trop bas » que le propriétaire relevait était leur
+ * ancrage au ras du bord (`bottom-3` sur une frise de six pixels).
+ */
+export function CommandesDeLAffiche({
+  tatoueur,
+  photos,
+  indice,
+  surRang,
+  photoEnregistrable,
+  cheminAPartager,
+  metier,
+  vues,
+  affichage,
+}: {
+  tatoueur: Tatoueur;
+  photos: PhotoGalerie[];
+  indice: number;
+  surRang: (rang: number) => void;
+  /** La photo regardée, quand elle existe en base — le fanion ne juge
+      qu'une image cataloguée (BoutonCoeurPhoto s'en garde aussi). */
+  photoEnregistrable?: string;
+  cheminAPartager: string;
+  metier: string;
+  vues?: number | null;
+  /** L'APPAREIL, DIT PAR L'APPELANT : la PAGE cache cette rangée au
+      doigt (`mobile:hidden flex` — la photo y a ses commandes SOUS elle,
+      nº 862-§3), la FENÊTRE superposée la montre aux deux (`flex`), ses
+      habillages n'ayant jamais porté d'appareil (nº 599). */
+  affichage: string;
+}) {
+  return (
+    <div
+      data-commandes-affiche=""
+      className={`${affichage} pointer-events-none absolute inset-x-3 bottom-3
+                  z-[2] min-h-12 items-center justify-between`}
+    >
+      {/*  À GAUCHE, AU SURVOL : le signalement puis les vues — l'ordre
+           et les airs du pied du fil (nº 855, nº 866-§3, nº 867-§7). */}
+      <div
+        data-commandes-au-survol=""
+        className="pointer-events-auto hidden pointer-fine:flex invisible
+                   group-hover:visible relative shrink-0 items-center
+                   [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
+      >
+        <FenetreSignalement
+          slug={tatoueur.slug}
+          nom={tatoueur.nom}
+          variante="icone"
+        />
+        <span
+          data-vues-de-fil=""
+          className="ml-2 flex min-h-10 items-center gap-1.5 text-[13px]
+                     font-semibold text-sombre-texte"
+        >
+          <IconeHistogramme taille={24} />
+          {vuesAffichees(vues)}
+        </span>
+      </div>
+      {/*  AU CENTRE, TOUJOURS : la frise, centrée sur TOUTE la largeur de
+           la rangée (jamais entre les deux groupes, qui changent de
+           largeur au survol) — l'écriture du pied du fil. */}
+      {photos.length > 1 && (
+        <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+          <PointsDuCarrousel photos={photos} indice={indice} surRang={surRang} />
+        </div>
+      )}
+      {/*  À DROITE, TOUJOURS : le fanion, puis le partage. */}
+      <div className="pointer-events-auto relative flex shrink-0 items-center">
+        {photoEnregistrable && (
+          <BoutonCoeurPhoto
+            //  LA CLÉ EST CELLE DE LA PHOTO : elle remonte le bouton à
+            //  chaque glissement, ce qui réamorce son état sur la
+            //  nouvelle image (le motif du pied du fil).
+            key={photoEnregistrable}
+            photoId={photoEnregistrable}
+            variante="fiche"
+          />
+        )}
+        <span
+          className="hidden pointer-fine:flex items-center
+                     [filter:drop-shadow(0_1px_2px_rgba(0,0,0,0.55))]"
+        >
+          <BoutonPartageFiche
+            nomArtisan={tatoueur.nom}
+            cheminFiche={cheminAPartager}
+            variante="icone"
+            tailleIcone={24}
+            avecFenetre
+            sombre
+            metier={metier}
+            commune={villeAffichee(tatoueur.ville_nom)}
+            marque={MARQUE_YOKOFOLIO.nom}
+            objet="portfolio"
+          />
+        </span>
       </div>
     </div>
   );

@@ -32,11 +32,13 @@ import {
  * de la suivante » de la nº 874-§5), `TeteDeGalerie` (nº 521/747, dont
  * le compteur vit déjà ici, `CompteurDeGalerie`), la purge d'arrivée de
  * la mémoire des galeries (nº 459 — elle ne servait que les bandes du
- * doigt, parties à la nº 873) et le type `SerieChoisie` avec le chemin
- * « une vignette change la photo du haut » (nº 204/306) : plus de
- * vignette, plus de série choisie — les poseurs correspondants de
- * FicheTatoueur et FenetreFiche sont partis avec (règle nº 386 : pas de
- * code mort). RESTENT : le va-et-vient (SelecteurOngletAffiche), la
+ * doigt, parties à la nº 873).
+ * ⚠️ `SerieChoisie` EST PARTI AVEC ELLES, PUIS REVENU À LA nº 877 : le
+ * chemin « le geste change la photo du haut » (nº 204/306) a retrouvé
+ * un porteur — LA PHOTO D'UNE CARTE DE GALERIE, cliquée au web (§3
+ * nº 877, FilDeGalerie). Les poseurs de FicheTatoueur et de
+ * FenetreFiche sont revenus avec lui.
+ * RESTENT : le va-et-vient (SelecteurOngletAffiche), la
  * liste des galeries d'une page (`galeriesDuPortfolio`), le titre et le
  * compteur d'une galerie — ce que le fil consomme.
  *
@@ -94,9 +96,29 @@ import {
     pages, trois adresses. Le type `OngletAffiche` à deux valeurs de la
     nº 197 est parti avec l'onglet-requête (« ?onglet=portfolio »). */
 
-/*  ⛔ §3 (nº 876) — `SerieChoisie` EST SUPPRIMÉ, CODE COMPRIS : « ce
-    qu'un toucher de vignette ouvre » (nº 204-§3) n'a plus de vignette
-    — voir la note en tête de fichier. */
+/**
+ * ██ §3 (nº 877) — `SerieChoisie` REVIENT, ET AVEC LUI LE CHEMIN QU'IL
+ * PORTAIT ██
+ * ==================================================================
+ * CE QUE LA nº 876 AVAIT SUPPRIMÉ : « ce qu'un toucher de vignette
+ * ouvre » (nº 204-§3), faute de vignette — les bandes par style du web
+ * étaient parties.
+ * CE QUE LE PROPRIÉTAIRE DEMANDE À LA nº 877 : « clic sur une photo
+ * d'une carte de galerie → elle s'affiche EN GRAND dans la colonne de
+ * gauche du profil, comme les anciennes vignettes le faisaient ». Le
+ * GESTE change de porteur — une carte du fil au lieu d'une vignette de
+ * bande —, le CHEMIN est le même, au caractère près : une série et un
+ * rang, que la fiche (FicheTatoueur) ou la fenêtre superposée
+ * (FenetreFiche) posent dans leur affiche.
+ */
+export type SerieChoisie = {
+  style: string;
+  nature: string;
+  rendu: string;
+  /** §1-6 (nº 306) — LE RANG DE LA PHOTO TOUCHÉE dans sa série. Le
+      cadre photo de la fiche s'ouvre SUR ELLE. Absent : la première. */
+  indice?: number;
+};
 
 //  §2 (nº 873) — LES TROIS ONGLETS, dans l'ordre des vues ; « Flash »
 //  est TOUJOURS là, même sans flash : la page existe, et dit alors

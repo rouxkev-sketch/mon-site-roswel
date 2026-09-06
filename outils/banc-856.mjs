@@ -154,11 +154,7 @@ for (const mode of ["web", "doigt"]) {
       const c = document.querySelector(sel);
       const b = (n) => { if (!n) return null; const x = n.getBoundingClientRect();
         return { y: Math.round(x.top), bas: Math.round(x.bottom), droite: Math.round(x.right), h: Math.round(x.height) }; };
-    //  nº 876 — LA PHOTO, PAS LE ROND DE L'EN-TÊTE : au web, la première
-    //  image de la carte est désormais l'avatar de l'en-tête du fil
-    //  (au-dessus de la photo). On prend la première image VISIBLE hors
-    //  de l'en-tête.
-      const photo = [...c.querySelectorAll("img")].map((i) => i.closest("div")).find((d) => d && !d.closest("[data-en-tete-de-fil]") && d.getBoundingClientRect().height > 0);
+      const photo = c.querySelector("img")?.closest("div");
       const ligne = [...c.querySelectorAll("p")].find((n) => n.textContent.includes("•"));
       const enveloppe = c.querySelector("[data-fanion-de-ligne]");
       const bouton = enveloppe?.querySelector("button[aria-pressed]");
@@ -169,30 +165,30 @@ for (const mode of ["web", "doigt"]) {
         glyphe: b(bouton?.querySelector("svg")),
         fanionsVisibles: [...c.querySelectorAll("button[aria-pressed]")]
           .filter((n) => n.getBoundingClientRect().height > 0).length,
-        //  nº 876 — au web, le fanion vit dans le PIED du fil (la carte
-        //  de recherche a pris la structure du fil) : on le lit là.
-        ligneVisible: ligne ? ligne.getClientRects().length > 0 : false,
-        pied: b(c.querySelector("[data-pied-de-fil]")),
-        fanionDuPied: (() => { const f = c.querySelector("[data-pied-de-fil] button[aria-pressed]");
-          return f ? { ...b(f), dansLien: Boolean(f.closest("a")) } : null; })(),
       };
     }, CARTE);
     if (mode === "web") {
-      /*  ⛔ nº 876 — LA LIGNE DES STYLES A DISPARU DES CARTES DE RECHERCHE
-          au web (comme au doigt) : la place du fanion SUR cette ligne
-          (nº 856, puis nº 859-§4 pour ses quatre pixels) n'existe plus.
-          Le fanion est celui du PIED DU FIL, sous la photo — la même
-          écriture que la carte du doigt (`PiedDeFil`) : hors du lien,
-          quarante pixels, dans la rangée du pied. */
-      verif("au web, la place du fanion sur la ligne des styles N'EXISTE PLUS (nº 876)",
-        vu.enveloppeVisible === false && vu.ligneVisible === false, `enveloppe visible ${vu.enveloppeVisible} · ligne visible ${vu.ligneVisible}`);
-      verif("le fanion est celui du PIED DU FIL, HORS du lien de la carte, quarante pixels",
-        vu.fanionDuPied && vu.fanionDuPied.h === 40 && vu.fanionDuPied.dansLien === false,
-        vu.fanionDuPied ? `${vu.fanionDuPied.h} px · dans un lien ${vu.fanionDuPied.dansLien}` : "fanion absent du pied");
-      verif("… dans la rangée du pied, sous la photo",
-        vu.fanionDuPied && vu.pied && vu.photo && vu.fanionDuPied.y >= vu.pied.y && vu.fanionDuPied.bas <= vu.pied.bas && vu.pied.y >= vu.photo.bas,
-        vu.fanionDuPied ? `fanion ${vu.fanionDuPied.y}→${vu.fanionDuPied.bas} · pied ${vu.pied?.y}→${vu.pied?.bas} · photo →${vu.photo?.bas}` : "fanion absent du pied");
-      verif("… et c'est le seul fanion visible de la carte", vu.fanionsVisibles === 1, `${vu.fanionsVisibles} fanion(s) visible(s)`);
+      verif("le fanion est là, HORS du lien de la carte",
+        vu.fanion && vu.fanion.h === 40 && vu.dansLien === false,
+        vu.fanion ? `${vu.fanion.h} px · dans un lien ${vu.dansLien}` : "fanion absent");
+      verif("… SUR la ligne des styles : même rangée, texte centré sur lui",
+        vu.fanion && vu.rangee && vu.fanion.y === vu.rangee.y && vu.fanion.bas === vu.rangee.bas
+          && Math.abs((vu.ligne.y + vu.ligne.bas) - (vu.fanion.y + vu.fanion.bas)) <= 2,
+        vu.fanion ? `fanion ${vu.fanion.y}→${vu.fanion.bas} · rangée ${vu.rangee?.y}→${vu.rangee?.bas} · texte ${vu.ligne?.y}→${vu.ligne?.bas}` : "fanion absent");
+      verif("… aligné à DROITE, sur le bord de la colonne de texte",
+        vu.fanion && vu.rangee && vu.fanion.droite === vu.rangee.droite,
+        vu.fanion ? `fanion ${vu.fanion.droite} · rangée ${vu.rangee?.droite}` : "fanion absent");
+      /*  « SI LE FANION TOUCHE LE HAUT DE LA PHOTO, ABAISSER CETTE LIGNE » :
+          la ligne EST abaissée (elle commence là où elle commençait, mais
+          fait la hauteur du fanion), et le fanion reste à huit pixels sous
+          la photo — le rythme du web, inchangé. */
+      /*  §4 (nº 859) — QUATRE PIXELS, ET PLUS HUIT : la ligne des styles
+          remonte de quatre (« la nº 856 l'a trop abaissée »), et le
+          fanion la suit — il garde le plus petit écart de l'échelle avec
+          la photo. Le détail se mesure au banc 859. */
+      verif("… et il ne touche PAS la photo : quatre pixels l'en séparent (nº 859-§4)",
+        vu.fanion && vu.photo && vu.fanion.y - vu.photo.bas === 4,
+        vu.fanion ? `${vu.fanion.y - vu.photo.bas} px sous la photo` : "fanion absent");
     } else {
       verif("au doigt, la place du fanion sur la ligne des styles N'EXISTE PAS",
         vu.enveloppeVisible === false, `enveloppe visible ${vu.enveloppeVisible}`);

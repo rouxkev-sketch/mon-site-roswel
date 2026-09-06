@@ -23,6 +23,8 @@ import {
   photoRetenueDeCarte,
   retenirPhotoDeCarte,
 } from "@/lib/memoire-cartes";
+import { AvatarRond } from "@/components/AvatarRond";
+import { BadgeTypeDeFiche } from "@/components/BadgeTypeDeFiche";
 import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 import {
@@ -353,18 +355,6 @@ function CarteTatoueurNue({
     retenirPhotoDeCarte(cleDeLaCarte, indiceDoigt);
   }, [cleDeLaCarte, indiceDoigt]);
   const rangRegarde = Math.max(galerie.indice, indiceDoigt);
-  /*  §4 (nº 876) — LES POINTS DU PIED POSENT UN RANG, aux deux appareils
-      désormais : au doigt le carrousel glisse jusqu'à la photo (nº 217),
-      au web la galerie de carte y saute (`allerAu`, nº 839). L'appareil
-      tranche, jamais la largeur (règle nº 60) — comme `auClic` et le
-      survol, plus bas. */
-  const allerAuRang = (rang: number) => {
-    if (document.documentElement.dataset.appareil === "mobile") {
-      setIndiceDoigt(rang);
-    } else {
-      galerie.allerAu(rang);
-    }
-  };
 
   /** ⚠️ LE TEXTE ET LE DÉFILEMENT SONT INDÉPENDANTS (nº 213-§1) : la
       photothèque masque les TEXTES, elle n'a jamais eu à décider si
@@ -564,14 +554,7 @@ function CarteTatoueurNue({
    * condition (`{!phototheque && …}`, plus bas) ; deux conditions qui
    * doivent s'accorder ne peuvent pas être écrites différemment.
    */
-  /*  ██ §4 (nº 876) — ET SEULEMENT SUR « MA SÉLECTION » ██
-      Les cartes de RECHERCHE du web ont pris le PIED du fil (§4) : leur
-      fanion y vit, comme au doigt — la ligne des styles a disparu de
-      ces cartes, et son fanion avec elle. Seule « Ma sélection » garde
-      la ligne (§5, « Old School • Color » + fanion) : c'est le drapeau
-      `fanion`, qu'elle seule passe, qui le dit. */
   const fanionSurLaLigne =
-    fanion &&
     Boolean(partiesDuTitre) &&
     !phototheque &&
     estIdentifiantDeBase(photoRegardee);
@@ -763,58 +746,6 @@ function CarteTatoueurNue({
       }
       {...gestesPincement}
     >
-      {/**
-        * ██ §4 ET §5 (nº 876) — L'EN-TÊTE DU FIL, AU-DESSUS DE LA PHOTO,
-        * AUX DEUX APPAREILS ██
-        * ================================================================
-        * DÉCISION DU PROPRIÉTAIRE : les cartes du WEB prennent LA
-        * STRUCTURE des cartes du fil mobile — au-dessus de la photo, le
-        * bloc avatar / nom / ville / badge du type ; en dessous, le pied.
-        * La grille du web (ses colonnes) reste ; la ligne des styles
-        * disparaît des cartes de recherche (comme au doigt) ; les
-        * chevrons au survol sont conservés. UNE SEULE ÉCRITURE de
-        * l'en-tête et du pied pour tout le site (CarteFil) — l'appareil
-        * ne décide que des colonnes.
-        * CE QUE CET EN-TÊTE REMPLACE, au web : le rond de profil, le nom,
-        * la localité et le badge du type qui vivaient SOUS la photo (nº 480
-        * à nº 852). Ils sont partis de là, code compris.
-        * OÙ IL SE MONTRE : sur une carte des RÉSULTATS (`fil`), aux deux
-        * appareils ; sur toute autre carte de la grille — vitrines,
-        * « Ma sélection » (§5) —, au web seul : leur vignette côte à côte
-        * du doigt n'a ni la place ni le besoin (nº 486, nº 865). Une
-        * seule déclaration d'affichage par appareil (piège nº 389), dite
-        * ici et lue chez lui.
-        * ⚠️ SON LIEN MÈNE AU PROFIL PAR LA PAGE (`adresseDeLienInterne`),
-        * au web comme au doigt — c'est déjà ce que fait le badge du type
-        * (BadgeTypeDeFiche), qui y était depuis la nº 852. La PHOTO, elle,
-        * garde le lien de la carte : au web il ouvre la fenêtre
-        * superposée sur la photo regardée (nº 371), inchangé.
-        * ⚠️ LA PHOTOTHÈQUE (nº 140) ne montre que la photo : pas d'en-tête
-        * — la même garde que le bloc de texte qu'il remplace.
-        */}
-      {!phototheque && (
-        <EnTeteDeFil
-          tatoueur={tatoueur}
-          lieu={lieuDeLaCarte}
-          affichage={fil ? "flex" : "hidden not-mobile:flex"}
-        />
-      )}
-      {/**
-        * ██ §4 (nº 876) — L'ANCRE DES SUPERPOSITIONS ██
-        * ================================================================
-        * Les trois superpositions de la carte — les chevrons de la
-        * galerie (nº 839), le fanion de la ligne des styles (nº 856) et
-        * le fanion flottant (nº 452) — se posent en absolu « en haut de
-        * la carte », parce que la photo y commençait. Depuis cette passe
-        * l'EN-TÊTE la précède : le haut de l'article n'est plus le haut
-        * de la photo. Cette boîte est donc leur nouveau repère : elle
-        * commence AVEC la photo — le lien du web (qui la contient) et le
-        * cadre du doigt (son voisin, `data-cadre-de-fil`) y vivent tous
-        * deux, et un seul se montre selon l'appareil ; les superpositions
-        * la suivent. Rien d'autre n'y est posé : ni air, ni fond, ni
-        * largeur — c'est un repère, pas une boîte de mise en page.
-        */}
-      <div className="relative">
       {/**
         * ██ §1 (nº 517) — UN SEUL LIEN, QUI CONTIENT LA CARTE ██
         * ================================================================
@@ -1236,20 +1167,7 @@ function CarteTatoueurNue({
             du fil a son propre pied), et l'écart y reste celui de
             toujours — deux variantes qui s'excluent (règle nº 60), une
             seule déclaration par écran (piège nº 389). */
-        /*  ██ §4 ET §5 (nº 876) — CE BLOC NE VIT PLUS AU WEB QUE SUR
-            « MA SÉLECTION » ██
-            Sur les cartes de RECHERCHE du web, tout ce qui vivait sous
-            la photo est parti : la ligne des styles (décision du
-            propriétaire — « comme au mobile ») et le rond, le nom, la
-            localité, le badge (montés dans l'en-tête du fil, au-dessus
-            de la photo). Le bloc entier se retire donc du web
-            (`not-mobile:hidden`) — sauf sur « Ma sélection » (`fanion`),
-            qui GARDE sa ligne « Old School • Color » et son fanion (§5).
-            Au doigt, rien ne change : la vignette côte à côte garde ses
-            lignes (nº 481 à nº 865). */
-        className={`mobile:pt-2 not-mobile:pt-1 px-0.5 mobile:px-2${
-          fanion ? "" : " not-mobile:hidden"
-        }`}
+        className="mobile:pt-2 not-mobile:pt-1 px-0.5 mobile:px-2"
       >
         {/*  ██ §1 (nº 480) — LA LIGNE 1 : LE STYLE ET LE RENDU ██
              ------------------------------------------------------
@@ -1323,13 +1241,9 @@ function CarteTatoueurNue({
               césure de seize pixels (`mb-4`), pas de rangée de quarante.
               La réservation n'existe que là où le fanion existe ; une
               seule déclaration de marge par cas (piège nº 389). */
-          /*  §5 (nº 876) — PLUS DE CÉSURE SOUS ELLE AU WEB : le rond de
-              profil qu'elle précédait (nº 856, `mb-[5px]` ; nº 485,
-              `mb-4`) est monté dans l'en-tête. Cette ligne est la
-              dernière du bloc, et le bloc s'arrête sur elle. */
           <div className={fanionSurLaLigne
-            ? "not-mobile:flex not-mobile:min-h-10 not-mobile:items-center not-mobile:gap-2"
-            : ""}>
+            ? "not-mobile:flex not-mobile:min-h-10 not-mobile:items-center not-mobile:gap-2 not-mobile:mb-[5px]"
+            : "not-mobile:mb-4"}>
           <p
             /*  ██ §1 ET §3 (nº 481) — LA GRAISSE ET L'AIR DE LA LIGNE 1 ██
                 LA GRAISSE S'INVERSE AVEC CELLE DU NOM : cette ligne
@@ -1421,15 +1335,26 @@ function CarteTatoueurNue({
              rangée, déplacée d'un cran sous la ligne du style — ses
              classes, son écart de 10 px et la hauteur du rond n'ont
              pas bougé. */}
-        {/*  ██ §4 (nº 876) — CETTE RANGÉE NE VIT PLUS QU'AU DOIGT ██
-             Le rond de profil (nº 486 : déjà retiré des cartes du doigt,
-             gardé au web à quarante pixels), le nom et la localité du
-             web, et le badge du type (nº 852) sont MONTÉS dans l'en-tête
-             du fil, au-dessus de la photo — la même écriture qu'au
-             doigt, où ils vivaient déjà là. Il ne reste ici que ce que
-             la vignette côte à côte du doigt montre : le nom sur « Ma
-             sélection » (nº 865), et la localité. */}
-        <div className="flex not-mobile:hidden items-center gap-2.5">
+        <div className="flex items-center gap-2.5">
+        {/*  §1 (nº 486) — LE ROND DE PROFIL QUITTE LES CARTES DU
+              DOIGT, LES DEUX DISPOSITIONS. Il n'était rendu que POUR
+              ACCOMPAGNER LE NOM (il en reprend la hauteur, écart
+              compris) : le nom parti, il n'a plus personne à côté de
+              qui se tenir. Il vivait déjà caché sur les cartes côte à
+              côte ; il l'est désormais aussi en pleine largeur.
+              ⚠️ LE WEB LE GARDE, à quarante pixels — son équation avec
+              la hauteur des lignes 2 et 3 (nº 485) est intacte.
+             §1 (nº 841) — LE ROND EST L'ÉCRITURE PARTAGÉE (AvatarRond)
+             depuis la carte du fil, son troisième porteur : fond et
+             initiale sont LES SIENS, inchangés au pixel. */}
+        <AvatarRond
+          photo={tatoueur.photo_profil}
+          nom={tatoueur.nom}
+          classeFond="bg-sombre-eleve"
+          classeInitiale="text-[13px] font-bold text-sombre-texte-doux"
+          paresseux
+          classe="mobile:hidden"
+        />
 
         {/* LE BLOC DE TEXTE — deux lignes, hauteur au pixel : 19 + 2 +
             19 = 40 px (21 + 2 + 21 = 44 px en une colonne sur
@@ -1613,17 +1538,32 @@ function CarteTatoueurNue({
                l'écriture du web et du fil (`ligneDeLieuDeCarte`) ; le
                type ne s'y dit plus (ni ici, ni dans un badge — la
                vignette n'en a pas la place, nº 852). */}
-          {/*  §4 (nº 876) — la ligne du web (la ville seule, nº 852) est
-               partie avec la rangée : l'en-tête du fil l'écrit au-dessus
-               de la photo. Reste celle du doigt. */}
-          {nomEtVilleAuDoigt
-            ? ligneDeLieuDeCarte(lieuDeLaCarte)
-            : sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
+          <span className="not-mobile:hidden">
+            {nomEtVilleAuDoigt
+              ? ligneDeLieuDeCarte(lieuDeLaCarte)
+              : sousTitreDeCarte(tatoueur, ligneDeLieuDeCarte(lieuDeLaCarte))}
+          </span>
+          <span className="mobile:hidden">
+            {ligneDeLieuDeCarte(lieuDeLaCarte)}
+          </span>
         </p>
         </div>
-        {/*  ⛔ §4 (nº 876) — LE BADGE DU TYPE (nº 852) N'EST PLUS ICI : il
-             est dans l'en-tête du fil, au-dessus de la photo — la place
-             qu'il avait déjà sur les cartes du doigt (nº 843). */}
+        {/*  ██ §8 ET §9 (nº 852) — LE TYPE, EN BADGE FACE À L'AVATAR ██
+             DÉCISION DU PROPRIÉTAIRE, pour les deux familles de cartes
+             du web : le type quitte le sous-titre et devient un badge, à
+             l'autre bout de la rangée du profil — exactement la place
+             qu'il occupe déjà sur les cartes du fil (nº 843), et la même
+             robe depuis le §6 de cette passe (l'aplat de « Suivre »).
+             ⚠️ C'EST LE COMPOSANT DU FIL, pas une copie : un seul badge
+             de type existe dans le site (`BadgeTypeDeFiche`), et il
+             porte sa robe, sa boîte et son lien. Les deux surfaces ne
+             peuvent donc plus diverger.
+             ⚠️ AU DOIGT, RIEN : la vignette n'a ni rond de profil ni nom
+             (nº 486), et cette rangée n'y montre que le sous-titre — un
+             badge y prendrait la moitié de la largeur. */}
+        <span className="mobile:hidden">
+          <BadgeTypeDeFiche tatoueur={tatoueur} />
+        </span>
         </div>
       </div>
       )}
@@ -1632,11 +1572,6 @@ function CarteTatoueurNue({
       {/**
         * ██ §1 (nº 841) — LA CARTE DU FIL : EN-TÊTE, IMAGE, PIED ██
         * ================================================================
-        * ⚠️ nº 876 — IL NE RESTE ICI QUE L'IMAGE : l'en-tête est monté au
-        * niveau de l'article (au-dessus de l'ancre des superpositions) et
-        * le pied descendu après elle — tous deux AUX DEUX APPAREILS
-        * désormais (§4). Ce cadre-ci reste celui du doigt.
-        * ----------------------------------------------------------------
         * Les trois blocs du doigt, rendus par le serveur pour tout le
         * monde et montrés au doigt seulement (`hidden mobile:…`, chez
         * chacun) — le pourquoi entier est écrit sur la propriété `fil`
@@ -1652,6 +1587,8 @@ function CarteTatoueurNue({
         *    lien du web emporte (`adresseFiche`).
         */}
       {fil && (
+        <>
+          <EnTeteDeFil tatoueur={tatoueur} lieu={lieuDeLaCarte} />
           <div
             ref={cadrePhoto}
             data-cadre-de-fil=""
@@ -1691,6 +1628,20 @@ function CarteTatoueurNue({
               />
             )}
           </div>
+          <PiedDeFil
+            tatoueur={tatoueur}
+            photos={photosDeLaCarte}
+            indice={indiceDoigt}
+            surRang={setIndiceDoigt}
+            cheminAPartager={adresseFiche}
+            metier={libelleStyle(photoEnregistrable?.style ?? styleRecherche)}
+            //  §6 (nº 853) — LE NOMBRE DE VUES arrive de la base avec la
+            //  fiche (colonne `vues`, SQL nº 852) et n'est calculé nulle
+            //  part. ⚠️ Nº 854 : le pied l'affiche TOUJOURS, et lit un
+            //  nombre absent comme un zéro.
+            vues={tatoueur.vues}
+          />
+        </>
       )}
 
       {/**
@@ -1834,41 +1785,6 @@ function CarteTatoueurNue({
             />
           </div>
         </div>
-      )}
-      </div>
-      {/**
-        * ██ §4 (nº 876) — LE PIED DU FIL, SOUS LA PHOTO, AUX DEUX APPAREILS ██
-        * ================================================================
-        * Signaler, les vues, les points de position, le fanion, le
-        * partage — l'écriture unique de CarteFil (nº 841/842/852/867),
-        * que les cartes du web portent désormais comme celles du doigt.
-        * OÙ IL SE MONTRE : sur une carte des RÉSULTATS (`fil`), aux deux
-        * appareils ; sur les autres cartes de la grille, au web seul —
-        * SAUF « Ma sélection » (`fanion`), qui n'a pas de pied : son
-        * fanion est sur la ligne des styles au web (§5) et dans l'image
-        * au doigt (nº 452), et un second fanion sur la même carte
-        * serait un mensonge. La photothèque n'a rien sous la photo.
-        * ⚠️ LE RANG ET LES POINTS : `rangRegarde` est le seul rang de la
-        * carte (le plus grand des deux, voir plus haut) ; un point posé
-        * fait glisser le carrousel au doigt et sauter la galerie au web
-        * (`allerAuRang`). Le partage emporte la photo regardée
-        * (`adresseFiche`), comme au doigt depuis la nº 841.
-        */}
-      {(fil || !fanion) && !phototheque && (
-        <PiedDeFil
-          affichage={fil ? "flex" : "hidden not-mobile:flex"}
-          tatoueur={tatoueur}
-          photos={photosDeLaCarte}
-          indice={rangRegarde}
-          surRang={allerAuRang}
-          cheminAPartager={adresseFiche}
-          metier={libelleStyle(photoEnregistrable?.style ?? styleRecherche)}
-          //  §6 (nº 853) — LE NOMBRE DE VUES arrive de la base avec la
-          //  fiche (colonne `vues`, SQL nº 852) et n'est calculé nulle
-          //  part. ⚠️ Nº 854 : le pied l'affiche TOUJOURS, et lit un
-          //  nombre absent comme un zéro.
-          vues={tatoueur.vues}
-        />
       )}
     </article>
   );

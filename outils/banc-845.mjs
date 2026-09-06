@@ -104,12 +104,9 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         const c = montrees[0];
         if (!c) return null;
         const f = new Function("return " + R)();
-        //  nº 876 — PLUS DE BLOC DU WEB EN TÊTE DE CASE : la carte de
-        //  recherche a la structure du fil aux deux appareils, le
-        //  squelette aussi — trois enfants, en-tête, photo, pied.
-        const tete = c.children[0];
-        const cadre = c.children[1];
-        const pied = c.children[2];
+        const tete = c.children[1];
+        const cadre = c.children[2];
+        const pied = c.children[3];
         const releve = f(
           c, tete, cadre, pied,
           tete?.children[0],
@@ -124,7 +121,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
           colonnes: getComputedStyle(b.querySelector("ul")).gridTemplateColumns.split(" ").length,
           //  Le premier bloc de chaque case est celui du WEB : au doigt
           //  il doit être retiré de l'affichage, comme sur la vraie.
-          enfants: c.children.length,
+          blocWeb: getComputedStyle(c.children[0]).display,
           y: c.getBoundingClientRect().top,
         };
       }, RELEVE).catch(() => null);
@@ -135,8 +132,8 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
       gris !== null && gris.colonnes === 1, gris ? `${gris.colonnes} colonne(s)` : "jamais vu");
     verif("il montre TROIS cartes au doigt (quinze rendues, douze retirées de l'affichage)",
       gris.rendues === 15 && gris.montrees === 3, `${gris.montrees} montrée(s) sur ${gris.rendues}`);
-    verif("la case n'a que la structure du fil : trois enfants, en-tête, photo, pied (nº 876)",
-      gris.enfants === 3, `${gris.enfants} enfant(s)`);
+    verif("le bloc de la carte du WEB est retiré de l'affichage au doigt",
+      gris.blocWeb === "none", gris.blocWeb);
 
     //  … ET MAINTENANT LA VRAIE, SUR LA MÊME PAGE.
     await page.waitForLoadState("networkidle");
@@ -303,12 +300,16 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
     /*  ⛔ nº 873 — L'ONGLET PORTFOLIO EST UNE PAGE, ET AU DOIGT UNE
         VIGNETTE DE GALERIE NE MÈNE PLUS NULLE PART (« toucher une photo
         ne fait rien », banc 873-§3) : la vue photo ne s'ouvre plus que
-        depuis un LIEN PARTAGÉ (mesurée dans ce banc). Le bloc qui touchait
-        une vignette des anciennes bandes (`[data-galeries]`, `[role=radio]`)
-        est retiré : ces nœuds n'existent plus — nº 873 au doigt, nº 876 au
-        web, où la page Portfolio montre les mêmes cartes de fil. */
+        depuis un LIEN PARTAGÉ (mesurée plus haut dans ce banc). Le bloc
+        qui touchait une vignette des anciennes bandes (`[data-galeries]`,
+        `[role=radio]`) est retiré : ces nœuds n'existent plus — nº 873 au
+        doigt, nº 876 au web, où la page Portfolio montre les mêmes cartes
+        de fil.
+        ⚠️ nº 877 — AU WEB, LA PHOTO D'UNE CARTE EST DEVENUE CLIQUABLE
+        (elle monte dans l'affiche) : c'est un autre geste, sur une autre
+        surface, et le banc 877 le mesure. */
     titre("845 · (mémoire) une vignette du Portfolio ouvrait le fil de la galerie — plus depuis la nº 873");
-    verif("(mémoire nº 845/863/866) le Portfolio est le fil de galeries, une vignette n'y mène nulle part — mesuré au banc 873", true, "");
+    verif("(mémoire nº 845/863/866) le Portfolio est le fil de galeries, une vignette n'y mène nulle part — mesuré aux bancs 873 et 877", true, "");
 
     titre("845 · la carte du fil, elle, mène toujours au profil direct");
     await page.goto(`${BASE}${MOSAIQUE}`, { waitUntil: "networkidle" });
@@ -334,7 +335,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
 {
   const { nav, page } = await ouvrir("web");
   try {
-    titre("845 · le web : le squelette du fil, aux deux appareils (nº 876)");
+    titre("845 · le web : ni fil, ni squelette de fil");
     //  ⚠️ MÊME RÉESSAI QU'AU DOIGT : voir la note du premier bloc.
     let gris = null;
     for (let essai = 0; essai < 3 && !gris; essai += 1) {
@@ -349,11 +350,11 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
         return {
           colonnes: getComputedStyle(b.querySelector("ul")).gridTemplateColumns.split(" ").length,
           montrees: montrees.length,
-          //  nº 876 — AU WEB AUSSI, la case peint la structure du fil :
-          //  en-tête, photo, pied — trois enfants, tous affichés (la
-          //  nº 845 exigeait l'inverse : le web n'avait que son bloc).
-          filMontre: montrees[0].children.length === 3
-            && [...montrees[0].children].every((n) => n.getBoundingClientRect().height > 0),
+          //  Au web, la structure du fil ne doit rien peindre : la
+          //  première case n'a que son bloc web affiché.
+          filMontre: montrees[0].children.length > 1
+            ? [...montrees[0].children].slice(1).some((n) => n.getBoundingClientRect().height > 0)
+            : false,
           hauteur: Math.round(montrees[0].getBoundingClientRect().height),
         };
       }).catch(() => null);
@@ -363,7 +364,7 @@ const RELEVE = `(carte, tete, cadre, pied, avatar, badge, gauche, droite) => {
     verif("le squelette du web garde ses colonnes (quatre à 1440 px) et ses douze cases",
       gris !== null && gris.colonnes === 4 && gris.montrees === 12,
       gris ? `${gris.colonnes} colonnes · ${gris.montrees} cases` : "jamais vu");
-    verif("la structure du fil y est peinte : en-tête, photo, pied (nº 876)", gris.filMontre === true);
+    verif("aucune structure de fil n'y est peinte", gris.filMontre === false);
 
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1500);

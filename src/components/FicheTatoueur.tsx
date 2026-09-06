@@ -51,9 +51,12 @@ import {
 } from "@/lib/memoire-galeries";
 //  §3 (nº 862) — `BoutonPartageFiche` N'EST PLUS APPELÉ D'ICI : le
 //  partage du doigt vivait dans la rangée du titre, il est passé dans
-//  le PIED DU FIL (components/CarteFil), qui le monte lui-même. Le web
-//  n'en avait pas dans cette page.
-import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
+//  le PIED DU FIL (components/CarteFil), qui le monte lui-même.
+//  §4 (nº 877) — ET `BoutonCoeurPhoto` SUIT LE MÊME CHEMIN : le fanion
+//  posé sur la grande photo du web appartient désormais à la RANGÉE DE
+//  COMMANDES (`CommandesDeLAffiche`, CarteFil), qui le monte avec le
+//  partage, le signalement, les vues et les points. Plus aucun appel
+//  direct ici.
 /*  ██ §3 (nº 862) — L'EN-TÊTE ET LE PIED DE LA CARTE DU FIL ██
     ------------------------------------------------------------------
     DÉCISION DU PROPRIÉTAIRE : « la VUE PHOTO prend EXACTEMENT la
@@ -62,11 +65,14 @@ import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
     l'image l'en-tête (avatar, nom, ville, badge du type), sous elle le
     pied (signaler, vues, points, fanion, partage). Aucune apparence
     n'est recopiée — une seule écriture, celle de CarteFil. */
-import { EnTeteDeFil, PiedDeFil } from "@/components/CarteFil";
 import {
-  CarrouselPortfolio,
-  PointsDuCarrousel,
-} from "@/components/CarrouselPortfolio";
+  CommandesDeLAffiche,
+  EnTeteDeFil,
+  PiedDeFil,
+} from "@/components/CarteFil";
+//  §4 (nº 877) — `PointsDuCarrousel` n'est plus monté d'ici non plus :
+//  la frise vit dans la rangée de commandes, avec les quatre autres.
+import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 //  §3 (nº 862) — `adresseDeLienInterne` N'EST PLUS APPELÉ D'ICI : la
 //  plaque du profil, son seul porteur, a cédé la place à l'en-tête du
 //  fil — qui mène au profil PAR LA MÊME ADRESSE, écrite chez lui.
@@ -245,12 +251,12 @@ export function FicheTatoueur({
 
   /** LE STYLE AFFICHÉ — c'est une vignette de l'onglet « Portfolio »
       qui en change, et le carrousel suit. */
-  /*  §3 (nº 876) — PLUS AUCUN POSEUR : la seule vignette qui changeait
-      le style affiché — celles des bandes par style du web
-      (PanneauPortfolio) — n'existe plus, les pages Portfolio et Flash
-      sont le fil de galeries aux deux appareils. La valeur est celle de
-      l'ouverture, pour la vie du composant. */
-  const [styleAffiche] = useState(ouverture.style);
+  /*  §3 (nº 876, ANNULÉ nº 877) — LA nº 876 AVAIT RETIRÉ LE POSEUR avec
+      les vignettes des bandes par style ; le propriétaire rend le geste
+      aux CARTES du fil de galeries, au web : un clic sur la photo d'une
+      carte change le style affiché, et le carrousel du haut suit. Le
+      chemin est celui de la nº 204-§3, au caractère près. */
+  const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
       dépôt. `null` à l'arrivée : le style entier, comme toujours.
@@ -295,8 +301,8 @@ export function FicheTatoueur({
     surUnePhoto?.serie ??
     serieCherchee ??
     serieDeLOuverture(groupes, ouverture.style);
-  //  §3 (nº 876) — plus aucun poseur non plus (voir `styleAffiche`).
-  const [serieOuverte] = useState<{
+  //  §3 (nº 877) — le poseur revient avec le geste (voir `styleAffiche`).
+  const [serieOuverte, setSerieOuverte] = useState<{
     nature: string;
     rendu: string;
   } | null>(serieInitiale);
@@ -1154,87 +1160,50 @@ export function FicheTatoueur({
               {/*  §1 (nº 459) — LA PASTILLE DE PARTAGE A QUITTÉ LA
                    PHOTO (l'angle haut gauche, nº 198-§3) : le partage
                    du profil vit dans la rangée du va-et-vient
-                   (nº 458-§2). Sur la photo du web, il ne reste que le
-                   fanion (angle bas droit, nº 375). */}
+                   (nº 458-§2). Sur la photo du web, il ne restait que
+                   le fanion (angle bas droit, nº 375) et les points
+                   (nº 598).
+                   ██ §4 (nº 877) — LES DEUX BLOCS DEVIENNENT UNE RANGÉE ██
+                   ------------------------------------------------------
+                   CE QUI VIVAIT ICI, EN DEUX HABILLAGES SÉPARÉS : le
+                   FANION ancré `bottom-3 right-3` (nº 375) et LES POINTS
+                   ancrés `inset-x-0 bottom-3` (nº 598), chacun collé au
+                   bas de l'image.
+                   CE QUE LE PROPRIÉTAIRE DEMANDE : une RANGÉE de
+                   commandes — signaler et les vues à gauche (au survol),
+                   les points au centre, le fanion puis le partage à
+                   droite —, et les points REMONTÉS sur la ligne des
+                   icônes. Les deux blocs se fondent donc dans une seule
+                   écriture, partagée avec la fenêtre superposée
+                   (`CommandesDeLAffiche`, CarteFil) — c'est le défaut
+                   que la nº 599 a fermé : ce qui se pose sur cette photo
+                   se pose sur les deux surfaces, ou il diverge.
+                   ⚠️ `mobile:hidden` VIENT D'ICI, comme avant : au doigt,
+                   rien n'est posé sur l'image (règle nº 452) — les mêmes
+                   commandes y vivent SOUS elle (le pied du fil, nº 862-§3,
+                   plus bas dans ce fichier). */}
               {!apercu && (
-                <>
-                  {/*  ██ §1 (nº 845) — LA CROIX DE RETOUR DE LA nº 844
-                       EST RETIRÉE ██
-                       Elle vivait ici, dans l'angle haut gauche de la
-                       photo. Le pourquoi de son départ est écrit en fin
-                       de fichier, là où sa définition vivait. */}
-                  {photoAffichee && (
-                    /*  §1 (nº 375) — LE FANION DESCEND, LA CAPSULE
-                        MONTE. Sur le web, les deux échangent leurs
-                        places : le fanion prend l'angle BAS droit,
-                        la capsule du compteur prend le HAUT droit
-                        (CarrouselPortfolio). Le partage ne bouge
-                        pas — il reste seul dans l'angle haut gauche.
-                        ⚠️ LE DOIGT N'EST PAS CONCERNÉ : ce bloc est
-                        `mobile:hidden`, et le cœur tactile plus bas
-                        garde son `bottom-3 right-3` d'origine. Même
-                        gabarit, même variante, même marge de 12 px
-                        au bord : seule l'ancre verticale change. */
-                    <div className="mobile:hidden absolute bottom-3 right-3 z-[2]">
-                      <BoutonCoeurPhoto
-                        photoId={photoAffichee.cle}
-                        variante="fiche"
-                      />
-                    </div>
+                <CommandesDeLAffiche
+                  affichage="mobile:hidden flex"
+                  tatoueur={tatoueur}
+                  photos={photosDuCarrousel}
+                  indice={indicePhoto}
+                  surRang={setIndicePhoto}
+                  //  Le fanion ne juge qu'une photo cataloguée.
+                  photoEnregistrable={photoAffichee?.cle}
+                  /*  L'ADRESSE PARTAGÉE EST CELLE DU CARROUSEL OUVERT
+                      (`cheminDuCarrousel`, nº 280-§3) : la même que le
+                      pied du doigt emporte, au caractère près. */
+                  cheminAPartager={cheminDuCarrousel(
+                    tatoueur.slug,
+                    styleAffiche,
+                    serieEffective
                   )}
-                  {/*  ██ §1 (nº 598) — LES POINTS REVIENNENT DANS LA
-                       PHOTO, AU WEB ██
-                       ----------------------------------------------
-                       LA nº 307 LES AVAIT RETIRÉS D'ICI, au motif que
-                       « la capsule du compteur, seule, dit le volume »
-                       et que deux repères pour le même renseignement
-                       se gênaient. Le propriétaire les rappelle : le
-                       compteur dit COMBIEN, les points montrent OÙ —
-                       et il garde les deux, sur les deux appareils.
-                       ⚠️ L'ÉCRITURE N'EST PAS NEUVE : `PointsDuCarrousel`
-                       n'a jamais quitté ce dépôt (bas de
-                       CarrouselPortfolio). Elle était seulement
-                       devenue morte, plus rendue nulle part. On la
-                       rebranche telle quelle — sept crans au plus,
-                       frise qui glisse, extrémités qui décroissent.
-                       ⚠️ LE BLANC PUR N'EST PAS UN OUBLI, et c'est à
-                       écrire pour qu'une passe future ne le « corrige »
-                       pas : ces ronds vivent SUR UNE PHOTO, pas sur un
-                       fond de charte — aucun jeton de la nº 466 n'y
-                       aurait de sens, puisqu'on ne sait pas ce qu'il y
-                       a dessous. Leur lisibilité vient de l'ombre douce
-                       de la nº 221, la même sur tous, jamais d'une
-                       couleur.
-                       ⚠️ LA BANDE NE PREND AUCUNE PLACE et n'intercepte
-                       aucun clic : elle est posée EN SURIMPRESSION
-                       (`absolute`), et seuls les ronds eux-mêmes
-                       répondent au doigt — c'est ce que
-                       `pointer-events-auto`, écrit sur eux depuis
-                       toujours, permet enfin de servir. La photo garde
-                       donc sa taille, son format et son plein écran
-                       cliquable.
-                       ⚠️ ET RIEN AU DOIGT : ce bloc est `mobile:hidden`,
-                       comme le fanion juste au-dessus. Le doigt a les
-                       siens SOUS la photo (plus bas dans ce fichier).
-                       ██ ⚠️ CE N'EST PAS LE SEUL AFFICHAGE DU WEB
-                       (nº 599) : une fiche s'y regarde en PAGE PLEINE
-                       — celle-ci — ou en FENÊTRE SUPERPOSÉE, et c'est
-                       la fenêtre qu'ouvre un clic de carte. Elle monte
-                       son propre carrousel dans `FenetreFiche`, avec
-                       ses propres habillages : les points y sont
-                       écrits une seconde fois, à l'identique. Toucher
-                       l'un sans l'autre, c'est le défaut que la nº 599
-                       a fermé. */}
-                  {photosDuCarrousel.length > 1 && (
-                    <div className="mobile:hidden pointer-events-none absolute inset-x-0 bottom-3 z-[2] flex justify-center">
-                      <PointsDuCarrousel
-                        photos={photosDuCarrousel}
-                        indice={indicePhoto}
-                        surRang={setIndicePhoto}
-                      />
-                    </div>
-                  )}
-                </>
+                  metier={stylePrincipal?.label ?? ""}
+                  //  §6 (nº 853) — le nombre arrive de la base avec la
+                  //  fiche ; un nombre absent se lit zéro (nº 854).
+                  vues={tatoueur.vues}
+                />
               )}
 
               {/*  §1 (nº 452) — PLUS AUCUN HABILLAGE POSÉ SUR L'IMAGE
@@ -1703,6 +1672,25 @@ export function FicheTatoueur({
             //  §1 (nº 873) — la page où l'on est : c'est elle qui ouvre
             //  l'onglet, et fait des trois onglets des liens.
             vue={vue}
+            /*  ██ §3 (nº 877) — LA PHOTO CLIQUÉE MONTE DANS L'AFFICHE ██
+                ------------------------------------------------------
+                LE GESTE : au web, un clic sur la photo d'une carte du
+                fil de galeries (FilDeGalerie). CE QU'IL POSE, et c'est
+                le chemin des anciennes vignettes, mot pour mot
+                (nº 204-§3, nº 306-§1-6) : le style, la série, et LE
+                RANG de la photo cliquée — le cadre du haut s'ouvre sur
+                ELLE, pas sur la première de sa série.
+                ⚠️ AUCUNE REMONTÉE DE PAGE : celle de la nº 239 ne
+                servait qu'au doigt (`remonterEnHautDeLaPhoto`, gardée
+                par l'appareil) et le doigt n'a jamais ce geste ; elle
+                est partie à la nº 876 avec les bandes, et rien ne la
+                rappelle. Au web, la colonne de la photo ne bouge pas :
+                elle est à côté, pas au-dessus. */
+            surSerieChoisie={(serie) => {
+              setStyleAffiche(serie.style);
+              setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
+              setIndicePhoto(serie.indice ?? 0);
+            }}
           />
         </div>
       </div>

@@ -182,17 +182,14 @@ for (const largeur of [390, 360]) {
 
   const { nav: navWeb, page: pageWeb } = await ouvrir("web", { session: U });
   try {
-    titre("865 · §4 — et le web garde sa ligne du style, son nom et son badge (nº 876 : le nom dans l'en-tête du fil, au-dessus de la photo)");
+    titre("865 · §4 — et le web ne change pas : style, nom, ville, badge");
     await pageWeb.goto(`${BASE}/my-favorites`, { waitUntil: "networkidle" });
     await pageWeb.waitForTimeout(1500);
     await pageWeb.waitForSelector("[data-carte]", { timeout: 20000 });
     const w = await pageWeb.evaluate(() => {
       const c = document.querySelector("[data-carte]");
       const vu = (n) => n && getComputedStyle(n).display !== "none" && n.getBoundingClientRect().height > 0;
-      //  nº 876 — au web, le nom vit dans l'en-tête du fil (au-dessus de
-      //  la photo), plus dans un h3 sous elle.
-      return { style: vu(c.querySelector("p")) ? c.querySelector("p").textContent.trim() : null,
-        nom: vu(c.querySelector("[data-en-tete-de-fil] [data-lien-profil-de-fil] span > span:first-child")), badge: [...c.querySelectorAll("[data-badge-type]")].some(vu) };
+      return { style: vu(c.querySelector("p")) ? c.querySelector("p").textContent.trim() : null, nom: vu(c.querySelector("h3")), badge: [...c.querySelectorAll("[data-badge-type]")].some(vu) };
     });
     verif("au web, la ligne du style, le nom et le badge du type sont là", Boolean(w.style) && w.nom && w.badge, JSON.stringify(w));
   } catch (e) {

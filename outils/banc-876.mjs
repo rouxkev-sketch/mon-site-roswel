@@ -74,52 +74,11 @@ const proche = (a, b, marge = 0.5) => a !== null && a !== undefined && b !== nul
 /** La boîte d'un nœud, ou null s'il n'est pas dans l'affichage. */
 const BOITE = `(n) => { if (!n || n.getClientRects().length === 0) return null; const r = n.getBoundingClientRect();
   return { y: +r.top.toFixed(2), bas: +r.bottom.toFixed(2), g: +r.left.toFixed(2), d: +r.right.toFixed(2), h: +r.height.toFixed(2), l: +r.width.toFixed(2) }; }`;
-/** L'EN-TÊTE ET LE PIED D'UNE CARTE, MESURÉS — ce que le banc compare
-    entre le doigt et le web : les boîtes, le rond, le corps du nom et
-    de la ville, le badge, les trois cibles du pied et le dessin des
-    vues. Rien de ce qui dépend de la largeur de la colonne (les
-    largeurs elles-mêmes) : l'appareil ne décide que des colonnes. */
-const RELEVE_CARTE = `(carte, B) => {
-  const tete = carte.querySelector("[data-en-tete-de-fil]");
-  const pied = carte.querySelector("[data-pied-de-fil]");
-  const police = (n) => n ? { corps: getComputedStyle(n).fontSize, graisse: getComputedStyle(n).fontWeight, couleur: getComputedStyle(n).color } : null;
-  const avatar = tete?.querySelector("[data-lien-profil-de-fil] > span:first-child");
-  const nom = tete?.querySelector("[data-lien-profil-de-fil] span span:first-child");
-  const ville = tete?.querySelector("[data-lien-profil-de-fil] span span:last-child");
-  const badge = [...(tete?.querySelectorAll("[data-badge-type]") ?? [])].find((n) => n.getClientRects().length > 0);
-  const signaler = pied?.querySelector(":scope > div:first-child > *:first-child");
-  const vues = pied?.querySelector("[data-vues-de-fil]");
-  const droite = pied?.querySelector(":scope > div:last-child");
-  const photoWeb = carte.querySelector("[data-lien-carte] > div > div");
-  const photoDoigt = carte.querySelector("[data-cadre-de-fil]");
-  const photo = [photoWeb, photoDoigt].map(B).find(Boolean) ?? null;
-  return {
-    tete: { boite: B(tete), h: B(tete)?.h, avatar: B(avatar), nom: police(nom), ville: police(ville), badgeH: B(badge)?.h, pb: tete ? getComputedStyle(tete).paddingBottom : null, gap: tete ? getComputedStyle(tete).columnGap : null },
-    pied: { boite: B(pied), h: B(pied)?.h, signaler: B(signaler), vues: B(vues), vuesSvg: B(vues?.querySelector("svg")), droite: B(droite), boutonsDroite: [...(droite?.querySelectorAll("button") ?? [])].map(B), pt: pied ? getComputedStyle(pied).paddingTop : null },
-    photo,
-    lignesSousLaPhoto: [...carte.querySelectorAll("[data-lien-carte] p, [data-lien-carte] h3")].filter((n) => n.getClientRects().length > 0).map((n) => n.textContent.trim()),
-    carte: B(carte),
-  };
-}`;
-const releverCarte = (page, selecteur) => page.evaluate(([sel, R, Bs]) => {
-  const carte = document.querySelector(sel);
-  if (!carte) return null;
-  return new Function("return " + R)()(carte, new Function("return " + Bs)());
-}, [selecteur, RELEVE_CARTE, BOITE]);
-/** Ce qui doit être IDENTIQUE entre le doigt et le web : tout sauf les
-    largeurs (les colonnes), c'est-à-dire les hauteurs, les gabarits et
-    les écritures. */
-const memesRangees = (a, b) => {
-  const ecarts = [];
-  const cmp = (nom, x, y) => { if (JSON.stringify(x) !== JSON.stringify(y)) ecarts.push(`${nom}: ${JSON.stringify(x)} ≠ ${JSON.stringify(y)}`); };
-  cmp("en-tête h", a.tete.h, b.tete.h); cmp("avatar h", a.tete.avatar?.h, b.tete.avatar?.h); cmp("avatar l", a.tete.avatar?.l, b.tete.avatar?.l);
-  cmp("nom", a.tete.nom, b.tete.nom); cmp("ville", a.tete.ville, b.tete.ville); cmp("badge h", a.tete.badgeH, b.tete.badgeH);
-  cmp("en-tête pb", a.tete.pb, b.tete.pb); cmp("en-tête gap", a.tete.gap, b.tete.gap);
-  cmp("pied h", a.pied.h, b.pied.h); cmp("signaler h", a.pied.signaler?.h, b.pied.signaler?.h); cmp("vues svg h", a.pied.vuesSvg?.h, b.pied.vuesSvg?.h);
-  cmp("boutons de droite", a.pied.boutonsDroite.map((x) => [x?.h, x?.l]), b.pied.boutonsDroite.map((x) => [x?.h, x?.l])); cmp("pied pt", a.pied.pt, b.pied.pt);
-  return ecarts;
-};
-const LISTE = "/search?style=blackwork&nature=tatouage";
+/*  ⛔ nº 877 — LE RELEVÉ DE CARTE (`RELEVE_CARTE`, `releverCarte`) ET LA
+    COMPARAISON DOIGT/WEB (`memesRangees`) SONT RETIRÉS avec les §4, §5
+    et §6 qu'ils servaient : les cartes du web ne prennent plus la
+    structure du fil (voir la note en bas de fichier). Pas de code mort
+    dans un banc non plus. */
 
 //  ══ 1 · L'ORDRE DES PORTFOLIOS SUIVIS ═══════════════════════════════
 for (const mode of ["web", "doigt"]) {
@@ -201,10 +160,17 @@ for (const mode of ["web", "doigt"]) {
     verif("le fil de galeries est affiché au web, trois cartes", v.filVisible && v.cartes.length === 3, `${v.cartes.length} carte(s)`);
     verif("chaque carte est PLEINE LARGEUR dans les marges (la largeur de la colonne de lecture)",
       v.cartes.every((c) => proche(c.boite.l, v.colonne.l, 1) && proche(c.boite.g, v.colonne.g, 1)), JSON.stringify(v.cartes.map((c) => [c.boite.g, c.boite.l])) + ` colonne (contenu) ${v.colonne.g}/${v.colonne.l}, air ${JSON.stringify(v.colonne.air)}`);
+    /*  nº 877-§5 — LES SEIZE PIXELS DE CÔTÉ SONT PARTIS : le titre
+        s'aligne sur le BORD GAUCHE de la carte et le compteur sur le
+        BORD DROIT de l'image. Le banc 877 mesure la règle ; ici on
+        vérifie seulement que les deux se suivent sur la ligne du titre. */
     verif("le titre en haut à gauche, le compteur « 1/6 » en haut à droite, sur la même ligne",
-      v.cartes[0].compteur === "1/6" && proche(v.cartes[0].titreBoite.g, v.cartes[0].boite.g + 16, 1) && proche(v.cartes[0].compteurBoite.d, v.cartes[0].boite.d - 16, 1) && v.cartes[0].compteurBoite.y < v.cartes[0].cadre.y,
+      v.cartes[0].compteur === "1/6" && v.cartes[0].titreBoite.g < v.cartes[0].compteurBoite.g && v.cartes[0].compteurBoite.y < v.cartes[0].cadre.y,
       `${v.cartes[0].compteur} · titre g ${v.cartes[0].titreBoite.g} · compteur d ${v.cartes[0].compteurBoite.d} · carte ${v.cartes[0].boite.g}→${v.cartes[0].boite.d}`);
-    verif("le pied est sous la photo, sur chaque carte", v.cartes.every((c) => c.pied && c.pied.y >= c.cadre.bas - 0.5), JSON.stringify(v.cartes.map((c) => [c.cadre?.bas, c.pied?.y])));
+    /*  nº 877-§2 — LE PIED A QUITTÉ LES CARTES DU WEB : ses commandes
+        (fanion, signaler, vues, partage, points) vivent sur la GRANDE
+        PHOTO (banc 877-§4). Le doigt garde le sien. */
+    verif("aucun pied sous une carte de galerie, au web (nº 877-§2)", v.cartes.every((c) => c.pied === null), JSON.stringify(v.cartes.map((c) => c.pied)));
     verif("au web, c'est la PISTE de la nº 839 qui se montre, pas le carrousel du doigt",
       v.cartes[0].pistesVisibles === 1 && !v.cartes[0].carrouselVisible, `pistes visibles ${v.cartes[0].pistesVisibles}, carrousel visible ${v.cartes[0].carrouselVisible}`);
     verif("la galerie à UNE photo n'a ni compteur ni piste", v.cartes[2].compteur === null && v.cartes[2].pistes === 0, `${v.cartes[2].compteur} · ${v.cartes[2].pistes} piste(s)`);
@@ -230,19 +196,10 @@ for (const mode of ["web", "doigt"]) {
     });
     verif("un pas : le compteur dit 2/6, la deuxième photo est dans l'encadré, le chevron de gauche apparaît",
       apres.compteur === "2/6" && apres.montree === 1 && apres.gauche, JSON.stringify(apres));
-    //  LES POINTS DU PIED POSENT UN RANG, au web aussi (§4).
-    //  ⚠️ LE PIED A D'AUTRES BOUTONS (signaler, partage, fanion) : on vise
-    //  LE ROND par son libellé (`View photo N of M`, PointsDuCarrousel).
-    const points = carte.locator("[data-pied-de-fil] button[aria-label^='View photo ']");
-    const nb = await points.count();
-    if (nb >= 4) {
-      await carte.locator("[data-pied-de-fil] button[aria-label^='View photo 4 of ']").click();
-      await attendre(page, 700);
-      const compteur = await carte.locator("[data-compteur-galerie]").textContent();
-      verif("un point du pied posé : la galerie y saute (4/6)", compteur.trim() === "4/6", compteur.trim());
-    } else {
-      verif("les points du pied sont là", false, `${nb} bouton(s) dans le pied`);
-    }
+    /*  nº 877-§2 — PLUS DE POINTS À POSER : le pied a quitté les cartes
+        du web. Ce qui fait glisser une carte y est le CHEVRON (mesuré
+        juste au-dessus) ou LES FLÈCHES DU CLAVIER (nº 877-§6, banc
+        877). */
     //  LA PAGE FLASH suit la même écriture : sans flash, l'écran vide.
     await page.goto(`${BASE}/artist/${SLUG}/flash`, { waitUntil: "domcontentloaded" });
     await attendre(page, 1500);
@@ -252,147 +209,23 @@ for (const mode of ["web", "doigt"]) {
   } finally { await nav.close(); }
 }
 
-//  ══ 4 · WEB : LA GRILLE DES RÉSULTATS ══════════════════════════════
-let releveDoigt = null, releveWeb = null;
-{
-  const { nav, page } = await ouvrir("doigt");
-  try {
-    titre("876 · §4 — doigt : la carte du fil ne change pas (en-tête, photo, pied)");
-    await page.goto(`${BASE}${LISTE}`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 2000);
-    releveDoigt = await releverCarte(page, "[data-carte]");
-    verif("en-tête au-dessus de la photo, pied en dessous", releveDoigt.tete.boite && releveDoigt.pied.boite && releveDoigt.tete.boite.bas <= releveDoigt.photo.y + 0.5 && releveDoigt.pied.boite.y >= releveDoigt.photo.bas - 0.5,
-      JSON.stringify([releveDoigt.tete.boite?.bas, releveDoigt.photo?.y, releveDoigt.photo?.bas, releveDoigt.pied.boite?.y]));
-    verif("aucune ligne de texte sous la photo", releveDoigt.lignesSousLaPhoto.length === 0, JSON.stringify(releveDoigt.lignesSousLaPhoto));
-  } catch (e) {
-    verif("déroulement du banc 876 (§4 doigt)", false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
-{
-  const { nav, page } = await ouvrir("web");
-  try {
-    titre("876 · §4 — web : chaque carte de la grille prend la structure du fil");
-    await page.goto(`${BASE}${LISTE}`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 2000);
-    releveWeb = await releverCarte(page, "[data-carte]");
-    const grille = await page.evaluate(() => ({
-      colonnes: getComputedStyle(document.querySelector("[data-grille-tatoueurs]")).gridTemplateColumns.split(" ").length,
-      cartes: document.querySelectorAll("[data-carte]").length,
-      tetes: [...document.querySelectorAll("[data-carte] [data-en-tete-de-fil]")].filter((n) => n.getClientRects().length > 0).length,
-      pieds: [...document.querySelectorAll("[data-carte] [data-pied-de-fil]")].filter((n) => n.getClientRects().length > 0).length,
-    }));
-    verif("la grille garde ses colonnes (quatre à 1440 px)", grille.colonnes === 4, `${grille.colonnes} colonne(s)`);
-    verif("chaque carte montre l'en-tête et le pied", grille.tetes === grille.cartes && grille.pieds === grille.cartes, `${grille.tetes} en-têtes, ${grille.pieds} pieds, ${grille.cartes} cartes`);
-    verif("l'en-tête est AU-DESSUS de la photo, le pied EN DESSOUS", releveWeb.tete.boite.bas <= releveWeb.photo.y + 0.5 && releveWeb.pied.boite.y >= releveWeb.photo.bas - 0.5,
-      JSON.stringify([releveWeb.tete.boite.bas, releveWeb.photo.y, releveWeb.photo.bas, releveWeb.pied.boite.y]));
-    verif("la ligne des styles a disparu : aucun texte sous la photo", releveWeb.lignesSousLaPhoto.length === 0, JSON.stringify(releveWeb.lignesSousLaPhoto));
-    const ecarts = memesRangees(releveDoigt, releveWeb);
-    verif("L'EN-TÊTE ET LE PIED SONT IDENTIQUES À CEUX DU MOBILE (hauteurs, gabarits, écritures)", ecarts.length === 0, ecarts.join(" ; ") || "identiques");
-    //  LES CHEVRONS AU SURVOL, CONSERVÉS.
-    const carte = page.locator("[data-carte]").first();
-    await carte.hover({ position: { x: 150, y: 250 } });
-    await attendre(page, 500);
-    const droite = carte.locator("[data-fleche-de-carte='droite']");
-    verif("les chevrons au survol sont conservés", await droite.isVisible());
-    await droite.click();
-    await attendre(page, 700);
-    verif("… et ils font toujours glisser (pastille 2/N)", /^2\/\d+$/.test((await carte.locator("[data-compteur-de-carte]").textContent()).trim()));
-    //  LES POINTS DU PIED, AU WEB : un point posé fait sauter la galerie.
-    const points = carte.locator("[data-pied-de-fil] button[aria-label^='View photo ']");
-    if ((await points.count()) >= 3) {
-      await carte.locator("[data-pied-de-fil] button[aria-label^='View photo 3 of ']").click();
-      await attendre(page, 700);
-      verif("un point du pied posé au web : la galerie y saute (3/N)", /^3\/\d+$/.test((await carte.locator("[data-compteur-de-carte]").textContent()).trim()));
-    }
-  } catch (e) {
-    verif("déroulement du banc 876 (§4 web)", false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
-
-//  ══ 5 · MA SÉLECTION > FAVORIS ══════════════════════════════════════
-await suivre([A, B]);
-for (const mode of ["web", "doigt"]) {
-  const { nav, page } = await ouvrir(mode, { session: U });
-  try {
-    titre(`876 · §5 — ${mode} : la carte des favoris`);
-    await page.goto(`${BASE}/my-favorites`, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("[data-carte]", { timeout: 20000 });
-    await attendre(page, 2000);
-    const r = await releverCarte(page, "[data-carte]");
-    const fanion = await page.evaluate(() => {
-      const c = document.querySelector("[data-carte]");
-      const ligne = c.querySelector("[data-fanion-de-ligne]"), flottant = c.querySelector("[data-fanion-flottant]");
-      return { ligne: Boolean(ligne && ligne.getClientRects().length > 0), flottant: Boolean(flottant && flottant.getClientRects().length > 0) };
-    });
-    if (mode === "web") {
-      verif("l'en-tête (avatar, nom, ville, badge) est AU-DESSUS de la photo", r.tete.boite && r.tete.boite.bas <= r.photo.y + 0.5, JSON.stringify([r.tete.boite?.bas, r.photo?.y]));
-      verif("sous la photo, la ligne « Blackwork • … » est GARDÉE, avec son fanion", r.lignesSousLaPhoto.length === 1 && /Blackwork/.test(r.lignesSousLaPhoto[0]) && fanion.ligne, JSON.stringify([r.lignesSousLaPhoto, fanion]));
-      verif("pas de pied sur une carte de « Ma sélection »", r.pied.boite === null);
-      const ecarts = memesRangees({ ...releveDoigt, pied: { h: null, signaler: null, vuesSvg: null, boutonsDroite: [], pt: null } }, { ...r, pied: { h: null, signaler: null, vuesSvg: null, boutonsDroite: [], pt: null } });
-      verif("… et l'en-tête est celui du fil, à l'identique", ecarts.length === 0, ecarts.join(" ; ") || "identique");
-    } else {
-      verif("au doigt, la vignette ne change pas : pas d'en-tête, le nom et la ville sous la photo, le fanion dans l'image",
-        r.tete.boite === null && r.lignesSousLaPhoto.length === 2 && fanion.flottant && !fanion.ligne, JSON.stringify([r.tete.boite, r.lignesSousLaPhoto, fanion]));
-      verif("… et pas de pied", r.pied.boite === null);
-    }
-  } catch (e) {
-    verif(`déroulement du banc 876 (§5 ${mode})`, false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
-
-//  ══ 6 · LES SQUELETTES DU WEB, SANS SAUT ════════════════════════════
-/*  LA MÉTHODE DU BANC 845 : la main rendue dès la navigation COMMISE,
-    puis le document interrogé toutes les cinq millisecondes — le repli
-    de `loading.tsx` porte `aria-busy`. Trois tentatives : sur une
-    doublure qui répond en dix millisecondes, la fenêtre se ferme
-    parfois avant la première interrogation. */
-const RELEVE_GRIS = `(li, B) => {
-  const enfants = [...li.children];
-  return { hauteur: B(li)?.h, y: B(li)?.y, enfants: enfants.map((n) => ({ h: B(n)?.h, y: B(n)?.y, affiche: n.getClientRects().length > 0 })) };
-}`;
-for (const [nom, chemin, session] of [["la recherche", LISTE, null], ["Ma sélection", "/my-favorites", U]]) {
-  const { nav, page } = await ouvrir("web", session ? { session } : {});
-  try {
-    titre(`876 · §6 — web : le squelette de ${nom} épouse la nouvelle carte`);
-    let gris = null;
-    for (let essai = 0; essai < 3 && !gris; essai += 1) {
-      await page.goto(`${BASE}${chemin}`, { waitUntil: "commit" });
-      for (let i = 0; i < 400 && !gris; i += 1) {
-        gris = await page.evaluate(([R, Bs]) => {
-          const b = document.querySelector('[aria-busy="true"]');
-          if (!b) return null;
-          const li = [...b.querySelectorAll("li")].find((n) => n.getBoundingClientRect().height > 0);
-          if (!li) return null;
-          return new Function("return " + R)()(li, new Function("return " + Bs)());
-        }, [RELEVE_GRIS, BOITE]).catch(() => null);
-        if (!gris) await page.waitForTimeout(5);
-      }
-    }
-    verif("le squelette est attrapé", gris !== null);
-    await page.waitForLoadState("networkidle");
-    await attendre(page, 1800);
-    const vraie = await page.evaluate(([Bs]) => {
-      const B = new Function("return " + Bs)();
-      const c = document.querySelector("[data-carte]");
-      const tete = c.querySelector("[data-en-tete-de-fil]");
-      const photo = c.querySelector("[data-lien-carte] > div > div");
-      const pied = c.querySelector("[data-pied-de-fil]");
-      const bloc = c.querySelector("[data-lien-carte] > div + div");
-      return { hauteur: B(c)?.h, y: B(c)?.y, tete: B(tete), photo: B(photo), pied: B(pied), bloc: B(bloc) };
-    }, [BOITE]);
-    const egal = (a, b, tol = 0.5) => a !== null && a !== undefined && b !== null && b !== undefined && Math.abs(a - b) <= tol;
-    verif("MÊME HAUTEUR DE CARTE", egal(gris?.hauteur, vraie.hauteur), `${gris?.hauteur} px (gris) vs ${vraie.hauteur} px (vraie)`);
-    verif("l'EN-TÊTE : même hauteur, même place", egal(gris?.enfants[0]?.h, vraie.tete?.h) && egal(gris?.enfants[0]?.y, vraie.tete?.y), `h ${gris?.enfants[0]?.h}/${vraie.tete?.h} · y ${gris?.enfants[0]?.y}/${vraie.tete?.y}`);
-    verif("la PHOTO : même hauteur, même place", egal(gris?.enfants[1]?.h, vraie.photo?.h) && egal(gris?.enfants[1]?.y, vraie.photo?.y), `h ${gris?.enfants[1]?.h}/${vraie.photo?.h} · y ${gris?.enfants[1]?.y}/${vraie.photo?.y}`);
-    const bas = session ? vraie.bloc : vraie.pied;
-    verif(session ? "le BLOC SOUS LA PHOTO : même hauteur, même place" : "le PIED : même hauteur, même place",
-      egal(gris?.enfants[2]?.h, bas?.h) && egal(gris?.enfants[2]?.y, bas?.y), `h ${gris?.enfants[2]?.h}/${bas?.h} · y ${gris?.enfants[2]?.y}/${bas?.y}`);
-    verif("AUCUN SAUT AU REMPLACEMENT : la première carte arrive là où le squelette la promettait", egal(gris?.y, vraie.y, 1), `${gris?.y} promis, ${vraie.y} rendu`);
-  } catch (e) {
-    verif(`déroulement du banc 876 (§6 ${nom})`, false, String(e).slice(0, 400));
-  } finally { await nav.close(); }
-}
+/*  ⛔ §4, §5 ET §6 SONT ANNULÉS PAR LA nº 877, SUR DÉCISION DU
+    PROPRIÉTAIRE
+    ==================================================================
+    CE QUE CES TROIS SECTIONS MESURAIENT : les cartes de RECHERCHE et de
+    « MA SÉLECTION » prenant, au web, la structure du fil (en-tête
+    au-dessus de la photo, pied en dessous, plus de ligne de styles), et
+    les squelettes du web épousant cette carte-là.
+    CE QUE LE PROPRIÉTAIRE A TRANCHÉ À L'ÉCRAN, LA PASSE SUIVANTE :
+    « retour à l'état d'AVANT la 876 » pour ces cartes. Les mesures
+    correspondantes ne décrivent donc plus le site : elles sont retirées
+    plutôt que retournées, et c'est LE BANC 877 qui garde le nouvel état
+    (§1 : les cartes du web, mesurées à l'écriture du bâti 875), avec
+    les bancs 841, 842, 843, 845, 856, 862 et 865 — rendus eux aussi à
+    leur écriture d'avant la nº 876.
+    CE QUI RESTE ICI EST CE QUI TIENT : l'ordre des portfolios suivis
+    (§1), « Independent » en premier (§2) et le fil de galeries au web
+    (§3) — les trois décisions de la nº 876 que la nº 877 ne touche
+    pas. */
 
 bilan();

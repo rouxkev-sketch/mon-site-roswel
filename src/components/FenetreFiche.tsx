@@ -4,18 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { corpsGele, gelerLeCorps } from "@/lib/gel-du-corps";
 import { declarerDepartVouluVersLAccueil } from "@/lib/navigation-session";
 import Link from "next/link";
-//  §1 (nº 459) — `villeAffichee`, `MARQUE_YOKOFOLIO`,
-//  `BoutonPartageFiche` et `cheminDuCarrousel` sont partis avec la
-//  pastille de partage de la photo : le partage vit dans la rangée du
-//  va-et-vient (ContenuFiche, nº 458-§2).
+//  §1 (nº 459) — `villeAffichee`, `MARQUE_YOKOFOLIO` et
+//  `BoutonPartageFiche` sont partis avec la pastille de partage de la
+//  photo : le partage du PROFIL vit dans la rangée du va-et-vient
+//  (ContenuFiche, nº 458-§2).
+//  §4 (nº 877) — `cheminDuCarrousel` REVIENT, et pour un autre partage :
+//  celui de la PHOTO REGARDÉE, dans la rangée de commandes posée sur
+//  l'image (`CommandesDeLAffiche`, l'écriture de la page).
 import { libelleStyle } from "@/config/tatouage";
-import { BoutonCoeurPhoto } from "@/components/BoutonCoeurPhoto";
-import {
-  CarrouselPortfolio,
-  PointsDuCarrousel,
-} from "@/components/CarrouselPortfolio";
+import { CommandesDeLAffiche } from "@/components/CarteFil";
+import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
+
 import { ContenuFiche } from "@/components/ContenuFiche";
 import {
+  cheminDuCarrousel,
   galerieParStyles,
   ouvertureGalerie,
   ouvertureSurUnePhoto,
@@ -252,11 +254,11 @@ export function FenetreFiche({
       qui en change (nº 197-§4) ; la fenêtre est remontée à chaque
       ouverture (voir la clé dans GrilleTatoueurs), l'état repart donc
       toujours du bon style. */
-  /*  §3 (nº 876) — PLUS AUCUN POSEUR : les bandes par style du panneau
-      de droite (PanneauPortfolio), seules à changer le style affiché,
-      n'existent plus — le portfolio y est le fil de galeries. La valeur
-      est celle de l'ouverture, pour la vie de la fenêtre. */
-  const [styleAffiche] = useState(ouverture.style);
+  /*  §3 (nº 876, ANNULÉ nº 877) — LE POSEUR REVIENT AVEC LE GESTE : ce
+      n'est plus une vignette de bande qui change le style affiché (elles
+      n'existent plus), mais LA PHOTO D'UNE CARTE du fil de galeries,
+      cliquée au web dans le panneau de droite. */
+  const [styleAffiche, setStyleAffiche] = useState(ouverture.style);
   /** LA SÉRIE OUVERTE (nº 204-§3) — catégorie + rendu d'une vignette
       touchée : le carrousel ne montre alors QUE cette galerie de
       dépôt. `null` à l'ouverture : le style entier, comme toujours. */
@@ -840,60 +842,42 @@ export function FenetreFiche({
                      partage du profil vit dans la rangée du
                      va-et-vient (à gauche de « Suivre », nº 458-§2 —
                      ContenuFiche, que cette fenêtre monte). Sur la
-                     photo, il ne reste que le fanion (bas droit,
-                     nº 375). */}
-                {photoEnregistrable && (
-                  /*  §1 (nº 375) — LA FENÊTRE SUIT LA PAGE, PARCE
-                      QU'ELLE EST LA PAGE. Elle n'existe QUE sur le
-                      web et consomme LE MÊME `CarrouselPortfolio` :
-                      sa capsule est donc déjà remontée en haut à
-                      droite par le même réglage. Laisser le fanion
-                      en haut ici, c'est le superposer à la capsule
-                      et faire diverger la fenêtre de la page — il
-                      descend avec elle, à l'identique. */
-                  <div className="absolute bottom-3 right-3 z-[2]">
-                    <BoutonCoeurPhoto
-                      photoId={photoEnregistrable}
-                      //  L'ENSEMBLE DE LA PHOTO REGARDÉE — calculé
-                      //  depuis la GALERIE BRUTE, la seule liste où
-                      //  chaque photo porte ses trois tags : la réponse
-                      //  ne dépend donc plus du chemin d'arrivée
-                      //  (nº 210-§2, voir le commentaire jumeau dans
-                      //  FicheTatoueur).
-                      variante="fiche"
-                    />
-                  </div>
-                )}
-                {/*  ██ §1 (nº 599) — LES POINTS AUSSI, ET C'EST TOUTE
-                     LA CAUSE DU DÉFAUT ██
+                     photo, il restait le fanion (bas droit, nº 375) et
+                     les points (nº 599).
+                     ██ §4 (nº 877) — LA MÊME RANGÉE QUE LA PAGE ██
                      ----------------------------------------------
-                     LA nº 598 a rebranché la frise dans `FicheTatoueur`
-                     seulement. Or le web a DEUX affichages d'une fiche,
-                     et celui qu'on voit en cliquant une carte est
-                     CELUI-CI : la fenêtre superposée monte SON PROPRE
-                     `CarrouselPortfolio` (juste au-dessus), avec pour
-                     seul enfant le fanion. La page pleine avait donc
-                     ses points, la fenêtre non — et comme la mosaïque
-                     n'ouvre jamais la page, on ne voyait rien.
-                     C'EST L'ÉCRITURE DE LA PAGE, MOT POUR MOT : même
-                     composant, même ancrage bas, même surimpression
-                     qui ne prend aucune place et n'intercepte aucun
-                     clic (seuls les ronds répondent).
-                     ⚠️ AUCUNE BASCULE D'APPAREIL ICI, contrairement à
-                     la page : cette fenêtre s'ouvre AUSSI au doigt
-                     (une fiche ouverte depuis une fiche, PileFiches),
-                     et ses habillages de photo — le fanion juste
-                     au-dessus — n'en ont jamais porté. Les points
-                     suivent le fanion, pas la page. */}
-                {photosDuStyleAffiche.length > 1 && (
-                  <div className="pointer-events-none absolute inset-x-0 bottom-3 z-[2] flex justify-center">
-                    <PointsDuCarrousel
-                      photos={photosDuStyleAffiche}
-                      indice={rang}
-                      surRang={setIndice}
-                    />
-                  </div>
-                )}
+                     LES DEUX HABILLAGES SE FONDENT dans l'écriture
+                     partagée (`CommandesDeLAffiche`, CarteFil) : c'est
+                     la leçon de la nº 599, tenue cette fois par
+                     construction — la page et cette fenêtre montent LE
+                     MÊME composant, elles ne peuvent plus diverger.
+                     ⚠️ AUCUNE BASCULE D'APPAREIL ICI, comme avant :
+                     cette fenêtre s'ouvre AUSSI au doigt (une fiche
+                     ouverte depuis une fiche, PileFiches), et ses
+                     habillages n'en ont jamais porté. CE QUI ARRIVE AU
+                     WEB SEULEMENT — le partage, et le survol qui
+                     découvre signaler et les vues — se garde tout seul,
+                     chez la rangée (`pointer-fine`) : le doigt voit
+                     donc EXACTEMENT ce qu'il voyait, le fanion et les
+                     points. */}
+                <CommandesDeLAffiche
+                  affichage="flex"
+                  tatoueur={tatoueur}
+                  photos={photosDuStyleAffiche}
+                  indice={rang}
+                  surRang={setIndice}
+                  photoEnregistrable={photoEnregistrable}
+                  /*  L'ADRESSE PARTAGÉE EST CELLE DU CARROUSEL OUVERT
+                      (`cheminDuCarrousel`, nº 280-§3), comme sur la
+                      page : la fenêtre montre la même galerie. */
+                  cheminAPartager={cheminDuCarrousel(
+                    tatoueur.slug,
+                    styleAffiche,
+                    serieEffective
+                  )}
+                  metier={stylePrincipal?.label ?? ""}
+                  vues={tatoueur.vues}
+                />
               </CarrouselPortfolio>
             </div>
 
@@ -1046,6 +1030,18 @@ export function FenetreFiche({
                 //  le panneau montre les deux sections (la série
                 //  cherchée continue d'ouvrir le carrousel de gauche,
                 //  serieCherchee n'a pas bougé).
+                /*  ██ §3 (nº 877) — LA PHOTO CLIQUÉE MONTE DANS L'AFFICHE ██
+                    L'ÉCRITURE DE LA PAGE (FicheTatoueur), pour la même
+                    raison qu'à la nº 599 : cette fenêtre EST la fiche du
+                    web, et c'est elle qu'un clic de carte ouvre. Le rang
+                    est honoré ici aussi — la nº 310-§5 avait relevé ce
+                    défaut précis (l'indice remis à zéro ouvrait la bonne
+                    série sur sa première image, « il ne se passe rien »). */
+                surSerieChoisie={(serie) => {
+                  setStyleAffiche(serie.style);
+                  setSerieOuverte({ nature: serie.nature, rendu: serie.rendu });
+                  setIndice(serie.indice ?? 0);
+                }}
               />
               )}
             </div>

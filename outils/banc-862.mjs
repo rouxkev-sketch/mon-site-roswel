@@ -54,10 +54,7 @@ const SONDE_CARTE = `() => {
   const coeur = [ligne, flottant].map((b) => b?.querySelector("button"))
     .find((n) => n && n.getBoundingClientRect().height > 0);
   return {
-  //  nº 876 — la photo, pas le rond de l'en-tête du fil (au web, la
-  //  première image de la carte est l'avatar, au-dessus de la photo).
-    photo: B([...c.querySelectorAll("img")].map((i) => i.closest("div")).find((d) => d && !d.closest("[data-en-tete-de-fil]") && d.getBoundingClientRect().height > 0)),
-    styles: B(c.querySelector("p")),
+    photo: B(c.querySelector("img")?.closest("div")), styles: B(c.querySelector("p")),
     coeur: B(coeur), ligne: vu(ligne), flottant: vu(flottant),
     ligneExiste: Boolean(ligne), flottantExiste: Boolean(flottant),
   };
@@ -132,14 +129,20 @@ const sonder = (page, sonde, arg = null) =>
     /*  ██ LA MÊME ÉCRITURE, ET ON LE MESURE ██ La consigne dit « la
         place qu'il a sur les cartes de recherche » : on va donc lire
         une carte de recherche et comparer les trois écarts. */
-    /*  ⛔ nº 876 — LA CARTE DE RECHERCHE DU WEB N'A PLUS DE LIGNE DES
-        STYLES (elle a pris la structure du fil : son fanion vit dans le
-        pied, sous la photo). Il n'y a donc plus de « nombres d'une carte
-        de recherche » à comparer : la carte de « Ma sélection » GARDE sa
-        ligne et son fanion (§5 de la nº 876), aux valeurs absolues
-        mesurées ci-dessus (quatre et quinze pixels, nº 859). */
-    titre("862 · §1 — (mémoire) les nombres d'une carte de recherche — plus de ligne des styles au web depuis la nº 876");
-    verif("(mémoire nº 862) la carte de recherche du web porte son fanion dans le pied du fil — mesuré aux bancs 856 et 876", true, "");
+    titre("862 · §1 — et ce sont EXACTEMENT les nombres d'une carte de recherche");
+    await page.goto(`${BASE}/search?style=${STYLE}&nature=tatouage`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1500);
+    await page.waitForSelector("[data-carte]", { timeout: 20000 });
+    const r = await sonder(page, SONDE_CARTE);
+    const ecarts = (v) => ({
+      photoAuFanion: v.coeur.y - v.photo.bas,
+      photoAuTexte: v.styles.y - v.photo.bas,
+      hauteurFanion: v.coeur.h,
+      bordDroit: v.photo.d - v.coeur.d,
+    });
+    const a = ecarts(s), b = ecarts(r);
+    verif("les quatre mesures sont identiques des deux côtés",
+      JSON.stringify(a) === JSON.stringify(b), `sélection ${JSON.stringify(a)} · recherche ${JSON.stringify(b)}`);
   } catch (e) {
     verif("déroulement du banc 862 (§1 web)", false, String(e).slice(0, 400));
   } finally { await nav.close(); }
@@ -234,10 +237,7 @@ for (const [appareil, hauteurAttendue] of [["web", 40], ["doigt", 30]]) {
         await page.goto(`${BASE}/my-favorites`, { waitUntil: "networkidle" });
         await page.waitForTimeout(1500);
         await page.waitForSelector("[data-carte]", { timeout: 20000 });
-        //  nº 876 — LE LIEN DE LA PHOTO (`data-lien-carte`), pas le premier
-        //  lien de la carte : celui-ci est désormais le lien de profil de
-        //  l'en-tête du fil, qui n'est monté qu'au web sur « Ma sélection ».
-        await page.locator(`[data-carte] [data-lien-carte]`).first().tap();
+        await page.locator(`[data-carte] a[href*="/artist/"]`).first().tap();
         await page.waitForTimeout(2500);
       }],
     ]) {

@@ -6,10 +6,13 @@
 //  ⛔ nº 876 — LES BANDES DU WEB SONT PARTIES À LEUR TOUR : la page
 //  Portfolio du web montre LES CARTES DE GALERIE du fil, une par rangée,
 //  dont la photo glisse par la galerie de carte de la nº 839
-//  (`useGalerieDeCarte`, un rang par carte). Le déclencheur d'origine —
-//  un clic de vignette qui posait la photo dans le cadre du haut — est
-//  parti avec les bandes. CE QUI RESTE À ÉPROUVER EST LA PROMESSE
-//  ELLE-MÊME : un RE-RENDU de la fiche SANS remontage laisse les cartes
+//  (`useGalerieDeCarte`, un rang par carte).
+//  ⚠️ nº 877 — LE DÉCLENCHEUR D'ORIGINE EST REVENU, SOUS UNE AUTRE
+//  FORME : un clic sur LA PHOTO D'UNE CARTE pose de nouveau cette photo
+//  dans le cadre du haut (`surSerieChoisie`) — le banc 877 le mesure.
+//  Ici, on pose les rangs PAR LES CHEVRONS (le pied et ses points ont
+//  quitté les cartes du web à la nº 877-§2). CE QUI RESTE À ÉPROUVER EST
+//  LA PROMESSE ELLE-MÊME : un RE-RENDU de la fiche SANS remontage laisse les cartes
 //  en place — mêmes nœuds, mêmes rangs, mêmes compteurs, aucune photo
 //  redemandée. Le re-rendu : une adresse qui change sans changer de tag
 //  (la clé de FicheSelonLAdresse reste la même) ; sa preuve : l'effet de
@@ -27,8 +30,8 @@ const serie = (style, rendu, nature, k) => { for (let i = 0; i < k; i++) { n++; 
 serie("blackwork", "black", "tatouage", 6); serie("blackwork", "color", "tatouage", 5); serie("realisme", "black", "tatouage", 4);
 await ranger("photos_tatoueur", photos);
 
-//  LES RANGS POSÉS SUR LES TROIS CARTES (par les points du pied), tous
-//  différents du repos, pour qu'un remontage se voie.
+//  LES RANGS POSÉS SUR LES TROIS CARTES (par leurs chevrons, nº 877),
+//  tous différents du repos, pour qu'un remontage se voie.
 const RANGS = [2, 3, 4];
 const LECTURE = `(() => {
   const cartes = [...document.querySelectorAll("[data-carte-de-galerie]")];
@@ -72,10 +75,16 @@ const intact = (nom, avant, apres, images, nImages) => {
     await page.waitForFunction((s) => location.pathname === `/artist/${s}/portfolio`, SLUG, { timeout: 15000 });
     await page.waitForFunction(() => document.querySelectorAll("[data-carte-de-galerie]").length === 3, null, { timeout: 15000 });
     await page.waitForTimeout(600);
-    //  Les points du pied posent le rang (nº 876) : le rond « View photo N of M ».
+    //  ON POSE LE RANG PAR LE CHEVRON DE DROITE, autant de fois qu'il
+    //  faut : c'est le seul geste qui fait glisser une carte au web
+    //  depuis la nº 877 (le pied et ses points sont partis).
     for (let i = 0; i < 3; i += 1) {
-      await page.locator("[data-carte-de-galerie]").nth(i).locator(`[data-pied-de-fil] button[aria-label^='View photo ${RANGS[i]} of ']`).click();
-      await page.waitForTimeout(500);
+      const carte = page.locator("[data-carte-de-galerie]").nth(i);
+      await carte.hover({ position: { x: 200, y: 200 } });
+      for (let pas = 1; pas < RANGS[i]; pas += 1) {
+        await carte.locator("[data-fleche-de-carte='droite']").click();
+        await page.waitForTimeout(400);
+      }
     }
     await page.waitForTimeout(700);
     const nImages = await memoriser(page);

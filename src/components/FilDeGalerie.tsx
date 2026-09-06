@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MARGES_EN_TETE_DE_FIL, PiedDeFil } from "@/components/CarteFil";
+import { PiedDeFil } from "@/components/CarteFil";
+//  §6 (nº 877) — les flèches du clavier font défiler la carte survolée
+//  (la mécanique de la nº 840, telle quelle).
+import { ClavierCartes } from "@/components/ClavierCartes";
 import { CarrouselPortfolio } from "@/components/CarrouselPortfolio";
 //  §3 (nº 876) — la galerie de carte du WEB (nº 839) : la piste qui
 //  glisse par transformation, ses deux chevrons au survol, et l'état
@@ -16,6 +19,7 @@ import {
   CompteurDeGalerie,
   TitreDeGalerie,
   type GalerieDuPortfolio,
+  type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
 import { GOUTTIERE_DU_FIL } from "@/components/GrilleTatoueurs";
 import { CADRE_PHOTO_PORTFOLIO, FOND_RESERVE_PHOTO } from "@/config/tatouage";
@@ -66,7 +70,8 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *     de pastille, pas de points — comme une carte à photo unique.
  *     Un toucher sur l'image NE FAIT RIEN : aucune photo n'est un lien
  *     (« Clic sur une photo : rien », nº 873-§3) ;
- *  c. LE PIED DU FIL (`PiedDeFil`) : signaler, les vues, les POINTS de
+ *  c. LE PIED DU FIL (`PiedDeFil`), AU DOIGT SEULEMENT depuis la
+ *     nº 877-§2 : signaler, les vues, les POINTS de
  *     position au centre (la frise des fiches — il y a plusieurs photos,
  *     le pied les dessine ; une seule, il n'en dessine aucun), le fanion
  *     de LA PHOTO REGARDÉE, son partage (`cheminDuCarrousel`, avec cette
@@ -104,8 +109,8 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  * CES CARTES — une par rangée, PLEINE LARGEUR dans les marges gauche et
  * droite du web (la colonne de lecture d'une fiche, la colonne de
  * droite de la fenêtre superposée) : le titre en haut à gauche, le
- * compteur « 1/20 » en haut à droite, la photo, le pied en dessous.
- * Une galerie à une photo : sans compteur ni points, comme au doigt.
+ * compteur « 1/20 » en haut à droite, la photo.
+ * Une galerie à une photo : sans compteur, comme au doigt.
  * CE QUI CHANGE D'UN APPAREIL À L'AUTRE, ET RIEN D'AUTRE : LA PHOTO.
  *  · AU DOIGT, le carrousel natif de la fiche en variante « carte »
  *    (glissement au doigt, accrochage par photo) — inchangé ;
@@ -123,27 +128,77 @@ import type { Tatoueur } from "@/lib/tatoueurs";
  *    dans un élément sans boîte ne part jamais).
  * LE RANG REGARDÉ EST UN SEUL NOMBRE, écrit comme sur une carte des
  * résultats (nº 841) : celui du doigt ne bouge que par un glissement,
- * celui du web que par ses chevrons ou les points du pied — le plus
- * grand des deux est donc toujours le rang regardé, et l'autre zéro.
- * Le compteur du titre et le pied lisent ce nombre-là.
+ * celui du web que par ses chevrons (ou les flèches du clavier, §6
+ * nº 877, qui les pressent) — le plus grand des deux est donc toujours
+ * le rang regardé, et l'autre zéro. Le compteur du titre le lit.
+ *
+ * ██ §2, §3, §5 ET §6 (nº 877) — CE QUE LE PROPRIÉTAIRE A CORRIGÉ À
+ * L'ÉCRAN, LA PASSE SUIVANTE ██
+ * ==================================================================
+ *  · §2 — LE PIED DISPARAÎT DU WEB : plus de fanion, de signalement, de
+ *    vues, de partage ni de points sous une carte de galerie. Ces
+ *    commandes vivent désormais SUR LA GRANDE PHOTO, à gauche
+ *    (`CommandesDeLAffiche`, CarteFil, §4 nº 877) — et la carte n'a
+ *    plus rien à dire d'autre que son titre, son compteur et sa photo.
+ *    Le DOIGT garde le sien, entier : ce sont les deux rangées de
+ *    CarteFil qui portent l'appareil (`hidden mobile:flex`), rendues à
+ *    leur état d'avant la nº 876 ;
+ *  · §3 — LA PHOTO CLIQUÉE MONTE DANS L'AFFICHE : le chemin des
+ *    anciennes vignettes (`SerieChoisie`, nº 204-§3 et nº 306), rendu
+ *    aux cartes. Au web seulement ;
+ *  · §5 — LE TITRE S'ALIGNE SUR LE BORD GAUCHE DE LA CARTE et le
+ *    compteur sur le bord droit de l'image (`MARGES_DU_TITRE_DE_GALERIE`,
+ *    juste au-dessus) ;
+ *  · §6 — LES FLÈCHES DU CLAVIER font défiler la carte survolée
+ *    (`ClavierCartes`, la mécanique de la nº 840).
  * LA GOUTTIÈRE entre deux cartes est celle du fil des résultats
  * (`GOUTTIERE_DU_FIL`, GrilleTatoueurs — vingt-quatre pixels), aux deux
  * appareils ; au doigt seulement, la liste saigne jusqu'aux bords
  * (`mobile:-mx-4`), comme les cartes des résultats.
  * ⚠️ AUCUNE PHOTO N'EST UN LIEN, ni au doigt (nº 873-§3) ni au web : la
- * page est déjà celle de cet artiste.
+ * page est déjà celle de cet artiste. Au web, elle est un BOUTON depuis
+ * la nº 877 — il ne navigue pas, il pose la photo dans l'affiche.
  */
+/**
+ * ██ §5 (nº 877) — LA BOÎTE DU TITRE, ET SES DEUX APPAREILS ██
+ * ==================================================================
+ * CE QUE LE PROPRIÉTAIRE A RELEVÉ À L'ÉCRAN, AU WEB : « le titre est
+ * trop à droite, le compteur trop à gauche ». La carte lisait la boîte
+ * de l'en-tête du fil (`MARGES_EN_TETE_DE_FIL`, CarteFil — seize
+ * pixels de côté), et ces seize pixels rentraient le titre ET le
+ * compteur À L'INTÉRIEUR de l'image, qui, elle, prend toute la largeur
+ * de la carte.
+ * CE QUI EST DEMANDÉ : le titre à l'aplomb du BORD GAUCHE de la carte,
+ * le compteur à l'aplomb du BORD DROIT DE L'IMAGE — donc aucune marge
+ * horizontale au web, la ligne du titre et l'image partageant le même
+ * bord.
+ * ⚠️ LE DOIGT NE BOUGE PAS D'UN PIXEL, et c'est la consigne : là-bas
+ * l'image SAIGNE jusqu'aux bords de l'écran (`mobile:-mx-4`, plus bas)
+ * tandis que le titre s'aligne sur les marges de la page — ses seize
+ * pixels sont donc JUSTES, et ils restent.
+ * ⚠️ DEUX PRÉFIXES, JAMAIS UNE VALEUR NUE PUIS SA CORRECTION : une
+ * seule déclaration de rembourrage horizontal par appareil (piège
+ * nº 389), et les deux écrites en toutes lettres (piège nº 472 : la
+ * feuille se fabrique en lisant ce texte).
+ */
+const MARGES_DU_TITRE_DE_GALERIE = "mobile:px-4 not-mobile:px-0 pb-3";
+
 export function FilDeGalerie({
   tatoueur,
   galeries,
   metier,
   vues,
   apercu = false,
+  surSerieChoisie,
 }: {
   tatoueur: Tatoueur;
   /** Les galeries de la page — une catégorie, dans l'ordre du profil
       (`galeriesDuPortfolio`). */
   galeries: GalerieDuPortfolio[];
+  /** §3 (nº 877) — LA PHOTO CLIQUÉE MONTE DANS L'AFFICHE : ce que
+      l'enveloppe (ContenuFiche) fait remonter jusqu'à la fiche ou à la
+      fenêtre superposée. Au web seulement — voir la carte. */
+  surSerieChoisie: (serie: SerieChoisie) => void;
   /** Le style montré, pour le message pré-rempli du partage. */
   metier: string;
   vues?: number | null;
@@ -197,6 +252,17 @@ export function FilDeGalerie({
            GrilleTatoueurs) : les cartes s'y détachent de vingt-quatre
            pixels, comme les cartes d'une liste de résultats au doigt —
            et au web depuis la nº 876, la même valeur. */}
+      {/*  ██ §6 (nº 877) — LES FLÈCHES DU CLAVIER, SUR LA CARTE SURVOLÉE ██
+           LA MÊME MÉCANIQUE QUE LA MOSAÏQUE (nº 371, refaite nº 840) :
+           un seul écouteur sur le document, la carte survolée demandée
+           au navigateur (`:hover`), et son CHEVRON pressé — le geste de
+           la souris, à la lettre. Ce composant n'affiche rien ; il est
+           monté par la surface qui porte des cartes, et une page de
+           portfolio n'en montre jamais deux (la mosaïque et « Ma
+           sélection » ne coexistent pas avec elle).
+           ⚠️ RIEN AU DOIGT : le composant s'en garde lui-même (règle
+           nº 60, l'appareil). */}
+      <ClavierCartes />
       <ul ref={liste} className={`flex flex-col ${GOUTTIERE_DU_FIL}`}>
         {galeries.map((galerie, rang) => (
           <CarteDeGalerie
@@ -208,6 +274,7 @@ export function FilDeGalerie({
             metier={metier}
             vues={vues}
             apercu={apercu}
+            surSerieChoisie={surSerieChoisie}
           />
         ))}
       </ul>
@@ -241,6 +308,7 @@ function CarteDeGalerie({
   metier,
   vues,
   apercu,
+  surSerieChoisie,
 }: {
   tatoueur: Tatoueur;
   galerie: GalerieDuPortfolio;
@@ -249,6 +317,7 @@ function CarteDeGalerie({
   metier: string;
   vues?: number | null;
   apercu: boolean;
+  surSerieChoisie: (serie: SerieChoisie) => void;
 }) {
   const { serie, nature } = galerie;
   const [indice, setIndice] = useState(0);
@@ -259,10 +328,6 @@ function CarteDeGalerie({
       d'une carte des résultats (CarteTatoueur). */
   const galerieWeb = useGalerieDeCarte(serie.photos.length);
   const rangRegarde = Math.max(galerieWeb.indice, indice);
-  const allerAuRang = (cible: number) => {
-    if (document.documentElement.dataset.appareil === "mobile") setIndice(cible);
-    else galerieWeb.allerAu(cible);
-  };
   /** La première carte est celle qu'on regarde à l'arrivée : son image
       ne se diffère pas. Les autres attendent qu'on défile jusqu'à
       elles. */
@@ -311,7 +376,7 @@ function CarteDeGalerie({
            propriétaire). Une galerie d'une seule photo n'en a pas : il
            n'y a rien à compter (`serie.photos.length > 1`, la règle de
            la pastille qu'il remplace). */}
-      <div className={MARGES_EN_TETE_DE_FIL}>
+      <div className={MARGES_DU_TITRE_DE_GALERIE}>
         <TitreDeGalerie
           titre={titreDeGalerie(serie.label, serie.rendu)}
           compteur={
@@ -402,22 +467,64 @@ function CarteDeGalerie({
             />
           )
         )}
+        {/*  ██ §3 (nº 877) — CLIQUER LA PHOTO LA MET DANS L'AFFICHE ██
+             ------------------------------------------------------------
+             DÉCISION DU PROPRIÉTAIRE : au web, un clic sur la photo d'une
+             carte la montre EN GRAND dans la colonne de gauche du profil
+             — « comme les anciennes vignettes le faisaient » (le chemin
+             de la nº 204-§3 et de la nº 306, parti à la nº 876 avec les
+             bandes par style).
+             CE QUE CE BOUTON EST, ET RIEN DE PLUS : une surface
+             transparente à l'aplomb de l'encadré, SŒUR de la photo et
+             non son enveloppe — aucune image n'est déplacée, aucun lien
+             n'est créé (nº 517 : on n'imbrique pas de l'interactif).
+             ⚠️ SOUS LES CHEVRONS : ceux-ci portent `z-[2]` (BoutonChevron)
+             et gardent donc leurs deux bandes latérales — avancer d'une
+             photo ne la met pas dans l'affiche, et inversement.
+             ⚠️ AU WEB SEULEMENT (`hidden not-mobile:block`, l'appareil —
+             règle nº 60) : au doigt, « toucher une photo ne fait rien »
+             (nº 873-§3), et rien ici ne peut être touché.
+             ⚠️ IL PORTE LE RANG REGARDÉ : la photo montrée dans l'encadré
+             à cet instant, jamais la première de la série (nº 306-§1-6 —
+             le défaut que la nº 310-§5 avait relevé dans la fenêtre). */}
+        <button
+          type="button"
+          data-photo-vers-affiche=""
+          onClick={() =>
+            surSerieChoisie({
+              style: serie.style,
+              nature,
+              rendu: serie.rendu,
+              indice: rangRegarde,
+            })
+          }
+          aria-label={`Show photo ${rangRegarde + 1} of ${serie.photos.length}`}
+          className="absolute inset-0 hidden not-mobile:block
+                     focus-visible:outline-2 focus-visible:-outline-offset-2
+                     focus-visible:outline-primaire"
+        />
       </div>
       {!apercu && (
         <PiedDeFil
           tatoueur={tatoueur}
           photos={serie.photos}
-          //  §3 (nº 876) — le rang regardé, et les points posent le rang
-          //  de l'appareil (voir `allerAuRang`).
-          indice={rangRegarde}
-          surRang={allerAuRang}
+          /*  ⛔ §2 (nº 877) — LE PIED N'EXISTE PLUS QU'AU DOIGT, et il ne
+              le dit pas lui-même : ses deux rangées portent leur appareil
+              (`hidden mobile:flex`, CarteFil), rendues à l'état d'avant la
+              nº 876. Le rang qu'il montre et qu'il pose est donc CELUI DU
+              DOIGT (`indice`), le seul qui existe là où il se voit — au
+              web, la carte n'a plus ni pied, ni points, ni fanion, ni
+              partage : les commandes de la photo vivent sur L'AFFICHE
+              (§4, CommandesDeLAffiche). */
+          indice={indice}
+          surRang={setIndice}
           //  LE PARTAGE EMPORTE LA PHOTO REGARDÉE de cette galerie — la
           //  fiche s'ouvrira dessus (`ouvertureSurUnePhoto`).
           cheminAPartager={cheminDuCarrousel(
             tatoueur.slug,
             serie.style,
             { nature, rendu: serie.rendu },
-            serie.photos[rangRegarde]?.cle ?? ""
+            serie.photos[indice]?.cle ?? ""
           )}
           metier={metier}
           vues={vues}

@@ -92,8 +92,25 @@ export function ClavierCartes() {
       //  existe dans le document (masqué) et un `click()` l'atteindrait
       //  quand même. L'appareil tranche (règle nº 60).
       if (document.documentElement.dataset.appareil === "mobile") return;
+      /*  ██ §6 (nº 877) — LES CARTES DE GALERIE RÉPONDENT AUSSI ██
+          Le propriétaire veut les flèches sur les cartes du FIL DE
+          GALERIES (les pages Portfolio et Flash d'un profil, au web) :
+          « curseur sur une carte → ← → font défiler ses photos ».
+          RIEN DE NEUF N'EST ÉCRIT : ces cartes portent les MÊMES
+          chevrons (`data-fleche-de-carte`, GalerieDeCarte) que celles de
+          la mosaïque — seule leur enveloppe a un autre nom
+          (`data-carte-de-galerie` au lieu de `data-carte`). On ajoute
+          donc ce nom au sélecteur, et tout le reste — les quatre gardes,
+          le clic du chevron, l'absence d'entrée d'historique — vaut
+          pour elles sans une ligne de plus.
+          ⚠️ LES DEUX NOMS NE SE CROISENT JAMAIS : une page de résultats
+          ne montre pas de carte de galerie, et une page de profil ne
+          montre pas de carte de résultat. `querySelector` rend le
+          premier trouvé ; il n'y a jamais les deux. */
       const chevron = document.querySelector<HTMLElement>(
         `[data-carte]:hover [data-fleche-de-carte="${
+          sens === 1 ? "droite" : "gauche"
+        }"], [data-carte-de-galerie]:hover [data-fleche-de-carte="${
           sens === 1 ? "droite" : "gauche"
         }"]`
       );

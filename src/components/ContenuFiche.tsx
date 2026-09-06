@@ -60,6 +60,7 @@ import {
   categorieDeLaVue,
   galeriesDuPortfolio,
   SelecteurOngletAffiche,
+  type SerieChoisie,
 } from "@/components/PortfolioDeLAffiche";
 //  §3 (nº 873) — au doigt, les pages Portfolio et Flash SONT le fil de
 //  galeries ; §4 — une page sans photo montre l'écran vide du site.
@@ -693,6 +694,7 @@ export function ContenuFiche({
   studioCourant,
   demonstration = false,
   apercu = false,
+  surSerieChoisie,
   suiviAuDepart = false,
   adresseALui = false,
   collantSousLaBarre = false,
@@ -710,10 +712,20 @@ export function ContenuFiche({
   /** Vrai dans l'espace tatoueur (« Ma fiche ») : ni suivi, ni
       signalement, ni mise hors ligne. */
   apercu?: boolean;
-  /*  ⛔ §3 (nº 876) — `surSerieChoisie` EST PARTIE : « un toucher sur
-      une vignette montre cette série et remonte en haut » (nº 204-§3,
-      nº 197-§4) n'a plus de vignette — les bandes par style du web sont
-      supprimées, le fil de galeries sert les deux appareils. */
+  /**
+   * ██ §3 (nº 877) — `surSerieChoisie` REVIENT, PAR LES CARTES ██
+   * La nº 876 l'avait retirée avec les bandes par style : plus de
+   * vignette, plus de série choisie. Le propriétaire rend le geste aux
+   * CARTES DU FIL DE GALERIES, au web : un clic sur la photo d'une
+   * carte pose cette photo dans l'affiche (la colonne de gauche). Ce
+   * qui remonte est donc ce qui remontait — la série ET le rang
+   * (nº 204-§3, nº 306-§1-6) —, et l'enveloppe (FicheTatoueur ou
+   * FenetreFiche) en fait ce qu'elle en faisait.
+   * ⚠️ RIEN AU DOIGT : la carte n'y porte aucun bouton de photo
+   * (« toucher une photo ne fait rien », nº 873-§3) — c'est la carte
+   * elle-même qui s'en garde, par l'appareil (FilDeGalerie).
+   */
+  surSerieChoisie: (serie: SerieChoisie) => void;
   /** SUIT-ON DÉJÀ CE TATOUEUR ? — lu par le SERVEUR (nº 208-§1) : le
       bouton naît dans le bon état, il ne se corrige plus à l'écran. */
   suiviAuDepart?: boolean;
@@ -2180,6 +2192,9 @@ export function ContenuFiche({
             <FilDeGalerie
               tatoueur={tatoueur}
               galeries={galeries}
+              //  §3 (nº 877) — le clic d'une photo remonte jusqu'ici,
+              //  puis jusqu'à l'affiche (voir la propriété).
+              surSerieChoisie={surSerieChoisie}
               //  Le style principal, pour le message de partage — ce que
               //  la vue photo donne à son pied (FicheTatoueur).
               metier={tatoueur.styles[0] ? libelleStyle(tatoueur.styles[0]) : ""}
